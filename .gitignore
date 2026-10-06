@@ -1,0 +1,4 @@
+/data/*.sqlite
+/data/*.sqlite-journal
+.DS_Store
+Thumbs.db

@@ -14,18 +14,18 @@ if ($u['loc'] !== 'shop') {
 if ($buy !== '' && isset($all[$buy])) {
     $it = $all[$buy];
     if ((int) $u['gold'] < (int) $it['gold']) {
-        flash_set('金不够。');
+        flash_set('钱不够。');
     } elseif ($it['slot'] === 'potion') {
         $u['gold'] = (int) $u['gold'] - (int) $it['gold'];
         $u['potion'] = (int) $u['potion'] + 1;
         user_save($u);
         flash_set('买下回血药。');
     } else {
+        // 商店旧货直接换成新装备系统的正式装备（普通随机2词缀）
         $u['gold'] = (int) $u['gold'] - (int) $it['gold'];
-        $slot = $it['slot'];
-        $u[$slot] = $buy;
+        $nm = make_equip((int) $u['id'], $it['slot'] === 'armor' ? 'body' : 'weapon', $it['name'], 1);
         user_save($u);
-        flash_set('换上了' . $it['name'] . '。旧的被掌柜收走当废铁。');
+        flash_set('买下【' . $nm . '】，去背包穿上。');
     }
     header('Location: shop.php');
     exit;
@@ -33,7 +33,7 @@ if ($buy !== '' && isset($all[$buy])) {
 
 wap_start('黑市');
 echo '<div class="muted">' . h(loc('shop')['desc']) . '</div>';
-echo '<span class="gold">金 ' . (int) $u['gold'] . '</span>';
+echo '<span class="gold">' . h(fmt_money((int) $u['gold'])) . '</span>';
 $flash = flash_get();
 if ($flash !== '') {
     echo '<div class="warn">' . h($flash) . '</div>';
@@ -51,7 +51,7 @@ foreach ($all as $id => $it) {
         $extra = ' 生命+20';
     }
     echo '· <a href="shop.php?buy=' . h($id) . '">' . h($it['name']) . '</a>';
-    echo ' <span class="gold">' . (int) $it['gold'] . '金</span>' . h($extra) . '<br>';
+    echo ' <span class="gold">' . h(fmt_money((int) $it['gold'])) . '</span>' . h($extra) . '<br>';
 }
 echo '<div class="hr">--------</div>';
 echo '<a href="map.php?to=gate">离开黑市</a>';

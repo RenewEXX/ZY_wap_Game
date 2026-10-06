@@ -2,3 +2,5 @@
 /data/*.sqlite-journal
 .DS_Store
 Thumbs.db
+
+data/kill_*.json

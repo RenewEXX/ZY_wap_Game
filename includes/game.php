@@ -1817,7 +1817,7 @@ function monster_material(string $mid): array
 
 function quest_mats(): array
 {
-    return ['blackcoin' => '不断下坠的黑币', 'aiden_badge' => '艾登·灰叶的铭牌', 'investigation_record' => '调查队记录', 'augustus_letter' => '镇长的信', 'dsw_ticket' => '黑暗沼泽副本入场券', 'dsw_item1' => '幽暗黏液', 'dsw_item2' => '沼泽之核', 'dsw_item3' => '腐泥之心', 'dsw_item4' => '王座徽记', 'abx_ticket' => '影蚀深渊入场券', 'abx_item1' => '蚀影尘', 'abx_item2' => '影蚀徽记', 'abx_item3' => '低语残章', 'abx_item4' => '王座蚀印', 'capital_badge' => '王都徽章', 'puppet_eye' => '傀儡之眼', 'ch3_proof' => '第三章通关证明', 'mx_ticket' => '银丝母巢入场券', 'mx_item1' => '黏丝束', 'mx_item2' => '茧壳碎片', 'mx_item3' => '织线梭', 'mx_item4' => '蛾翼磷粉', 'mx_item5' => '守望之瞳', 'mx_item6' => '育巢摇篮曲', 'farm_coin' => '农场币', 'seed_green' => '青菜种子', 'seed_radish' => '萝卜种子', 'seed_melon' => '南瓜种子'];
+    return ['blackcoin' => '不断下坠的黑币', 'aiden_badge' => '艾登·灰叶的铭牌', 'investigation_record' => '调查队记录', 'augustus_letter' => '镇长的信', 'dsw_ticket' => '黑暗沼泽副本入场券', 'dsw_item1' => '幽暗黏液', 'dsw_item2' => '沼泽之核', 'dsw_item3' => '腐泥之心', 'dsw_item4' => '王座徽记', 'abx_ticket' => '影蚀深渊入场券', 'abx_item1' => '蚀影尘', 'abx_item2' => '影蚀徽记', 'abx_item3' => '低语残章', 'abx_item4' => '王座蚀印', 'capital_badge' => '王都徽章', 'puppet_eye' => '傀儡之眼', 'ch3_proof' => '第三章通关证明', 'mx_ticket' => '银丝母巢入场券', 'mx_item1' => '黏丝束', 'mx_item2' => '茧壳碎片', 'mx_item3' => '织线梭', 'mx_item4' => '蛾翼磷粉', 'mx_item5' => '守望之瞳', 'mx_item6' => '育巢摇篮曲', 'farm_coin' => '农场币', 'seed_green' => '青菜种子', 'seed_radish' => '萝卜种子', 'seed_melon' => '南瓜种子', 'seed_tomato' => '番茄种子', 'seed_strawberry' => '草莓种子'];
 }
 
 function skill_catalog(): array
@@ -4007,9 +4007,85 @@ function farm_crops(): array
 {
     return [
         'green' => ['name' => '青菜', 'seed' => 'seed_green', 'cost' => 500, 'grow' => 600, 'coin' => 5],
+        'tomato' => ['name' => '番茄', 'seed' => 'seed_tomato', 'cost' => 3000, 'grow' => 1200, 'coin' => 8],
         'radish' => ['name' => '萝卜', 'seed' => 'seed_radish', 'cost' => 2000, 'grow' => 1800, 'coin' => 12],
         'melon' => ['name' => '南瓜', 'seed' => 'seed_melon', 'cost' => 5000, 'grow' => 3600, 'coin' => 25],
+        'strawberry' => ['name' => '草莓', 'seed' => 'seed_strawberry', 'cost' => 15000, 'grow' => 7200, 'coin' => 40],
     ];
+}
+
+function farm_slots(int $uid): int
+{
+    return min(6, max(4, 4 + (int) (cflags((int) $uid)['farm_slots'] ?? 0)));
+}
+
+function farm_buy_slot(int $uid): string
+{
+    $d = cflags((int) $uid);
+    $bought = (int) ($d['farm_slots'] ?? 0);
+    if ($bought >= 2) {
+        return '地已经扩到6块，到顶了。';
+    }
+    $cost = [100, 300][$bought];
+    $mats = mats_of((int) $uid);
+    if ((int) ($mats['farm_coin'] ?? 0) < $cost) {
+        return '农场币不够，下一块地要' . $cost . '币。';
+    }
+    add_mat((int) $uid, 'farm_coin', -$cost);
+    cflag_set((int) $uid, 'farm_slots', $bought + 1);
+    return '花' . $cost . '农场币开垦出第' . (5 + $bought) . '块地！';
+}
+
+function farm_fertilize(int $uid, int $plot): string
+{
+    $d = farm_plots((int) $uid);
+    if (empty($d[$plot]) || !empty($d[$plot]['fert'])) {
+        return '这块地不用施肥。';
+    }
+    $c = farm_crops()[$d[$plot]['crop']] ?? null;
+    if ($c === null) {
+        return '这茬坏了。';
+    }
+    $u = user_by_id((int) $uid);
+    if ((int) ($u['gold'] ?? 0) < 1000) {
+        return '施肥要10银，钱不够。';
+    }
+    $u['gold'] = (int) ($u['gold'] ?? 0) - 1000;
+    user_save($u);
+    $d[$plot]['fert'] = 1;
+    $d[$plot]['at'] = (int) $d[$plot]['at'] - (int) ($c['grow'] * 0.3);
+    cflag_set((int) $uid, 'farm', $d);
+    return '施了肥，' . $c['name'] . '长得更快了（-30%时间）！';
+}
+
+function farm_steal(int $uid, int $victim, int $plot): string
+{
+    $uid = (int) $uid;
+    $victim = (int) $victim;
+    if ($victim === $uid) {
+        return '偷自己？你没事吧。';
+    }
+    $vd = farm_plots($victim);
+    if (empty($vd[$plot]) || !empty($vd[$plot]['stolen'])) {
+        return '下手晚了，这块地没得偷。';
+    }
+    $c = farm_crops()[$vd[$plot]['crop']] ?? null;
+    if ($c === null) {
+        return '这茬坏了。';
+    }
+    if (time() - (int) $vd[$plot]['at'] < $c['grow']) {
+        return '还没熟呢，贼也讲规矩。';
+    }
+    $take = max(1, (int) ($c['coin'] * 0.4));
+    $vd[$plot]['stolen'] = $take;
+    cflag_set($victim, 'farm', $vd);
+    add_mat($uid, 'farm_coin', $take);
+    $vu = user_by_id($victim);
+    $tu = user_by_id($uid);
+    if ($vu) {
+        send_mail($victim, '农场', 'farm', '菜被偷了！', ($tu['username'] ?? '有人') . '偷了你' . $plot . '号地的' . $c['name'] . '（-' . $take . '币），收菜时只剩' . ($c['coin'] - $take) . '币了。', []);
+    }
+    return '得手！偷到' . $take . '农场币，主人收菜只剩' . ($c['coin'] - $take) . '币了。';
 }
 
 function farm_plots(int $uid): array
@@ -4024,7 +4100,7 @@ function farm_plots(int $uid): array
 function farm_plant(int $uid, int $plot, string $crop): string
 {
     $crops = farm_crops();
-    if (!isset($crops[$crop]) || $plot < 1 || $plot > 4) {
+    if (!isset($crops[$crop]) || $plot < 1 || $plot > farm_slots((int) $uid)) {
         return '没这种种法。';
     }
     $d = farm_plots((int) $uid);
@@ -4058,10 +4134,12 @@ function farm_harvest(int $uid, int $plot): string
     if (time() - (int) $d[$plot]['at'] < $c['grow']) {
         return $c['name'] . '还没熟，剩' . dummy_fmt($c['grow'] - (time() - (int) $d[$plot]['at'])) . '。';
     }
+    $lost = (int) ($d[$plot]['stolen'] ?? 0);
     unset($d[$plot]);
     cflag_set((int) $uid, 'farm', $d);
-    add_mat((int) $uid, 'farm_coin', $c['coin']);
-    return '收获' . $c['name'] . '！+' . $c['coin'] . '农场币。';
+    $gain = max(1, $c['coin'] - $lost);
+    add_mat((int) $uid, 'farm_coin', $gain);
+    return '收获' . $c['name'] . '！+' . $gain . '农场币' . ($lost > 0 ? '（被偷了' . $lost . '币）' : '') . '。';
 }
 
 function farm_exchange(int $uid, string $m): string

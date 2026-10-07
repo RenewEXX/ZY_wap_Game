@@ -1493,6 +1493,12 @@ function redeem_repeatable(): array
 {
     return ['TEST1000'];
 }
+function monster_gold_reward(int $base): int
+{
+    // 怪物金币是铜币；压低挂机产出并封顶，避免高等级怪随等级无限膨胀。
+    return max(1, min(10, (int) ceil(max(0, $base) * 0.005)));
+}
+
 function fmt_money(int $copper): string
 {
     $copper = max(0, $copper);
@@ -3337,7 +3343,7 @@ function battle_round(array &$u, array &$b, string $mode): array
         $killed = (int) ($b['num'] ?? 1) - (int) ($b['left'] ?? 1) + 1;
         if ((int) ($b['left'] ?? 1) > 1) {
             $b['wexp'] = (int) ($b['wexp'] ?? 0) + exp_gain_for($u, (string) ($b['id'] ?? ''));
-            $b['wgold'] = (int) ($b['wgold'] ?? 0) + (int) $b['gold'] + random_int(0, 2);
+            $b['wgold'] = (int) ($b['wgold'] ?? 0) + monster_gold_reward((int) $b['gold']);
             $b['left'] = (int) $b['left'] - 1;
             $b['hp'] = (int) $b['maxhp'];
             $dp = roll_drop((int) $u['id'], (string) ($b['id'] ?? ''), (int) ($b['elite'] ?? 0));
@@ -3500,7 +3506,7 @@ function battle_round(array &$u, array &$b, string $mode): array
             user_save($u);
             $msg = ($msg ?? '') . '。沼泽之王倒下，你被传回白石镇广场';
         }
-        $g = (int) ($b['wgold'] ?? 0) + (int) $b['gold'] + random_int(0, 2);
+        $g = (int) ($b['wgold'] ?? 0) + monster_gold_reward((int) $b['gold']);
         $u['gold'] = (int) $u['gold'] + $g;
         $rawExp = (int) (((int) ($b['wexp'] ?? 0) + exp_gain_for($u, (string) ($b['id'] ?? ''))) * guild_exp_mult((int) $u['id']) * party_bonus_mult((int) $u['id']));
         war_add_score((int) $u['id'], (string) ($b['id'] ?? ''));

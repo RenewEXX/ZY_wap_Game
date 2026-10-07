@@ -19,6 +19,10 @@ a{color:#8cf;text-decoration:none}
 .muted{color:#696}
 .hr{color:#363;margin:8px 0}
 .warn{color:#fa6}
+.nav{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin:8px 0}
+.nav a{display:block;text-align:center;background:#0d140d;border:1px solid #2a3a2a;color:#8c8;padding:7px 0;border-radius:8px;font-size:13px;white-space:nowrap;overflow:hidden}
+.nav a:active{background:#1c2b1c}
+.nav a.on{background:#1c2b1c;border-color:#6a6;color:#cfc}
 input{background:#111;color:#cfc;border:1px solid #363;padding:4px;font:13px monospace}
 </style></head><body>';
     echo '<div class="t">【' . h($title) . '】</div>';
@@ -45,6 +49,21 @@ function require_login(): array
         header('Location: index.php');
         exit;
     }
+    if ((int) ($u['maxmp'] ?? 0) <= 0) {
+        $jmp = (int) (job_of($u)['mp'] ?? 30);
+        $u['maxmp'] = $jmp;
+        $u['mp'] = $jmp;
+        user_save($u);
+    }
+    background_battle($u);
+    offline_tick($u);
+    dummy_tick($u);
+    dungeon_tick($u);
+    settle_auctions();
+    settle_wars();
+    settle_war_rewards();
+    spawn_tick();
+    settle_horse();
     // 一次性迁移：旧武器栏全部转成新装备
     $oldmap = [
         'rusty' => ['weapon', '生锈铁剑', 1], 'bow' => ['weapon', '猎弓', 1],
@@ -88,14 +107,24 @@ function flash_get(): string
 
 function nav_line(): void
 {
-    echo '<div class="hr">--------</div>';
-    echo '<a href="home.php">行动</a> . ';
-    echo '<a href="map.php">地图</a> . ';
-    echo '<a href="teleport.php">传送</a> . ';
-    echo '<a href="status.php">状态</a> . ';
-    echo '<a href="bag.php">背包</a> . ';
-    echo '<a href="quest.php">任务</a> . ';
-    echo '<a href="logout.php">退出</a>';
+    // 快捷栏：以后加按钮只在这里加一行，grid自动排成4列等宽
+    $mailN = !empty($_SESSION['uid']) ? mail_unread((int) $_SESSION['uid']) : 0;
+    $items = [
+        ['home.php', '行动'], ['status.php', '状态'], ['bag.php', '背包'], ['map.php', '地图'],
+        ['skills.php', '技能'], ['pet.php', '宠物'], ['quest.php', '任务'], ['mail.php', '邮件' . ($mailN > 0 ? '(' . $mailN . ')' : '')],
+        ['teleport.php', '传送'], ['mall.php', '商城'], ['auction.php', '拍卖'], ['logout.php?a=char', '退出'],
+        ['guild.php', '公会'], ['chat.php', '聊天'], ['party.php', '组队'], ['look.php', '观察'],
+    ];
+    $cur = basename((string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+    echo '<div class="nav">';
+    foreach ($items as [$href, $label]) {
+        $on = (explode('?', $href)[0] === $cur) ? ' class="on"' : '';
+        echo '<a href="' . $href . '"' . $on . '>' . $label . '</a>';
+    }
+    echo '</div>';
+    if (basename((string) ($_SERVER['SCRIPT_NAME'] ?? '')) !== 'fight.php') {
+        echo '<script>setInterval(async()=>{try{const r=await fetch("ping.php",{credentials:"same-origin"});const d=await r.json();if(!d||!d.ok)return;for(const k of["flash","note"]){const t=d[k];if(t&&t!==window["_pz"+k]){window["_pz"+k]=t;const e=document.createElement("div");e.style.cssText="position:fixed;top:0;left:0;right:0;background:#321;color:#fc6;padding:6px;text-align:center;z-index:99";e.textContent=t;e.onclick=()=>e.remove();document.body.appendChild(e);setTimeout(()=>e.remove(),15000);}}}catch(e){}},30000);</script>';
+    }
 }
 
 function quest_of(int $q): array
@@ -112,7 +141,7 @@ function quest_of(int $q): array
 function quest_banner(array $u, string $page = 'home.php'): void
 {
     $qs = quest_state($u);
-    $prog = quest_progress_text((int) ($u['id'] ?? 0), $qs);
+    $prog = (($qs['ch'] ?? 0) === 2) ? quest_progress2_text((int) ($u['id'] ?? 0), $qs) : quest_progress_text((int) ($u['id'] ?? 0), $qs);
     echo '<div class="warn">【任务' . h($qs['step'] ?? '') . '·' . h($qs['name']) . '】' . h($qs['todo']);
     if ($prog !== '') {
         echo '<br>' . h($prog);

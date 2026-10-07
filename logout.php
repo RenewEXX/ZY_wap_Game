@@ -2,6 +2,11 @@
 declare(strict_types=1);
 require __DIR__ . '/includes/bootstrap.php';
 
+if ((string) ($_GET['a'] ?? '') === 'char' && !empty($_SESSION['account'])) {
+    unset($_SESSION['uid']);
+    header('Location: account.php');
+    exit;
+}
 $_SESSION = [];
 if (ini_get('session.use_cookies')) {
     $p = session_get_cookie_params();

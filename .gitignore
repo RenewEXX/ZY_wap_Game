@@ -1,6 +1,7 @@
-/data/*.sqlite
-/data/*.sqlite-journal
+*.db
+*.sqlite
+*.sqlite-journal
+*.log
+test.php
 .DS_Store
 Thumbs.db
-
-data/kill_*.json

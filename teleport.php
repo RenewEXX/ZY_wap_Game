@@ -21,6 +21,31 @@ function teleport_cost(string $from, string $to): ?int
 $go = (string) ($_GET['go'] ?? '');
 if ($go !== '' && isset($all[$go])) {
     $cost = teleport_cost($cur, $go);
+    if (in_array($go, dsw_maps(), true) || in_array($go, abx_maps(), true)) {
+        flash_set('副本只能找NPC进，不能传送。');
+        header('Location: teleport.php');
+        exit;
+    }
+    if ($go === 'warfield') {
+        $werr = warfield_can_enter($u);
+        if ($werr !== '') {
+            flash_set($werr);
+            header('Location: teleport.php');
+            exit;
+        }
+    }
+    $needLv = teleport_min_lv($go);
+    $maxLv = teleport_max_lv($go);
+    if ((int) $u['lv'] < $needLv) {
+        flash_set('【' . $all[$go]['name'] . '】太危险，需要' . $needLv . '级，你现在' . (int) $u['lv'] . '级。');
+        header('Location: teleport.php');
+        exit;
+    }
+    if ((int) $u['lv'] > $maxLv) {
+        flash_set('【' . $all[$go]['name'] . '】只接待' . $maxLv . '级以下，你超了。');
+        header('Location: teleport.php');
+        exit;
+    }
     if ($cost === null) {
         flash_set('走不过去，传不了。');
     } elseif ($cost === 0) {
@@ -71,7 +96,11 @@ foreach (map_regions() as $region => $ids) {
             echo '·' . h($all[$id]['name']) . '(到不了)<br>';
             continue;
         }
-        echo '·<a href="teleport.php?go=' . h($id) . '">' . h($all[$id]['name']) . '</a>(' . h(fmt_money($cost)) . ')<br>';
+        if (in_array($id, dsw_maps(), true) || in_array($id, abx_maps(), true)) {
+            continue;
+        }
+        $lvTag = teleport_min_lv($id) > 1 ? '需' . teleport_min_lv($id) . '级' : '';
+        echo '·<a href="teleport.php?go=' . h($id) . '">' . h($all[$id]['name']) . '</a>(' . h(fmt_money($cost)) . ')' . h($lvTag) . '<br>';
     }
 }
 nav_line();

@@ -12,6 +12,11 @@ if ((string) ($_GET['a'] ?? '') === 'enhance') {
     header('Location: equip.php?id=' . $eid);
     exit;
 }
+if ((string) ($_GET['a'] ?? '') === 'enchant') {
+    flash_set(enchant_equip((int) $u['id'], $eid, (string) ($_GET['stone'] ?? '')));
+    header('Location: equip.php?id=' . $eid);
+    exit;
+}
 if (!$e) {
     flash_set('没有这件装备。');
     header('Location: bag.php');
@@ -30,11 +35,25 @@ echo '强化：+' . (int) ($e['enhance_level'] ?? 0) . ((int) ($e['broken'] ?? 0
 echo '<div class="hr">--------</div>';
 $aff = json_decode((string) $e['affixes'], true);
 if (is_array($aff)) {
-    foreach ($aff as $x) {
-        echo '·' . h(affix_fmt((string) ($x['id'] ?? $x['k'] ?? ''), (float) $x['v'], $x['tier'] ?? null)) . '<br>';
-    }
+    echo equip_affix_html($aff);
+}
+$isWep = (($e['slot'] ?? '') === 'weapon');
+if (!empty($e['enchant_el'])) {
+    echo '·附魔：' . h(element_name((string) $e['enchant_el']) . ($isWep ? '伤害+' : '抗性+') . (int) ($e['enchant_val'] ?? 0) . ($isWep ? '' : '%')) . '<br>';
 }
 echo '<div class="hr">--------</div>';
+$myStones = [];
+foreach (mats_of((int) $u['id']) as $mid => $num) {
+    if ($num > 0 && enchant_mat_el($mid) !== '' && enchant_mat_tier($mid) !== '') {
+        $myStones[$mid] = $num;
+    }
+}
+if ($myStones !== []) {
+    echo '附魔（武器加属性伤害，防具加属性抗性，戒指项链不可附魔；同石重附只在区间内波动）：<br>';
+    foreach ($myStones as $mid => $num) {
+        echo '·' . h(enchant_mat_name($mid)) . 'x' . $num . ' <a href="equip.php?a=enchant&id=' . $eid . '&stone=' . h($mid) . '">附魔</a><br>';
+    }
+}
 if ((int) ($e['broken'] ?? 0) === 0) {
     $next = (int) ($e['enhance_level'] ?? 0) + 1;
     $rule = enhance_table()[$next] ?? null;

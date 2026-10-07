@@ -34,6 +34,28 @@ if ($a === 'off') {
     header('Location: bag.php?tab=equip');
     exit;
 }
+if ($a === 'sellall') {
+    $st = db()->prepare('SELECT * FROM equips WHERE uid=? AND pos="" AND quality<=2');
+    $st->execute([(int) $u['id']]);
+    $tot = 0;
+    $cnt = 0;
+    while ($eq = $st->fetch()) {
+        $tot += equip_sell_price((int) $eq['quality']);
+        $cnt++;
+        db()->exec('DELETE FROM equips WHERE id=' . (int) $eq['id']);
+    }
+    _gear_uncache((int) $u['id']);
+    $u['gold'] = (int) $u['gold'] + $tot;
+    user_save($u);
+    flash_set($cnt > 0 ? '一键卖掉' . $cnt . '件稀有及以下装备，+' . fmt_money($tot) . '。' : '没有可卖的（只卖未穿戴的稀有及以下）。');
+    header('Location: bag.php?tab=equip');
+    exit;
+}
+if ($a === 'useext') {
+    flash_set(use_bag_ext((int) $u['id'], (string) ($_GET['id'] ?? '')));
+    header('Location: bag.php?tab=other');
+    exit;
+}
 if ($a === 'sell') {
     $st = db()->prepare('SELECT * FROM equips WHERE id=? AND uid=? AND pos=""');
     $st->execute([(int) ($_GET['id'] ?? 0), (int) $u['id']]);
@@ -50,9 +72,59 @@ if ($a === 'sell') {
     header('Location: bag.php?tab=equip');
     exit;
 }
+if ($a === 'drop') {
+    $did = (string) ($_GET['id'] ?? '');
+    $dtab = (string) ($_GET['tab'] ?? 'mat');
+    if (!in_array($dtab, ['mat', 'quest', 'other'], true)) {
+        $dtab = 'mat';
+    }
+    db()->prepare('DELETE FROM mats WHERE uid=? AND mat=?')->execute([(int) $u['id'], $did]);
+    flash_set('扔掉了【' . mat_name($did) . '】。');
+    header('Location: bag.php?tab=' . $dtab);
+    exit;
+}
+if ($a === 'dummy') {
+    if ((string) ($_GET['v'] ?? '') === '1') {
+        $dmats = mats_of((int) $u['id']);
+        if (empty($dmats['dummy_time'])) {
+            flash_set('人偶没时间，先去商城买。');
+        } else {
+            mat_set((int) $u['id'], 'dummy_on', 1);
+            mat_set((int) $u['id'], 'dummy_last', time());
+            mat_set((int) $u['id'], 'dummy_acc', 0);
+            flash_set('陪练人偶启动：每30秒自动群殴6只当前地图的怪。');
+        }
+    } else {
+        db()->prepare('DELETE FROM mats WHERE uid=? AND mat=?')->execute([(int) $u['id'], 'dummy_on']);
+        flash_set('陪练人偶停止。');
+    }
+    header('Location: bag.php?tab=other');
+    exit;
+}
+if ($a === 'usebook') {
+    flash_set(use_skill_book((int) $u['id'], (string) ($_GET['id'] ?? '')));
+    header('Location: skills.php');
+    exit;
+}
+if ($a === 'usecard') {
+    flash_set(use_exp_card((int) $u['id']));
+    header('Location: bag.php?tab=other');
+    exit;
+}
+if ($a === 'usereset') {
+    flash_set(use_reset_potion((int) $u['id']));
+    header('Location: status.php?a=all');
+    exit;
+}
+if ($a === 'synth') {
+    flash_set(synth_enchant((int) $u['id'], (string) ($_GET['id'] ?? '')));
+    header('Location: bag.php?tab=mat');
+    exit;
+}
 
 wap_start('背包');
 echo '<span class="gold">' . h(fmt_money((int) $u['gold'])) . '</span><br>';
+echo '容量：' . bag_count((int) $u['id']) . '/' . bag_size((int) $u['id']) . (bag_full((int) $u['id']) ? '<span style="color:#f00">（满了！新装备会烂地上）</span>' : '') . ' <a href="bag.php?a=sellall">一键卖稀有及以下</a><br>';
 echo '<a href="bag.php?tab=equip">装备</a> . ';
 echo '<a href="bag.php?tab=mat">材料</a> . ';
 echo '<a href="bag.php?tab=quest">任务</a> . ';
@@ -111,14 +183,19 @@ if ($tab === 'equip') {
     $qmats = quest_mats();
     $any = false;
     foreach ($mats as $mid => $num) {
-        if (isset($qmats[$mid])) {
+        if (isset($qmats[$mid]) || isset(mall_tanks()[$mid]) || mat_hidden($mid)) {
             continue;
         }
         $any = true;
-        echo '·' . h(mat_name($mid)) . 'x' . $num . '<br>';
+        echo '·' . h(mat_name($mid)) . 'x' . $num . ' <a href="bag.php?a=drop&id=' . h($mid) . '&tab=mat">扔</a>';
+        $et = enchant_mat_tier($mid);
+        if ($et !== '' && (enchant_tiers()[$et]['next'] ?? '') !== '' && $num >= enchant_tiers()[$et]['need']) {
+            echo ' <a href="bag.php?a=synth&id=' . h($mid) . '">合成' . h(enchant_tiers()[enchant_tiers()[$et]['next']]['name']) . '</a>';
+        }
+        echo '<br>';
     }
     if (!$any) {
-        echo '<span class="muted">空。刷怪会掉材料，掉率45%。</span>';
+        echo '<span class="muted">空。刷怪会掉材料。</span>';
     }
 } elseif ($tab === 'quest') {
     $qs = quest_state($u);
@@ -134,17 +211,82 @@ if ($tab === 'equip') {
     foreach ($qmats as $mid => $mname) {
         if (!empty($mats[$mid])) {
             $any = true;
-            echo '·' . h($mname) . 'x' . $mats[$mid] . '（无法丢弃）<br>';
+            echo '·' . h($mname) . 'x' . $mats[$mid] . ' <a href="bag.php?a=drop&id=' . h($mid) . '&tab=quest">扔</a><br>';
         }
     }
     if (!$any) {
         echo '<span class="muted">暂无任务物品。</span>';
+    }
+    echo '<div class="hr">--------</div>';
+    echo '技能书：<br>';
+    $hasBook = false;
+    foreach (skill_books() as $bid => $b) {
+        if (empty($mats[$bid])) {
+            continue;
+        }
+        $hasBook = true;
+        echo '·' . h($b['name']) . 'x' . $mats[$bid] . ' <a href="bag.php?a=usebook&id=' . h($bid) . '">使用</a><br>';
+    }
+    if (!$hasBook) {
+        echo '<span class="muted">空。</span>';
+    }
+    echo '功能道具：<br>';
+    $func = false;
+    if (!empty($mats['exp_card100'])) {
+        $func = true;
+        echo '·升级卡100型x' . $mats['exp_card100'] . ' <a href="bag.php?a=usecard">使用(1小时双倍)</a><br>';
+    }
+    if (!empty($mats['reset_potion'])) {
+        $func = true;
+        echo '·属性洗点药x' . $mats['reset_potion'] . ' <a href="bag.php?a=usereset">使用</a><br>';
+    }
+    if (!empty($mats['bag_ext5'])) {
+        $func = true;
+        echo '·5格背包扩充x' . $mats['bag_ext5'] . ' <a href="bag.php?a=useext&id=bag_ext5">使用(最多5次)</a><br>';
+    }
+    if (!empty($mats['bag_ext10'])) {
+        $func = true;
+        echo '·10格背包扩充x' . $mats['bag_ext10'] . ' <a href="bag.php?a=useext&id=bag_ext10">使用(最多2次)</a><br>';
+    }
+    $cardLeft = (int) ($mats['exp_card_until'] ?? 0) - time();
+    if ($cardLeft > 0) {
+        $func = true;
+        echo '<span class="muted">双倍经验剩' . h(dummy_fmt($cardLeft)) . '</span><br>';
+    }
+    if (!$func) {
+        echo '<span class="muted">空。</span>';
     }
 } else {
     echo '回血药：' . (int) $u['potion'] . '<br>';
     if ((int) $u['potion'] > 0) {
         echo '<a href="bag.php?a=drink">喝一瓶药</a><br>';
     }
+    echo '<div class="hr">--------</div>';
+    echo '药罐（点进商城可续）：<br>';
+    $omats = mats_of((int) $u['id']);
+    $hasTank = false;
+    foreach (mall_tanks() as $tid => $t) {
+        if (empty($omats[$tid])) {
+            continue;
+        }
+        $hasTank = true;
+        echo '·' . h($t['name']) . '剩' . $omats[$tid] . '点<br>';
+    }
+    if (!$hasTank) {
+        echo '<span class="muted">空。去<a href="mall.php">商城</a>买罐。</span><br>';
+    }
+    echo '<div class="hr">--------</div>';
+    echo '陪练人偶：';
+    $dmats = mats_of((int) $u['id']);
+    if (!empty($dmats['dummy_time'])) {
+        echo '剩' . h(dummy_fmt((int) $dmats['dummy_time']));
+    } else {
+        echo '没时间';
+    }
+    echo !empty($dmats['dummy_on']) ? '（开着） <a href="bag.php?a=dummy&v=0">停止</a>' : ' <a href="bag.php?a=dummy&v=1">启动</a>';
+    echo '<br>';
+    echo '离线模块：' . (!empty($dmats['offline_on']) ? '已开通（与人偶共用时长）' : '未开通，去<a href="mall.php">商城</a>') . '<br>';
+    echo '<div class="hr">--------</div>';
     echo '<a href="shop.php">去黑市</a>';
 }
 nav_line();

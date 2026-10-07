@@ -23,6 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $err = '这名号已经被别人拿走了。';
     } else {
         $_SESSION['uid'] = user_create($name, $pass, $job);
+        send_mail((int) $_SESSION['uid'], '系统', 'system', '欢迎来到白石镇', '欢迎来到白石镇，年轻的冒险者！这是为你准备的新手补给，请查收。', [['t' => 'mat', 'id' => 'enhance_t1', 'n' => 10], ['t' => 'potion', 'n' => 5], ['t' => 'gold', 'n' => 500]], 1);
         header('Location: home.php');
         exit;
     }

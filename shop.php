@@ -11,6 +11,18 @@ if ($u['loc'] !== 'shop') {
     user_save($u);
 }
 
+if ($buy === 'pet_revive_potion') {
+    if ((int) $u['gold'] < 5000) {
+        flash_set('钱不够（50银）。');
+    } else {
+        $u['gold'] = (int) $u['gold'] - 5000;
+        user_save($u);
+        add_mat((int) $u['id'], 'pet_revive_potion', 1);
+        flash_set('买下宠物复活药。');
+    }
+    header('Location: shop.php');
+    exit;
+}
 if ($buy !== '' && isset($all[$buy])) {
     $it = $all[$buy];
     if ((int) $u['gold'] < (int) $it['gold']) {
@@ -39,6 +51,7 @@ if ($flash !== '') {
     echo '<div class="warn">' . h($flash) . '</div>';
 }
 echo '<div class="hr">--------</div>';
+echo '· <a href="shop.php?buy=pet_revive_potion">宠物复活药</a> <span class="gold">50银</span>（虚弱宠物满血复活）<br>';
 foreach ($all as $id => $it) {
     $extra = '';
     if ((int) $it['atk'] > 0) {

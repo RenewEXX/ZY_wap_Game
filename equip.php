@@ -31,7 +31,8 @@ echo '<div class="hr">--------</div>';
 $aff = json_decode((string) $e['affixes'], true);
 if (is_array($aff)) {
     foreach ($aff as $x) {
-        echo '·' . h(affix_fmt((string) ($x['id'] ?? $x['k'] ?? ''), (float) $x['v'], $x['tier'] ?? null)) . '<br>';
+        $mainMark = !empty($x['main']) ? '主·' : (!empty($x['legend']) ? '传·' : '');
+        echo '·' . $mainMark . h(affix_fmt((string) ($x['id'] ?? $x['k'] ?? ''), (float) $x['v'], $x['tier'] ?? null)) . '<br>';
     }
 }
 echo '<div class="hr">--------</div>';

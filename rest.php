@@ -12,6 +12,7 @@ if ($u['loc'] !== 'camp') {
 
 if ($a === 'sleep') {
     $u['hp'] = (int) $u['maxhp'];
+    $u['mp'] = (int) ($u['maxmp'] ?? 0);
     user_save($u);
     flash_set('火堆旁一觉。伤好了，梦不好。');
     header('Location: rest.php');
@@ -20,7 +21,7 @@ if ($a === 'sleep') {
 
 wap_start('残火营地');
 echo '<div class="muted">' . h(loc('camp')['desc']) . '</div>';
-echo '<span class="hp">生命 ' . (int) $u['hp'] . '/' . (int) $u['maxhp'] . '</span>';
+echo '<span class="hp">生命 ' . (int) $u['hp'] . '/' . (int) $u['maxhp'] . '</span> <span style="color:#6cf">魔力 ' . (int) ($u['mp'] ?? 0) . '/' . (int) ($u['maxmp'] ?? 0) . '</span>';
 $flash = flash_get();
 if ($flash !== '') {
     echo '<div class="warn">' . h($flash) . '</div>';

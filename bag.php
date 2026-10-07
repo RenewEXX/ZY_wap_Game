@@ -50,6 +50,40 @@ if ($a === 'sell') {
     header('Location: bag.php?tab=equip');
     exit;
 }
+if ($a === 'drop') {
+    $did = (string) ($_GET['id'] ?? '');
+    $dtab = (string) ($_GET['tab'] ?? 'mat');
+    if (!in_array($dtab, ['mat', 'quest', 'other'], true)) {
+        $dtab = 'mat';
+    }
+    db()->prepare('DELETE FROM mats WHERE uid=? AND mat=?')->execute([(int) $u['id'], $did]);
+    flash_set('扔掉了【' . mat_name($did) . '】。');
+    header('Location: bag.php?tab=' . $dtab);
+    exit;
+}
+if ($a === 'dummy') {
+    if ((string) ($_GET['v'] ?? '') === '1') {
+        $dmats = mats_of((int) $u['id']);
+        if (empty($dmats['dummy_time'])) {
+            flash_set('人偶没时间，先去商城买。');
+        } else {
+            mat_set((int) $u['id'], 'dummy_on', 1);
+            mat_set((int) $u['id'], 'dummy_last', time());
+            mat_set((int) $u['id'], 'dummy_acc', 0);
+            flash_set('陪练人偶启动：每30秒自动群殴6只当前地图的怪。');
+        }
+    } else {
+        db()->prepare('DELETE FROM mats WHERE uid=? AND mat=?')->execute([(int) $u['id'], 'dummy_on']);
+        flash_set('陪练人偶停止。');
+    }
+    header('Location: bag.php?tab=other');
+    exit;
+}
+if ($a === 'usebook') {
+    flash_set(use_skill_book((int) $u['id'], (string) ($_GET['id'] ?? '')));
+    header('Location: skills.php');
+    exit;
+}
 
 wap_start('背包');
 echo '<span class="gold">' . h(fmt_money((int) $u['gold'])) . '</span><br>';
@@ -111,14 +145,14 @@ if ($tab === 'equip') {
     $qmats = quest_mats();
     $any = false;
     foreach ($mats as $mid => $num) {
-        if (isset($qmats[$mid])) {
+        if (isset($qmats[$mid]) || isset(mall_tanks()[$mid]) || mat_hidden($mid)) {
             continue;
         }
         $any = true;
-        echo '·' . h(mat_name($mid)) . 'x' . $num . '<br>';
+        echo '·' . h(mat_name($mid)) . 'x' . $num . ' <a href="bag.php?a=drop&id=' . h($mid) . '&tab=mat">扔</a><br>';
     }
     if (!$any) {
-        echo '<span class="muted">空。刷怪会掉材料，掉率45%。</span>';
+        echo '<span class="muted">空。刷怪会掉材料。</span>';
     }
 } elseif ($tab === 'quest') {
     $qs = quest_state($u);
@@ -134,17 +168,56 @@ if ($tab === 'equip') {
     foreach ($qmats as $mid => $mname) {
         if (!empty($mats[$mid])) {
             $any = true;
-            echo '·' . h($mname) . 'x' . $mats[$mid] . '（无法丢弃）<br>';
+            echo '·' . h($mname) . 'x' . $mats[$mid] . ' <a href="bag.php?a=drop&id=' . h($mid) . '&tab=quest">扔</a><br>';
         }
     }
     if (!$any) {
         echo '<span class="muted">暂无任务物品。</span>';
+    }
+    echo '<div class="hr">--------</div>';
+    echo '技能书：<br>';
+    $hasBook = false;
+    foreach (skill_books() as $bid => $b) {
+        if (empty($mats[$bid])) {
+            continue;
+        }
+        $hasBook = true;
+        echo '·' . h($b['name']) . 'x' . $mats[$bid] . ' <a href="bag.php?a=usebook&id=' . h($bid) . '">使用</a><br>';
+    }
+    if (!$hasBook) {
+        echo '<span class="muted">空。</span>';
     }
 } else {
     echo '回血药：' . (int) $u['potion'] . '<br>';
     if ((int) $u['potion'] > 0) {
         echo '<a href="bag.php?a=drink">喝一瓶药</a><br>';
     }
+    echo '<div class="hr">--------</div>';
+    echo '药罐（点进商城可续）：<br>';
+    $omats = mats_of((int) $u['id']);
+    $hasTank = false;
+    foreach (mall_tanks() as $tid => $t) {
+        if (empty($omats[$tid])) {
+            continue;
+        }
+        $hasTank = true;
+        echo '·' . h($t['name']) . '剩' . $omats[$tid] . '点<br>';
+    }
+    if (!$hasTank) {
+        echo '<span class="muted">空。去<a href="mall.php">商城</a>买罐。</span><br>';
+    }
+    echo '<div class="hr">--------</div>';
+    echo '陪练人偶：';
+    $dmats = mats_of((int) $u['id']);
+    if (!empty($dmats['dummy_time'])) {
+        echo '剩' . h(dummy_fmt((int) $dmats['dummy_time']));
+    } else {
+        echo '没时间';
+    }
+    echo !empty($dmats['dummy_on']) ? '（开着） <a href="bag.php?a=dummy&v=0">停止</a>' : ' <a href="bag.php?a=dummy&v=1">启动</a>';
+    echo '<br>';
+    echo '离线模块：' . (!empty($dmats['offline_on']) ? '已开通（与人偶共用时长）' : '未开通，去<a href="mall.php">商城</a>') . '<br>';
+    echo '<div class="hr">--------</div>';
     echo '<a href="shop.php">去黑市</a>';
 }
 nav_line();

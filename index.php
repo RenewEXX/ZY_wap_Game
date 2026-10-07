@@ -2,6 +2,10 @@
 declare(strict_types=1);
 require __DIR__ . '/includes/bootstrap.php';
 
+if (!empty($_SESSION['account'])) {
+    header('Location: account.php');
+    exit;
+}
 if (!empty($_SESSION['uid'])) {
     header('Location: home.php');
     exit;
@@ -11,10 +15,16 @@ $err = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = trim((string) ($_POST['u'] ?? ''));
     $pass = (string) ($_POST['p'] ?? '');
-    $u = user_by_name($name);
-    if ($u && password_verify($pass, $u['pass'])) {
-        $_SESSION['uid'] = (int) $u['id'];
-        header('Location: home.php');
+    $ok = false;
+    foreach (account_rows($name) as $row) {
+        if (password_verify($pass, $row['pass'])) {
+            $ok = true;
+            break;
+        }
+    }
+    if ($ok) {
+        $_SESSION['account'] = $name;
+        header('Location: account.php');
         exit;
     }
     $err = '名号或口令不对。';

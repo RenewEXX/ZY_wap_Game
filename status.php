@@ -10,6 +10,7 @@ echo h($u['username']) . '　' . (int) $u['lv'] . '级';
 echo '　' . h(job_of($u)['name']) . '(' . h(job_of($u)['skill']) . ')';
 echo '<br>';
 echo '<span class="hp">生命 ' . (int) $u['hp'] . '/' . (int) $u['maxhp'] . '</span><br>';
+echo '<span style="color:#6cf">魔力 ' . (int) ($u['mp'] ?? 0) . '/' . (int) ($u['maxmp'] ?? 0) . '</span><br>';
 echo '攻击 ' . player_atk($u) . '　防御 ' . player_def($u) . '<br>';
 echo '<span class="gold">' . h(fmt_money((int) $u['gold'])) . '</span><br>';
 echo '经验 ' . (int) $u['exp'] . '/' . exp_need((int) $u['lv']) . '<br>';

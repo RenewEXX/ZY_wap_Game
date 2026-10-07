@@ -29,6 +29,7 @@ $qname = equip_qualities()[(int) $e['quality']] ?? '';
 echo '<span style="color:' . $qcolor[(int) $e['quality']] . '">' . h(equip_shortname($e['name'])) . '</span><br>';
 echo '部位：' . h(equip_slots()[$e['slot']] ?? '') . '<br>';
 echo '品级：' . h($qname) . '<br>';
+echo '穿戴要求：' . h(equip_req_text($e)) . '<br>';
 echo '物品等级：' . (int) ($e['item_level'] ?? 1) . '<br>';
 echo '状态：' . ((int) ($e['broken'] ?? 0) === 1 ? '已碎裂' : ($e['pos'] === 'wear' ? '已穿戴' : '背包')) . '<br>';
 echo '强化：+' . (int) ($e['enhance_level'] ?? 0) . ((int) ($e['broken'] ?? 0) === 1 ? '（碎裂）' : '') . '<br>';

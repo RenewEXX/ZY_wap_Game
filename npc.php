@@ -97,7 +97,7 @@ function ch2_choice(array &$u, string $doneFlag, string $resultFlag, string $res
     flash_set($msg);
 }
 
-if ($who === 'reed' && in_array($choice, ['kill', 'save', 'leave'], true) && (int) $u['quest'] === 21) {
+if ($who === 'reed' && in_array($choice, ['kill', 'save', 'leave'], true) && (int) $u['quest'] === 21 && empty(cflags((int) $u['id'])['reed_done'])) {
     if ($choice === 'save') {
         $u['hp'] = max(1, (int) ((int) $u['hp'] / 2));
         ch2_choice($u, 'reed_done', 'reed_result', 'save', 1000, '你按住雷德的影子，生命力从掌心流走（生命减半）。影子退回去了。格温后来对你说：你救了一个不该救的人。但也许，这才是对的。（+10银）');
@@ -106,10 +106,36 @@ if ($who === 'reed' && in_array($choice, ['kill', 'save', 'leave'], true) && (in
     } else {
         ch2_choice($u, 'reed_done', 'reed_result', 'leave', 0, '你转身离开。身后传来一声很长的叹息，然后什么都没了。');
     }
+    $u = user_by_id((int) $u['id']);
+    $qs2 = ch2_quests()[21] + ['id' => 21];
+    if (check_ch2_done((int) $u['id'], $qs2)) {
+        $u['quest'] = 22;
+        quest2_baseline((int) $u['id'], 22);
+        user_save($u);
+        flash_set(flash_get() . '【任务完成】进下一环：深处笔记·莉莉！');
+    }
     header('Location: npc.php?who=reed');
     exit;
 }
-if ($who === 'lily2' && in_array($choice, ['give', 'burn', 'keep'], true) && (int) $u['quest'] === 22) {
+function chx_advance(array $u, int $q, string $doneFlag): void
+{
+    $u = user_by_id((int) $u['id']);
+    $all = $q >= 30 ? ch3_quests() : ch2_quests();
+    $fn = $q >= 30 ? 'check_ch3_done' : 'check_ch2_done';
+    $qs = ($all[$q] ?? null) + ['id' => $q];
+    if (($all[$q] ?? null) && $fn((int) $u['id'], $qs)) {
+        $u['quest'] = $q + 1;
+        if ($q >= 30) {
+            quest3_baseline((int) $u['id'], $q + 1);
+        } else {
+            quest2_baseline((int) $u['id'], $q + 1);
+        }
+        user_save($u);
+        flash_set(flash_get() . '【任务完成】进下一环！');
+    }
+}
+
+if ($who === 'lily2' && in_array($choice, ['give', 'burn', 'keep'], true) && (int) $u['quest'] === 22 && empty(cflags((int) $u['id'])['note_done'])) {
     if ($choice === 'give') {
         ch2_choice($u, 'note_done', 'note_result', 'give', 1000, '格温看完笔记沉默很久：我知道了。她开始调查城主。（+10银）');
     } elseif ($choice === 'burn') {
@@ -119,10 +145,11 @@ if ($who === 'lily2' && in_array($choice, ['give', 'burn', 'keep'], true) && (in
         ch2_choice($u, 'note_done', 'note_result', 'keep', 0, '你把笔记揣进怀里。莉莉笑了笑：也好，知道太多的人，影子都长得快。城主会更加警惕。');
         cflag_set((int) $u['id'], 'lord_alert', 1);
     }
+    chx_advance($u, 22, 'note_done');
     header('Location: npc.php?who=lily2');
     exit;
 }
-if ($who === 'apostle_echo' && in_array($choice, ['ask', 'killfirst', 'free'], true) && (int) $u['quest'] === 23) {
+if ($who === 'apostle_echo' && in_array($choice, ['ask', 'killfirst', 'free'], true) && (int) $u['quest'] === 23 && empty(cflags((int) $u['id'])['apostle_done'])) {
     if ($choice === 'ask') {
         ch2_choice($u, 'apostle_done', 'apostle_result', 'ask', 1000, '使徒说：莉莉是裂隙分化出的人性碎片，是眼睛，也是心。她在学做人。她帮过你，也害过你。她只是一面镜子。（+10银）');
     } elseif ($choice === 'killfirst') {
@@ -132,10 +159,11 @@ if ($who === 'apostle_echo' && in_array($choice, ['ask', 'killfirst', 'free'], t
         ch2_choice($u, 'apostle_done', 'apostle_result', 'free', 0, '你放他去带话。他走远时说：她会听到的。她一直听着。');
         cflag_set((int) $u['id'], 'lily_cold', 1);
     }
+    chx_advance($u, 23, 'apostle_done');
     header('Location: npc.php?who=apostle_echo');
     exit;
 }
-if ($who === 'golem_echo' && in_array($choice, ['see', 'refuse', 'what'], true) && (int) $u['quest'] === 24) {
+if ($who === 'golem_echo' && in_array($choice, ['see', 'refuse', 'what'], true) && (int) $u['quest'] === 24 && empty(cflags((int) $u['id'])['golem_done'])) {
     if ($choice === 'see') {
         ch2_choice($u, 'golem_done', 'golem_result', 'see', 1000, '傀儡的手按在你额头上。你看见枯井边的她，看见祭坛里莫尔甘身后的她，眼神是空的。（+10银）');
     } elseif ($choice === 'refuse') {
@@ -145,10 +173,11 @@ if ($who === 'golem_echo' && in_array($choice, ['see', 'refuse', 'what'], true) 
         ch2_choice($u, 'golem_done', 'golem_result', 'what', 0, '傀儡没有回答，只是把真相按进你脑子里。你踉跄一步，耳朵里全是水声。');
         cflag_set((int) $u['id'], 'lily_cold', 1);
     }
+    chx_advance($u, 24, 'golem_done');
     header('Location: npc.php?who=golem_echo');
     exit;
 }
-if ($who === 'lord' && in_array($choice, ['fake', 'fight', 'asklily'], true) && (int) $u['quest'] === 25) {
+if ($who === 'lord' && in_array($choice, ['fake', 'fight', 'asklily'], true) && (int) $u['quest'] === 25 && empty(cflags((int) $u['id'])['lord_done'])) {
     if ($choice === 'asklily') {
         ch2_choice($u, 'lord_done', 'lord_result', 'ask', 1000, '城主笑：莉莉什么都不知道。她以为在学习人类，其实她只是一把钥匙，一把打开王都地下大门的钥匙。（+10银）');
     } elseif ($choice === 'fake') {
@@ -158,10 +187,11 @@ if ($who === 'lord' && in_array($choice, ['fake', 'fight', 'asklily'], true) && 
         ch2_choice($u, 'lord_done', 'lord_result', 'fight', 0, '你直接开战。他比想象的强，但终究逃了，只留一封信：王都地下，万眼之夜。');
         cflag_set((int) $u['id'], 'lily_doom', 1);
     }
+    chx_advance($u, 25, 'lord_done');
     header('Location: npc.php?who=lord');
     exit;
 }
-if ($who === 'darklily' && in_array($choice, ['slay', 'talk', 'where'], true) && (int) $u['quest'] === 26) {
+if ($who === 'darklily' && in_array($choice, ['slay', 'talk', 'where'], true) && (int) $u['quest'] === 26 && empty(cflags((int) $u['id'])['lily_done'])) {
     if ($choice === 'where') {
         ch2_choice($u, 'lily_done', 'lily_result', 'where', 0, '她说：杀了我，她变人类；理解我，她变眼睛。你决定吧。你选择了前者。她笑着倒下，真正的莉莉哭着出现：我终于……可以哭了。（魔力上限+20）');
         $u['maxmp'] = (int) ($u['maxmp'] ?? 0) + 20;
@@ -174,6 +204,7 @@ if ($who === 'darklily' && in_array($choice, ['slay', 'talk', 'where'], true) &&
         ch2_choice($u, 'lily_done', 'lily_result', 'talk', 0, '你试图理解她。她听着听着，影子翅膀合拢，把你们一起裹进黑暗。等你醒来，祭坛空了。');
         cflag_set((int) $u['id'], 'lily_gone', 1);
     }
+    chx_advance($u, 26, 'lily_done');
     header('Location: npc.php?who=darklily');
     exit;
 }
@@ -197,7 +228,7 @@ if ($who === 'waldon' && $choice === 'start' && (int) $u['quest'] === 28) {
     header('Location: npc.php?who=waldon');
     exit;
 }
-if ($who === 'guard_captain' && in_array($choice, ['kill', 'cut', 'leave'], true) && (int) $u['quest'] === 31) {
+if ($who === 'guard_captain' && in_array($choice, ['kill', 'cut', 'leave'], true) && (int) $u['quest'] === 31 && empty(cflags((int) $u['id'])['gc_done'])) {
     if ($choice === 'cut') {
         ch2_choice($u, 'gc_done', 'gc_result', 'cut', 100, '你切断他身上的银丝。他活下来了，后续会在农场出现报答你。（+1银）');
     } elseif ($choice === 'kill') {
@@ -208,7 +239,7 @@ if ($who === 'guard_captain' && in_array($choice, ['kill', 'cut', 'leave'], true
     header('Location: npc.php?who=guard_captain');
     exit;
 }
-if ($who === 'stringer' && in_array($choice, ['ask', 'kill', 'purify'], true) && (int) $u['quest'] === 37) {
+if ($who === 'stringer' && in_array($choice, ['ask', 'kill', 'purify'], true) && (int) $u['quest'] === 37 && empty(cflags((int) $u['id'])['st_done'])) {
     if ($choice === 'ask') {
         ch2_choice($u, 'st_done', 'st_result', 'ask', 0, '你问：你是谁？牵线者沉默很久：我是国王。你的灵魂被认可了。（魔力上限+50）');
         $u['maxmp'] = (int) ($u['maxmp'] ?? 0) + 50;

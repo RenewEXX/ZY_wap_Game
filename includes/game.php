@@ -305,8 +305,8 @@ function offline_tick(array &$u): void
     $wins = 0;
     $tried = 0;
     $dead = false;
+    $emptyRounds = 0;
     for ($f = 0; $f < $maxFights; $f++) {
-        $tried++;
         $mid = $mlist[array_rand($mlist)];
         $m = $allm[$mid];
         if ($mid === 'echo_rayne' && (int) ($u['quest'] ?? 0) > 14) {
@@ -316,8 +316,10 @@ function offline_tick(array &$u): void
         $isBossOff = ($mid === boss_of_map((string) ($u['loc'] ?? '')));
         $takeOff = spawn_take((string) ($u['loc'] ?? ''), $mid, 0, $isBossOff ? 1 : 6);
         if ($takeOff <= 0) {
+            $emptyRounds++;
             continue;
         }
+        $tried++;
         $numOff = $isBossOff ? 1 : min(6, $takeOff);
         $b = [
             'id' => $mid, 'name' => $m['name'], 'hp' => $m['hp'], 'maxhp' => $m['hp'],
@@ -347,6 +349,9 @@ function offline_tick(array &$u): void
     user_save($u);
     $eq1 = (int) db()->query('SELECT COUNT(*) FROM equips WHERE uid=' . $uid)->fetchColumn();
     $txt = '离线' . dummy_fmt($gap) . '，人偶带打' . $tried . '场胜' . $wins . '场，金+' . fmt_money(max(0, (int) $u['gold'] - $gold0)) . '，装备+' . max(0, $eq1 - $eq0) . '件';
+    if ($wins <= 0 && $emptyRounds > 0) {
+        $txt .= '（图里没怪了，人偶在空转——换个怪多的图挂机）';
+    }
     if ((int) $u['lv'] > $lv0) {
         $txt .= '，连升' . ((int) $u['lv'] - $lv0) . '级';
     }
@@ -1734,9 +1739,59 @@ function equip_primary(string $slot, string $offKind = ''): string
     return ['weapon' => 'atk', 'body' => 'def', 'head' => 'def', 'legs' => 'def', 'gloves' => 'crit', 'shoes' => 'dodge', 'back' => 'dodge', 'ring' => 'hit', 'necklace' => 'energy'][$slot] ?? '';
 }
 
+function equip_reqs(int $itemLevel, int $q): array
+{
+    $lv = max(1, (int) $itemLevel);
+    $req = ['lv' => $lv, 'str' => 0, 'agi' => 0];
+    if ($lv < 300) {
+        return $req;
+    }
+    if ($q >= 4) {
+        // 传奇：主属性取同级预期的55%，力量装要力量，坚毅装要坚毅
+        $main = (int) (($lv - 280) * 1.5 + 120);
+        $req['str'] = $main;
+    } elseif ($q === 3 || ($lv >= 280 && $q >= 0)) {
+        // 套装/史诗：主属性取同级预期的40%
+        $main = (int) (($lv - 280) * 1.1 + 80);
+        $req['str'] = $main;
+    }
+    return $req;
+}
+
+function equip_req_text(array $e): string
+{
+    $t = '需' . (int) ($e['req_lv'] ?? 1) . '级';
+    if ((int) ($e['req_str'] ?? 0) > 0) {
+        $t .= ' 力' . (int) $e['req_str'];
+    }
+    if ((int) ($e['req_agi'] ?? 0) > 0) {
+        $t .= ' 毅' . (int) $e['req_agi'];
+    }
+    return $t;
+}
+
+function equip_can_wear(array $u, array $e): string
+{
+    if ((int) ($u['lv'] ?? 1) < (int) ($e['req_lv'] ?? 1)) {
+        return '等级不够（需' . (int) ($e['req_lv'] ?? 1) . '级）。';
+    }
+    if ((int) ($u['str'] ?? 0) < (int) ($e['req_str'] ?? 0)) {
+        return '力量不够（需' . (int) ($e['req_str'] ?? 0) . '）。';
+    }
+    if ((int) ($u['agi'] ?? 0) < (int) ($e['req_agi'] ?? 0)) {
+        return '坚毅不够（需' . (int) ($e['req_agi'] ?? 0) . '）。';
+    }
+    return '';
+}
+
 function make_equip(int $uid, string $slot, string $base, int $q, int $itemLevel = 1, ?array $legend = null, string $offKind = ''): string
 {
     $toGround = bag_full((int) $uid);
+    $req = equip_reqs(max(1, $itemLevel), $q);
+    $isStr = in_array($slot, ['weapon', 'body', 'head', 'legs', 'gloves'], true);
+    $reqLv = $req['lv'];
+    $reqStr = $isStr ? $req['str'] : 0;
+    $reqAgi = !$isStr ? $req['str'] : 0;
     $primary = equip_primary($slot, $offKind);
     $legendId = (string) ($legend['extra']['k'] ?? '');
     $legendGroup = $legendId !== '' ? (string) (affix_catalog()[$legendId]['data']['group'] ?? '') : '';
@@ -1775,8 +1830,8 @@ function make_equip(int $uid, string $slot, string $base, int $q, int $itemLevel
         $affixes[] = ['id' => $legendId, 'tier' => '特', 'v' => (float) $legend['extra']['v'], 'legend' => true];
     }
     $name = equip_fullname($base, $q);
-    $st = db()->prepare('INSERT INTO equips (uid, slot, name, quality, affixes, pos, item_level) VALUES (?, ?, ?, ?, ?, ?, ?)');
-    $st->execute([$toGround ? 0 : (int) $uid, $slot, $name, $q, json_encode($affixes, JSON_UNESCAPED_UNICODE), $toGround ? 'ground' : '', max(1, $itemLevel)]);
+    $st = db()->prepare('INSERT INTO equips (uid, slot, name, quality, affixes, pos, item_level, req_lv, req_str, req_agi) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+    $st->execute([$toGround ? 0 : (int) $uid, $slot, $name, $q, json_encode($affixes, JSON_UNESCAPED_UNICODE), $toGround ? 'ground' : '', max(1, $itemLevel), $reqLv, $reqStr, $reqAgi]);
     if ($toGround) {
         $eid = (int) db()->lastInsertId();
         $uo = user_by_id((int) $uid);
@@ -2805,6 +2860,13 @@ function wear_equip(int $uid, int $eid): string
     }
     if ((int) ($eq['broken'] ?? 0) === 1) {
         return '碎裂装备不能穿戴。';
+    }
+    $u = user_by_id($uid);
+    if ($u) {
+        $reqErr = equip_can_wear($u, $eq);
+        if ($reqErr !== '') {
+            return $reqErr . '（' . equip_req_text($eq) . '）';
+        }
     }
     $isTwo = in_array(equip_shortname((string) $eq['name']), twohand_bases(), true);
     if ($isTwo) {

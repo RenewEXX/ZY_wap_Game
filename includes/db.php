@@ -16,6 +16,10 @@ function db(): PDO
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
     ]);
     $pdo->exec('PRAGMA foreign_keys = ON');
+    $pdo->exec('PRAGMA journal_mode = WAL');
+    $pdo->exec('PRAGMA synchronous = NORMAL');
+    $pdo->exec('PRAGMA temp_store = MEMORY');
+    $pdo->exec('PRAGMA cache_size = -8000');
     return $pdo;
 }
 
@@ -100,6 +104,8 @@ function db_init(): void
         }
     }
     db()->exec('CREATE INDEX IF NOT EXISTS idx_equips_uid ON equips (uid)');
+    db()->exec('CREATE INDEX IF NOT EXISTS idx_mats_uid ON mats (uid)');
+    db()->exec('CREATE INDEX IF NOT EXISTS idx_spawns_loc ON map_spawns (loc)');
     db()->exec(
         'CREATE TABLE IF NOT EXISTS mails (
             id INTEGER PRIMARY KEY AUTOINCREMENT,

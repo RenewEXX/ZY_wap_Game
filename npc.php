@@ -39,6 +39,10 @@ $people = [
     'spider' => ['name' => '断线人·阿蛛', 'loc' => 'theater', 'text' => '剧场下面还有个母巢，是牵线者死后留下的卵。150级以上、带着母巢入场券（杀牵线者1%掉），我送你进去。45分钟，出来或者变成茧。'],
     'grocer' => ['name' => '菜商·豆豆', 'loc' => 'farm', 'text' => '农场币换好东西！粮食、洗点药、升级卡，每周限量，先到先得。'],
     'rank_c' => ['name' => '榜单老人', 'loc' => 'avenue', 'text' => '王都也看榜。数据全服通用。'],
+    'med_g' => ['name' => '卖药郎中', 'loc' => 'square', 'text' => '跌打损伤找我！绷带草药金疮药圣水，铜币金币都收。记住：药只能战斗中手动喝，死了可别怪药。'],
+    'med_t' => ['name' => '卖药郎中', 'loc' => 'market', 'text' => '白石镇分号，药价全服统一。绷带10%到圣水50%，按血量回，血越多越划算。'],
+    'med_s' => ['name' => '卖药郎中', 'loc' => 'silver_sq', 'text' => '白银城分号。影子会动，血可不能空，备点圣水吧。'],
+    'med_c' => ['name' => '卖药郎中', 'loc' => 'avenue', 'text' => '王都分号。傀儡不流血，你流，备药吧。'],
 ];
 if (!isset($people[$who]) || $people[$who]['loc'] !== $cur) {
     flash_set('这个人不在这里。');
@@ -239,6 +243,11 @@ if ($who === 'spider' && $choice === 'open') {
     header('Location: home.php');
     exit;
 }
+if (in_array($who, ['med_g', 'med_t', 'med_s', 'med_c'], true) && str_starts_with($choice, 'buy')) {
+    flash_set(buy_pct_potion((int) $u['id'], substr($choice, 3)));
+    header('Location: npc.php?who=' . $who);
+    exit;
+}
 if ($who === 'grocer' && str_starts_with($choice, 'ex')) {
     if ((int) $u['quest'] < 38) {
         flash_set('豆豆：农场还没开放，通关第三章再来。');
@@ -318,6 +327,14 @@ if (in_array($who, ['horse_t', 'horse_s', 'horse_g'], true)) {
 }
 if (in_array($who, ['rank_t', 'rank_s', 'rank_g', 'rank_c'], true)) {
     echo '<a href="rank.php">看排行榜（战力/活跃/充值/宠物/赛马）</a><br>';
+}
+if (in_array($who, ['med_g', 'med_t', 'med_s', 'med_c'], true)) {
+    echo '卖药（按最大生命百分比回，战斗中手动喝，不自动）：<br>';
+    $medm = mats_of((int) $u['id']);
+    foreach (pct_potions() as $pmid => $pt) {
+        $pr = $pt['unit'] === 'gold' ? fmt_money($pt['price']) : fmt_money($pt['price']);
+        echo '·【' . h($pt['name']) . '】回' . $pt['pct'] . '% ' . h($pr) . '(有' . (int) ($medm[$pmid] ?? 0) . ') <a href="npc.php?who=' . $who . '&choice=buy' . $pmid . '">买</a><br>';
+    }
 }
 if ($who === 'reed' && (int) $u['quest'] === 21 && empty(cflags((int) $u['id'])['reed_done'])) {
     echo '抉择：<a href="npc.php?who=reed&choice=kill">杀了他</a> <a href="npc.php?who=reed&choice=save">按住影子救他(血减半)</a> <a href="npc.php?who=reed&choice=leave">离开</a><br>';

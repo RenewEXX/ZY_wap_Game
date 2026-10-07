@@ -4,22 +4,25 @@ require __DIR__ . '/includes/bootstrap.php';
 
 header('Content-Type: application/json; charset=utf-8');
 if (empty($_SESSION['uid'])) {
+    session_write_close();
     echo json_encode(['ok' => 0]);
     exit;
 }
-$u = require_login();
-$f = flash_get();
-if ($f !== '') {
-    flash_set($f);
-}
-$note = '';
-$mats = mats_of((int) $u['id']);
-if (!empty($mats['dummy_on'])) {
-    $here = loc((string) ($u['loc'] ?? ''));
-    if (empty($here['monsters'])) {
-        $note = '陪练人偶开着，但这里没怪，去有怪的地图。';
-    } elseif ((int) ($mats['dummy_time'] ?? 0) <= 0) {
+// 轻量探活：不跑任何tick，只查人偶状态，不碰session锁
+$uid = (int) $_SESSION['uid'];
+session_write_close();
+try {
+    $st = db()->prepare('SELECT mat, num FROM mats WHERE uid=? AND mat IN ("dummy_on","dummy_time")');
+    $st->execute([$uid]);
+    $m = [];
+    while ($row = $st->fetch()) {
+        $m[$row['mat']] = (int) $row['num'];
+    }
+    $note = '';
+    if (!empty($m['dummy_on']) && (int) ($m['dummy_time'] ?? 0) <= 0) {
         $note = '陪练人偶没电了，去商城续费。';
     }
+    echo json_encode(['ok' => 1, 'note' => $note]);
+} catch (Throwable $e) {
+    echo json_encode(['ok' => 0]);
 }
-echo json_encode(['ok' => 1, 'flash' => $f, 'note' => $note]);

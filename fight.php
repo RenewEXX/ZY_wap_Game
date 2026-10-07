@@ -261,12 +261,10 @@ if ($a === 'silence') {
     exit;
 }
 
-if ($a === 'drink' && (int) $u['potion'] > 0) {
-    $u['potion'] = (int) $u['potion'] - 1;
-    $heal = min(20, (int) $u['maxhp'] - (int) $u['hp']);
-    $u['hp'] = (int) $u['hp'] + $heal;
-    user_save($u);
-    $b['log'] = '你喝下一瓶药，回复' . $heal . '。';
+if ($a === 'drink') {
+    $pm = (string) ($_GET['m'] ?? 'hp_pct10');
+    $msg = drink_pct_potion($u, $pm);
+    $b['log'] = $msg;
     $b['last'] = time();
     $_SESSION['battle'] = $b;
     header('Location: fight.php');
@@ -304,8 +302,11 @@ foreach (array_slice($history, -6) as $h) {
 echo '</div>';
 echo '<div class="hr">--------</div>';
 echo '<button id="pauseBtn" type="button">暂停</button> ';
-if ((int) $u['potion'] > 0) {
-    echo '<a href="fight.php?a=drink">喝药 (' . (int) $u['potion'] . ')</a> ';
+$pmats = mats_of((int) $u['id']);
+foreach (pct_potions() as $pmid => $pt) {
+    if ((int) ($pmats[$pmid] ?? 0) > 0) {
+        echo '<a href="fight.php?a=drink&m=' . $pmid . '">喝' . h($pt['name']) . '(' . $pt['pct'] . '%×' . (int) $pmats[$pmid] . ')</a> ';
+    }
 }
 echo '<a href="fight.php?a=run">撤</a>';
 nav_line();

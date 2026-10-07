@@ -351,7 +351,7 @@ function offline_tick(array &$u): void
         $txt .= '，连升' . ((int) $u['lv'] - $lv0) . '级';
     }
     if ($dead) {
-        db()->prepare('DELETE FROM mats WHERE uid=? AND mat=?')->execute([$uid, 'dummy_on']);
+        mat_del($uid, 'dummy_on');
         $txt .= '（陪练中倒下，人偶已停）';
     }
     flash_set($txt);
@@ -1338,6 +1338,7 @@ function mat_set(int $uid, string $mat, int $n): void
     if ($st->rowCount() === 0) {
         db()->prepare('INSERT INTO mats (uid, mat, num) VALUES (?, ?, ?)')->execute([(int) $uid, $mat, $n]);
     }
+    mats_bust();
 }
 
 function dummy_fmt(int $sec): string
@@ -1369,7 +1370,7 @@ function dummy_tick(array &$u): void
     $pool = (int) ($mats['dummy_time'] ?? 0);
     mat_set($uid, 'dummy_last', $now);
     if ($pool <= 0) {
-        db()->prepare('DELETE FROM mats WHERE uid=? AND mat=?')->execute([$uid, 'dummy_on']);
+        mat_del($uid, 'dummy_on');
         flash_set('陪练人偶没电了，去商城续费。');
         return;
     }
@@ -1425,7 +1426,7 @@ function dummy_tick(array &$u): void
         }
         $done++;
         if ($r['status'] === 'dead') {
-            db()->prepare('DELETE FROM mats WHERE uid=? AND mat=?')->execute([$uid, 'dummy_on']);
+            mat_del($uid, 'dummy_on');
             user_save($u);
             flash_set('陪练中' . $r['flash']);
             return;
@@ -2013,6 +2014,59 @@ function roll_abx_skillbook(int $uid, string $mid): string
     return skill_books()[$b]['name'];
 }
 
+function pct_potions(): array
+{
+    return [
+        'hp_pct10' => ['name' => '粗布绷带', 'pct' => 10, 'price' => 200, 'unit' => 'silver'],
+        'hp_pct20' => ['name' => '草药膏', 'pct' => 20, 'price' => 600, 'unit' => 'silver'],
+        'hp_pct35' => ['name' => '强效金疮药', 'pct' => 35, 'price' => 3000, 'unit' => 'silver'],
+        'hp_pct50' => ['name' => '圣水', 'pct' => 50, 'price' => 1, 'unit' => 'gold'],
+    ];
+}
+
+function buy_pct_potion(int $uid, string $mid): string
+{
+    $tab = pct_potions()[$mid] ?? null;
+    if ($tab === null) {
+        return '没这种药。';
+    }
+    $u = user_by_id((int) $uid);
+    if ($tab['unit'] === 'gold') {
+        if ((int) ($u['gold'] ?? 0) < $tab['price']) {
+            return '金币不够，要' . fmt_money($tab['price']) . '。';
+        }
+        $u['gold'] = (int) ($u['gold'] ?? 0) - $tab['price'];
+    } else {
+        if ((int) ($u['gold'] ?? 0) < $tab['price']) {
+            return '铜币不够，要' . fmt_money($tab['price']) . '。';
+        }
+        $u['gold'] = (int) ($u['gold'] ?? 0) - $tab['price'];
+    }
+    user_save($u);
+    add_mat((int) $uid, $mid, 1);
+    return '买到【' . $tab['name'] . '】（回' . $tab['pct'] . '%血，战斗中手动喝）。';
+}
+
+function drink_pct_potion(array &$u, string $mid): string
+{
+    $tab = pct_potions()[$mid] ?? null;
+    if ($tab === null) {
+        return '没这种药。';
+    }
+    $mats = mats_of((int) ($u['id'] ?? 0));
+    if ((int) ($mats[$mid] ?? 0) <= 0) {
+        return '你没有【' . $tab['name'] . '】。';
+    }
+    if ((int) $u['hp'] >= (int) $u['maxhp']) {
+        return '血是满的，别浪费药。';
+    }
+    add_mat((int) ($u['id'] ?? 0), $mid, -1);
+    $heal = min((int) $u['maxhp'] - (int) $u['hp'], (int) ((int) $u['maxhp'] * $tab['pct'] / 100));
+    $u['hp'] = (int) $u['hp'] + $heal;
+    user_save($u);
+    return '喝下【' . $tab['name'] . '】，回复' . $heal . '（' . $tab['pct'] . '%）。';
+}
+
 function mat_name(string $id): string
 {
     $all = [];
@@ -2046,6 +2100,10 @@ function mat_name(string $id): string
     if ($id === 'dummy_time') {
         return '挂机时间(秒)';
     }
+    if (isset(pct_potions()[$id])) {
+        $t = pct_potions()[$id];
+        return $t['name'] . '(回' . $t['pct'] . '%)';
+    }
     if ($id === 'offline_mod') {
         return '人偶离线升级模块';
     }
@@ -2075,17 +2133,35 @@ function add_mat(int $uid, string $mat, int $n): void
     if ($st->rowCount() === 0) {
         db()->prepare('INSERT INTO mats (uid, mat, num) VALUES (?, ?, ?)')->execute([(int) $uid, $mat, max(0, $n)]);
     }
+    mats_bust();
+}
+
+function mats_bust(): void
+{
+    $GLOBALS['_mats_gen'] = (int) ($GLOBALS['_mats_gen'] ?? 0) + 1;
 }
 
 function mats_of(int $uid): array
 {
+    static $cache = [];
+    $k = (int) $uid . ':' . (int) ($GLOBALS['_mats_gen'] ?? 0);
+    if (isset($cache[$k])) {
+        return $cache[$k];
+    }
     $st = db()->prepare('SELECT mat, num FROM mats WHERE uid=? ORDER BY mat');
     $st->execute([$uid]);
     $out = [];
     while ($row = $st->fetch()) {
         $out[$row['mat']] = (int) $row['num'];
     }
+    $cache[$k] = $out;
     return $out;
+}
+
+function mat_del(int $uid, string $mat): void
+{
+    db()->prepare('DELETE FROM mats WHERE uid=? AND mat=?')->execute([(int) $uid, $mat]);
+    mats_bust();
 }
 
 function roll_material(int $uid, string $mid): string

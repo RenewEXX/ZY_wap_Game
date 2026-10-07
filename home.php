@@ -65,6 +65,11 @@ if ($to !== '' && isset(locations()[$to])) {
     }
 }
 
+if ((string) ($_GET['a'] ?? '') === 'pickup') {
+    flash_set(ground_pickup((int) $u['id'], (int) ($_GET['id'] ?? 0)));
+    header('Location: home.php');
+    exit;
+}
 $flash = flash_get();
 $here = loc((string) $u['loc']);
 $cur = (string) $u['loc'];
@@ -82,6 +87,24 @@ echo '等级 ' . (int) $u['lv'] . '　';
 echo '<span class="hp">生命 ' . (int) $u['hp'] . '/' . (int) $u['maxhp'] . '</span> <span style="color:#6cf">魔力 ' . (int) ($u['mp'] ?? 0) . '/' . (int) ($u['maxmp'] ?? 0) . '</span>　';
 echo '<span class="gold">' . h(fmt_money((int) $u['gold'])) . '</span><br>';
 echo '所在：' . h($here['name']);
+if ($cur === 'camp') {
+    echo '<br><a href="rest.php?a=sleep">靠着火堆睡觉（回满血蓝）</a>';
+}
+$grounds = ground_list($cur);
+if ($grounds !== []) {
+    echo '<div class="hr">--------</div>地上有东西（1分钟后消失）：<br>';
+    foreach ($grounds as $g) {
+        if (($g['kind'] ?? '') === 'equip') {
+            $st = db()->prepare('SELECT name, quality FROM equips WHERE id=? AND uid=0 AND pos="ground"');
+            $st->execute([(int) $g['ref']]);
+            $e = $st->fetch();
+            $gn = $e ? '【' . equip_shortname((string) $e['name']) . '】' : '【烂掉的装备】';
+        } else {
+            $gn = '【' . mat_name((string) $g['ref']) . '】x' . (int) $g['num'];
+        }
+        echo '·' . h($gn) . ' <a href="home.php?a=pickup&id=' . $g['id'] . '">拾取</a><br>';
+    }
+}
 if ($flash !== '') {
     echo '<div class="warn">' . h($flash) . '</div>';
 }

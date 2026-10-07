@@ -64,6 +64,7 @@ function require_login(): array
     settle_war_rewards();
     spawn_tick();
     settle_horse();
+    ground_tick();
     // 一次性迁移：旧武器栏全部转成新装备
     $oldmap = [
         'rusty' => ['weapon', '生锈铁剑', 1], 'bow' => ['weapon', '猎弓', 1],

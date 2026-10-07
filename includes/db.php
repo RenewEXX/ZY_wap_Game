@@ -333,6 +333,17 @@ function db_init(): void
     );
     db()->exec('CREATE INDEX IF NOT EXISTS idx_hb_race ON horse_bets (race_id)');
     db()->exec(
+        'CREATE TABLE IF NOT EXISTS ground_items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            loc TEXT NOT NULL DEFAULT "",
+            kind TEXT NOT NULL DEFAULT "mat",
+            ref TEXT NOT NULL DEFAULT "",
+            num INTEGER NOT NULL DEFAULT 1,
+            at INTEGER NOT NULL DEFAULT 0
+        )'
+    );
+    db()->exec('CREATE INDEX IF NOT EXISTS idx_ground_loc ON ground_items (loc)');
+    db()->exec(
         'CREATE TABLE IF NOT EXISTS mats (
             uid INTEGER NOT NULL,
             mat TEXT NOT NULL,

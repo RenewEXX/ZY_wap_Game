@@ -263,21 +263,24 @@ function offline_tick(array &$u): void
         return;
     }
     $gap = $now - $seen;
-    if ($gap < 300) {
+    if ($gap < 60) {
         return;
     }
     $pool = (int) ($mats['dummy_time'] ?? 0);
     if ($pool <= 0) {
+        flash_set('离线' . dummy_fmt($gap) . '，离线模块开着但人偶没时间了，去商城续费。');
         return;
     }
     $here = loc((string) ($u['loc'] ?? ''));
     $mlist = $here['monsters'] ?? [];
     if ($mlist === []) {
+        flash_set('离线' . dummy_fmt($gap) . '，你在安全区，人偶没开工。');
         return;
     }
     $allm = monsters();
     $maxFights = min(120, intdiv($gap, 30), intdiv($pool, 30));
     if ($maxFights <= 0) {
+        flash_set('离线' . dummy_fmt($gap) . '，人偶剩' . dummy_fmt($pool) . '不够打一场，去续费。');
         return;
     }
     $eq0 = (int) db()->query('SELECT COUNT(*) FROM equips WHERE uid=' . $uid)->fetchColumn();
@@ -1301,7 +1304,7 @@ function del_read_mail(int $uid): int
 
 function mat_hidden(string $mid): bool
 {
-    return str_starts_with($mid, 'code_') || str_starts_with($mid, 'dummy_') || str_starts_with($mid, 'hatch_') || in_array($mid, ['offline_on', 'seen_last', 'exp_card_until', 'bag_ext5_used', 'bag_ext10_used'], true);
+    return str_starts_with($mid, 'code_') || str_starts_with($mid, 'dummy_') || str_starts_with($mid, 'hatch_') || in_array($mid, ['offline_on', 'seen_last', 'exp_card_until', 'bag_ext5_used', 'bag_ext10_used', 'dummy_total'], true);
 }
 
 function mat_set(int $uid, string $mat, int $n): void
@@ -1407,7 +1410,9 @@ function dummy_tick(array &$u): void
     unset($_SESSION['battle']);
     user_save($u);
     if ($done > 0) {
-        flash_set('陪练人偶带打' . $done . '场：' . $lastFlash);
+        $tot = (int) (mats_of($uid)['dummy_total'] ?? 0) + $done;
+        mat_set($uid, 'dummy_total', $tot);
+        flash_set('人偶本次带打' . $done . '场（累计' . $tot . '场）：' . $lastFlash);
     }
 }
 
@@ -1698,9 +1703,7 @@ function equip_primary(string $slot, string $offKind = ''): string
 
 function make_equip(int $uid, string $slot, string $base, int $q, int $itemLevel = 1, ?array $legend = null, string $offKind = ''): string
 {
-    if (bag_full((int) $uid)) {
-        return '';
-    }
+    $toGround = bag_full((int) $uid);
     $primary = equip_primary($slot, $offKind);
     $legendId = (string) ($legend['extra']['k'] ?? '');
     $legendGroup = $legendId !== '' ? (string) (affix_catalog()[$legendId]['data']['group'] ?? '') : '';
@@ -1739,8 +1742,14 @@ function make_equip(int $uid, string $slot, string $base, int $q, int $itemLevel
         $affixes[] = ['id' => $legendId, 'tier' => '特', 'v' => (float) $legend['extra']['v'], 'legend' => true];
     }
     $name = equip_fullname($base, $q);
-    $st = db()->prepare('INSERT INTO equips (uid, slot, name, quality, affixes, pos, item_level) VALUES (?, ?, ?, ?, ?, "", ?)');
-    $st->execute([$uid, $slot, $name, $q, json_encode($affixes, JSON_UNESCAPED_UNICODE), max(1, $itemLevel)]);
+    $st = db()->prepare('INSERT INTO equips (uid, slot, name, quality, affixes, pos, item_level) VALUES (?, ?, ?, ?, ?, ?, ?)');
+    $st->execute([$toGround ? 0 : (int) $uid, $slot, $name, $q, json_encode($affixes, JSON_UNESCAPED_UNICODE), $toGround ? 'ground' : '', max(1, $itemLevel)]);
+    if ($toGround) {
+        $eid = (int) db()->lastInsertId();
+        $uo = user_by_id((int) $uid);
+        ground_place_equip((string) ($uo['loc'] ?? 'town_sq'), $eid);
+        return '';
+    }
     return $name;
 }
 
@@ -2281,6 +2290,73 @@ function use_bag_ext(int $uid, string $mid): string
     return '背包扩充+' . $slots . '格！现在' . bag_size((int) $uid) . '格。';
 }
 
+function ground_tick(): void
+{
+    $cut = time() - 60;
+    $st = db()->prepare('SELECT id, ref FROM ground_items WHERE kind="equip" AND at<?');
+    $st->execute([$cut]);
+    while ($r = $st->fetch()) {
+        db()->exec('DELETE FROM equips WHERE id=' . (int) $r['ref'] . ' AND uid=0 AND pos="ground"');
+    }
+    db()->prepare('DELETE FROM ground_items WHERE at<?')->execute([$cut]);
+}
+
+function ground_trim(string $loc): void
+{
+    $n = (int) (db()->query('SELECT COUNT(*) FROM ground_items WHERE loc=' . db()->quote($loc))->fetchColumn() ?: 0);
+    if ($n > 50) {
+        db()->exec('DELETE FROM ground_items WHERE id IN (SELECT id FROM ground_items WHERE loc=' . db()->quote($loc) . ' ORDER BY at LIMIT ' . ($n - 50) . ')');
+    }
+}
+
+function ground_place_mat(string $loc, string $mid, int $num): void
+{
+    db()->prepare('INSERT INTO ground_items (loc, kind, ref, num, at) VALUES (?, "mat", ?, ?, ?)')->execute([$loc, $mid, max(1, $num), time()]);
+    ground_trim($loc);
+}
+
+function ground_place_equip(string $loc, int $eid): void
+{
+    db()->prepare('INSERT INTO ground_items (loc, kind, ref, num, at) VALUES (?, "equip", ?, 1, ?)')->execute([$loc, (string) $eid, time()]);
+    ground_trim($loc);
+}
+
+function ground_list(string $loc): array
+{
+    $st = db()->prepare('SELECT * FROM ground_items WHERE loc=? ORDER BY at DESC LIMIT 50');
+    $st->execute([$loc]);
+    return $st->fetchAll();
+}
+
+function ground_pickup(int $uid, int $gid): string
+{
+    $st = db()->prepare('SELECT * FROM ground_items WHERE id=?');
+    $st->execute([$gid]);
+    $g = $st->fetch();
+    if (!$g) {
+        return '地上啥也没有了。';
+    }
+    if (($g['kind'] ?? '') === 'equip') {
+        if (bag_full((int) $uid)) {
+            return '背包满了，捡不起来。';
+        }
+        $st2 = db()->prepare('SELECT * FROM equips WHERE id=? AND uid=0 AND pos="ground"');
+        $st2->execute([(int) $g['ref']]);
+        $e = $st2->fetch();
+        if (!$e) {
+            db()->prepare('DELETE FROM ground_items WHERE id=?')->execute([$gid]);
+            return '那件装备已经烂没了。';
+        }
+        db()->prepare('UPDATE equips SET uid=?, pos="" WHERE id=?')->execute([(int) $uid, (int) $e['id']]);
+        db()->prepare('DELETE FROM ground_items WHERE id=?')->execute([$gid]);
+        _gear_uncache((int) $uid);
+        return '捡起【' . equip_shortname((string) $e['name']) . '】。';
+    }
+    add_mat((int) $uid, (string) $g['ref'], (int) $g['num']);
+    db()->prepare('DELETE FROM ground_items WHERE id=?')->execute([$gid]);
+    return '捡起【' . mat_name((string) $g['ref']) . '】x' . (int) $g['num'] . '。';
+}
+
 function player_resist(array $u, string $el): float
 {
     $gs = gear_stats((int) ($u['id'] ?? 0));
@@ -2661,8 +2737,12 @@ function alloc_stat(int $uid, string $k): string
     if (!$u) {
         return '角色不存在。';
     }
-    if ((int) ($u['s_pts'] ?? 0) <= 0) {
-        return '没有可分配的属性点，升级获取。';
+    $cost = ['str' => 3, 'agi' => 3, 'vit' => 1, 'int' => 1][$k] ?? 0;
+    if ($cost <= 0) {
+        return '只能加力量/坚毅/体质/智慧（力量坚毅3点1次，体质智慧1点1次）。';
+    }
+    if ((int) ($u['s_pts'] ?? 0) < $cost) {
+        return '属性点不够（剩' . (int) ($u['s_pts'] ?? 0) . '点，要' . $cost . '点），升级获取。';
     }
     if ($k === 'str') {
         $u['str'] = (int) ($u['str'] ?? 0) + 1;
@@ -2676,20 +2756,22 @@ function alloc_stat(int $uid, string $k): string
         $u['maxmp'] = (int) ($u['maxmp'] ?? 0) + 3;
         $u['mp'] = (int) ($u['mp'] ?? 0) + 3;
         $u['int'] = (int) ($u['int'] ?? 0) + 1;
-    } else {
-        return '只能加力量/敏捷/体质/智慧。';
     }
-    $u['s_pts'] = (int) ($u['s_pts'] ?? 0) - 1;
+    $u['s_pts'] = (int) ($u['s_pts'] ?? 0) - $cost;
     user_save($u);
-    return '分配成功。';
+    return '分配成功（-' . $cost . '点）。';
 }
 
 function alloc_all_stat(int $uid, string $k): string
 {
     $n = 0;
+    $cost = ['str' => 3, 'agi' => 3, 'vit' => 1, 'int' => 1][$k] ?? 0;
+    if ($cost <= 0) {
+        return '只能加力量/坚毅/体质/智慧。';
+    }
     while (true) {
         $u = user_by_id((int) $uid);
-        if (!$u || (int) ($u['s_pts'] ?? 0) <= 0) {
+        if (!$u || (int) ($u['s_pts'] ?? 0) < $cost) {
             break;
         }
         alloc_stat((int) $uid, $k);
@@ -2698,7 +2780,8 @@ function alloc_all_stat(int $uid, string $k): string
             break;
         }
     }
-    return $n > 0 ? '全部' . $n . '点投入' . ['str' => '力量', 'agi' => '敏捷', 'vit' => '体质', 'int' => '智慧'][$k] . '。' : '没有可分配的属性点。';
+    $nm = ['str' => '力量', 'agi' => '坚毅', 'vit' => '体质', 'int' => '智慧'][$k];
+    return $n > 0 ? '全部投入' . $nm . $n . '次（-' . ($n * $cost) . '点）。' : '属性点不够一次（要' . $cost . '点）。';
 }
 
 function use_reset_potion(int $uid): string

@@ -78,9 +78,32 @@ if ($a === 'drop') {
     if (!in_array($dtab, ['mat', 'quest', 'other'], true)) {
         $dtab = 'mat';
     }
-    db()->prepare('DELETE FROM mats WHERE uid=? AND mat=?')->execute([(int) $u['id'], $did]);
-    flash_set('扔掉了【' . mat_name($did) . '】。');
+    $st = db()->prepare('SELECT num FROM mats WHERE uid=? AND mat=?');
+    $st->execute([(int) $u['id'], $did]);
+    $dn = (int) ($st->fetchColumn() ?: 0);
+    if ($dn > 0) {
+        ground_place_mat((string) ($u['loc'] ?? 'town_sq'), $did, $dn);
+        db()->prepare('DELETE FROM mats WHERE uid=? AND mat=?')->execute([(int) $u['id'], $did]);
+        flash_set('扔地上了【' . mat_name($did) . '】x' . $dn . '（1分钟后消失）。');
+    } else {
+        flash_set('没有这个东西。');
+    }
     header('Location: bag.php?tab=' . $dtab);
+    exit;
+}
+if ($a === 'dropequip') {
+    $st = db()->prepare('SELECT * FROM equips WHERE id=? AND uid=? AND pos=""');
+    $st->execute([(int) ($_GET['id'] ?? 0), (int) $u['id']]);
+    $eq = $st->fetch();
+    if (!$eq) {
+        flash_set('穿着的不能扔，先脱下来。');
+    } else {
+        db()->prepare('UPDATE equips SET uid=0, pos="ground" WHERE id=?')->execute([(int) $eq['id']]);
+        ground_place_equip((string) ($u['loc'] ?? 'town_sq'), (int) $eq['id']);
+        _gear_uncache((int) $u['id']);
+        flash_set('扔地上了【' . equip_shortname((string) $eq['name']) . '】（1分钟后消失）。');
+    }
+    header('Location: bag.php?tab=equip');
     exit;
 }
 if ($a === 'dummy') {
@@ -173,7 +196,7 @@ if ($tab === 'equip') {
         $has = true;
         echo '<a href="equip.php?id=' . $e['id'] . '"><span style="color:' . $qcolor[(int) $e['quality']] . '">' . h(equip_shortname($e['name'])) . '</span></a>[' . h($slots[$e['slot']] ?? '') . ']';
         echo ' +' . (int) ($e['enhance_level'] ?? 0) . ((int) ($e['broken'] ?? 0) === 1 ? '（碎裂）' : '');
-        echo ' <a href="bag.php?a=wear&id=' . $e['id'] . '">穿</a> <a href="bag.php?a=sell&id=' . $e['id'] . '">卖' . h(fmt_money(equip_sell_price((int) $e['quality']))) . '</a><br>';
+        echo ' <a href="bag.php?a=wear&id=' . $e['id'] . '">穿</a> <a href="bag.php?a=sell&id=' . $e['id'] . '">卖' . h(fmt_money(equip_sell_price((int) $e['quality']))) . '</a> <a href="bag.php?a=dropequip&id=' . $e['id'] . '">扔</a><br>';
     }
     if (!$has) {
         echo '<span class="muted">空。去刷怪掉装备吧。</span>';

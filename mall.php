@@ -9,6 +9,17 @@ $goods = mall_goods();
 
 if ($a === 'buy') {
     $n = max(1, min(99, (int) ($_GET['n'] ?? $_POST['n'] ?? 1)));
+    $mats0 = mats_of((int) $u['id']);
+    if ($m === 'bag_ext5' && (int) ($mats0['bag_ext5'] ?? 0) + (int) ($mats0['bag_ext5_used'] ?? 0) + $n > 5) {
+        flash_set('5格扩充终身最多5个（已用+持有），买多了用不了。');
+        header('Location: mall.php' . ($m !== '' ? '?m=' . urlencode($m) : ''));
+        exit;
+    }
+    if ($m === 'bag_ext10' && (int) ($mats0['bag_ext10'] ?? 0) + (int) ($mats0['bag_ext10_used'] ?? 0) + $n > 2) {
+        flash_set('10格扩充终身最多2个（已用+持有），买多了用不了。');
+        header('Location: mall.php' . ($m !== '' ? '?m=' . urlencode($m) : ''));
+        exit;
+    }
     if (!isset($goods[$m])) {
         flash_set('没有这件商品。');
     } elseif ((int) ($u['diamonds'] ?? 0) < $goods[$m]['price'] * $n) {

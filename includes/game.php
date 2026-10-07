@@ -1331,6 +1331,14 @@ function del_read_mail(int $uid): int
     return $n;
 }
 
+function is_usable_item(string $mid): bool
+{
+    if (isset(skill_books()[$mid]) || isset(pet_eggs()[$mid]) || isset(mall_tanks()[$mid]) || isset(pct_potions()[$mid])) {
+        return true;
+    }
+    return in_array($mid, ['exp_card100', 'reset_potion', 'bag_ext5', 'bag_ext10', 'pet_food', 'pet_revive_potion'], true);
+}
+
 function mat_hidden(string $mid): bool
 {
     return str_starts_with($mid, 'code_') || str_starts_with($mid, 'dummy_') || str_starts_with($mid, 'hatch_') || in_array($mid, ['offline_on', 'seen_last', 'exp_card_until', 'bag_ext5_used', 'bag_ext10_used', 'dummy_total'], true);
@@ -1843,31 +1851,9 @@ function make_equip(int $uid, string $slot, string $base, int $q, int $itemLevel
 
 function monster_material(string $mid): array
 {
+    // 只有副本信物怪和矿工铭牌任务掉材料，其他怪一律不掉（卖钱+装备就够了）
     return [
-        'rat' => ['rat_tail', '鼠尾'], 'rat_pack' => ['pack_fang', '鼠群獠牙'], 'slime' => ['slime_gel', '雾凝黏液'],
-        'goblin' => ['goblin_ear', '哥布林耳朵'], 'wolf' => ['wolf_fang', '灰狼牙'],
-        'banshee' => ['banshee_hair', '女妖发丝'], 'wraith' => ['soul_dust', '残魂尘'],
-        'thief' => ['loot_clasp', '赃物铜扣'], 'bee' => ['bee_sting', '巨蜂刺'],
-        'frog' => ['frog_sac', '毒蛙囊'], 'leech' => ['blood_clot', '凝血块'],
-        'ogre' => ['ogre_knuckle', '食人魔指骨'], 'skeleton' => ['bone_shard', '碎骨'],
-        'bat' => ['bat_membrane', '蝠翼膜'], 'ghoul' => ['ghoul_fang', '尸牙'],
-        'cultist' => ['whisper_note', '低语纸条'], 'guard' => ['altar_chip', '祭坛铁片'],
-        'jailer' => ['jail_rivet', '牢门铆钉'], 'knight' => ['knight_sigil', '黑骑士徽记'],
-        'corrupt_rat' => ['corrupt_tail', '腐化鼠尾'], 'deep_bat' => ['deep_membrane', '深渊蝙蝠膜'],
-        'abyss_spore' => ['abyss_spore', '腐化孢子'],
-        'echo_rayne' => ['echo_shard', '雷恩回响碎片'],
-        'shadow_rat' => ['shadow_tail', '影蚀鼠尾'], 'shadow_soldier' => ['shadow_shard', '影子碎片'],
-        'corrupt_guard' => ['corrupt_badge', '腐化徽章'], 'shadow_hound' => ['hound_fang', '影蚀犬牙'],
-        'corrupt_treant' => ['treant_heart', '腐木心'], 'gargoyle' => ['gargoyle_chip', '石像碎片'],
-        'puppet' => ['rune_chip', '符文碎片'], 'apostle' => ['apostle_cloth', '使徒法袍片'],
-        'guardian' => ['guardian_core', '守护者核心'], 'valentin' => ['valentin_seal', '城主印戒'],
-        'dark_lily' => ['dark_hair', '暗影发丝'], 'abyss_eye' => ['eye_pupil', '深渊眼瞳'],
-        'shadow_walker' => ['walker_ash', '行者余烬'], 'corrupt_warder' => ['warder_sigil', '守卫蚀印'],
-        'whisperer' => ['whisper_tongue', '低语之舌'], 'colossus' => ['colossus_eye', '巨像之眼'],
-        'abaddon' => ['abaddon_horn', '君王断角'],
-        'corrupt_rat' => ['corrupt_tail', '腐化鼠尾'], 'deep_bat' => ['deep_membrane', '深渊蝠膜'],
-        'runaway_miner' => ['mine_badge', '矿工铭牌'], 'abyss_spore' => ['abyss_spore', '腐化孢子'],
-        'echo_rayne' => ['echo_shard', '回响碎片'],
+        'runaway_miner' => ['mine_badge', '矿工铭牌'],
     ][$mid] ?? [];
 }
 
@@ -4501,11 +4487,17 @@ function check_ch3_done(int $uid, array $qs): bool
     return true;
 }
 
-function quest3_baseline(int $uid, int $q): void
+function quest3_baseline(int $uid, int $q, bool $force = false): void
 {
     $qs = ch3_quests()[$q] ?? null;
     if (!$qs || empty($qs['need'])) {
         return;
+    }
+    if (!$force) {
+        $ex = cflags((int) $uid)['qb' . $q] ?? null;
+        if (is_array($ex) && $ex !== []) {
+            return;
+        }
     }
     $c = kill_counts((int) $uid);
     $b = [];
@@ -4571,11 +4563,17 @@ function check_ch2_done(int $uid, array $qs): bool
     return true;
 }
 
-function quest2_baseline(int $uid, int $q): void
+function quest2_baseline(int $uid, int $q, bool $force = false): void
 {
     $qs = ch2_quests()[$q] ?? null;
     if (!$qs || empty($qs['need'])) {
         return;
+    }
+    if (!$force) {
+        $ex = cflags((int) $uid)['qb' . $q] ?? null;
+        if (is_array($ex) && $ex !== []) {
+            return;
+        }
     }
     $c = kill_counts((int) $uid);
     $b = [];

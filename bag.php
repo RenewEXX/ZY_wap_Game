@@ -209,7 +209,7 @@ if ($tab === 'equip') {
     $qmats = quest_mats();
     $any = false;
     foreach ($mats as $mid => $num) {
-        if (isset($qmats[$mid]) || isset(mall_tanks()[$mid]) || mat_hidden($mid)) {
+        if (isset($qmats[$mid]) || isset(mall_tanks()[$mid]) || mat_hidden($mid) || is_usable_item($mid)) {
             continue;
         }
         $any = true;

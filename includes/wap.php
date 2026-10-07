@@ -72,6 +72,9 @@ function require_login(): array
     spawn_tick();
     settle_horse();
     ground_tick();
+    if (function_exists('backfill_rank_stats')) {
+        backfill_rank_stats();
+    }
     // 一次性迁移：旧武器栏全部转成新装备
     $oldmap = [
         'rusty' => ['weapon', '生锈铁剑', 1], 'bow' => ['weapon', '猎弓', 1],

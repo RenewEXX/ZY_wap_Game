@@ -106,6 +106,9 @@ function db_init(): void
     db()->exec('CREATE INDEX IF NOT EXISTS idx_equips_uid ON equips (uid)');
     db()->exec('CREATE INDEX IF NOT EXISTS idx_mats_uid ON mats (uid)');
     db()->exec('CREATE INDEX IF NOT EXISTS idx_spawns_loc ON map_spawns (loc)');
+    if (function_exists('backfill_rank_stats')) {
+        backfill_rank_stats();
+    }
     db()->exec(
         'CREATE TABLE IF NOT EXISTS mails (
             id INTEGER PRIMARY KEY AUTOINCREMENT,

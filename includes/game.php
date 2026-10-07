@@ -2573,6 +2573,51 @@ function power_score(array $u): int
     return (int) ($atk * 2 + $def * 1.5 + (int) $u['maxhp'] / 10 + (int) ($u['maxmp'] ?? 0) / 5 + (int) $u['lv'] * 5);
 }
 
+function job_name_of(array $u): string
+{
+    $jid = job_id_of($u);
+    return jobs()[$jid]['name'] ?? '战士';
+}
+
+function backfill_rank_stats(): void
+{
+    // 充值榜：历史兑换魔钻没有单独计数，老号按持有+累计消费反推
+    try {
+        $st = db()->query('SELECT id, diamonds, diamonds_bought FROM users WHERE diamonds_bought<=0 AND diamonds>0');
+        while ($r = $st->fetch()) {
+            $spent = 0;
+            try {
+                $s2 = db()->prepare('SELECT COALESCE(SUM(amount),0) FROM horse_bets WHERE uid=?');
+                $s2->execute([(int) $r['id']]);
+                $spent += (int) $s2->fetchColumn();
+            } catch (Throwable $e) {
+            }
+            db()->prepare('UPDATE users SET diamonds_bought=? WHERE id=?')->execute([(int) $r['diamonds'] + $spent, (int) $r['id']]);
+        }
+    } catch (Throwable $e) {
+    }
+    // 赛马榜：历史盈利没有单独计数，按邮件里的中奖记录反推
+    try {
+        $st = db()->query('SELECT uid, body FROM mails WHERE sender="赛马场" AND title LIKE "%中了%"');
+        $seen = [];
+        while ($r = $st->fetch()) {
+            if (preg_match('/分得(\d+)魔钻/u', (string) ($r['body'] ?? ''), $m)) {
+                $seen[(int) $r['uid']] = ($seen[(int) $r['uid']] ?? 0) + (int) $m[1];
+            }
+        }
+        foreach ($seen as $uid => $tot) {
+            db()->prepare('UPDATE users SET horse_won=? WHERE id=? AND horse_won<=0')->execute([$tot, $uid]);
+        }
+    } catch (Throwable $e) {
+    }
+}
+
+function pet_power(array $p): int
+{
+    $s = pet_stats($p);
+    return (int) ((int) ($s['atk'] ?? 0) * 3 + (int) ($s['def'] ?? 0) * 2 + (int) ($s['maxhp'] ?? 0) / 5 + (int) ($s['spd'] ?? 0) * 2 + (int) ($p['level'] ?? 1) * 5);
+}
+
 function fmt_playtime(int $secs): string
 {
     if ($secs < 3600) {

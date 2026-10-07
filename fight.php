@@ -13,6 +13,14 @@ if ((int) $u['hp'] <= 0) {
         $u['loc'] = 'town_sq';
         $pen .= '副本中倒下，直接传回白石镇广场。';
     }
+    if (in_array((string) ($u['loc'] ?? ''), abx_maps(), true)) {
+        $u['loc'] = 'silver_sq';
+        $pen .= '深渊中倒下，直接传回白银广场。';
+    }
+    if (in_array((string) ($u['loc'] ?? ''), mx_maps(), true)) {
+        $u['loc'] = 'avenue';
+        $pen .= '母巢中倒下，直接传回中央大道。';
+    }
     user_save($u);
     unset($_SESSION['battle']);
     flash_set('你被拖回营地。' . $pen);
@@ -39,6 +47,7 @@ if ($a === 'start' && isset($allm[$mid])) {
     if ($mid === 'echo_rayne' && (int) ($u['quest'] ?? 0) > 14) {
         $m = ['name' => '深渊回响·雷恩', 'hp' => 2000, 'atk' => 85, 'exp' => 2200, 'gold' => 1000];
     }
+    $m = scale_monster($m, $mid, $elite);
     if ($elite === 1 && $mid === boss_of_map((string) $u['loc'])) {
         $elite = 0;
     }

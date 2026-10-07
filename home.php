@@ -114,13 +114,17 @@ $npcLinks = [
     'smith' => [['barton', '老铁匠·巴顿']], 'supply' => [['martha', '杂货商·玛莎']],
     'market' => [['aileen', '药剂师·艾琳']], 'wall' => [['carl', '守卫队长·卡尔']], 'tavern' => [['jack', '酒馆老板·老杰克']],
     'gate' => [['lily', '神秘少女·莉莉']], 'mansion' => [['augustus', '镇长·奥古斯都']], 'church' => [['thomas', '牧师·托马斯']],
-    'town_sq' => [['alice', '修女·爱丽丝'], ['horse_t', '赛马人·老霍']],
+    'town_sq' => [['alice', '修女·爱丽丝'], ['horse_t', '赛马人·老霍'], ['rank_t', '榜单老人']],
     'silver_gate' => [['sentry', '守卫·布雷']], 'sguild' => [['gwen', '会长·格温'], ['gmaster', '公会管理员·霍尔']],
-    'silver_sq' => [['vera', '守渊人·薇拉'], ['horse_s', '赛马人·阿金']],
-    'square' => [['horse_g', '赛马人·豆芽']],
+    'silver_sq' => [['vera', '守渊人·薇拉'], ['horse_s', '赛马人·阿金'], ['rank_s', '榜单老人']],
+    'square' => [['horse_g', '赛马人·豆芽'], ['rank_g', '榜单老人']],
     'guild' => [['greg', '公会接待·格雷']],
     'dsewer1' => [['reed', '守卫·雷德']], 'dsewer2' => [['lily2', '少女·莉莉']],
     'manor' => [['lord', '城主·瓦伦丁']],
+    'noble' => [['guard_captain', '守卫队长']],
+    'theater' => [['stringer', '牵线者'], ['spider', '断线人·阿蛛']],
+    'farm' => [['grocer', '菜商·豆豆']],
+    'avenue' => [['waldon', '线人·瓦尔顿'], ['rank_c', '榜单老人']],
 ];
 foreach ($npcLinks[$cur] ?? [] as [$npcId, $npcName]) {
     echo 'NPC【' . h($npcName) . '】：<a href="npc.php?who=' . h($npcId) . '">对话</a><br>';
@@ -150,6 +154,12 @@ if (in_array($cur, abx_maps(), true)) {
     $stg = abx_stage((int) $u['id']);
     $need = [1 => '蚀影尘×10（影蚀行者）', 2 => '影蚀徽记×10（腐影守卫）', 3 => '低语残章×8（深渊低语者）', 4 => '王座蚀印×5（影蚀巨像）', 5 => '去君王大门，推开君王王座，杀阿巴顿'][min(5, $stg)];
     echo '<div class="warn">影蚀深渊：剩' . gmdate('i:s', max(0, $left)) . '　阶段' . $stg . '/5：' . h($need) . '</div>';
+}
+if (in_array($cur, mx_maps(), true)) {
+    $left = 2700 - (time() - (int) (mats_of((int) $u['id'])['mx_enter'] ?? time()));
+    $stg = mx_stage((int) $u['id']);
+    $need = [1 => '黏丝束×15（银丝蛛）', 2 => '茧壳碎片×15（茧守）', 3 => '织线梭×12（织线者）', 4 => '蛾翼磷粉×12（银丝蛾）', 5 => '守望之瞳×10（巢穴守望）', 6 => '育巢摇篮曲×8（育巢侍女）', 7 => '去母巢之心，杀缠丝之母'][min(7, $stg)];
+    echo '<div class="warn">银丝母巢：剩' . gmdate('i:s', max(0, $left)) . '　阶段' . $stg . '/7：' . h($need) . '</div>';
 }
 if ($cur === 'warfield') {
     echo '<div class="warn">公会战进行中！你本周战功' . war_my_points((int) $u['id']) . '分。杀不同公会的人+1。</div>';

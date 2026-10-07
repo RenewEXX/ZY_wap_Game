@@ -21,7 +21,7 @@ function teleport_cost(string $from, string $to): ?int
 $go = (string) ($_GET['go'] ?? '');
 if ($go !== '' && isset($all[$go])) {
     $cost = teleport_cost($cur, $go);
-    if (in_array($go, dsw_maps(), true) || in_array($go, abx_maps(), true)) {
+    if (in_array($go, dsw_maps(), true) || in_array($go, abx_maps(), true) || in_array($go, mx_maps(), true)) {
         flash_set('副本只能找NPC进，不能传送。');
         header('Location: teleport.php');
         exit;
@@ -96,7 +96,7 @@ foreach (map_regions() as $region => $ids) {
             echo '·' . h($all[$id]['name']) . '(到不了)<br>';
             continue;
         }
-        if (in_array($id, dsw_maps(), true) || in_array($id, abx_maps(), true)) {
+        if (in_array($id, dsw_maps(), true) || in_array($id, abx_maps(), true) || in_array($id, mx_maps(), true)) {
             continue;
         }
         $lvTag = teleport_min_lv($id) > 1 ? '需' . teleport_min_lv($id) . '级' : '';

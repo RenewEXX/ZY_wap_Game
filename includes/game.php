@@ -112,7 +112,7 @@ function locations(): array
             'exits' => ['gate' => '罪渊入口'],
             'monsters' => [],
         ],
-    ] + ch1_locations() + dsw_locations() + ch2_locations() + abx_locations();
+    ] + ch1_locations() + dsw_locations() + ch2_locations() + abx_locations() + ch3_locations() + mx_locations() + farm_locations();
 }
 
 function loc(string $id): array
@@ -169,6 +169,22 @@ function monsters(): array
         'whisperer' => ['name' => '深渊低语者', 'hp' => 4200, 'atk' => 180, 'exp' => 5500, 'gold' => 2000],
         'colossus' => ['name' => '影蚀巨像', 'hp' => 6500, 'atk' => 230, 'exp' => 9000, 'gold' => 3500],
         'abaddon' => ['name' => '影蚀君王阿巴顿', 'hp' => 20000, 'atk' => 340, 'exp' => 30000, 'gold' => 20000],
+        'puppet_guard' => ['name' => '傀儡守卫', 'hp' => 30000, 'atk' => 420, 'exp' => 35000, 'gold' => 18000],
+        'masked_noble' => ['name' => '假面贵族', 'hp' => 44000, 'atk' => 520, 'exp' => 52000, 'gold' => 26000],
+        'ink_puppet' => ['name' => '墨傀儡', 'hp' => 65000, 'atk' => 680, 'exp' => 80000, 'gold' => 38000],
+        'silver_undead' => ['name' => '银丝亡灵', 'hp' => 92000, 'atk' => 840, 'exp' => 115000, 'gold' => 55000],
+        'silver_assassin' => ['name' => '银丝刺客', 'hp' => 125000, 'atk' => 1000, 'exp' => 160000, 'gold' => 75000],
+        'puppet_priest' => ['name' => '牵线牧师', 'hp' => 165000, 'atk' => 1180, 'exp' => 215000, 'gold' => 100000],
+        'star_puppet' => ['name' => '观星傀儡', 'hp' => 210000, 'atk' => 1350, 'exp' => 280000, 'gold' => 130000],
+        'silver_puppet' => ['name' => '银丝傀儡', 'hp' => 235000, 'atk' => 1420, 'exp' => 310000, 'gold' => 150000],
+        'string_puller' => ['name' => '牵线者', 'hp' => 450000, 'atk' => 1900, 'exp' => 900000, 'gold' => 450000],
+        'silk_spider' => ['name' => '银丝蛛', 'hp' => 150000, 'atk' => 1100, 'exp' => 180000, 'gold' => 85000],
+        'cocoon_guard' => ['name' => '茧守', 'hp' => 180000, 'atk' => 1220, 'exp' => 220000, 'gold' => 105000],
+        'thread_weaver' => ['name' => '织线者', 'hp' => 205000, 'atk' => 1320, 'exp' => 260000, 'gold' => 120000],
+        'silk_moth' => ['name' => '银丝蛾', 'hp' => 230000, 'atk' => 1420, 'exp' => 300000, 'gold' => 140000],
+        'nest_watcher' => ['name' => '巢穴守望', 'hp' => 260000, 'atk' => 1520, 'exp' => 340000, 'gold' => 160000],
+        'brood_maiden' => ['name' => '育巢侍女', 'hp' => 300000, 'atk' => 1650, 'exp' => 400000, 'gold' => 190000],
+        'silk_mother' => ['name' => '缠丝之母', 'hp' => 600000, 'atk' => 2200, 'exp' => 1200000, 'gold' => 600000],
     ];
 }
 
@@ -296,6 +312,7 @@ function offline_tick(array &$u): void
         if ($mid === 'echo_rayne' && (int) ($u['quest'] ?? 0) > 14) {
             $m = ['name' => '深渊回响·雷恩', 'hp' => 2000, 'atk' => 85, 'exp' => 2200, 'gold' => 1000];
         }
+        $m = scale_monster($m, $mid, 0);
         $isBossOff = ($mid === boss_of_map((string) ($u['loc'] ?? '')));
         $takeOff = spawn_take((string) ($u['loc'] ?? ''), $mid, 0, $isBossOff ? 1 : 6);
         if ($takeOff <= 0) {
@@ -675,7 +692,7 @@ function war_enemies(int $uid): array
 
 function boss_of_map(string $loc): string
 {
-    static $m = ['boss' => 'knight', 'echo_room' => 'echo_rayne', 'rift' => 'abyss_eye', 'baltar' => 'dark_lily', 'dsw_throne' => 'swamp_king', 'abx_throne' => 'abaddon'];
+    static $m = ['boss' => 'knight', 'echo_room' => 'echo_rayne', 'rift' => 'abyss_eye', 'baltar' => 'dark_lily', 'dsw_throne' => 'swamp_king', 'abx_throne' => 'abaddon', 'theater' => 'string_puller', 'mx_heart' => 'silk_mother'];
     return $m[$loc] ?? '';
 }
 
@@ -854,6 +871,7 @@ function settle_horse(): void
                 $tu = user_by_id((int) $w['uid']);
                 if ($tu) {
                     $tu['diamonds'] = (int) ($tu['diamonds'] ?? 0) + $win;
+                    $tu['horse_won'] = (int) ($tu['horse_won'] ?? 0) + $win;
                     user_save($tu);
                 }
                 send_mail((int) $w['uid'], '赛马场', 'horse', '赌马中了！' . $names[$h] . '拿了' . ['冠', '亚', '季'][$rank] . '军', '你押' . ((int) $w['amount']) . '魔钻，分得' . fmt_diamond($win) . '。', [['t' => 'diamond', 'n' => $win]]);
@@ -890,6 +908,7 @@ function pet_species(): array
         'dragon' => ['name' => '幼龙', 'quality' => 'epic', 'growth' => 1.6, 'atk' => 16, 'def' => 8, 'hp' => 90, 'spd' => 14, 'crit' => 8, 'cd' => 180, 'active' => '火焰吐息', 'mult' => 1.3, 'passive' => '龙鳞：防御+15%', 'source' => '商城砸蛋'],
         'shadow_cat' => ['name' => '影猫', 'quality' => 'rare', 'growth' => 1.3, 'atk' => 10, 'def' => 5, 'hp' => 50, 'spd' => 18, 'crit' => 5, 'cd' => 150, 'active' => '暗影突袭', 'mult' => 1.5, 'passive' => '敏捷：速度+10%', 'source' => '雷恩掉落'],
         'abaddon_spawn' => ['name' => '蚀影幼体', 'quality' => 'epic', 'growth' => 1.6, 'atk' => 14, 'def' => 7, 'hp' => 80, 'spd' => 16, 'crit' => 6, 'cd' => 170, 'active' => '蚀影冲击', 'mult' => 1.4, 'passive' => '君王血脉：攻击+10%', 'source' => '阿巴顿掉落'],
+        'puppet_doll' => ['name' => '傀儡人偶', 'quality' => 'epic', 'growth' => 1.6, 'atk' => 12, 'def' => 8, 'hp' => 70, 'spd' => 12, 'crit' => 6, 'cd' => 160, 'active' => '提线绞杀', 'mult' => 1.4, 'passive' => '丝甲：承伤-10%', 'source' => '牵线者掉落'],
     ];
 }
 
@@ -907,6 +926,7 @@ function pet_eggs(): array
         'egg_ghost' => ['species' => 'ghost', 'name' => '幽灵蛋'],
         'egg_dragon' => ['species' => 'dragon', 'name' => '幼龙蛋'],
         'abaddon_egg' => ['species' => 'abaddon_spawn', 'name' => '阿巴顿之蛋'],
+        'puppet_egg' => ['species' => 'puppet_doll', 'name' => '傀儡人偶蛋'],
         'egg_unknown' => ['species' => '', 'name' => '未知宠物蛋'],
     ];
 }
@@ -1069,7 +1089,7 @@ function pet_hurt(int $uid, int $md): string
         return '';
     }
     $take = max(1, (int) ($md / 2));
-    if ($p['species'] === 'ghost') {
+    if ($p['species'] === 'ghost' || $p['species'] === 'puppet_doll') {
         $take = max(1, (int) ($take * 0.9));
     }
     $stats = pet_stats($p);
@@ -1095,6 +1115,10 @@ function roll_pet_egg(int $uid, string $mid): string
     if ($mid === 'abaddon') {
         add_mat($uid, 'abaddon_egg', 1);
         return '阿巴顿之蛋';
+    }
+    if ($mid === 'string_puller') {
+        add_mat($uid, 'puppet_egg', 1);
+        return '傀儡人偶蛋';
     }
     return '';
 }
@@ -1375,6 +1399,7 @@ function dummy_tick(array &$u): void
         if ($mid === 'echo_rayne' && (int) ($u['quest'] ?? 0) > 14) {
             $m = ['name' => '深渊回响·雷恩', 'hp' => 2000, 'atk' => 85, 'exp' => 2200, 'gold' => 1000];
         }
+        $m = scale_monster($m, $mid, 0);
         $isBossDummy = ($mid === boss_of_map((string) ($u['loc'] ?? '')));
         $takeDummy = spawn_take((string) ($u['loc'] ?? ''), $mid, 0, $isBossDummy ? 1 : 6);
         if ($takeDummy <= 0) {
@@ -1690,6 +1715,13 @@ function monster_drops(string $mid): array
         'whisperer' => ['slot' => 'back', 'base' => '低语披风'],
         'colossus' => ['slot' => 'body', 'base' => '巨像重铠'],
         'abaddon' => ['slot' => 'weapon', 'base' => '君王蚀影刃'],
+        'silk_spider' => ['slot' => 'body', 'base' => '剧场·幕布甲'],
+        'cocoon_guard' => ['slot' => 'legs', 'base' => '剧场·悬丝裤'],
+        'thread_weaver' => ['slot' => 'gloves', 'base' => '剧场·操线手套'],
+        'silk_moth' => ['slot' => 'head', 'base' => '剧场·假面'],
+        'nest_watcher' => ['slot' => 'shoes', 'base' => '剧场·无声靴'],
+        'brood_maiden' => ['slot' => 'offhand', 'off' => 'magic', 'base' => '剧场·提线灯'],
+        'silk_mother' => ['slot' => 'weapon', 'base' => '剧场·断线刃'],
     ][$mid] ?? [];
 }
 
@@ -1785,7 +1817,7 @@ function monster_material(string $mid): array
 
 function quest_mats(): array
 {
-    return ['blackcoin' => '不断下坠的黑币', 'aiden_badge' => '艾登·灰叶的铭牌', 'investigation_record' => '调查队记录', 'augustus_letter' => '镇长的信', 'dsw_ticket' => '黑暗沼泽副本入场券', 'dsw_item1' => '幽暗黏液', 'dsw_item2' => '沼泽之核', 'dsw_item3' => '腐泥之心', 'dsw_item4' => '王座徽记', 'abx_ticket' => '影蚀深渊入场券', 'abx_item1' => '蚀影尘', 'abx_item2' => '影蚀徽记', 'abx_item3' => '低语残章', 'abx_item4' => '王座蚀印'];
+    return ['blackcoin' => '不断下坠的黑币', 'aiden_badge' => '艾登·灰叶的铭牌', 'investigation_record' => '调查队记录', 'augustus_letter' => '镇长的信', 'dsw_ticket' => '黑暗沼泽副本入场券', 'dsw_item1' => '幽暗黏液', 'dsw_item2' => '沼泽之核', 'dsw_item3' => '腐泥之心', 'dsw_item4' => '王座徽记', 'abx_ticket' => '影蚀深渊入场券', 'abx_item1' => '蚀影尘', 'abx_item2' => '影蚀徽记', 'abx_item3' => '低语残章', 'abx_item4' => '王座蚀印', 'capital_badge' => '王都徽章', 'puppet_eye' => '傀儡之眼', 'ch3_proof' => '第三章通关证明', 'mx_ticket' => '银丝母巢入场券', 'mx_item1' => '黏丝束', 'mx_item2' => '茧壳碎片', 'mx_item3' => '织线梭', 'mx_item4' => '蛾翼磷粉', 'mx_item5' => '守望之瞳', 'mx_item6' => '育巢摇篮曲', 'farm_coin' => '农场币', 'seed_green' => '青菜种子', 'seed_radish' => '萝卜种子', 'seed_melon' => '南瓜种子'];
 }
 
 function skill_catalog(): array
@@ -2074,6 +2106,8 @@ function roll_enhance_material(int $uid, string $mid, string $loc = ''): string
         $id = 'enhance_t1';
     } elseif (in_array($loc, abx_maps(), true) && $mid === 'abaddon') {
         $id = 'enhance_t1';
+    } elseif (in_array($loc, mx_maps(), true) && $mid === 'silk_mother') {
+        $id = 'enhance_t2';
     }
     if ($id === '') {
         return '';
@@ -2117,6 +2151,10 @@ function monster_element(string $mid): string
         'gargoyle' => 'thunder', 'puppet' => 'thunder', 'apostle' => 'dark', 'guardian' => 'thunder',
         'valentin' => 'dark', 'dark_lily' => 'dark', 'abyss_eye' => 'dark',
         'shadow_walker' => 'dark', 'corrupt_warder' => 'fire', 'whisperer' => 'dark', 'colossus' => 'thunder', 'abaddon' => 'dark',
+        'puppet_guard' => 'thunder', 'masked_noble' => 'dark', 'ink_puppet' => 'dark', 'silver_undead' => 'ice',
+        'silver_assassin' => 'wind', 'puppet_priest' => 'light', 'star_puppet' => 'fire', 'silver_puppet' => 'thunder', 'string_puller' => 'dark',
+        'silk_spider' => 'wind', 'cocoon_guard' => 'thunder', 'thread_weaver' => 'dark', 'silk_moth' => 'fire',
+        'nest_watcher' => 'ice', 'brood_maiden' => 'dark', 'silk_mother' => 'dark',
     ];
     return $m[$mid] ?? '';
 }
@@ -2357,6 +2395,102 @@ function ground_pickup(int $uid, int $gid): string
     return '捡起【' . mat_name((string) $g['ref']) . '】x' . (int) $g['num'] . '。';
 }
 
+function is_boss_mid(string $mid): bool
+{
+    static $bosses = ['knight', 'echo_rayne', 'swamp_king', 'abaddon', 'abyss_eye', 'dark_lily', 'valentin', 'guardian', 'string_puller', 'silk_mother'];
+    return in_array($mid, $bosses, true);
+}
+
+function is_ch3_mid(string $mid): bool
+{
+    static $mids = ['puppet_guard', 'masked_noble', 'ink_puppet', 'silver_undead', 'silver_assassin', 'puppet_priest', 'star_puppet', 'silver_puppet', 'string_puller', 'silk_spider', 'cocoon_guard', 'thread_weaver', 'silk_moth', 'nest_watcher', 'brood_maiden', 'silk_mother'];
+    return in_array($mid, $mids, true);
+}
+
+function scale_monster(array $m, string $mid, int $elite = 0): array
+{
+    if (is_ch3_mid($mid)) {
+        if ($elite === 1) {
+            $m['hp'] = (int) ($m['hp'] * 1.6);
+            $m['maxhp'] = (int) ($m['hp']);
+            $m['atk'] = (int) ($m['atk'] * 1.4);
+        }
+        return $m;
+    }
+    $lv = min(120, monster_lv($mid));
+    $hm = 1 + $lv * 0.008;
+    $am = 1 + $lv * 0.005;
+    if (is_boss_mid($mid)) {
+        $hm *= 1.5;
+        $am *= 1.3;
+    }
+    if ($elite === 1) {
+        $hm *= 1.6;
+        $am *= 1.4;
+    }
+    $m['hp'] = (int) ($m['hp'] * $hm);
+    $m['maxhp'] = (int) ($m['hp']);
+    $m['atk'] = (int) ($m['atk'] * $am);
+    return $m;
+}
+
+function power_score(array $u): int
+{
+    $gs = gear_stats((int) ($u['id'] ?? 0));
+    $atk = (int) $u['atk'] + (int) ($u['str'] ?? 0) + (int) $gs['atk'];
+    $def = (int) $u['def'] + (int) ($u['agi'] ?? 0) + (int) $gs['def'];
+    return (int) ($atk * 2 + $def * 1.5 + (int) $u['maxhp'] / 10 + (int) ($u['maxmp'] ?? 0) / 5 + (int) $u['lv'] * 5);
+}
+
+function fmt_playtime(int $secs): string
+{
+    if ($secs < 3600) {
+        return max(1, intdiv($secs, 60)) . '分钟';
+    }
+    return round($secs / 3600, 1) . '小时';
+}
+
+function ch3_drops(): array
+{
+    return [
+        'puppet_guard' => [['weapon', '傀儡短剑', ''], ['body', '傀儡皮甲', '']],
+        'masked_noble' => [['weapon', '傀儡短剑', ''], ['body', '傀儡皮甲', '']],
+        'ink_puppet' => [['offhand', '傀儡法杖', 'magic'], ['necklace', '傀儡项链', '']],
+        'silver_undead' => [['weapon', '傀儡大剑', ''], ['body', '傀儡铠甲', '']],
+        'silver_assassin' => [['weapon', '银丝短剑', ''], ['body', '银丝皮甲', '']],
+        'puppet_priest' => [['offhand', '牵线法杖', 'magic'], ['necklace', '牵线项链', '']],
+        'star_puppet' => [['offhand', '星眼法杖', 'magic'], ['necklace', '星眼项链', '']],
+        'silver_puppet' => [['offhand', '银丝法杖', 'magic'], ['necklace', '银丝项链', '']],
+    ];
+}
+
+function roll_ch3_drop(int $uid, string $mid, int $elite = 0): string
+{
+    $tab = ch3_drops()[$mid] ?? null;
+    if ($tab === null) {
+        return '';
+    }
+    $m = 1 + monster_lv($mid) * 0.03 + min(200, gear_stats($uid)['magic_find']) / 100;
+    $one = function () use ($uid, $mid, $tab, $m) {
+        if (mt_rand() / mt_getrandmax() > 0.05 * $m) {
+            return '';
+        }
+        $r = mt_rand(1, 100);
+        $q = $r <= 55 ? 0 : ($r <= 87 ? 1 : 2);
+        $e = $tab[array_rand($tab)];
+        return make_equip($uid, $e[0], $e[1], $q, monster_lv($mid), null, $e[2]);
+    };
+    $a = $one();
+    if ($elite === 1) {
+        $b = $one();
+        if ($a !== '' && $b !== '') {
+            return $a . '】【' . $b;
+        }
+        return $a . $b;
+    }
+    return (string) $a;
+}
+
 function player_resist(array $u, string $el): float
 {
     $gs = gear_stats((int) ($u['id'] ?? 0));
@@ -2372,6 +2506,10 @@ function monster_dodge(string $mid): float
 
 function roll_drop(int $uid, string $mid, int $elite = 0): string
 {
+    $ch3 = roll_ch3_drop($uid, $mid, $elite);
+    if ($ch3 !== '' || isset(ch3_drops()[$mid])) {
+        return $ch3;
+    }
     $t = monster_drops($mid);
     if ($t === []) {
         return '';
@@ -2455,6 +2593,28 @@ function gear_stats(int $uid): array
     if (in_array('深渊蚀甲', $worn, true) && in_array('深渊腿甲', $worn, true) && in_array('深渊护手', $worn, true)) {
         $s['atk'] += 25;
         $s['def'] += 15;
+    }
+    $theater = 0;
+    foreach ($worn as $wn) {
+        if (str_starts_with($wn, '剧场·')) {
+            $theater++;
+        }
+    }
+    if ($theater >= 3) {
+        $s['atk_pct'] += 15;
+    }
+    if ($theater >= 5) {
+        $s['element'] += 80;
+    }
+    if ($theater >= 7) {
+        $s['damage_reduction'] += 12;
+        $s['skill_damage'] += 20;
+    }
+    $qu = db()->prepare('SELECT quest FROM users WHERE id=?');
+    $qu->execute([$uid]);
+    if ((int) ($qu->fetchColumn() ?: 0) >= 38) {
+        $s['atk_pct'] += 5;
+        $s['all_attr'] += 10;
     }
     $cache[$uid] = $s;
     return $s;
@@ -2677,6 +2837,10 @@ function monster_lv(string $mid): int
         'gargoyle' => 50, 'puppet' => 55, 'apostle' => 45, 'guardian' => 55, 'valentin' => 62, 'dark_lily' => 66, 'abyss_eye' => 70,
         'shadow_walker' => 55, 'corrupt_warder' => 65, 'whisperer' => 80, 'colossus' => 95, 'abaddon' => 120,
         'dark_slime' => 20, 'swamp_slime' => 21, 'swamp_king' => 25,
+        'puppet_guard' => 130, 'masked_noble' => 150, 'ink_puppet' => 180, 'silver_undead' => 210,
+        'silver_assassin' => 240, 'puppet_priest' => 270, 'star_puppet' => 300, 'silver_puppet' => 310, 'string_puller' => 320,
+        'silk_spider' => 280, 'cocoon_guard' => 295, 'thread_weaver' => 305, 'silk_moth' => 315,
+        'nest_watcher' => 325, 'brood_maiden' => 335, 'silk_mother' => 340,
     ];
     return $lv[$mid] ?? 1;
 }
@@ -3058,6 +3222,16 @@ function battle_round(array &$u, array &$b, string $mode): array
                 $b['drops'][] = $aq;
                 $log .= '掉落【' . $aq . '】！';
             }
+            $mx = roll_mx_ticket((int) $u['id'], (string) ($b['id'] ?? ''));
+            if ($mx !== '') {
+                $b['drops'][] = $mx;
+                $log .= '掉落【' . $mx . '】！';
+            }
+            $mq = roll_mx_quest((int) $u['id'], (string) ($b['id'] ?? ''));
+            if ($mq !== '') {
+                $b['drops'][] = $mq;
+                $log .= '掉落【' . $mq . '】！';
+            }
             $sb = roll_abx_skillbook((int) $u['id'], (string) ($b['id'] ?? ''));
             if ($sb !== '') {
                 $b['drops'][] = $sb;
@@ -3102,6 +3276,24 @@ function battle_round(array &$u, array &$b, string $mode): array
         $aq = roll_abx_quest((int) $u['id'], (string) ($b['id'] ?? ''));
         if ($aq !== '') {
             $b['drops'][] = $aq;
+        }
+        $mx = roll_mx_ticket((int) $u['id'], (string) ($b['id'] ?? ''));
+        if ($mx !== '') {
+            $b['drops'][] = $mx;
+        }
+        $mq = roll_mx_quest((int) $u['id'], (string) ($b['id'] ?? ''));
+        if ($mq !== '') {
+            $b['drops'][] = $mq;
+        }
+        if ((string) ($b['id'] ?? '') === 'string_puller') {
+            add_mat((int) $u['id'], 'capital_badge', 1);
+            add_mat((int) $u['id'], 'puppet_eye', 1);
+            $b['drops'][] = '王都徽章';
+            $b['drops'][] = '傀儡之眼';
+            $peg2 = roll_pet_egg((int) $u['id'], 'string_puller');
+            if ($peg2 !== '') {
+                $b['drops'][] = $peg2;
+            }
         }
         $sb = roll_abx_skillbook((int) $u['id'], (string) ($b['id'] ?? ''));
         if ($sb !== '') {
@@ -3237,6 +3429,35 @@ function battle_round(array &$u, array &$b, string $mode): array
                 $txt .= '。【' . $qs2['name'] . '】' . quest_progress2_text((int) $u['id'], $qs2);
             }
         }
+        if ($cur >= 30 && $cur <= 37) {
+            $qs3 = ch3_quests()[$cur] + ['id' => $cur];
+            if (check_ch3_done((int) $u['id'], $qs3)) {
+                $u['quest'] = $cur + 1;
+                $u['gold'] = (int) $u['gold'] + [30 => 2000, 31 => 3000, 32 => 4000, 33 => 5000, 34 => 6000, 35 => 7000, 36 => 8000, 37 => 10000][$cur];
+                $gear3 = [31 => ['weapon', '傀儡短剑', 150], 32 => ['body', '傀儡皮甲', 180], 33 => ['weapon', '傀儡长弓', 210], 34 => ['body', '傀儡铠甲', 240], 35 => ['back', '傀儡斗篷', 270]][$cur] ?? null;
+                if ($gear3 !== null) {
+                    $gn3 = make_equip((int) $u['id'], $gear3[0], $gear3[1], 2, $gear3[2]);
+                    if ($gn3 !== '') {
+                        $txt .= '。获得【' . $gn3 . '】！';
+                    }
+                }
+                if ($cur === 36) {
+                    add_mat((int) $u['id'], 'puppet_eye', 1);
+                    $txt .= '。获得【傀儡之眼】！';
+                }
+                if ($cur === 37) {
+                    add_mat((int) $u['id'], 'capital_badge', 1);
+                    add_mat((int) $u['id'], 'ch3_proof', 1);
+                    $txt .= '。第三章·傀儡之夜完成！影子融入体内（影子伙伴：全属性+5%）。获得【王都徽章】，农场开启，去王都农场种菜！';
+                } else {
+                    $txt .= '。本环完成，进下一环！';
+                }
+                quest3_baseline((int) $u['id'], $cur + 1);
+                user_save($u);
+            } else {
+                $txt .= '。【' . $qs3['name'] . '】' . quest_progress3_text((int) $u['id'], $qs3);
+            }
+        }
         if ($bid === 'ogre' && (int) ($u['quest'] ?? 0) === 3) {
             $u['quest'] = 10;
             $base = job_skillset(job_id_of($u))[0];
@@ -3312,6 +3533,9 @@ function battle_round(array &$u, array &$b, string $mode): array
         } elseif (in_array((string) ($u['loc'] ?? ''), abx_maps(), true)) {
             $u['loc'] = 'silver_sq';
             $pen .= '深渊中倒下，直接传回白银广场。';
+        } elseif (in_array((string) ($u['loc'] ?? ''), mx_maps(), true)) {
+            $u['loc'] = 'avenue';
+            $pen .= '母巢中倒下，直接传回中央大道。';
         }
         user_save($u);
         unset($_SESSION['battle']);
@@ -3398,6 +3622,8 @@ function map_regions(): array
         '矿坑·灰烬中的低语' => ['mine_gate', 'mine1', 'mine2', 'mine3', 'echo_room'],
         '深渊旧道' => ['tunnel', 'shoal', 'altar', 'prison', 'shop', 'camp'],
         '白银城·影蚀之潮' => ['silver_gate', 'silver_sq', 'sguild', 'dsewer1', 'dsewer2', 'bmine1', 'bmine2', 'sforest', 'manor', 'baltar', 'rift'],
+        '王都·傀儡之夜' => ['capital_gate', 'avenue', 'noble', 'library', 'ctomb', 'slum', 'cathedral', 'observatory', 'theater'],
+        '银丝母巢' => ['mx_gate', 'mx_path', 'mx_hall', 'mx_depth', 'mx_nest', 'mx_heart'],
         '公会战场' => ['warfield'],
     ];
 }
@@ -3502,6 +3728,12 @@ function teleport_min_lv(string $loc): int
     }
     if (in_array($loc, ch2_maps(), true)) {
         return 30;
+    }
+    if (in_array($loc, ch3_maps(), true)) {
+        return 110;
+    }
+    if (in_array($loc, mx_maps(), true)) {
+        return 150;
     }
     if ($loc === 'warfield') {
         return 30;
@@ -3611,6 +3843,49 @@ function roll_abx_ticket(int $uid, string $mid): string
     return '影蚀深渊入场券';
 }
 
+function roll_mx_ticket(int $uid, string $mid): string
+{
+    if ($mid === 'string_puller' && mt_rand(1, 100) <= 1) {
+        add_mat($uid, 'mx_ticket', 1);
+        return '银丝母巢入场券';
+    }
+    if ($mid === 'silk_mother' && mt_rand(1, 100) <= 5) {
+        add_mat($uid, 'mx_ticket', 1);
+        return '银丝母巢入场券';
+    }
+    return '';
+}
+
+function roll_mx_quest(int $uid, string $mid): string
+{
+    $stage = mx_stage($uid);
+    $give = '';
+    if ($mid === 'silk_spider' && $stage === 1) {
+        $give = 'mx_item1';
+    } elseif ($mid === 'cocoon_guard' && $stage === 2) {
+        $give = 'mx_item2';
+    } elseif ($mid === 'thread_weaver' && $stage === 3) {
+        $give = 'mx_item3';
+    } elseif ($mid === 'silk_moth' && $stage === 4) {
+        $give = 'mx_item4';
+    } elseif ($mid === 'nest_watcher' && $stage === 5) {
+        $give = 'mx_item5';
+    } elseif ($mid === 'brood_maiden' && $stage === 6) {
+        $give = 'mx_item6';
+    }
+    if ($give === '') {
+        return '';
+    }
+    add_mat($uid, $give, 1);
+    $need = ['mx_item1' => 15, 'mx_item2' => 15, 'mx_item3' => 12, 'mx_item4' => 12, 'mx_item5' => 10, 'mx_item6' => 8][$give];
+    $out = quest_mats()[$give] . '+1';
+    if ((mats_of($uid)[$give] ?? 0) >= $need) {
+        mat_set($uid, 'mx_stage', $stage + 1);
+        $out .= '（本轮完成，下一阶段开启！）';
+    }
+    return $out;
+}
+
 function roll_abx_quest(int $uid, string $mid): string
 {
     $stage = abx_stage($uid);
@@ -3640,17 +3915,19 @@ function roll_abx_quest(int $uid, string $mid): string
 function dungeon_tick(array &$u): void
 {
     $loc = (string) ($u['loc'] ?? '');
-    if (!in_array($loc, dsw_maps(), true) && !in_array($loc, abx_maps(), true)) {
+    if (!in_array($loc, dsw_maps(), true) && !in_array($loc, abx_maps(), true) && !in_array($loc, mx_maps(), true)) {
         return;
     }
     $inAbx = in_array($loc, abx_maps(), true);
+    $inMx = in_array($loc, mx_maps(), true);
     $mats = mats_of((int) ($u['id'] ?? 0));
-    $enter = (int) ($mats[$inAbx ? 'abx_enter' : 'dsw_enter'] ?? time());
-    if (time() - $enter > 1800) {
+    $enter = (int) ($mats[$inMx ? 'mx_enter' : ($inAbx ? 'abx_enter' : 'dsw_enter')] ?? time());
+    $limit = $inMx ? 2700 : 1800;
+    if (time() - $enter > $limit) {
         unset($_SESSION['battle']);
-        $u['loc'] = $inAbx ? 'silver_sq' : 'town_sq';
+        $u['loc'] = $inMx ? 'avenue' : ($inAbx ? 'silver_sq' : 'town_sq');
         user_save($u);
-        flash_set('30分钟到了，你被传回' . ($inAbx ? '白银广场' : '白石镇广场') . '。');
+        flash_set(($inMx ? '45' : '30') . '分钟到了，你被传回' . ($inMx ? '中央大道' : ($inAbx ? '白银广场' : '白石镇广场')) . '。');
     }
 }
 
@@ -3658,7 +3935,7 @@ function ch2_locations(): array
 {
     $m = [];
     $m['silver_gate'] = ['name' => '白银城门', 'desc' => '灰白城墙高耸。守卫面朝内，影子被夕阳拉得很长，像黑色的手指。', 'exits' => ['gate' => '罪渊入口', 'silver_sq' => '白银广场'], 'monsters' => []];
-    $m['silver_sq'] = ['name' => '白银广场', 'desc' => '天黑后街上没人。每一道影子都可能自己动。', 'exits' => ['silver_gate' => '白银城门', 'sguild' => '公会大厅', 'dsewer1' => '下水道一层', 'warfield' => '荒芜战场'], 'monsters' => []];
+    $m['silver_sq'] = ['name' => '白银广场', 'desc' => '天黑后街上没人。每一道影子都可能自己动。', 'exits' => ['silver_gate' => '白银城门', 'sguild' => '公会大厅', 'dsewer1' => '下水道一层', 'warfield' => '荒芜战场', 'capital_gate' => '王都城门'], 'monsters' => []];
     $m['warfield'] = ['name' => '荒芜战场', 'desc' => '公会战专用。周末晚上，这里只讲拳头。杀不同公会的人+1战功。', 'exits' => ['silver_sq' => '白银广场'], 'monsters' => []];
     $m['sguild'] = ['name' => '公会大厅', 'desc' => '油灯照不亮的墙上挂着白银城地图，红圈几十个。格温在桌后等你。', 'exits' => ['silver_sq' => '白银广场'], 'monsters' => []];
     $m['dsewer1'] = ['name' => '下水道一层', 'desc' => '水没脚踝，铁锈混腐肉的气味。白眼睛的影蚀鼠从四面涌来。', 'exits' => ['silver_sq' => '白银广场', 'dsewer2' => '下水道二层'], 'monsters' => ['shadow_rat']];
@@ -3675,6 +3952,138 @@ function ch2_locations(): array
 function ch2_maps(): array
 {
     return ['silver_gate', 'silver_sq', 'sguild', 'dsewer1', 'dsewer2', 'bmine1', 'bmine2', 'sforest', 'manor', 'baltar', 'rift'];
+}
+
+function ch3_locations(): array
+{
+    $m = [];
+    $m['capital_gate'] = ['name' => '王都城门', 'desc' => '城墙高耸入云。守卫动作僵硬，像被线提着，关节处有细小的银丝连着天空。', 'exits' => ['silver_sq' => '白银广场', 'avenue' => '中央大道'], 'monsters' => []];
+    $m['avenue'] = ['name' => '王都中央大道', 'desc' => '市民走路没有声音，关节咔咔作响。瓦尔顿在街角等你：真正的王都二十年前就没了。', 'exits' => ['capital_gate' => '王都城门', 'noble' => '贵族区', 'library' => '皇家图书馆', 'slum' => '贫民窟'], 'monsters' => ['puppet_guard']];
+    $m['noble'] = ['name' => '贵族区', 'desc' => '舞会彻夜不停。贵族们脚不沾地，被银丝吊在天花板上跳舞。', 'exits' => ['avenue' => '中央大道', 'cathedral' => '光明大教堂'], 'monsters' => ['masked_noble']];
+    $m['library'] = ['name' => '皇家图书馆', 'desc' => '满架子全是剧本，记载着王都每一天该发生什么。墨傀儡在吃掉关于真王都的记载。', 'exits' => ['avenue' => '中央大道', 'ctomb' => '皇家陵墓'], 'monsters' => ['ink_puppet']];
+    $m['ctomb'] = ['name' => '皇家陵墓', 'desc' => '所有棺材都是空的。国王雷金纳德根本没有葬在这里。', 'exits' => ['library' => '皇家图书馆'], 'monsters' => ['silver_undead']];
+    $m['slum'] = ['name' => '贫民窟', 'desc' => '黑市里有人在偷偷剪断银丝。剪线人的刀很快，刺客的刀更快。', 'exits' => ['avenue' => '中央大道', 'observatory' => '皇家天文台'], 'monsters' => ['silver_assassin']];
+    $m['cathedral'] = ['name' => '光明大教堂', 'desc' => '大主教塞缪尔被银丝吊了二十年，还在布道。牵线牧师说：莉莉是钥匙，也是锁。', 'exits' => ['noble' => '贵族区', 'theater' => '傀儡剧场'], 'monsters' => ['puppet_priest']];
+    $m['observatory'] = ['name' => '皇家天文台', 'desc' => '观星者白天看星星，晚上看深渊。牵线者已经不满足于傀儡剧场，它要整个王国都变成舞台。', 'exits' => ['slum' => '贫民窟', 'theater' => '傀儡剧场'], 'monsters' => ['star_puppet']];
+    $m['theater'] = ['name' => '王宫地下·傀儡剧场', 'desc' => '巨大的舞台。中央吊着真正的国王雷金纳德。牵线者从天花板降下来：我不是深渊，我是国王。', 'exits' => ['cathedral' => '大教堂', 'observatory' => '皇家天文台'], 'monsters' => ['silver_puppet', 'string_puller']];
+    return $m;
+}
+
+function ch3_maps(): array
+{
+    return ['capital_gate', 'avenue', 'noble', 'library', 'ctomb', 'slum', 'cathedral', 'observatory', 'theater'];
+}
+
+function mx_locations(): array
+{
+    $m = [];
+    $m['mx_gate'] = ['name' => '银丝母巢·入口', 'desc' => '银丝织成的茧门，一收一缩像在呼吸。断线人说：里面是牵线者死后留下的卵，45分钟，出来或者变成茧。', 'exits' => ['mx_path' => '黏丝小径'], 'monsters' => ['silk_spider']];
+    $m['mx_path'] = ['name' => '黏丝小径', 'desc' => '脚下全是黏丝。茧守从茧里睁开眼睛。', 'exits' => ['mx_gate' => '入口', 'mx_hall' => '织丝大厅'], 'monsters' => ['silk_spider', 'cocoon_guard']];
+    $m['mx_hall'] = ['name' => '织丝大厅', 'desc' => '穹顶垂下上万根丝。织线者在丝上爬，修补着破掉的茧。', 'exits' => ['mx_path' => '黏丝小径', 'mx_depth' => '巢穴深处'], 'monsters' => ['cocoon_guard', 'thread_weaver']];
+    $m['mx_depth'] = ['name' => '巢穴深处', 'desc' => '银丝蛾的磷粉像雪。守望者站在茧堆上，一动不动。', 'exits' => ['mx_hall' => '织丝大厅', 'mx_nest' => '育巢'], 'monsters' => ['thread_weaver', 'silk_moth', 'nest_watcher']];
+    $m['mx_nest'] = ['name' => '育巢', 'desc' => '育巢侍女抱着卵唱歌。歌声越好听，丝勒得越紧。', 'exits' => ['mx_depth' => '巢穴深处', 'mx_heart' => '母巢之心'], 'monsters' => ['nest_watcher', 'brood_maiden']];
+    $m['mx_heart'] = ['name' => '母巢之心', 'desc' => '缠丝之母盘踞在巨茧上。它是牵线者死后留下的最后的卵，孵出来就是下一个牵线者。', 'exits' => ['mx_nest' => '育巢'], 'monsters' => ['silk_mother']];
+    return $m;
+}
+
+function mx_maps(): array
+{
+    return ['mx_gate', 'mx_path', 'mx_hall', 'mx_depth', 'mx_nest', 'mx_heart'];
+}
+
+function mx_stage(int $uid): int
+{
+    return max(1, min(7, (int) (mats_of($uid)['mx_stage'] ?? 1)));
+}
+
+function farm_locations(): array
+{
+    $m = [];
+    $m['farm'] = ['name' => '王都农场', 'desc' => '牵线者死后，银丝化成了肥料。守卫队长（如果你救了他）在这里帮你看菜。种菜收菜赚农场币。', 'exits' => ['avenue' => '中央大道'], 'monsters' => []];
+    return $m;
+}
+
+function farm_crops(): array
+{
+    return [
+        'green' => ['name' => '青菜', 'seed' => 'seed_green', 'cost' => 500, 'grow' => 600, 'coin' => 5],
+        'radish' => ['name' => '萝卜', 'seed' => 'seed_radish', 'cost' => 2000, 'grow' => 1800, 'coin' => 12],
+        'melon' => ['name' => '南瓜', 'seed' => 'seed_melon', 'cost' => 5000, 'grow' => 3600, 'coin' => 25],
+    ];
+}
+
+function farm_plots(int $uid): array
+{
+    $d = cflags((int) $uid)['farm'] ?? null;
+    if (!is_array($d)) {
+        $d = [];
+    }
+    return $d;
+}
+
+function farm_plant(int $uid, int $plot, string $crop): string
+{
+    $crops = farm_crops();
+    if (!isset($crops[$crop]) || $plot < 1 || $plot > 4) {
+        return '没这种种法。';
+    }
+    $d = farm_plots((int) $uid);
+    if (!empty($d[$plot])) {
+        return '这块地已经种了。';
+    }
+    $c = $crops[$crop];
+    $u = user_by_id((int) $uid);
+    if ((int) ($u['gold'] ?? 0) < $c['cost']) {
+        return '钱不够，' . $c['name'] . '种子要' . fmt_money($c['cost']) . '。';
+    }
+    $u['gold'] = (int) ($u['gold'] ?? 0) - $c['cost'];
+    user_save($u);
+    $d[$plot] = ['crop' => $crop, 'at' => time()];
+    cflag_set((int) $uid, 'farm', $d);
+    return '种下' . $c['name'] . '，' . dummy_fmt($c['grow']) . '后收菜。';
+}
+
+function farm_harvest(int $uid, int $plot): string
+{
+    $d = farm_plots((int) $uid);
+    if (empty($d[$plot])) {
+        return '这块地是空的。';
+    }
+    $c = farm_crops()[$d[$plot]['crop']] ?? null;
+    if ($c === null) {
+        unset($d[$plot]);
+        cflag_set((int) $uid, 'farm', $d);
+        return '这茬坏了，清掉了。';
+    }
+    if (time() - (int) $d[$plot]['at'] < $c['grow']) {
+        return $c['name'] . '还没熟，剩' . dummy_fmt($c['grow'] - (time() - (int) $d[$plot]['at'])) . '。';
+    }
+    unset($d[$plot]);
+    cflag_set((int) $uid, 'farm', $d);
+    add_mat((int) $uid, 'farm_coin', $c['coin']);
+    return '收获' . $c['name'] . '！+' . $c['coin'] . '农场币。';
+}
+
+function farm_exchange(int $uid, string $m): string
+{
+    $tab = ['petfood' => ['pet_food', 10, 20, '宠物粮食'], 'expcard' => ['exp_card100', 100, 2, '升级卡100型'], 'reset' => ['reset_potion', 200, 1, '属性洗点药']];
+    if (!isset($tab[$m])) {
+        return '不换这个。';
+    }
+    [$give, $cost, $limit, $nm] = $tab[$m];
+    $wk = 'fx_' . $m . '_' . war_week();
+    $used = (int) (cflags((int) $uid)[$wk] ?? 0);
+    if ($used >= $limit) {
+        return $nm . '本周换满了（限' . $limit . '）。';
+    }
+    $mats = mats_of((int) $uid);
+    if ((int) ($mats['farm_coin'] ?? 0) < $cost) {
+        return '农场币不够，要' . $cost . '。';
+    }
+    add_mat((int) $uid, 'farm_coin', -$cost);
+    add_mat((int) $uid, $give, 1);
+    cflag_set((int) $uid, $wk, $used + 1);
+    return '换到【' . $nm . '】！本周已换' . ($used + 1) . '/' . $limit . '。';
 }
 
 function ch1_locations(): array
@@ -3753,7 +4162,17 @@ function quest_state(array $u): array
         return ['name' => '雾散之后', 'step' => '完成', 'todo' => '第一章完成，自由探索。30级后去白银城公会大厅找格温', 'loc' => 'town_sq', 'locname' => '白石镇广场', 'id' => 16, 'ch' => 1, 'need' => []];
     }
     if ($q === 28) {
-        return ['name' => '王都·万眼之夜', 'step' => '序', 'todo' => '第二章完成！莉莉握住了你的手。第三章制作中，敬请期待（先去影蚀深渊/公会战变强）', 'loc' => 'silver_sq', 'locname' => '白银广场', 'id' => 28, 'ch' => 2, 'need' => []];
+        return ['name' => '第三章·傀儡之夜', 'step' => '序', 'todo' => '第二章完成！带着格温的推荐信，去王都中央大道找瓦尔顿', 'loc' => 'avenue', 'locname' => '中央大道', 'id' => 28, 'ch' => 2, 'need' => []];
+    }
+    if ($q >= 30 && $q <= 37) {
+        $all = ch3_quests();
+        if (!isset($all[$q])) {
+            return ['name' => '傀儡之夜·完', 'step' => '完成', 'todo' => '第三章完成，去王都农场种菜吧', 'loc' => 'farm', 'locname' => '王都农场', 'id' => 99, 'ch' => 3, 'need' => []];
+        }
+        return $all[$q] + ['id' => $q, 'ch' => 3, 'step' => ($q - 29) . '/8'];
+    }
+    if ($q >= 38) {
+        return ['name' => '影子伙伴', 'step' => '完成', 'todo' => '第三章完成！农场、母巢、公会战等你（影子伙伴：全属性+5%）', 'loc' => 'farm', 'locname' => '王都农场', 'id' => 99, 'ch' => 3, 'need' => []];
     }
     if ($q >= 20 && $q <= 27) {
         $all = ch2_quests();
@@ -3781,6 +4200,76 @@ function ch2_quests(): array
         26 => ['name' => '祭坛·暗影莉莉', 'todo' => '深渊祭坛直面暗影莉莉，问出真正的莉莉在哪', 'loc' => 'baltar', 'locname' => '暗影祭坛', 'need' => ['dark_lily' => 1], 'flag' => 'lily_done'],
         27 => ['name' => '裂隙·深渊之眼', 'todo' => '裂隙深处：沉默面对深渊之眼，绝不回答', 'loc' => 'rift', 'locname' => '裂隙深处', 'need' => ['abyss_eye' => 1], 'flag' => null],
     ];
+}
+
+function ch3_quests(): array
+{
+    return [
+        30 => ['name' => '入城清剿', 'todo' => '王都中央大道：傀儡守卫×80', 'loc' => 'avenue', 'locname' => '中央大道', 'need' => ['puppet_guard' => 80], 'flag' => null],
+        31 => ['name' => '假面舞会', 'todo' => '贵族区：假面贵族×100', 'loc' => 'noble', 'locname' => '贵族区', 'need' => ['masked_noble' => 100], 'flag' => null],
+        32 => ['name' => '图书馆的剧本', 'todo' => '皇家图书馆：墨傀儡×100', 'loc' => 'library', 'locname' => '皇家图书馆', 'need' => ['ink_puppet' => 100], 'flag' => null],
+        33 => ['name' => '陵墓的空棺', 'todo' => '皇家陵墓：银丝亡灵×120', 'loc' => 'ctomb', 'locname' => '皇家陵墓', 'need' => ['silver_undead' => 120], 'flag' => null],
+        34 => ['name' => '黑市的剪线人', 'todo' => '贫民窟：银丝刺客×150', 'loc' => 'slum', 'locname' => '贫民窟', 'need' => ['silver_assassin' => 150], 'flag' => null],
+        35 => ['name' => '大教堂的木偶戏', 'todo' => '光明大教堂：牵线牧师×180', 'loc' => 'cathedral', 'locname' => '光明大教堂', 'need' => ['puppet_priest' => 180], 'flag' => null],
+        36 => ['name' => '天文台的观众', 'todo' => '皇家天文台：观星傀儡×200', 'loc' => 'observatory', 'locname' => '皇家天文台', 'need' => ['star_puppet' => 200], 'flag' => null],
+        37 => ['name' => '傀儡剧场', 'todo' => '王宫地下：银丝傀儡×250、击败牵线者', 'loc' => 'theater', 'locname' => '傀儡剧场', 'need' => ['silver_puppet' => 250, 'string_puller' => 1], 'flag' => null],
+    ];
+}
+
+function check_ch3_done(int $uid, array $qs): bool
+{
+    $uid = (int) $uid;
+    if (!empty($qs['flag'])) {
+        $f = cflags($uid);
+        if (empty($f[$qs['flag']])) {
+            return false;
+        }
+    }
+    if (!empty($qs['need'])) {
+        $c = kill_counts($uid);
+        $base = cflags($uid)['qb' . ($qs['id'] ?? 0)] ?? [];
+        if (!is_array($base)) {
+            $base = [];
+        }
+        foreach ($qs['need'] as $mid => $need) {
+            if ((int) ($c[$mid] ?? 0) - (int) ($base[$mid] ?? 0) < $need) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+function quest3_baseline(int $uid, int $q): void
+{
+    $qs = ch3_quests()[$q] ?? null;
+    if (!$qs || empty($qs['need'])) {
+        return;
+    }
+    $c = kill_counts((int) $uid);
+    $b = [];
+    foreach ($qs['need'] as $mid => $need) {
+        $b[$mid] = (int) ($c[$mid] ?? 0);
+    }
+    cflag_set((int) $uid, 'qb' . $q, $b);
+}
+
+function quest_progress3_text(int $uid, array $qs): string
+{
+    if (empty($qs['need'])) {
+        return '';
+    }
+    $c = kill_counts((int) $uid);
+    $base = cflags((int) $uid)['qb' . ($qs['id'] ?? 0)] ?? [];
+    if (!is_array($base)) {
+        $base = [];
+    }
+    $parts = [];
+    foreach ($qs['need'] as $mid => $need) {
+        $mn = monsters()[$mid]['name'] ?? $mid;
+        $parts[] = $mn . max(0, (int) ($c[$mid] ?? 0) - (int) ($base[$mid] ?? 0)) . '/' . $need;
+    }
+    return implode('，', $parts);
 }
 
 function cflags(int $uid): array
@@ -3846,11 +4335,24 @@ function quest_progress2_text(int $uid, array $qs): string
         $base = [];
     }
     $parts = [];
+    $killsDone = true;
     foreach ($qs['need'] as $mid => $need) {
         $mn = monsters()[$mid]['name'] ?? $mid;
-        $parts[] = $mn . max(0, (int) ($c[$mid] ?? 0) - (int) ($base[$mid] ?? 0)) . '/' . $need;
+        $have = max(0, (int) ($c[$mid] ?? 0) - (int) ($base[$mid] ?? 0));
+        if ($have < $need) {
+            $killsDone = false;
+        }
+        $parts[] = $mn . $have . '/' . $need;
     }
-    return implode('，', $parts);
+    $txt = implode('，', $parts);
+    if ($killsDone && !empty($qs['flag'])) {
+        $f = cflags((int) $uid);
+        if (empty($f[$qs['flag']])) {
+            $who = ['reed_done' => '下水道一层的守卫雷德', 'note_done' => '下水道二层的莉莉', 'apostle_done' => '矿道二层的使徒残响', 'golem_done' => '影蚀森林的守护者残响', 'lord_done' => '废弃庄园的城主瓦伦丁', 'lily_done' => '暗影祭坛的暗影莉莉'][$qs['flag']] ?? '关键NPC';
+            $txt .= '（怪杀够了，去找' . $who . '做抉择）';
+        }
+    }
+    return $txt;
 }
 
 function kill_file(int $uid): string

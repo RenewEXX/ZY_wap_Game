@@ -55,6 +55,13 @@ function require_login(): array
         $u['mp'] = $jmp;
         user_save($u);
     }
+    $nowA = time();
+    $lastA = (int) ($u['last_seen'] ?? 0);
+    if ($lastA > 0) {
+        $u['active_secs'] = (int) ($u['active_secs'] ?? 0) + min(300, max(0, $nowA - $lastA));
+    }
+    $u['last_seen'] = $nowA;
+    user_save($u);
     background_battle($u);
     offline_tick($u);
     dummy_tick($u);
@@ -142,7 +149,7 @@ function quest_of(int $q): array
 function quest_banner(array $u, string $page = 'home.php'): void
 {
     $qs = quest_state($u);
-    $prog = (($qs['ch'] ?? 0) === 2) ? quest_progress2_text((int) ($u['id'] ?? 0), $qs) : quest_progress_text((int) ($u['id'] ?? 0), $qs);
+    $prog = (($qs['ch'] ?? 0) === 2) ? quest_progress2_text((int) ($u['id'] ?? 0), $qs) : ((($qs['ch'] ?? 0) === 3) ? quest_progress3_text((int) ($u['id'] ?? 0), $qs) : quest_progress_text((int) ($u['id'] ?? 0), $qs));
     echo '<div class="warn">【任务' . h($qs['step'] ?? '') . '·' . h($qs['name']) . '】' . h($qs['todo']);
     if ($prog !== '') {
         echo '<br>' . h($prog);

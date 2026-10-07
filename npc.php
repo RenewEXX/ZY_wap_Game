@@ -30,6 +30,15 @@ $people = [
     'horse_t' => ['name' => '赛马人·老霍', 'loc' => 'town_sq', 'text' => '赌马了啊！10匹马，2小时一场，1到10魔钻，冠军分奖池六成！'],
     'horse_s' => ['name' => '赛马人·阿金', 'loc' => 'silver_sq', 'text' => '白银城分场，奖池全服通用。押马要趁早，开赛不候。'],
     'horse_g' => ['name' => '赛马人·豆芽', 'loc' => 'square', 'text' => '灰雾村也有马！小注怡情，大注发家。'],
+    'rank_t' => ['name' => '榜单老人', 'loc' => 'town_sq', 'text' => '战力、活跃、充值、宠物、赛马，五榜每刻更新。扬名立万，就在此处。'],
+    'rank_s' => ['name' => '榜单老人', 'loc' => 'silver_sq', 'text' => '白银城也看榜。数据全服通用。'],
+    'rank_g' => ['name' => '榜单老人', 'loc' => 'square', 'text' => '灰雾村小地方，榜可是全服的。'],
+    'waldon' => ['name' => '线人·瓦尔顿', 'loc' => 'avenue', 'text' => '真正的王都二十年前就没了，这里只是深渊搭的戏台。拿着格温的信，就去中央大道杀傀儡守卫，杀够80只再回来。'],
+    'guard_captain' => ['name' => '守卫队长', 'loc' => 'noble', 'text' => '银丝已经缠到我脖子了……杀了我，或者切断银丝，或者……走开，别看。'],
+    'stringer' => ['name' => '牵线者', 'loc' => 'theater', 'text' => '我不是深渊，我是国王。二十年前，国王为了永生献出灵魂，灵魂变成了我。你是谁？你来杀我，还是来理解我？'],
+    'spider' => ['name' => '断线人·阿蛛', 'loc' => 'theater', 'text' => '剧场下面还有个母巢，是牵线者死后留下的卵。150级以上、带着母巢入场券（杀牵线者1%掉），我送你进去。45分钟，出来或者变成茧。'],
+    'grocer' => ['name' => '菜商·豆豆', 'loc' => 'farm', 'text' => '农场币换好东西！粮食、洗点药、升级卡，每周限量，先到先得。'],
+    'rank_c' => ['name' => '榜单老人', 'loc' => 'avenue', 'text' => '王都也看榜。数据全服通用。'],
 ];
 if (!isset($people[$who]) || $people[$who]['loc'] !== $cur) {
     flash_set('这个人不在这里。');
@@ -176,6 +185,69 @@ if ($who === 'gwen' && $choice === 'start' && (int) $u['quest'] === 16) {
     header('Location: npc.php?who=gwen');
     exit;
 }
+if ($who === 'waldon' && $choice === 'start' && (int) $u['quest'] === 28) {
+    $u['quest'] = 30;
+    user_save($u);
+    quest3_baseline((int) $u['id'], 30);
+    flash_set('瓦尔顿：银丝已经吊满全城。第三章·傀儡之夜开启！去中央大道杀傀儡守卫×80。');
+    header('Location: npc.php?who=waldon');
+    exit;
+}
+if ($who === 'guard_captain' && in_array($choice, ['kill', 'cut', 'leave'], true) && (int) $u['quest'] === 31) {
+    if ($choice === 'cut') {
+        ch2_choice($u, 'gc_done', 'gc_result', 'cut', 100, '你切断他身上的银丝。他活下来了，后续会在农场出现报答你。（+1银）');
+    } elseif ($choice === 'kill') {
+        ch2_choice($u, 'gc_done', 'gc_result', 'kill', 0, '你结束了他的痛苦。银丝缩回天上，舞会照常进行。');
+    } else {
+        ch2_choice($u, 'gc_done', 'gc_result', 'leave', 0, '你转身离开。身后舞曲不停，像什么都没发生。');
+    }
+    header('Location: npc.php?who=guard_captain');
+    exit;
+}
+if ($who === 'stringer' && in_array($choice, ['ask', 'kill', 'purify'], true) && (int) $u['quest'] === 37) {
+    if ($choice === 'ask') {
+        ch2_choice($u, 'st_done', 'st_result', 'ask', 0, '你问：你是谁？牵线者沉默很久：我是国王。你的灵魂被认可了。（魔力上限+50）');
+        $u['maxmp'] = (int) ($u['maxmp'] ?? 0) + 50;
+        $u['mp'] = (int) ($u['mp'] ?? 0) + 50;
+        user_save($u);
+    } elseif ($choice === 'kill') {
+        ch2_choice($u, 'st_done', 'st_result', 'kill', 0, '你直接动手。银丝崩断的声音像满城的琴弦一起断掉。');
+    } else {
+        ch2_choice($u, 'st_done', 'st_result', 'purify', 0, '你试图净化它。银丝白了一瞬，又黑了回去。它说：谢谢，但别白费力气。');
+    }
+    header('Location: npc.php?who=stringer');
+    exit;
+}
+if ($who === 'spider' && $choice === 'open') {
+    $lv = (int) ($u['lv'] ?? 1);
+    $mats = mats_of((int) $u['id']);
+    if ($lv < 150 || $lv > 340) {
+        flash_set('阿蛛摇头：银丝母巢只要150到340级的冒险者，你现在' . $lv . '级。');
+    } elseif (empty($mats['mx_ticket'])) {
+        flash_set('阿蛛：没有【银丝母巢入场券】进不去，去杀牵线者（1%掉）。');
+    } else {
+        add_mat((int) $u['id'], 'mx_ticket', -1);
+        foreach (['mx_item1', 'mx_item2', 'mx_item3', 'mx_item4', 'mx_item5', 'mx_item6'] as $it) {
+            db()->prepare('DELETE FROM mats WHERE uid=? AND mat=?')->execute([(int) $u['id'], $it]);
+        }
+        mat_set((int) $u['id'], 'mx_stage', 1);
+        mat_set((int) $u['id'], 'mx_enter', time());
+        $u['loc'] = 'mx_gate';
+        user_save($u);
+        flash_set('阿蛛剪断你影子上的丝，送你进银丝母巢。45分钟倒计时开始！');
+    }
+    header('Location: home.php');
+    exit;
+}
+if ($who === 'grocer' && str_starts_with($choice, 'ex')) {
+    if ((int) $u['quest'] < 38) {
+        flash_set('豆豆：农场还没开放，通关第三章再来。');
+    } else {
+        flash_set(farm_exchange((int) $u['id'], substr($choice, 2)));
+    }
+    header('Location: npc.php?who=grocer');
+    exit;
+}
 if ($who === 'vera' && $choice === 'open') {
     $lv = (int) ($u['lv'] ?? 1);
     $mats = mats_of((int) $u['id']);
@@ -224,8 +296,28 @@ if ($who === 'gmaster' || $who === 'greg') {
 if ($who === 'gwen' && (int) $u['quest'] === 16 && (int) ($u['lv'] ?? 1) >= 30) {
     echo '<a href="npc.php?who=gwen&choice=start">接受委托，开启第二章·影蚀之潮</a><br>';
 }
+if ($who === 'waldon' && (int) $u['quest'] === 28) {
+    echo '<a href="npc.php?who=waldon&choice=start">递上推荐信，开启第三章·傀儡之夜</a><br>';
+}
+if ($who === 'guard_captain' && (int) $u['quest'] === 31 && empty(cflags((int) $u['id'])['gc_done'])) {
+    echo '抉择：<a href="npc.php?who=guard_captain&choice=kill">杀了他</a> <a href="npc.php?who=guard_captain&choice=cut">切断银丝(+1银)</a> <a href="npc.php?who=guard_captain&choice=leave">离开</a><br>';
+}
+if ($who === 'stringer' && (int) $u['quest'] === 37 && empty(cflags((int) $u['id'])['st_done'])) {
+    echo '抉择：<a href="npc.php?who=stringer&choice=kill">杀死牵线者</a> <a href="npc.php?who=stringer&choice=purify">试图净化</a> <a href="npc.php?who=stringer&choice=ask">问：你是谁？(+50魔力上限)</a><br>';
+}
+if ($who === 'spider') {
+    echo '<a href="npc.php?who=spider&choice=open">开启副本【银丝母巢】（150~340级，消耗入场券×1）</a><br>';
+}
+if ($who === 'grocer' && (int) $u['quest'] >= 38) {
+    $mats = mats_of((int) $u['id']);
+    echo '农场币：' . (int) ($mats['farm_coin'] ?? 0) . '<br>';
+    echo '换：<a href="npc.php?who=grocer&choice=expetfood">宠物粮食(10币/周20)</a> <a href="npc.php?who=grocer&choice=exexpcard">升级卡100型(100币/周2)</a> <a href="npc.php?who=grocer&choice=exreset">洗点药(200币/周1)</a><br>';
+}
 if (in_array($who, ['horse_t', 'horse_s', 'horse_g'], true)) {
     echo '<a href="horse.php">去赌马（2小时一场）</a><br>';
+}
+if (in_array($who, ['rank_t', 'rank_s', 'rank_g', 'rank_c'], true)) {
+    echo '<a href="rank.php">看排行榜（战力/活跃/充值/宠物/赛马）</a><br>';
 }
 if ($who === 'reed' && (int) $u['quest'] === 21 && empty(cflags((int) $u['id'])['reed_done'])) {
     echo '抉择：<a href="npc.php?who=reed&choice=kill">杀了他</a> <a href="npc.php?who=reed&choice=save">按住影子救他(血减半)</a> <a href="npc.php?who=reed&choice=leave">离开</a><br>';

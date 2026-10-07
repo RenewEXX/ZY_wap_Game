@@ -50,13 +50,17 @@ function db_init(): void
             job TEXT NOT NULL DEFAULT "",
             quest INTEGER NOT NULL DEFAULT 0,
             diamonds INTEGER NOT NULL DEFAULT 0,
+            active_secs INTEGER NOT NULL DEFAULT 0,
+            last_seen INTEGER NOT NULL DEFAULT 0,
+            diamonds_bought INTEGER NOT NULL DEFAULT 0,
+            horse_won INTEGER NOT NULL DEFAULT 0,
             zone TEXT NOT NULL DEFAULT "z1",
             chapter_flags TEXT NOT NULL DEFAULT "",
             created_at INTEGER NOT NULL,
             UNIQUE(username, zone)
         )'
     );
-    foreach (['s_pts', 's_atk', 's_def', 's_hp', 'str', 'agi', 'vit', 'int'] as $col) {
+    foreach (['s_pts', 's_atk', 's_def', 's_hp', 'str', 'agi', 'vit', 'int', 'active_secs', 'last_seen', 'diamonds_bought', 'horse_won'] as $col) {
         try {
             db()->exec("ALTER TABLE users ADD COLUMN {$col} INTEGER NOT NULL DEFAULT 0");
         } catch (Throwable $e) {
@@ -218,6 +222,10 @@ function db_init(): void
                 job TEXT NOT NULL DEFAULT "",
                 quest INTEGER NOT NULL DEFAULT 0,
                 diamonds INTEGER NOT NULL DEFAULT 0,
+                active_secs INTEGER NOT NULL DEFAULT 0,
+                last_seen INTEGER NOT NULL DEFAULT 0,
+                diamonds_bought INTEGER NOT NULL DEFAULT 0,
+                horse_won INTEGER NOT NULL DEFAULT 0,
                 zone TEXT NOT NULL DEFAULT "z1",
                 chapter_flags TEXT NOT NULL DEFAULT "",
                 created_at INTEGER NOT NULL,
@@ -379,12 +387,13 @@ function account_rows(string $name): array
 function user_save(array $u): void
 {
     $st = db()->prepare(
-        'UPDATE users SET lv=?, exp=?, hp=?, maxhp=?, mp=?, maxmp=?, atk=?, def=?, gold=?, loc=?, weapon=?, armor=?, potion=?, job=?, quest=?, chapter_flags=?, diamonds=?, s_pts=?, str=?, agi=?, vit=?, int=? WHERE id=?'
+        'UPDATE users SET lv=?, exp=?, hp=?, maxhp=?, mp=?, maxmp=?, atk=?, def=?, gold=?, loc=?, weapon=?, armor=?, potion=?, job=?, quest=?, chapter_flags=?, diamonds=?, s_pts=?, str=?, agi=?, vit=?, int=?, active_secs=?, last_seen=?, diamonds_bought=?, horse_won=? WHERE id=?'
     );
     $st->execute([
         $u['lv'], $u['exp'], $u['hp'], $u['maxhp'], $u['mp'] ?? 0, $u['maxmp'] ?? 0, $u['atk'], $u['def'],
         $u['gold'], $u['loc'], $u['weapon'], $u['armor'], $u['potion'], $u['job'] ?? '', $u['quest'] ?? 0, $u['chapter_flags'] ?? '', (int) ($u['diamonds'] ?? 0),
-        (int) ($u['s_pts'] ?? 0), (int) ($u['str'] ?? 0), (int) ($u['agi'] ?? 0), (int) ($u['vit'] ?? 0), (int) ($u['int'] ?? 0), $u['id'],
+        (int) ($u['s_pts'] ?? 0), (int) ($u['str'] ?? 0), (int) ($u['agi'] ?? 0), (int) ($u['vit'] ?? 0), (int) ($u['int'] ?? 0),
+        (int) ($u['active_secs'] ?? 0), (int) ($u['last_seen'] ?? 0), (int) ($u['diamonds_bought'] ?? 0), (int) ($u['horse_won'] ?? 0), $u['id'],
     ]);
 }
 

@@ -60,6 +60,7 @@ if ($a === 'redeem' && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 add_mat((int) $u['id'], $mark, 1);
             }
             $u['diamonds'] = (int) ($u['diamonds'] ?? 0) + $codes[$code];
+            $u['diamonds_bought'] = (int) ($u['diamonds_bought'] ?? 0) + $codes[$code];
             user_save($u);
             flash_set('兑换成功，+' . fmt_diamond($codes[$code]) . '。');
         }

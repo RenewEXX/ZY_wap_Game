@@ -325,6 +325,10 @@ if ($who === 'augustus' && (int) $u['quest'] === 15 && in_array($choice, ['expos
 }
 
 wap_start($people[$who]['name']);
+$npcFlash = flash_get();
+if ($npcFlash !== '') {
+    echo '<div class="warn">' . h($npcFlash) . '</div><div class="hr">--------</div>';
+}
 echo '<div class="muted">' . h($people[$who]['text']) . '</div><div class="hr">--------</div>';
 if ($who === 'augustus' && (int) $u['quest'] === 10) {
     echo '<a href="npc.php?who=augustus&choice=accept">接受矿坑调查委托</a><br>';

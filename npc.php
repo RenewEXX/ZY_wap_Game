@@ -53,7 +53,7 @@ if (!isset($people[$who]) || $people[$who]['loc'] !== $cur) {
 if ($who === 'augustus' && $choice === 'accept' && (int) $u['quest'] === 10) {
     $u['quest'] = 11;
     $u['chapter_flags'] = json_encode(['accepted' => true], JSON_UNESCAPED_UNICODE);
-    user_save($u);
+    user_save_flags($u);
     flash_set('奥古斯都交给你矿坑封锁门的钥匙。任务更新：腐化的前兆。');
     header('Location: home.php');
     exit;
@@ -63,7 +63,7 @@ if ($who === 'carl' && (int) $u['quest'] === 11) {
 }
 if ($who === 'lily' && (int) $u['quest'] === 13) {
     $u['chapter_flags'] = json_encode(['accepted' => true, 'lily_warned' => true], JSON_UNESCAPED_UNICODE);
-    user_save($u);
+    user_save_flags($u);
 }
 if ($who === 'alice' && $choice === 'open') {
     $lv = (int) ($u['lv'] ?? 1);

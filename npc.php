@@ -97,22 +97,27 @@ function ch2_choice(array &$u, string $doneFlag, string $resultFlag, string $res
     flash_set($msg);
 }
 
-if ($who === 'reed' && in_array($choice, ['kill', 'save', 'leave'], true) && (int) $u['quest'] === 21 && empty(cflags((int) $u['id'])['reed_done'])) {
-    if ($choice === 'save') {
-        $u['hp'] = max(1, (int) ((int) $u['hp'] / 2));
-        ch2_choice($u, 'reed_done', 'reed_result', 'save', 1000, '你按住雷德的影子，生命力从掌心流走（生命减半）。影子退回去了。格温后来对你说：你救了一个不该救的人。但也许，这才是对的。（+10银）');
-    } elseif ($choice === 'kill') {
-        ch2_choice($u, 'reed_done', 'reed_result', 'kill', 0, '你结束了雷德的痛苦。他的影子尖啸着散去。下水道里安静了。');
-    } else {
-        ch2_choice($u, 'reed_done', 'reed_result', 'leave', 0, '你转身离开。身后传来一声很长的叹息，然后什么都没了。');
+if ($who === 'reed' && in_array($choice, ['kill', 'save', 'leave'], true) && (int) $u['quest'] === 21) {
+    if (empty(cflags((int) $u['id'])['reed_done'])) {
+        if ($choice === 'save') {
+            $u['hp'] = max(1, (int) ((int) $u['hp'] / 2));
+            ch2_choice($u, 'reed_done', 'reed_result', 'save', 1000, '你按住雷德的影子，生命力从掌心流走（生命减半）。影子退回去了。格温后来对你说：你救了一个不该救的人。但也许，这才是对的。（+10银）');
+        } elseif ($choice === 'kill') {
+            ch2_choice($u, 'reed_done', 'reed_result', 'kill', 0, '你结束了雷德的痛苦。他的影子尖啸着散去。下水道里安静了。');
+        } else {
+            ch2_choice($u, 'reed_done', 'reed_result', 'leave', 0, '你转身离开。身后传来一声很长的叹息，然后什么都没了。');
+        }
     }
+    quest_stuck_fix($u);
     $u = user_by_id((int) $u['id']);
     $qs2 = ch2_quests()[21] + ['id' => 21];
     if (check_ch2_done((int) $u['id'], $qs2)) {
         $u['quest'] = 22;
-        quest2_baseline((int) $u['id'], 22);
+        quest2_baseline((int) $u['id'], 22, true);
         user_save($u);
         flash_set(flash_get() . '【任务完成】进下一环：深处笔记·莉莉！');
+    } else {
+        flash_set(flash_get() . '【' . $qs2['name'] . '】' . quest_progress2_text((int) $u['id'], $qs2) . '（先杀够数再来）');
     }
     header('Location: npc.php?who=reed');
     exit;

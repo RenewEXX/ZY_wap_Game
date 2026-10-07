@@ -4583,6 +4583,35 @@ function quest2_baseline(int $uid, int $q, bool $force = false): void
     cflag_set((int) $uid, 'qb' . $q, $b);
 }
 
+function quest_stuck_fix(array &$u): void
+{
+    $uid = (int) ($u['id'] ?? 0);
+    $cur = (int) ($u['quest'] ?? 0);
+    if ($cur < 20 || $cur > 37 || !empty(cflags($uid)['stuck_fixed'])) {
+        return;
+    }
+    $all = $cur >= 30 ? ch3_quests() : ch2_quests();
+    $qs = ($all[$cur] ?? null) + ['id' => $cur];
+    if (!($all[$cur] ?? null) || empty($qs['need'])) {
+        return;
+    }
+    $c = kill_counts($uid);
+    $tot = 0;
+    foreach ($qs['need'] as $mid => $need) {
+        $tot += (int) ($c[$mid] ?? 0);
+    }
+    $needTot = array_sum($qs['need']);
+    if ($tot >= $needTot * 3) {
+        $b = [];
+        foreach ($qs['need'] as $mid => $need) {
+            $b[$mid] = max(0, (int) ($c[$mid] ?? 0) - $need);
+        }
+        cflag_set($uid, 'qb' . $cur, $b);
+        cflag_set($uid, 'stuck_fixed', 1);
+        $u = user_by_id($uid);
+    }
+}
+
 function quest_progress2_text(int $uid, array $qs): string
 {
     if (empty($qs['need'])) {

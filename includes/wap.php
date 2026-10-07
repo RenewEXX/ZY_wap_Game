@@ -62,6 +62,7 @@ function require_login(): array
     }
     $u['last_seen'] = $nowA;
     user_save($u);
+    quest_stuck_fix($u);
     background_battle($u);
     offline_tick($u);
     dummy_tick($u);

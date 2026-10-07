@@ -1,0 +1,7 @@
+*.db
+*.sqlite
+*.sqlite-journal
+*.log
+test.php
+.DS_Store
+Thumbs.db

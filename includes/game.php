@@ -1804,13 +1804,13 @@ function equip_affix_html(array $aff, int $enhanceLv = 0): string
         if (!empty($x['main'])) {
             $mk = '主·';
         } elseif (!empty($x['legend'])) {
-            $mk = '传·特 ';
+            $mk = '【传奇属性】';
         } elseif (!empty($x['bonus'])) {
             $mk = '强·';
         } else {
             $mk = '';
         }
-        $line = '·' . $mk . h(affix_fmt($id, $v, $x['tier'] ?? null));
+        $line = '·' . $mk . h(affix_fmt($id, $v, !empty($x['legend']) ? null : ($x['tier'] ?? null)));
         if (!empty($x['legend'])) {
             $line = '<b style="color:#fc3">' . $line . '</b>';
         }

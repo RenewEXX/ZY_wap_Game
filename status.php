@@ -21,7 +21,7 @@ if ($worn !== []) {
     echo '穿戴：<br>';
     $qcolor = ['#999', '#fff', '#6cf', '#c6f', '#fc3'];
     foreach ($worn as $e) {
-        echo '·[' . h(equip_slots()[$e['slot']] ?? '') . ']<a href="equip.php?id=' . $e['id'] . '"><span style="color:' . $qcolor[(int) $e['quality']] . '">' . h(equip_shortname($e['name'])) . '</span></a><br>';
+        echo '·[' . h(equip_slots()[$e['slot']] ?? '') . ']' . enhance_tag_html((int) ($e['enhance_level'] ?? 0)) . '<a href="equip.php?id=' . $e['id'] . '"><span style="color:' . $qcolor[(int) $e['quality']] . '">' . h(equip_shortname($e['name'])) . '</span></a><br>';
     }
     $gs = gear_stats((int) $u['id']);
     echo '<span class="muted">共加成：攻+' . (int) $gs['atk'] . ' 防+' . (int) $gs['def'] . ' 命+' . (int) $gs['hp'];

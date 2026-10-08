@@ -19,11 +19,13 @@ function teleport_cost(string $from, string $to): ?int
 }
 
 $go = (string) ($_GET['go'] ?? '');
+$backRegion = (string) ($_GET['region'] ?? '');
+$backSuffix = $backRegion !== '' ? '?region=' . urlencode($backRegion) : '';
 if ($go !== '' && isset($all[$go])) {
     $cost = teleport_cost($cur, $go);
     if (in_array($go, dsw_maps(), true) || in_array($go, abx_maps(), true) || in_array($go, mx_maps(), true)) {
         flash_set('副本只能找NPC进，不能传送。');
-        header('Location: teleport.php');
+        header('Location: teleport.php' . $backSuffix);
         exit;
     }
     if ($go === 'warfield') {
@@ -68,7 +70,7 @@ if ($go !== '' && isset($all[$go])) {
         header('Location: home.php');
         exit;
     }
-    header('Location: teleport.php');
+    header('Location: teleport.php' . $backSuffix);
     exit;
 }
 
@@ -81,8 +83,22 @@ $flash = flash_get();
 if ($flash !== '') {
     echo '<div class="warn">' . h($flash) . '</div>';
 }
+$openRegion = $backRegion;
 foreach (map_regions() as $region => $ids) {
-    echo '【' . h($region) . '】<br>';
+    $cnt = 0;
+    foreach ($ids as $id) {
+        if (isset($all[$id]) && !in_array($id, dsw_maps(), true) && !in_array($id, abx_maps(), true) && !in_array($id, mx_maps(), true)) {
+            $cnt++;
+        }
+    }
+    if ($cnt <= 0) {
+        continue;
+    }
+    if ($openRegion !== $region) {
+        echo '【<a href="teleport.php?region=' . h($region) . '">' . h($region) . '×' . $cnt . '</a>】<br>';
+        continue;
+    }
+    echo '【<a href="teleport.php">' . h($region) . '×' . $cnt . '</a>】(收起)<br>';
     foreach ($ids as $id) {
         if (!isset($all[$id])) {
             continue;
@@ -100,7 +116,7 @@ foreach (map_regions() as $region => $ids) {
             continue;
         }
         $lvTag = teleport_min_lv($id) > 1 ? '需' . teleport_min_lv($id) . '级' : '';
-        echo '·<a href="teleport.php?go=' . h($id) . '">' . h($all[$id]['name']) . '</a>(' . h(fmt_money($cost)) . ')' . h($lvTag) . '<br>';
+        echo '·<a href="teleport.php?region=' . h($region) . '&go=' . h($id) . '">' . h($all[$id]['name']) . '</a>(' . h(fmt_money($cost)) . ')' . h($lvTag) . '<br>';
     }
 }
 nav_line();

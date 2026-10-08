@@ -32,11 +32,15 @@ echo '品级：' . h($qname) . '<br>';
 echo '穿戴要求：' . h(equip_req_text($e)) . '<br>';
 echo '物品等级：' . (int) ($e['item_level'] ?? 1) . '<br>';
 echo '状态：' . ((int) ($e['broken'] ?? 0) === 1 ? '已碎裂' : ($e['pos'] === 'wear' ? '已穿戴' : '背包')) . '<br>';
-echo '强化：+' . (int) ($e['enhance_level'] ?? 0) . ((int) ($e['broken'] ?? 0) === 1 ? '（碎裂）' : '') . '<br>';
+$elv = (int) ($e['enhance_level'] ?? 0);
+echo '强化：' . enhance_tag_html($elv) . '（主属性×' . rtrim(rtrim(number_format(enhance_rate($e), 2, '.', ''), '0'), '.') . ')' . ((int) ($e['broken'] ?? 0) === 1 ? '（碎裂）' : '') . '<br>';
 echo '<div class="hr">--------</div>';
 $aff = json_decode((string) $e['affixes'], true);
 if (is_array($aff)) {
-    echo equip_affix_html($aff);
+    echo equip_affix_html($aff, $elv);
+}
+if ((int) ($e['quality'] ?? 0) === 4) {
+    echo '<span style="color:#fc3"><b>◆传奇◆</b></span><br><span class="muted">' . legend_lore(equip_shortname((string) $e['name'])) . '</span><br>';
 }
 $isWep = (($e['slot'] ?? '') === 'weapon');
 if (!empty($e['enchant_el'])) {
@@ -59,8 +63,8 @@ if ((int) ($e['broken'] ?? 0) === 0) {
     $next = (int) ($e['enhance_level'] ?? 0) + 1;
     $rule = enhance_table()[$next] ?? null;
     if ($rule) {
-        echo '下一阶：+' . $next . '　成功率' . $rule['rate'] . '%　消耗' . h(enhance_material_name($rule['mat'])) . 'x' . $rule['cost'] . '<br>';
-        echo '<span class="muted">强化要找铁匠：灰雾村找布隆，白石镇找丹恩·铜须。</span><br>';
+        echo '下一阶：+' . $next . '　成功率' . $rule['rate'] . '%　消耗' . h(enhance_material_name($rule['mat'])) . 'x' . $rule['cost'] . h(enhance_bonus_text($next)) . '<br>';
+        echo '<span class="muted">+1~+6主属性每级+4%，+7起每级+12%。强化要找铁匠：灰雾村找布隆，白石镇找丹恩·铜须。</span><br>';
     }
 }
 if ($e['pos'] === 'wear') {

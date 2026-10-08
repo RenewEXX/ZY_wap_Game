@@ -179,12 +179,12 @@ if ($tab === 'equip') {
         if ($sid === 'ring') {
             for ($i = 0; $i < 2; $i++) {
                 $r = $rings[$i] ?? null;
-                echo $sname . ($i + 1) . '：' . ($r ? '<a href="equip.php?id=' . $r['id'] . '"><span style="color:' . $qcolor[(int) $r['quality']] . '">' . h(equip_shortname($r['name'])) . '</span></a>' : '空') . '<br>';
+                echo $sname . ($i + 1) . '：' . ($r ? enhance_tag_html((int) ($r['enhance_level'] ?? 0)) . '<a href="equip.php?id=' . $r['id'] . '"><span style="color:' . $qcolor[(int) $r['quality']] . '">' . h(equip_shortname($r['name'])) . '</span></a>' : '空') . '<br>';
             }
             continue;
         }
         $e = $wornBy[$sid] ?? null;
-        echo $sname . '：' . ($e ? '<a href="equip.php?id=' . $e['id'] . '"><span style="color:' . $qcolor[(int) $e['quality']] . '">' . h(equip_shortname($e['name'])) . '</span></a>' : '空') . '<br>';
+        echo $sname . '：' . ($e ? enhance_tag_html((int) ($e['enhance_level'] ?? 0)) . '<a href="equip.php?id=' . $e['id'] . '"><span style="color:' . $qcolor[(int) $e['quality']] . '">' . h(equip_shortname($e['name'])) . '</span></a>' : '空') . '<br>';
     }
     echo '<div class="hr">--------</div>';
     echo '库存：<br>';
@@ -194,8 +194,8 @@ if ($tab === 'equip') {
             continue;
         }
         $has = true;
-        echo '<a href="equip.php?id=' . $e['id'] . '"><span style="color:' . $qcolor[(int) $e['quality']] . '">' . h(equip_shortname($e['name'])) . '</span></a>[' . h($slots[$e['slot']] ?? '') . ']';
-        echo ' +' . (int) ($e['enhance_level'] ?? 0) . ((int) ($e['broken'] ?? 0) === 1 ? '（碎裂）' : '');
+        echo enhance_tag_html((int) ($e['enhance_level'] ?? 0)) . '<a href="equip.php?id=' . $e['id'] . '"><span style="color:' . $qcolor[(int) $e['quality']] . '">' . h(equip_shortname($e['name'])) . '</span></a>[' . h($slots[$e['slot']] ?? '') . ']';
+        echo ((int) ($e['broken'] ?? 0) === 1 ? '（碎裂）' : '');
         if ((int) ($e['req_lv'] ?? 1) > 1 || (int) ($e['req_str'] ?? 0) > 0 || (int) ($e['req_agi'] ?? 0) > 0) {
             echo '（' . h(equip_req_text($e)) . '）';
         }
@@ -212,8 +212,13 @@ if ($tab === 'equip') {
     $mats = mats_of((int) $u['id']);
     $qmats = quest_mats();
     $any = false;
+    $junk = [];
     foreach ($mats as $mid => $num) {
         if (isset($qmats[$mid]) || isset(mall_tanks()[$mid]) || mat_hidden($mid) || is_usable_item($mid)) {
+            continue;
+        }
+        if (!is_craft_mat($mid)) {
+            $junk[$mid] = $num;
             continue;
         }
         $any = true;
@@ -229,6 +234,13 @@ if ($tab === 'equip') {
     }
     if (!$any) {
         echo '<span class="muted">空。刷怪会掉材料。</span>';
+    }
+    if ($junk !== []) {
+        echo '<div class="hr">--------</div>';
+        echo '<span class="muted">旧物杂物（已绝版，无用途，可扔）：</span><br>';
+        foreach ($junk as $mid => $num) {
+            echo '<span class="muted">·' . h(mat_name($mid)) . 'x' . $num . '</span> <a href="bag.php?a=drop&id=' . h($mid) . '&tab=mat">扔</a><br>';
+        }
     }
 } elseif ($tab === 'quest') {
     $qs = quest_state($u);

@@ -190,10 +190,10 @@ if ($a === 'view') {
     echo '【物品详情】<br>';
     echo '<b>' . h(auction_item_name($auc)) . '</b><br>';
     if ($auc['kind'] === 'equip') {
-        echo '类型：' . h(equip_slots()[$auc['item_slot']] ?? '') . ' | 强化：+' . (int) $auc['enhance_level'] . '<br>';
+        echo '类型：' . h(equip_slots()[$auc['item_slot']] ?? '') . ' | 强化：' . enhance_tag_html((int) $auc['enhance_level']) . '<br>';
         $aff = json_decode((string) $auc['item_affixes'], true);
         if (is_array($aff)) {
-            echo equip_affix_html($aff);
+            echo equip_affix_html($aff, (int) $auc['enhance_level']);
         }
     } else {
         echo '类型：材料<br>';

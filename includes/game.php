@@ -405,16 +405,8 @@ function guild_can_take_warehouse(array $g): bool
 
 function is_tradable_mat(string $mid): bool
 {
-    if (mat_hidden($mid)) {
-        return false;
-    }
-    if (isset(quest_mats()[$mid])) {
-        return false;
-    }
-    if (in_array($mid, ['bag_ext5', 'bag_ext10', 'bag_ext5_used', 'bag_ext10_used', 'offline_on', 'dummy_on', 'seen_last', 'exp_card_until'], true)) {
-        return false;
-    }
-    return true;
+    // 公会仓库只收当前版本锻造材料：旧版掉落/杂物一律不可存，杜绝刷贡献和仓库垃圾
+    return is_craft_mat($mid);
 }
 
 function guild_warehouse_cap(int $level): int
@@ -1503,7 +1495,23 @@ function is_usable_item(string $mid): bool
 
 function mat_hidden(string $mid): bool
 {
-    return str_starts_with($mid, 'code_') || str_starts_with($mid, 'dummy_') || str_starts_with($mid, 'hatch_') || in_array($mid, ['offline_on', 'seen_last', 'exp_card_until', 'bag_ext5_used', 'bag_ext10_used', 'dummy_total'], true);
+    if (str_starts_with($mid, 'code_') || str_starts_with($mid, 'dummy_') || str_starts_with($mid, 'hatch_')) {
+        return true;
+    }
+    // 副本进度标记（计时/阶段）是系统字段，永不进背包显示
+    if (str_ends_with($mid, '_enter') || str_ends_with($mid, '_stage')) {
+        return true;
+    }
+    return in_array($mid, ['offline_on', 'seen_last', 'exp_card_until', 'bag_ext5_used', 'bag_ext10_used', 'dummy_total'], true);
+}
+
+// 当前版本真正有用的锻造材料：强化石 + 属性石/晶石/珠/神石
+function is_craft_mat(string $mid): bool
+{
+    if (in_array($mid, ['enhance_t1', 'enhance_t2', 'enhance_t3'], true)) {
+        return true;
+    }
+    return enchant_mat_el($mid) !== '' && enchant_mat_tier($mid) !== '';
 }
 
 function mat_set(int $uid, string $mat, int $n): void
@@ -1782,13 +1790,30 @@ function affix_label(string $k): string
     return affix_catalog()[$k]['name'] ?? $k;
 }
 
-function equip_affix_html(array $aff): string
+function equip_affix_html(array $aff, int $enhanceLv = 0): string
 {
+    $mult = enhance_rate(['enhance_level' => $enhanceLv]);
     $top = [];
     $sub = [];
     foreach ($aff as $x) {
-        $mk = !empty($x['main']) ? '主·' : (!empty($x['legend']) ? '传·' : '');
-        $line = '·' . $mk . h(affix_fmt((string) ($x['id'] ?? $x['k'] ?? ''), (float) $x['v'], $x['tier'] ?? null));
+        $id = (string) ($x['id'] ?? $x['k'] ?? '');
+        $v = (float) ($x['v'] ?? 0);
+        if (in_array($id, ['atk', 'def', 'hp', 'all_attr'], true)) {
+            $v *= $mult;
+        }
+        if (!empty($x['main'])) {
+            $mk = '主·';
+        } elseif (!empty($x['legend'])) {
+            $mk = '传·特 ';
+        } elseif (!empty($x['bonus'])) {
+            $mk = '强·';
+        } else {
+            $mk = '';
+        }
+        $line = '·' . $mk . h(affix_fmt($id, $v, $x['tier'] ?? null));
+        if (!empty($x['legend'])) {
+            $line = '<b style="color:#fc3">' . $line . '</b>';
+        }
         if (!empty($x['main']) || !empty($x['legend'])) {
             $top[] = $line;
         } else {
@@ -1804,6 +1829,29 @@ function equip_affix_html(array $aff): string
         $out .= '<br>';
     }
     return $out;
+}
+
+// 高强外观：+7彩虹字，+10金字炫光
+function enhance_tag_html(int $lv): string
+{
+    $lv = max(0, $lv);
+    if ($lv >= 10) {
+        return '<b style="color:#fc3;text-shadow:0 0 6px #f60,0 0 12px #fc3">✦+' . $lv . '✦</b>';
+    }
+    if ($lv >= 7) {
+        return '<b style="background:linear-gradient(90deg,#f66,#fc3,#6f6,#6cf,#c6f);-webkit-background-clip:text;background-clip:text;color:#fc3">+' . $lv . '</b>';
+    }
+    return '+' . $lv;
+}
+
+function legend_lore(string $shortName): string
+{
+    $lore = [
+        '食人魔战裙' => '咕噜死前还在笑。它说这条战裙是它从一百个输家身上剥下来的。<br>穿上它的人，听见的笑声比敌人多。',
+        '堕落骑士大剑' => '莫尔堕落那天，剑先替他哭了。剑身上的锈，是他没流出来的泪。<br>拿起它，就替他把没打完的那一仗打完。',
+        '雷恩回响戒' => '雷恩把名字刻在戒指内侧，字很小，怕深渊听见。<br>戴上它，第三层有人叫你名字时，你会先想起他。',
+    ];
+    return $lore[$shortName] ?? '深渊里捞出来的东西，每一件都记得主人的名字。<br>它现在记得你的了。';
 }
 
 function affix_fmt(string $k, float $v, ?string $tier = null): string
@@ -3001,7 +3049,61 @@ function enhance_rate(array $e): float
     if ((int) ($e['broken'] ?? 0) === 1) {
         return 0.0;
     }
-    return 1 + max(0, (int) ($e['enhance_level'] ?? 0)) * 0.06;
+    // 低强差距小（+1~+6每级+4%），+7起拉开（每级+12%）
+    $lv = max(0, (int) ($e['enhance_level'] ?? 0));
+    return 1 + 0.04 * min($lv, 6) + 0.12 * max(0, $lv - 6);
+}
+
+function enhance_bonus_text(int $next): string
+{
+    if ($next === 7) {
+        return '并觉醒一条额外词缀！';
+    }
+    if ($next === 12) {
+        return '并再觉醒一条额外词缀！';
+    }
+    return '';
+}
+
+// +7/+12成功时从本部位词缀池里随机觉醒一条额外词缀
+function enhance_grant_bonus_affix(int $eid): string
+{
+    $st = db()->prepare('SELECT * FROM equips WHERE id=?');
+    $st->execute([$eid]);
+    $e = $st->fetch();
+    if (!$e) {
+        return '';
+    }
+    $aff = json_decode((string) ($e['affixes'] ?? '[]'), true);
+    if (!is_array($aff)) {
+        $aff = [];
+    }
+    $have = [];
+    $groups = [];
+    $catalog = affix_catalog();
+    foreach ($aff as $a) {
+        $id = (string) ($a['id'] ?? $a['k'] ?? '');
+        $have[$id] = true;
+        $gr = (string) ($catalog[$id]['data']['group'] ?? '');
+        if ($gr !== '') {
+            $groups[$gr] = true;
+        }
+    }
+    $pool = array_values(array_filter(slot_pools()[(string) ($e['slot'] ?? '')] ?? [], function ($id) use ($have, $groups, $catalog) {
+        if (isset($have[$id])) {
+            return false;
+        }
+        $gr = (string) ($catalog[$id]['data']['group'] ?? '');
+        return $gr === '' || !isset($groups[$gr]);
+    }));
+    if ($pool === []) {
+        return '';
+    }
+    $id = $pool[array_rand($pool)];
+    $rolled = affix_roll($id, (int) ($e['quality'] ?? 0), (int) ($e['item_level'] ?? 1));
+    $aff[] = ['id' => $id, 'tier' => $rolled['tier'], 'v' => $rolled['v'], 'bonus' => true];
+    db()->prepare('UPDATE equips SET affixes=? WHERE id=?')->execute([json_encode($aff, JSON_UNESCAPED_UNICODE), $eid]);
+    return '觉醒【' . affix_fmt($id, (float) $rolled['v'], $rolled['tier']) . '】！';
 }
 
 function enhance_equip(int $uid, int $eid): string
@@ -3030,7 +3132,15 @@ function enhance_equip(int $uid, int $eid): string
     if ($ok) {
         db()->prepare('UPDATE equips SET enhance_level=?, enhance_fail=0 WHERE id=? AND uid=?')->execute([$next, $eid, $uid]);
         _gear_uncache($uid);
-        return '强化成功！【' . equip_shortname($e['name']) . '】达到+' . $next . '。';
+        $extra = '';
+        if ($next === 7 || $next === 12) {
+            $bmsg = enhance_grant_bonus_affix($eid);
+            if ($bmsg !== '') {
+                $extra = $bmsg;
+            }
+        }
+        $multTxt = rtrim(rtrim(number_format(enhance_rate(['enhance_level' => $next]), 2, '.', ''), '0'), '.');
+        return '强化成功！【' . equip_shortname($e['name']) . '】达到+' . $next . '，主属性×' . $multTxt . '。' . $extra;
     }
     if ($rule['fail'] === 'reset') {
         db()->prepare('UPDATE equips SET enhance_level=0, enhance_fail=enhance_fail+1 WHERE id=? AND uid=?')->execute([$eid, $uid]);

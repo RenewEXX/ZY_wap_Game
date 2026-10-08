@@ -47,7 +47,7 @@ foreach ($eqs as $e) {
         continue;
     }
     $have = $mats[$rule['mat']] ?? 0;
-    echo '<span class="muted">+' . ($lv + 1) . ' 成功率' . $rule['rate'] . '% ' . h(enhance_material_name($rule['mat'])) . 'x' . $rule['cost'] . '(有' . $have . ')</span><br>';
+    echo '<span class="muted">+' . ($lv + 1) . ' 成功率' . $rule['rate'] . '% ' . h(enhance_material_name($rule['mat'])) . 'x' . $rule['cost'] . '(有' . $have . ')主属性×' . rtrim(rtrim(number_format(enhance_rate(['enhance_level' => $lv + 1]), 2, '.', ''), '0'), '.') . h(enhance_bonus_text($lv + 1)) . '</span><br>';
     echo '<a href="smith.php?a=enhance&id=' . $e['id'] . '">强化</a><br>';
 }
 nav_line();

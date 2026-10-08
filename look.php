@@ -26,6 +26,20 @@ echo '职业：' . h(job_of($t)['name']) . '（' . h(job_of($t)['skill']) . '）
 echo '生命：' . (int) $t['hp'] . '/' . (int) $t['maxhp'] . '<br>';
 echo '魔力：' . (int) ($t['mp'] ?? 0) . '/' . (int) ($t['maxmp'] ?? 0) . '<br>';
 echo '位置：' . h(loc((string) $t['loc'])['name']) . '<br>';
+echo '战力：' . power_score($t) . '<br>';
+echo '<div class="hr">--------</div>';
+echo '他的装备：<br>';
+$qcolor = ['#999', '#fff', '#6cf', '#c6f', '#fc3'];
+$wst = db()->prepare('SELECT * FROM equips WHERE uid=? AND pos="wear"');
+$wst->execute([(int) $t['id']]);
+$hasGear = false;
+while ($we = $wst->fetch()) {
+    $hasGear = true;
+    echo enhance_tag_html((int) ($we['enhance_level'] ?? 0)) . '<span style="color:' . $qcolor[(int) $we['quality']] . '">' . h(equip_shortname((string) $we['name'])) . '</span><br>';
+}
+if (!$hasGear) {
+    echo '<span class="muted">空身。</span><br>';
+}
 echo '<div class="hr">--------</div>';
 echo '<a href="mail.php?a=write&to=' . h($t['username']) . '">写信</a><br>';
 $mg = my_guild((int) $u['id']);

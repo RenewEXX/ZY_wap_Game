@@ -7,6 +7,19 @@ $a = (string) ($_GET['a'] ?? '');
 $mid = (string) ($_GET['m'] ?? '');
 $allm = monsters();
 
+if ((int) $u['hp'] <= 0 && peak_arena_of((string) ($u['loc'] ?? '')) !== '') {
+    peak_forfeit((int) $u['id']);
+    $u['hp'] = 1;
+    $u['loc'] = 'square';
+    user_save($u);
+    unset($_SESSION['battle']);
+    unset($_SESSION['pvp']);
+    unset($_SESSION['peak']);
+    flash_set('你在巅峰战场倒下，丧失活动资格，被抬回灰雾村广场。');
+    header('Location: home.php');
+    exit;
+}
+
 if ((int) $u['hp'] <= 0) {
     $pen = death_penalty($u);
     if (in_array((string) ($u['loc'] ?? ''), dsw_maps(), true)) {
@@ -235,6 +248,98 @@ if ($a === 'pvpfight') {
     echo '<div class="hp">你 ' . (int) $u['hp'] . '/' . (int) $u['maxhp'] . '</div>';
     echo '<div class="hr">--------</div>';
     echo '<a href="fight.php?a=pvp_hit">砍他一刀</a> <a href="fight.php?a=run">撤</a>';
+    nav_line();
+    wap_end(false);
+    exit;
+}
+function peak_check(array $u, int $tuid): array
+{
+    $arena = peak_arena_of((string) ($u['loc'] ?? ''));
+    if ($arena === '') {
+        return [null, '你不在巅峰战场。'];
+    }
+    $t = user_by_id($tuid);
+    if (!$t) {
+        return [null, '那个人不见了。'];
+    }
+    if (peak_arena_of((string) ($t['loc'] ?? '')) !== $arena || (int) $t['hp'] <= 0) {
+        return [null, '对方不在战场或已倒下。'];
+    }
+    $st = db()->prepare('SELECT alive FROM peak_join WHERE uid=? AND day=?');
+    $st->execute([(int) $tuid, peak_day()]);
+    $row = $st->fetch();
+    if (!$row || (int) $row['alive'] !== 1) {
+        return [null, '对方已丧失资格。'];
+    }
+    return [$t, ''];
+}
+
+if ($a === 'peak') {
+    [$t, $err] = peak_check($u, (int) ($_GET['uid'] ?? 0));
+    if ($err !== '') {
+        flash_set($err);
+        header('Location: home.php');
+        exit;
+    }
+    $_SESSION['peak'] = ['tuid' => (int) $t['id']];
+    header('Location: fight.php?a=peakfight');
+    exit;
+}
+if ($a === 'peak_hit') {
+    $pk = $_SESSION['peak'] ?? null;
+    [$t, $err] = peak_check($u, (int) ($pk['tuid'] ?? 0));
+    if ($err !== '') {
+        unset($_SESSION['peak']);
+        flash_set($err);
+        header('Location: home.php');
+        exit;
+    }
+    $pd = max(1, player_atk($u) + random_int(0, 3) - player_def($t));
+    $t['hp'] = (int) $t['hp'] - $pd;
+    if ((int) $t['hp'] <= 0) {
+        $t['hp'] = 1;
+        $t['loc'] = 'square';
+        user_save($t);
+        peak_forfeit((int) $t['id']);
+        unset($_SESSION['peak']);
+        user_save($u);
+        flash_set('你一刀结果了【' . $t['username'] . '】！他被抬出战场，丧失资格。');
+        header('Location: home.php');
+        exit;
+    }
+    user_save($t);
+    $md = max(1, player_atk($t) + random_int(0, 2) - player_def($u));
+    $u['hp'] = (int) $u['hp'] - $md;
+    user_save($u);
+    if ((int) $u['hp'] <= 0) {
+        unset($_SESSION['peak']);
+        peak_forfeit((int) $u['id']);
+        $u['hp'] = 1;
+        $u['loc'] = 'square';
+        user_save($u);
+        flash_set('你被【' . $t['username'] . '】反杀了，丧失资格，被抬回灰雾村广场。');
+        header('Location: home.php');
+        exit;
+    }
+    flash_set('你砍' . $pd . '点，对方回敬' . $md . '点。');
+    header('Location: fight.php?a=peakfight');
+    exit;
+}
+if ($a === 'peakfight') {
+    $pk = $_SESSION['peak'] ?? null;
+    [$t, $err] = peak_check($u, (int) ($pk['tuid'] ?? 0));
+    if ($err !== '') {
+        unset($_SESSION['peak']);
+        flash_set($err);
+        header('Location: home.php');
+        exit;
+    }
+    wap_start('巅峰决斗');
+    echo '敌【' . h($t['username']) . '】' . (int) $t['lv'] . '级<br>';
+    echo '<div class="hp">敌生命 ' . (int) $t['hp'] . '/' . (int) $t['maxhp'] . '</div>';
+    echo '<div class="hp">你 ' . (int) $u['hp'] . '/' . (int) $u['maxhp'] . '</div>';
+    echo '<div class="hr">--------</div>';
+    echo '<a href="fight.php?a=peak_hit">砍他一刀</a> <a href="fight.php?a=run">撤(仍在战场)</a>';
     nav_line();
     wap_end(false);
     exit;

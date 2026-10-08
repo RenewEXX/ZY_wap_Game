@@ -50,6 +50,10 @@ if ($to !== '' && isset(locations()[$to])) {
                 $u['quest'] = 20;
             }
         }
+        if (peak_arena_of((string) ($u['loc'] ?? '')) !== '' && $to !== (string) ($u['loc'] ?? '')) {
+            peak_forfeit((int) $u['id']);
+            flash_set('你走出了巅峰战场，丧失活动资格。');
+        }
         $u['loc'] = $to;
         user_save($u);
         if ($to === 'shop') {
@@ -108,8 +112,10 @@ if ($grounds !== []) {
 if ($flash !== '') {
     echo '<div class="warn">' . h($flash) . '</div>';
 }
+peak_settle();
 echo '<div class="hr">--------</div>';
-echo '<div class="muted">' . h($here['desc']) . '</div>';
+echo '【' . h($here['name']) . '】<br><span class="muted">' . h($here['desc']) . '</span><br>';
+echo '在场：';
 $npcLinks = [
     'smith' => [['dane', '丹恩·铜须']], 'supply' => [['martha', '杂货商·玛莎']],
     'market' => [['aileen', '药剂师·艾琳'], ['med_t', '草药学徒·薄荷']], 'wall' => [['carl', '守卫队长·卡尔']], 'tavern' => [['jack', '酒馆老板·老杰克']],
@@ -117,7 +123,7 @@ $npcLinks = [
     'town_sq' => [['alice', '修女·爱丽丝'], ['horse_t', '赛马人·老霍'], ['rank_t', '榜单老人']],
     'silver_gate' => [['sentry', '守卫·布雷']], 'sguild' => [['gwen', '会长·格温'], ['gmaster', '公会管理员·霍尔']],
     'silver_sq' => [['vera', '守渊人·薇拉'], ['horse_s', '赛马人·阿金'], ['rank_s', '榜单老人'], ['med_s', '银月药剂师·霜叶']],
-    'square' => [['horse_g', '赛马人·豆芽'], ['rank_g', '榜单老人'], ['med_g', '雾语药剂师·菘蓝']],
+    'square' => [['horse_g', '赛马人·豆芽'], ['rank_g', '榜单老人'], ['med_g', '雾语药剂师·菘蓝'], ['eventer', '活动专员·阿战']],
     'guild' => [['greg', '公会接待·格雷']],
     'dsewer1' => [['reed', '守卫·雷德']], 'dsewer2' => [['lily2', '少女·莉莉']],
     'manor' => [['lord', '城主·瓦伦丁']],
@@ -126,22 +132,32 @@ $npcLinks = [
     'farm' => [['grocer', '菜商·豆豆']],
     'avenue' => [['waldon', '线人·瓦尔顿'], ['rank_c', '榜单老人'], ['med_c', '王都药剂师·藏红']],
 ];
+$npcHere = 0;
 foreach ($npcLinks[$cur] ?? [] as [$npcId, $npcName]) {
-    echo 'NPC【' . h($npcName) . '】：<a href="npc.php?who=' . h($npcId) . '">对话</a><br>';
+    $npcHere++;
+    echo '<a href="npc.php?who=' . h($npcId) . '">' . h($npcName) . '</a> ';
 }
 if ($cur === 'bmine2' && (int) $u['quest'] >= 23) {
-    echo 'NPC【使徒残响】：<a href="npc.php?who=apostle_echo">对话</a><br>';
+    $npcHere++;
+    echo '<a href="npc.php?who=apostle_echo">使徒残响</a> ';
 }
 if ($cur === 'sforest' && (int) $u['quest'] >= 24) {
-    echo 'NPC【守护者残响】：<a href="npc.php?who=golem_echo">对话</a><br>';
+    $npcHere++;
+    echo '<a href="npc.php?who=golem_echo">守护者残响</a> ';
 }
 if ($cur === 'baltar' && (int) $u['quest'] >= 26) {
-    echo 'NPC【暗影莉莉】：<a href="npc.php?who=darklily">对话</a><br>';
+    $npcHere++;
+    echo '<a href="npc.php?who=darklily">暗影莉莉</a> ';
 }
 $smiths = blacksmiths();
 if (isset($smiths[$cur])) {
-    echo '铁匠【' . h($smiths[$cur]) . '】在炉子边。<a href="smith.php">找他强化装备</a><br>';
+    $npcHere++;
+    echo '<a href="smith.php">' . h($smiths[$cur]) . '(强化)</a> ';
 }
+if ($npcHere === 0) {
+    echo '<span class="muted">空无一人</span>';
+}
+echo '<br>';
 echo '<div class="hr">--------</div>';
 if (in_array($cur, dsw_maps(), true)) {
     $left = 1800 - (time() - (int) (mats_of((int) $u['id'])['dsw_enter'] ?? time()));
@@ -173,6 +189,29 @@ if ($cur === 'warfield') {
     echo '<div class="hr">--------</div>【本周战功榜】<br>';
     foreach (war_rank(war_week()) as $i => $r) {
         echo ($i + 1) . '.' . h($r['username']) . '(' . h($r['gname'] ?? '') . ')' . (int) $r['points'] . '分<br>';
+    }
+}
+if (peak_arena_of($cur) !== '') {
+    $tickMsg = peak_tick($u);
+    if ($tickMsg !== '') {
+        echo '<div class="warn">' . $tickMsg . '</div>';
+    }
+    $alive = peak_alive_in($cur);
+    echo '<div class="warn">巅峰之战！场上还剩' . count($alive) . '人，活到23:00最后一人即胜。</div>';
+    if ($alive === []) {
+        echo '<span class="muted">场上只有风声。</span><br>';
+    }
+    foreach ($alive as $f) {
+        if ((int) $f['id'] === (int) $u['id']) {
+            continue;
+        }
+        echo '·敌【' . h($f['username']) . '】' . (int) $f['lv'] . '级血' . (int) $f['hp'] . ' <a href="fight.php?a=peak&uid=' . $f['id'] . '">砍他</a><br>';
+    }
+    $rst = db()->prepare('SELECT winner_name FROM peak_result WHERE day=? AND arena=?');
+    $rst->execute([peak_day(), $cur]);
+    $rw = $rst->fetchColumn();
+    if ($rw !== false && $rw !== null && $rw !== '') {
+        echo '今日胜者：【' . h((string) $rw) . '】<br>';
     }
 }
 $mailN = mail_unread((int) $u['id']);

@@ -139,6 +139,11 @@ if ($a === 'usereset') {
     header('Location: status.php?a=all');
     exit;
 }
+if ($a === 'usedragon') {
+    flash_set(use_dragon_pill((int) $u['id']));
+    header('Location: status.php?a=all');
+    exit;
+}
 if ($a === 'synth') {
     flash_set(synth_enchant((int) $u['id'], (string) ($_GET['id'] ?? '')));
     header('Location: bag.php?tab=mat');
@@ -283,6 +288,10 @@ if ($tab === 'equip') {
     if (!empty($mats['reset_potion'])) {
         $func = true;
         echo '·属性洗点药x' . $mats['reset_potion'] . ' <a href="bag.php?a=usereset">使用</a><br>';
+    }
+    if (!empty($mats['dragon_pill'])) {
+        $func = true;
+        echo '·真龙丹x' . $mats['dragon_pill'] . '(不可交易) <a href="bag.php?a=usedragon">使用(+3自由属性点)</a><br>';
     }
     if (!empty($mats['bag_ext5'])) {
         $func = true;

@@ -56,6 +56,14 @@ if ($go !== '' && isset($all[$go])) {
         flash_set('传送要' . fmt_money($cost) . '，钱不够。');
     } else {
         $u['gold'] = (int) $u['gold'] - $cost;
+        if (function_exists('peak_arena_of') && peak_arena_of((string) $u['loc']) !== '' && $go !== (string) $u['loc']) {
+            peak_forfeit((int) $u['id']);
+            flash_set('你传送离开了巅峰战场，丧失活动资格。');
+            $u['loc'] = $go;
+            user_save($u);
+            header('Location: home.php');
+            exit;
+        }
         $u['loc'] = $go;
         user_save($u);
         flash_set('传送到' . $all[$go]['name'] . '，花费' . fmt_money($cost) . '。');
@@ -85,6 +93,9 @@ if ($flash !== '') {
 }
 $openRegion = $backRegion;
 foreach (map_regions() as $region => $ids) {
+    if ($region === '巅峰战场') {
+        continue;
+    }
     $cnt = 0;
     foreach ($ids as $id) {
         if (isset($all[$id]) && !in_array($id, dsw_maps(), true) && !in_array($id, abx_maps(), true) && !in_array($id, mx_maps(), true)) {

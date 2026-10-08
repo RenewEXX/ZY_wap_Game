@@ -40,6 +40,7 @@ $people = [
     'grocer' => ['name' => '菜商·豆豆', 'loc' => 'farm', 'text' => '农场币换好东西！粮食、洗点药、升级卡，每周限量，先到先得。'],
     'rank_c' => ['name' => '榜单老人', 'loc' => 'avenue', 'text' => '王都也看榜。数据全服通用。'],
     'med_g' => ['name' => '雾语药剂师·菘蓝', 'loc' => 'square', 'text' => '雾气浸透绷带，药效反而更好。按最大生命百分比回，战斗中手动喝。记住：药救得活人，救不活死人。'],
+    'eventer' => ['name' => '活动专员·阿战', 'loc' => 'square', 'text' => '巅峰之战，每晚22:30~23:00！三个战场按等级分流，活到最后的人拿真龙丹（+3自由属性点）！死了、跑了、传走了，都别想再进来！'],
     'med_t' => ['name' => '草药学徒·薄荷', 'loc' => 'market', 'text' => '我是艾琳的学徒，老师忙着找她哥哥，药摊我看着。绷带10%到圣水50%，按血量回，血越多越划算。'],
     'med_s' => ['name' => '银月药剂师·霜叶', 'loc' => 'silver_sq', 'text' => '白银城的影子会动，血可不能空。备瓶月影圣水吧，关键时刻能救命。'],
     'med_c' => ['name' => '王都药剂师·藏红', 'loc' => 'avenue', 'text' => '傀儡不流血，你流。银丝勒颈之前，先把血回满。'],
@@ -314,6 +315,11 @@ if ($who === 'vera' && $choice === 'open') {
     header('Location: home.php');
     exit;
 }
+if ($who === 'eventer' && str_starts_with($choice, 'peak')) {
+    flash_set(peak_enter((int) $u['id'], $choice));
+    header('Location: home.php');
+    exit;
+}
 if ($who === 'augustus' && (int) $u['quest'] === 15 && in_array($choice, ['expose', 'question', 'hide'], true)) {
     cflag_set((int) $u['id'], 'ending', $choice);
     $u['quest'] = 16;
@@ -356,6 +362,20 @@ if ($who === 'stringer' && (int) $u['quest'] === 37 && empty(cflags((int) $u['id
 }
 if ($who === 'spider') {
     echo '<a href="npc.php?who=spider&choice=open">开启副本【银丝母巢】（150~340级，消耗入场券×1）</a><br>';
+}
+if ($who === 'eventer') {
+    if (!peak_open()) {
+        echo '<span class="muted">今晚22:30~23:00开打，现在先备好药。</span><br>';
+    } else {
+        $myArena = peak_arena_for_level((int) ($u['lv'] ?? 1));
+        if ($myArena === '') {
+            echo '<span class="muted">你' . (int) ($u['lv'] ?? 1) . '级，三个战场（100~300/301~600/601~999）都收不了你。</span><br>';
+        } else {
+            $cfg = peak_arenas()[$myArena];
+            echo '你的战场：【' . h(loc($myArena)['name']) . '】(' . $cfg['min'] . '~' . $cfg['max'] . '级，胜者真龙丹x' . $cfg['pills'] . ')<br>';
+            echo '<a href="npc.php?who=eventer&choice=' . $myArena . '">进场！（伤势回满，出来就没资格了）</a><br>';
+        }
+    }
 }
 if ($who === 'grocer' && (int) $u['quest'] >= 38) {
     $mats = mats_of((int) $u['id']);

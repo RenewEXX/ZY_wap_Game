@@ -315,6 +315,25 @@ function db_init(): void
     );
     db()->exec('CREATE INDEX IF NOT EXISTS idx_ginv_target ON guild_invites (target_uid, status)');
     db()->exec(
+        'CREATE TABLE IF NOT EXISTS peak_join (
+            uid INTEGER NOT NULL,
+            day TEXT NOT NULL DEFAULT "",
+            arena TEXT NOT NULL DEFAULT "",
+            alive INTEGER NOT NULL DEFAULT 1,
+            PRIMARY KEY (uid, day)
+        )'
+    );
+    db()->exec(
+        'CREATE TABLE IF NOT EXISTS peak_result (
+            day TEXT NOT NULL,
+            arena TEXT NOT NULL,
+            winner_uid INTEGER NOT NULL DEFAULT 0,
+            winner_name TEXT NOT NULL DEFAULT "",
+            created_at INTEGER NOT NULL DEFAULT 0,
+            PRIMARY KEY (day, arena)
+        )'
+    );
+    db()->exec(
         'CREATE TABLE IF NOT EXISTS wars (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             a_gid INTEGER NOT NULL,

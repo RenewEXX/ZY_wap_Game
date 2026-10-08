@@ -426,6 +426,193 @@ function war_banner(): string
     return '【公会战】' . $ga . ' VS ' . $gb . '，剩' . dummy_fmt(max(0, (int) $w['ends_at'] - time())) . '！去荒芜战场找军需官参战！';
 }
 
+function peak_arenas(): array
+{
+    return [
+        'peak1' => ['min' => 100, 'max' => 300, 'pills' => 1],
+        'peak2' => ['min' => 301, 'max' => 600, 'pills' => 2],
+        'peak3' => ['min' => 601, 'max' => 999, 'pills' => 3],
+    ];
+}
+
+function peak_arena_of(string $loc): string
+{
+    return isset(peak_arenas()[$loc]) ? $loc : '';
+}
+
+function peak_day(): string
+{
+    return date('Y-m-d');
+}
+
+function peak_open(): bool
+{
+    $t = time();
+    $start = strtotime(date('Y-m-d') . ' 22:30:00');
+    $end = strtotime(date('Y-m-d') . ' 23:00:00');
+    return $t >= $start && $t < $end;
+}
+
+function peak_banner(): string
+{
+    if (!peak_open()) {
+        return '';
+    }
+    $left = strtotime(date('Y-m-d') . ' 23:00:00') - time();
+    return '【巅峰之战】进行中！剩' . dummy_fmt(max(0, $left)) . '，去灰雾村广场找活动专员参加！';
+}
+
+function peak_arena_for_level(int $lv): string
+{
+    foreach (peak_arenas() as $arena => $cfg) {
+        if ($lv >= $cfg['min'] && $lv <= $cfg['max']) {
+            return $arena;
+        }
+    }
+    return '';
+}
+
+function peak_world_announce(string $text): void
+{
+    db()->prepare('INSERT INTO chat_msgs (uid, username, channel, target, text, created_at) VALUES (0, "战报", "world", 0, ?, ?)')->execute([$text, time()]);
+}
+
+function peak_enter(int $uid, string $arena): string
+{
+    $u = user_by_id((int) $uid);
+    if (!$u) {
+        return '角色不存在。';
+    }
+    if (!peak_open()) {
+        return '巅峰之战每晚22:30~23:00开启，现在还没开。';
+    }
+    if (!isset(peak_arenas()[$arena])) {
+        return '没有这个战场。';
+    }
+    if (peak_arena_for_level((int) $u['lv']) !== $arena) {
+        $cfg = peak_arenas()[$arena];
+        return '这个战场只收' . $cfg['min'] . '~' . $cfg['max'] . '级，你是' . (int) $u['lv'] . '级。';
+    }
+    if ((int) $u['hp'] <= 0) {
+        return '你倒在地上，先起来再说。';
+    }
+    $st = db()->prepare('SELECT alive FROM peak_join WHERE uid=? AND day=?');
+    $st->execute([(int) $uid, peak_day()]);
+    $row = $st->fetch();
+    if ($row && (int) $row['alive'] === 0) {
+        return '你已丧失今日资格（死亡/离开过战场），明天再来。';
+    }
+    if (!$row) {
+        db()->prepare('INSERT INTO peak_join (uid, day, arena, alive) VALUES (?, ?, ?, 1)')->execute([(int) $uid, peak_day(), $arena]);
+    }
+    $u['loc'] = $arena;
+    $u['hp'] = (int) $u['maxhp'];
+    $u['mp'] = (int) ($u['maxmp'] ?? 0);
+    user_save($u);
+    mat_set((int) $uid, 'peak_force', time());
+    return '进入【' . loc($arena)['name'] . '】！伤势尽复，活到最后就是巅峰。';
+}
+
+function peak_forfeit(int $uid): void
+{
+    db()->prepare('UPDATE peak_join SET alive=0 WHERE uid=? AND day=?')->execute([(int) $uid, peak_day()]);
+}
+
+function peak_alive_in(string $arena): array
+{
+    $day = peak_day();
+    $st = db()->prepare("SELECT u.id, u.username, u.lv, u.hp FROM users u JOIN peak_join j ON j.uid=u.id AND j.day=? AND j.arena=? AND j.alive=1 WHERE u.loc=? AND u.hp>0 ORDER BY u.lv DESC LIMIT 30");
+    $st->execute([$day, $arena, $arena]);
+    return $st->fetchAll();
+}
+
+// 战场内每分钟强制配对：闲着的人会被拖入决斗
+function peak_tick(array &$u): string
+{
+    $arena = peak_arena_of((string) ($u['loc'] ?? ''));
+    if ($arena === '' || !peak_open()) {
+        return '';
+    }
+    $uid = (int) $u['id'];
+    $msg = '';
+    // 对方发起的决斗先送达：自动接战
+    $foe = (int) (mats_of($uid)['peak_duel_from'] ?? 0);
+    if ($foe > 0) {
+        mat_del($uid, 'peak_duel_from');
+        $t = user_by_id($foe);
+        if ($t && peak_arena_of((string) ($t['loc'] ?? '')) === $arena && (int) $t['hp'] > 0) {
+            $_SESSION['peak'] = ['tuid' => $foe];
+            return '【' . $t['username'] . '】把你拖入了巅峰决斗！<a href="fight.php?a=peakfight">迎战</a>';
+        }
+    }
+    $last = (int) (mats_of($uid)['peak_force'] ?? 0);
+    if (time() - $last < 60) {
+        return $msg;
+    }
+    if (!empty($_SESSION['battle']) || !empty($_SESSION['pvp']) || !empty($_SESSION['peak'])) {
+        return $msg;
+    }
+    mat_set($uid, 'peak_force', time());
+    $cands = array_values(array_filter(peak_alive_in($arena), fn($p) => (int) $p['id'] !== $uid));
+    if ($cands === []) {
+        return $msg;
+    }
+    $pick = $cands[array_rand($cands)];
+    $_SESSION['peak'] = ['tuid' => (int) $pick['id']];
+    mat_set((int) $pick['id'], 'peak_duel_from', $uid);
+    return '战鼓响起！你被配对【' . $pick['username'] . '】(' . (int) $pick['lv'] . '级)！<a href="fight.php?a=peakfight">开打</a>';
+}
+
+function peak_settle(): void
+{
+    if (time() < strtotime(date('Y-m-d') . ' 23:00:00')) {
+        return;
+    }
+    $day = peak_day();
+    foreach (peak_arenas() as $arena => $cfg) {
+        $st = db()->prepare('SELECT winner_uid FROM peak_result WHERE day=? AND arena=?');
+        $st->execute([$day, $arena]);
+        if ($st->fetch()) {
+            continue;
+        }
+        $left = peak_alive_in($arena);
+        if (count($left) === 1) {
+            $w = $left[0];
+            $n = (int) $cfg['pills'];
+            add_mat((int) $w['id'], 'dragon_pill', $n);
+            send_mail((int) $w['id'], '巅峰裁决', 'peak', '巅峰之战冠军：真龙丹x' . $n, '你是【' . loc($arena)['name'] . '】最后的站立者！附件是真龙丹（使用+3自由属性点/枚），请查收。', []);
+            peak_world_announce('【巅峰之战】' . loc($arena)['name'] . '胜者是【' . $w['username'] . '】！真龙丹x' . $n . '已发放！');
+            db()->prepare('INSERT INTO peak_result (day, arena, winner_uid, winner_name, created_at) VALUES (?, ?, ?, ?, ?)')->execute([$day, $arena, (int) $w['id'], (string) $w['username'], time()]);
+        } else {
+            db()->prepare('INSERT INTO peak_result (day, arena, winner_uid, winner_name, created_at) VALUES (?, ?, 0, "", ?)')->execute([$day, $arena, time()]);
+        }
+        // 散场：还在里面的人传回广场
+        foreach ($left as $p) {
+            $pu = user_by_id((int) $p['id']);
+            if ($pu && peak_arena_of((string) ($pu['loc'] ?? '')) === $arena) {
+                $pu['loc'] = 'square';
+                user_save($pu);
+            }
+        }
+    }
+}
+
+function use_dragon_pill(int $uid): string
+{
+    $mats = mats_of((int) $uid);
+    if (empty($mats['dragon_pill'])) {
+        return '你没有真龙丹。';
+    }
+    $u = user_by_id((int) $uid);
+    if (!$u) {
+        return '角色不存在。';
+    }
+    add_mat((int) $uid, 'dragon_pill', -1);
+    $u['s_pts'] = (int) ($u['s_pts'] ?? 0) + 3;
+    user_save($u);
+    return '服下真龙丹，自由属性点+3！';
+}
+
 function guild_warehouse_count(int $gid): int
 {
     return (int) (db()->query('SELECT COUNT(*) FROM guild_warehouse WHERE gid=' . (int) $gid)->fetchColumn() ?: 0);
@@ -1483,7 +1670,7 @@ function is_usable_item(string $mid): bool
     if (isset(skill_books()[$mid]) || isset(pet_eggs()[$mid]) || isset(mall_tanks()[$mid]) || isset(pct_potions()[$mid])) {
         return true;
     }
-    return in_array($mid, ['exp_card100', 'reset_potion', 'bag_ext5', 'bag_ext10', 'pet_food', 'pet_revive_potion'], true);
+    return in_array($mid, ['exp_card100', 'reset_potion', 'bag_ext5', 'bag_ext10', 'pet_food', 'pet_revive_potion', 'dragon_pill'], true);
 }
 
 function mat_hidden(string $mid): bool
@@ -2355,6 +2542,9 @@ function mat_name(string $id): string
     }
     if ($id === 'dummy_time') {
         return '挂机时间(秒)';
+    }
+    if ($id === 'dragon_pill') {
+        return '真龙丹';
     }
     if (isset(pct_potions()[$id])) {
         $t = pct_potions()[$id];
@@ -4079,6 +4269,7 @@ function map_regions(): array
         '王都·傀儡之夜' => ['capital_gate', 'avenue', 'noble', 'library', 'ctomb', 'slum', 'cathedral', 'observatory', 'theater'],
         '银丝母巢' => ['mx_gate', 'mx_path', 'mx_hall', 'mx_depth', 'mx_nest', 'mx_heart'],
         '公会战场' => ['warfield'],
+        '巅峰战场' => ['peak1', 'peak2', 'peak3'],
     ];
 }
 
@@ -4391,6 +4582,9 @@ function ch2_locations(): array
     $m['silver_gate'] = ['name' => '白银城门', 'desc' => '灰白城墙高耸。守卫面朝内，影子被夕阳拉得很长，像黑色的手指。', 'exits' => ['gate' => '罪渊入口', 'silver_sq' => '白银广场'], 'monsters' => []];
     $m['silver_sq'] = ['name' => '白银广场', 'desc' => '天黑后街上没人。每一道影子都可能自己动。', 'exits' => ['silver_gate' => '白银城门', 'sguild' => '公会大厅', 'dsewer1' => '下水道一层', 'warfield' => '荒芜战场', 'capital_gate' => '王都城门'], 'monsters' => []];
     $m['warfield'] = ['name' => '荒芜战场', 'desc' => '公会战专用。周末晚上，这里只讲拳头。杀不同公会的人+1战功。', 'exits' => ['silver_sq' => '白银广场'], 'monsters' => []];
+    $m['peak1'] = ['name' => '巅峰战场·初', 'desc' => '100~300级的角斗场。活到最后的人，只需要一个。', 'exits' => ['square' => '灰雾村·广场'], 'monsters' => []];
+    $m['peak2'] = ['name' => '巅峰战场·中', 'desc' => '301~600级的角斗场。影子在这里也会出汗。', 'exits' => ['square' => '灰雾村·广场'], 'monsters' => []];
+    $m['peak3'] = ['name' => '巅峰战场·终', 'desc' => '601~999级的角斗场。深渊在上面看着，挑下一个名字。', 'exits' => ['square' => '灰雾村·广场'], 'monsters' => []];
     $m['sguild'] = ['name' => '公会大厅', 'desc' => '油灯照不亮的墙上挂着白银城地图，红圈几十个。格温在桌后等你。', 'exits' => ['silver_sq' => '白银广场'], 'monsters' => []];
     $m['dsewer1'] = ['name' => '下水道一层', 'desc' => '水没脚踝，铁锈混腐肉的气味。白眼睛的影蚀鼠从四面涌来。', 'exits' => ['silver_sq' => '白银广场', 'dsewer2' => '下水道二层'], 'monsters' => ['shadow_rat']];
     $m['dsewer2'] = ['name' => '下水道二层', 'desc' => '墙上画满眼睛。角落里三具尸体靠墙坐着，影子不见了。墙上有血字：不要回答。', 'exits' => ['dsewer1' => '下水道一层', 'bmine1' => '白银矿道一层'], 'monsters' => ['shadow_rat', 'shadow_soldier']];

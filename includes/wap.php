@@ -35,6 +35,15 @@ input{background:#111;color:#cfc;border:1px solid #363;padding:4px;font:13px mon
         } catch (Throwable $e) {
         }
     }
+    if (function_exists('peak_banner')) {
+        try {
+            $pb = peak_banner();
+            if ($pb !== '') {
+                echo '<div class="warn">' . h($pb) . '</div>';
+            }
+        } catch (Throwable $e) {
+        }
+    }
 }
 
 function wap_end(bool $home = true): void

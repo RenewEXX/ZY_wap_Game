@@ -111,20 +111,20 @@ if ($flash !== '') {
 echo '<div class="hr">--------</div>';
 echo '<div class="muted">' . h($here['desc']) . '</div>';
 $npcLinks = [
-    'smith' => [['barton', '老铁匠·巴顿']], 'supply' => [['martha', '杂货商·玛莎']],
-    'market' => [['aileen', '药剂师·艾琳'], ['med_t', '卖药郎中']], 'wall' => [['carl', '守卫队长·卡尔']], 'tavern' => [['jack', '酒馆老板·老杰克']],
+    'smith' => [['dane', '丹恩·铜须']], 'supply' => [['martha', '杂货商·玛莎']],
+    'market' => [['aileen', '药剂师·艾琳'], ['med_t', '草药学徒·薄荷']], 'wall' => [['carl', '守卫队长·卡尔']], 'tavern' => [['jack', '酒馆老板·老杰克']],
     'gate' => [['lily', '神秘少女·莉莉']], 'mansion' => [['augustus', '镇长·奥古斯都']], 'church' => [['thomas', '牧师·托马斯']],
     'town_sq' => [['alice', '修女·爱丽丝'], ['horse_t', '赛马人·老霍'], ['rank_t', '榜单老人']],
     'silver_gate' => [['sentry', '守卫·布雷']], 'sguild' => [['gwen', '会长·格温'], ['gmaster', '公会管理员·霍尔']],
-    'silver_sq' => [['vera', '守渊人·薇拉'], ['horse_s', '赛马人·阿金'], ['rank_s', '榜单老人'], ['med_s', '卖药郎中']],
-    'square' => [['horse_g', '赛马人·豆芽'], ['rank_g', '榜单老人'], ['med_g', '卖药郎中']],
+    'silver_sq' => [['vera', '守渊人·薇拉'], ['horse_s', '赛马人·阿金'], ['rank_s', '榜单老人'], ['med_s', '银月药剂师·霜叶']],
+    'square' => [['horse_g', '赛马人·豆芽'], ['rank_g', '榜单老人'], ['med_g', '雾语药剂师·菘蓝']],
     'guild' => [['greg', '公会接待·格雷']],
     'dsewer1' => [['reed', '守卫·雷德']], 'dsewer2' => [['lily2', '少女·莉莉']],
     'manor' => [['lord', '城主·瓦伦丁']],
     'noble' => [['guard_captain', '守卫队长']],
     'theater' => [['stringer', '牵线者'], ['spider', '断线人·阿蛛']],
     'farm' => [['grocer', '菜商·豆豆']],
-    'avenue' => [['waldon', '线人·瓦尔顿'], ['rank_c', '榜单老人'], ['med_c', '卖药郎中']],
+    'avenue' => [['waldon', '线人·瓦尔顿'], ['rank_c', '榜单老人'], ['med_c', '王都药剂师·藏红']],
 ];
 foreach ($npcLinks[$cur] ?? [] as [$npcId, $npcName]) {
     echo 'NPC【' . h($npcName) . '】：<a href="npc.php?who=' . h($npcId) . '">对话</a><br>';

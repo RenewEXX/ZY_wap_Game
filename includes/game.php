@@ -2206,10 +2206,10 @@ function roll_abx_skillbook(int $uid, string $mid): string
 function pct_potions(): array
 {
     return [
-        'hp_pct10' => ['name' => '粗布绷带', 'pct' => 10, 'price' => 200, 'unit' => 'silver'],
-        'hp_pct20' => ['name' => '草药膏', 'pct' => 20, 'price' => 600, 'unit' => 'silver'],
-        'hp_pct35' => ['name' => '强效金疮药', 'pct' => 35, 'price' => 3000, 'unit' => 'silver'],
-        'hp_pct50' => ['name' => '圣水', 'pct' => 50, 'price' => 1, 'unit' => 'gold'],
+        'hp_pct10' => ['name' => '雾纹绷带', 'pct' => 10, 'price' => 200, 'unit' => 'silver'],
+        'hp_pct20' => ['name' => '苔语药膏', 'pct' => 20, 'price' => 600, 'unit' => 'silver'],
+        'hp_pct35' => ['name' => '龙血愈合剂', 'pct' => 35, 'price' => 3000, 'unit' => 'silver'],
+        'hp_pct50' => ['name' => '月影圣水', 'pct' => 50, 'price' => 10000, 'unit' => 'gold'],
     ];
 }
 

@@ -3120,13 +3120,14 @@ function gain_exp(array &$u, int $exp): string
     while ((int) $u['exp'] >= exp_need((int) $u['lv'])) {
         $u['exp'] -= exp_need((int) $u['lv']);
         $u['lv'] = (int) $u['lv'] + 1;
-        $u['maxhp'] = (int) $u['maxhp'] + 6;
+        $u['maxhp'] = (int) $u['maxhp'] + 10;
+        $u['maxmp'] = (int) ($u['maxmp'] ?? 0) + 5;
         $u['atk'] = (int) $u['atk'] + 1;
         $u['def'] = (int) $u['def'] + 1;
         $u['hp'] = (int) $u['maxhp'];
         $u['mp'] = (int) ($u['maxmp'] ?? 0);
         $u['s_pts'] = (int) ($u['s_pts'] ?? 0) + 3;
-        $msg .= '！升级至' . $u['lv'] . '级，伤势尽复，得3属性点';
+        $msg .= '！升级至' . $u['lv'] . '级，伤势尽复，生命上限+10，魔力上限+5，得3属性点';
     }
     return $msg;
 }

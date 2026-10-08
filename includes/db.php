@@ -266,6 +266,31 @@ function db_init(): void
     );
     db()->exec('CREATE INDEX IF NOT EXISTS idx_gm_gid ON guild_members (gid)');
     db()->exec(
+        'CREATE TABLE IF NOT EXISTS guild_warehouse (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            gid INTEGER NOT NULL DEFAULT 0,
+            kind TEXT NOT NULL DEFAULT "mat",
+            mat_id TEXT NOT NULL DEFAULT "",
+            qty INTEGER NOT NULL DEFAULT 0,
+            equip_id INTEGER NOT NULL DEFAULT 0,
+            donor_uid INTEGER NOT NULL DEFAULT 0,
+            donor_name TEXT NOT NULL DEFAULT "",
+            created_at INTEGER NOT NULL DEFAULT 0
+        )'
+    );
+    db()->exec('CREATE INDEX IF NOT EXISTS idx_gwh_gid ON guild_warehouse (gid)');
+    db()->exec(
+        'CREATE TABLE IF NOT EXISTS guild_invites (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            gid INTEGER NOT NULL DEFAULT 0,
+            inviter_uid INTEGER NOT NULL DEFAULT 0,
+            target_uid INTEGER NOT NULL DEFAULT 0,
+            status TEXT NOT NULL DEFAULT "open",
+            created_at INTEGER NOT NULL DEFAULT 0
+        )'
+    );
+    db()->exec('CREATE INDEX IF NOT EXISTS idx_ginv_target ON guild_invites (target_uid, status)');
+    db()->exec(
         'CREATE TABLE IF NOT EXISTS wars (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             a_gid INTEGER NOT NULL,

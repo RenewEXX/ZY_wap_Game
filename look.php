@@ -28,6 +28,10 @@ echo '魔力：' . (int) ($t['mp'] ?? 0) . '/' . (int) ($t['maxmp'] ?? 0) . '<br
 echo '位置：' . h(loc((string) $t['loc'])['name']) . '<br>';
 echo '<div class="hr">--------</div>';
 echo '<a href="mail.php?a=write&to=' . h($t['username']) . '">写信</a><br>';
+$mg = my_guild((int) $u['id']);
+if ($mg && guild_can_invite($mg) && !my_guild((int) $t['id'])) {
+    echo '<a href="guild.php?a=invite&uid=' . (int) $t['id'] . '">公会邀请（' . h($mg['name']) . '）</a><br>';
+}
 echo '<a href="home.php">回行动</a>';
 nav_line();
 wap_end(false);

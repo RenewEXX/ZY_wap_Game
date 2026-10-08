@@ -26,6 +26,15 @@ a{color:#8cf;text-decoration:none}
 input{background:#111;color:#cfc;border:1px solid #363;padding:4px;font:13px monospace}
 </style></head><body>';
     echo '<div class="t">【' . h($title) . '】</div>';
+    if (function_exists('war_banner')) {
+        try {
+            $wb = war_banner();
+            if ($wb !== '') {
+                echo '<div class="warn">' . h($wb) . '</div>';
+            }
+        } catch (Throwable $e) {
+        }
+    }
 }
 
 function wap_end(bool $home = true): void

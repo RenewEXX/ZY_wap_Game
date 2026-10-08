@@ -199,7 +199,11 @@ if ($tab === 'equip') {
         if ((int) ($e['req_lv'] ?? 1) > 1 || (int) ($e['req_str'] ?? 0) > 0 || (int) ($e['req_agi'] ?? 0) > 0) {
             echo '（' . h(equip_req_text($e)) . '）';
         }
-        echo ' <a href="bag.php?a=wear&id=' . $e['id'] . '">穿</a> <a href="bag.php?a=sell&id=' . $e['id'] . '">卖' . h(fmt_money(equip_sell_price((int) $e['quality']))) . '</a> <a href="bag.php?a=dropequip&id=' . $e['id'] . '">扔</a><br>';
+        echo ' <a href="bag.php?a=wear&id=' . $e['id'] . '">穿</a> <a href="bag.php?a=sell&id=' . $e['id'] . '">卖' . h(fmt_money(equip_sell_price((int) $e['quality']))) . '</a> <a href="bag.php?a=dropequip&id=' . $e['id'] . '">扔</a>';
+        if (my_guild((int) $u['id'])) {
+            echo ' <a href="guild.php?a=wput&kind=equip&eid=' . $e['id'] . '">存公会</a>';
+        }
+        echo '<br>';
     }
     if (!$has) {
         echo '<span class="muted">空。去刷怪掉装备吧。</span>';
@@ -214,6 +218,9 @@ if ($tab === 'equip') {
         }
         $any = true;
         echo '·' . h(mat_name($mid)) . 'x' . $num . ' <a href="bag.php?a=drop&id=' . h($mid) . '&tab=mat">扔</a>';
+        if (my_guild((int) $u['id']) && is_tradable_mat($mid)) {
+            echo ' <a href="guild.php?a=wput&kind=mat&mid=' . h($mid) . '&n=' . $num . '">全存公会</a>';
+        }
         $et = enchant_mat_tier($mid);
         if ($et !== '' && (enchant_tiers()[$et]['next'] ?? '') !== '' && $num >= enchant_tiers()[$et]['need']) {
             echo ' <a href="bag.php?a=synth&id=' . h($mid) . '">合成' . h(enchant_tiers()[enchant_tiers()[$et]['next']]['name']) . '</a>';

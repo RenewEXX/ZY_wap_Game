@@ -387,6 +387,84 @@ function guild_level_need(int $lv): int
     return $lv >= 10 ? 999999999 : $lv * 5000;
 }
 
+function guild_role_name(string $role): string
+{
+    return ['leader' => '会长', 'vice' => '副会长', 'officer' => '管理员', 'member' => '成员'][$role] ?? '成员';
+}
+
+function guild_can_invite(array $g): bool
+{
+    return in_array($g['role'] ?? '', ['leader', 'vice', 'officer'], true);
+}
+
+function guild_can_take_warehouse(array $g): bool
+{
+    return in_array($g['role'] ?? '', ['leader', 'vice'], true);
+}
+
+function is_tradable_mat(string $mid): bool
+{
+    if (mat_hidden($mid)) {
+        return false;
+    }
+    if (isset(quest_mats()[$mid])) {
+        return false;
+    }
+    if (in_array($mid, ['bag_ext5', 'bag_ext10', 'bag_ext5_used', 'bag_ext10_used', 'offline_on', 'dummy_on', 'seen_last', 'exp_card_until'], true)) {
+        return false;
+    }
+    return true;
+}
+
+function guild_warehouse_cap(int $level): int
+{
+    return 20 + (int) $level * 10;
+}
+
+function war_banner(): string
+{
+    $st = db()->query('SELECT a_gid, b_gid, ends_at FROM wars WHERE status="open" ORDER BY id DESC LIMIT 1');
+    $w = $st->fetch();
+    if (!$w) {
+        return '';
+    }
+    $ga = db()->query('SELECT name FROM guilds WHERE id=' . (int) $w['a_gid'])->fetchColumn();
+    $gb = db()->query('SELECT name FROM guilds WHERE id=' . (int) $w['b_gid'])->fetchColumn();
+    return '【公会战】' . $ga . ' VS ' . $gb . '，剩' . dummy_fmt(max(0, (int) $w['ends_at'] - time())) . '！去荒芜战场找军需官参战！';
+}
+
+function guild_warehouse_count(int $gid): int
+{
+    return (int) (db()->query('SELECT COUNT(*) FROM guild_warehouse WHERE gid=' . (int) $gid)->fetchColumn() ?: 0);
+}
+
+function guild_exp_bonus(int $level): int
+{
+    return (int) $level;
+}
+
+function guild_level_up(int $gid): string
+{
+    $st = db()->prepare('SELECT * FROM guilds WHERE id=?');
+    $st->execute([(int) $gid]);
+    $g = $st->fetch();
+    if (!$g) {
+        return '没有这个公会。';
+    }
+    $lv = (int) $g['level'];
+    if ($lv >= 10) {
+        return '公会已满级。';
+    }
+    $need = guild_level_need($lv);
+    $tot = (int) (db()->query('SELECT COALESCE(SUM(contrib),0) FROM guild_members WHERE gid=' . (int) $gid)->fetchColumn() ?: 0);
+    $used = (int) (db()->query('SELECT COALESCE(SUM(exp),0) FROM guilds WHERE id=' . (int) $gid)->fetchColumn() ?: 0);
+    if ($tot - $used < $need) {
+        return '全员累计贡献' . $tot . '，已用' . $used . '，升级要' . $need . '贡献。';
+    }
+    $msg = guild_add_exp((int) $gid, $need);
+    return '消耗' . $need . '贡献升级！' . $msg . '仓库上限' . guild_warehouse_cap($lv + 1) . '格。';
+}
+
 function guild_add_exp(int $gid, int $exp): string
 {
     $st = db()->prepare('SELECT * FROM guilds WHERE id=?');
@@ -486,6 +564,9 @@ function declare_war(int $uid, int $targetGid): string
     $u['gold'] = (int) $u['gold'] - 5000;
     user_save($u);
     db()->prepare('INSERT INTO wars (a_gid, b_gid, ends_at, status) VALUES (?, ?, ?, "open")')->execute([$myGid, $targetGid, time() + 86400]);
+    $ga = db()->query('SELECT name FROM guilds WHERE id=' . $myGid)->fetchColumn();
+    $gb = db()->query('SELECT name FROM guilds WHERE id=' . $targetGid)->fetchColumn();
+    db()->prepare('INSERT INTO chat_msgs (uid, username, channel, target, text, created_at) VALUES (0, "战报", "world", 0, ?, ?)')->execute(['【公会战】' . $ga . '向' . $gb . '宣战！24小时刷怪比战功，去荒芜战场找军需官参战！', time()]);
     return '宣战成功！24小时内双方成员刷怪涨战功。';
 }
 

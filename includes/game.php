@@ -486,6 +486,9 @@ function peak_enter(int $uid, string $arena): string
     if (!peak_open()) {
         return '巅峰之战每晚22:30~23:00开启，现在还没开。';
     }
+    if (time() >= strtotime(date('Y-m-d') . ' 22:55:00')) {
+        return '22:55后封场了，不再放新人进，明天早点来。';
+    }
     if (!isset(peak_arenas()[$arena])) {
         return '没有这个战场。';
     }
@@ -583,17 +586,17 @@ function peak_settle(): void
             send_mail((int) $w['id'], '巅峰裁决', 'peak', '巅峰之战冠军：真龙丹x' . $n, '你是【' . loc($arena)['name'] . '】最后的站立者！附件是真龙丹（使用+3自由属性点/枚），请查收。', []);
             peak_world_announce('【巅峰之战】' . loc($arena)['name'] . '胜者是【' . $w['username'] . '】！真龙丹x' . $n . '已发放！');
             db()->prepare('INSERT INTO peak_result (day, arena, winner_uid, winner_name, created_at) VALUES (?, ?, ?, ?, ?)')->execute([$day, $arena, (int) $w['id'], (string) $w['username'], time()]);
-        } else {
-            db()->prepare('INSERT INTO peak_result (day, arena, winner_uid, winner_name, created_at) VALUES (?, ?, 0, "", ?)')->execute([$day, $arena, time()]);
-        }
-        // 散场：还在里面的人传回广场
-        foreach ($left as $p) {
-            $pu = user_by_id((int) $p['id']);
+            // 散场：胜者传回广场
+            $pu = user_by_id((int) $w['id']);
             if ($pu && peak_arena_of((string) ($pu['loc'] ?? '')) === $arena) {
                 $pu['loc'] = 'square';
                 user_save($pu);
             }
+        } elseif (count($left) === 0) {
+            // 场里没人了才流局
+            db()->prepare('INSERT INTO peak_result (day, arena, winner_uid, winner_name, created_at) VALUES (?, ?, 0, "", ?)')->execute([$day, $arena, time()]);
         }
+        // 还剩多人：不等了也不散场，继续等到只剩1人（不记result，下次页面访问再结算）
     }
 }
 

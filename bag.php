@@ -10,7 +10,9 @@ if (!in_array($tab, ['equip', 'mat', 'quest', 'other'], true)) {
 }
 
 if ($a === 'drink') {
-    if ((int) $u['potion'] <= 0) {
+    if (peak_arena_of((string) ($u['loc'] ?? '')) !== '') {
+        flash_set('巅峰战场禁药！全靠刀硬砍。');
+    } elseif ((int) $u['potion'] <= 0) {
         flash_set('药空了。');
     } elseif ((int) $u['hp'] >= (int) $u['maxhp']) {
         flash_set('你没有伤。');

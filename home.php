@@ -190,9 +190,10 @@ foreach ($nears as $nu) {
     echo '·<a href="look.php?id=' . (int) $nu['id'] . '">' . h($nu['username']) . '</a>(' . (int) $nu['lv'] . '级' . h(job_of(['job' => (string) $nu['job']])['name']) . ')<br>';
 }
 
-// 打怪：在行动画面直接开打（3分钟一刷新，小怪20只，精英2只，BOSS独苗）
+// 打怪：在行动画面直接开打（3分钟一刷新，每种怪各20只，精英2只，BOSS独苗）
 if ($here['monsters'] !== []) {
     echo '动手：<br>';
+    spawn_tick($cur);
     $spawns = [];
     foreach (map_spawns($cur) as $s) {
         $spawns[$s['mid'] . '|' . $s['elite']] = (int) $s['num'];
@@ -204,7 +205,7 @@ if ($here['monsters'] !== []) {
         $isBoss = ($mid === boss_of_map($cur));
         $left = $spawns[$mid . '|0'] ?? 0;
         if ($left <= 0) {
-            echo '· ' . h($m['name']) . '[Lv' . monster_lv($mid) . ']' . ($isBoss ? '（BOSS剩' . gmdate('i:s', spawn_respawn_in($cur)) . '刷新）' : '（杀光了，剩' . gmdate('i:s', spawn_respawn_in($cur)) . '刷新）') . '<br>';
+            echo '· ' . h($m['name']) . '[Lv' . monster_lv($mid) . ']' . ($isBoss ? '（BOSS剩' . gmdate('i:s', spawn_respawn_in($cur, $mid)) . '刷新）' : '（这种杀光了，剩' . gmdate('i:s', spawn_respawn_in($cur, $mid)) . '刷新，可打别的怪）') . '<br>';
             continue;
         }
         $gang = (!$isBoss && $left >= 6) ? ' / <a href="fight.php?a=start&m=' . h($mid) . '&n=6">群殴6只</a>' : '';

@@ -292,6 +292,18 @@ function db_init(): void
     );
     db()->exec('CREATE INDEX IF NOT EXISTS idx_gwh_gid ON guild_warehouse (gid)');
     db()->exec(
+        'CREATE TABLE IF NOT EXISTS guild_warehouse_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            gid INTEGER NOT NULL DEFAULT 0,
+            uid INTEGER NOT NULL DEFAULT 0,
+            username TEXT NOT NULL DEFAULT "",
+            action TEXT NOT NULL DEFAULT "",
+            detail TEXT NOT NULL DEFAULT "",
+            created_at INTEGER NOT NULL DEFAULT 0
+        )'
+    );
+    db()->exec('CREATE INDEX IF NOT EXISTS idx_gwhlog_gid ON guild_warehouse_log (gid, id)');
+    db()->exec(
         'CREATE TABLE IF NOT EXISTS guild_invites (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             gid INTEGER NOT NULL DEFAULT 0,

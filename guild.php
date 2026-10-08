@@ -25,6 +25,23 @@ function guild_confirm(string $title, string $desc): void
     exit;
 }
 
+// 取仓库金是POST表单，走两步确认：第一步回显金额，第二步执行
+function guild_confirm_take_gold(int $n): void
+{
+    wap_start('确认操作');
+    echo '<div class="warn">你确定吗？</div>';
+    echo '【取出仓库金】<br>取出' . h(fmt_money($n)) . '，个人贡献-' . intdiv($n, 10000) . '金，不可撤销！<br>';
+    echo '<div class="hr">--------</div>';
+    echo '<form method="post" action="guild.php?a=wwithgold">';
+    echo '<input type="hidden" name="gold" value="' . $n . '">';
+    echo '<input type="hidden" name="yes" value="1">';
+    echo '<input type="submit" value="确定取出">';
+    echo '</form><a href="guild.php?tab=wh">取消</a><br>';
+    nav_line();
+    wap_end(false);
+    exit;
+}
+
 if ($a === 'create' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     flash_set(guild_create($uid, (string) ($_POST['name'] ?? '')));
     header('Location: guild.php');
@@ -78,6 +95,7 @@ if ($a === 'wdepgold') {
         if ($cg > 0) {
             db()->prepare('UPDATE guild_members SET contrib=contrib+? WHERE uid=?')->execute([$cg, $uid]);
         }
+        guild_wh_log((int) $g['id'], $uid, (string) $u['username'], '存金', fmt_money($n));
         flash_set('存入仓库' . fmt_money($n) . '，个人贡献+' . $cg . '金' . ($cg <= 0 ? '（不足1金不计贡献）' : '') . '。');
     }
     header('Location: guild.php?tab=wh');
@@ -95,6 +113,11 @@ if ($a === 'wwithgold') {
     } elseif ((int) ($g['gold'] ?? 0) < $n) {
         flash_set('仓库没这么多金。');
     } else {
+        if ((string) ($_POST['yes'] ?? '') !== '1') {
+            $_GET['a'] = 'wwithgold';
+            $_GET['yes'] = '0';
+            guild_confirm_take_gold($n);
+        }
         db()->prepare('UPDATE guilds SET gold=gold-? WHERE id=?')->execute([$n, (int) $g['id']]);
         $u['gold'] = (int) $u['gold'] + $n;
         user_save($u);
@@ -103,6 +126,7 @@ if ($a === 'wwithgold') {
         if ($cg > 0) {
             db()->prepare('UPDATE guild_members SET contrib=CASE WHEN contrib>? THEN contrib-? ELSE 0 END WHERE uid=?')->execute([$cg, $cg, $uid]);
         }
+        guild_wh_log((int) $g['id'], $uid, (string) $u['username'], '取金', fmt_money($n));
         flash_set('取出' . fmt_money($n) . '，个人贡献-' . $cg . '金。');
     }
     header('Location: guild.php?tab=wh');
@@ -250,6 +274,7 @@ if ($a === 'wput') {
                 } else {
                     add_mat($uid, $mid, -$n);
                     db()->prepare('INSERT INTO guild_warehouse (gid, kind, mat_id, qty, donor_uid, donor_name, created_at) VALUES (?, "mat", ?, ?, ?, ?, ?)')->execute([(int) $g['id'], $mid, $n, $uid, (string) $u['username'], time()]);
+                    guild_wh_log((int) $g['id'], $uid, (string) $u['username'], '存物', mat_name($mid) . 'x' . $n);
                     flash_set('存入【' . mat_name($mid) . '】x' . $n . '。');
                 }
             } elseif ($kind === 'equip') {
@@ -264,6 +289,7 @@ if ($a === 'wput') {
                 } else {
                     db()->prepare('UPDATE equips SET uid=0, pos="gwarehouse" WHERE id=?')->execute([$eid]);
                     db()->prepare('INSERT INTO guild_warehouse (gid, kind, equip_id, qty, donor_uid, donor_name, created_at) VALUES (?, "equip", ?, 1, ?, ?, ?)')->execute([(int) $g['id'], $eid, $uid, (string) $u['username'], time()]);
+                    guild_wh_log((int) $g['id'], $uid, (string) $u['username'], '存物', equip_shortname((string) $eq['name']));
                     _gear_uncache($uid);
                     flash_set('存入【' . equip_shortname((string) $eq['name']) . '】。');
                 }
@@ -297,10 +323,13 @@ if ($a === 'wtake') {
                 }
                 add_mat($uid, (string) $w['mat_id'], (int) $w['qty']);
                 db()->prepare('DELETE FROM guild_warehouse WHERE id=?')->execute([$wid]);
+                guild_wh_log((int) $g['id'], $uid, (string) $u['username'], '取物', mat_name((string) $w['mat_id']) . 'x' . (int) $w['qty']);
                 flash_set('取出【' . mat_name((string) $w['mat_id']) . '】x' . (int) $w['qty'] . '。');
             } else {
+                $eqn = (string) (db()->query('SELECT name FROM equips WHERE id=' . (int) $w['equip_id'])->fetchColumn() ?: '装备');
                 db()->prepare('UPDATE equips SET uid=?, pos="" WHERE id=? AND pos="gwarehouse"')->execute([$uid, (int) $w['equip_id']]);
                 db()->prepare('DELETE FROM guild_warehouse WHERE id=?')->execute([$wid]);
+                guild_wh_log((int) $g['id'], $uid, (string) $u['username'], '取物', equip_shortname($eqn));
                 _gear_uncache($uid);
                 flash_set('取出装备。');
             }
@@ -448,6 +477,17 @@ if ($g) {
             echo '<span class="muted">空。去背包把可交易材料/装备存进来。</span><br>';
         }
         echo '存入：<a href="bag.php?tab=mat">去材料背包</a> <a href="bag.php?tab=equip">去装备背包</a><br>';
+        echo '<div class="hr">--------</div>【出入库记录】<br>';
+        $lst = db()->prepare('SELECT * FROM guild_warehouse_log WHERE gid=? ORDER BY id DESC LIMIT 20');
+        $lst->execute([(int) $g['id']]);
+        $hasLog = false;
+        while ($lr = $lst->fetch()) {
+            $hasLog = true;
+            echo date('m-d H:i', (int) $lr['created_at']) . ' ' . h($lr['username']) . h($lr['action']) . '【' . h($lr['detail']) . '】<br>';
+        }
+        if (!$hasLog) {
+            echo '<span class="muted">暂无记录。</span><br>';
+        }
     } else {
         $st = db()->prepare('SELECT u.* FROM guild_members m JOIN users u ON u.id=m.uid WHERE m.gid=? LIMIT 60');
         $st->execute([(int) $g['id']]);

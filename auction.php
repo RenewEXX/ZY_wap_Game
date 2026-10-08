@@ -86,6 +86,16 @@ if ($a === 'buyout') {
         flash_set('钱不够。');
         auction_back('auction.php?a=view&id=' . $auc['id']);
     }
+    if ((string) ($_GET['yes'] ?? '') !== '1') {
+        wap_start('确认购买');
+        echo '<div class="warn">你确定吗？</div>';
+        echo '一口价【' . h(auction_item_name($auc)) . '】' . h(auction_money_text($price, $auc['currency'])) . '，买下不可退！<br>';
+        echo '<div class="hr">--------</div>';
+        echo '<a href="auction.php?a=buyout&id=' . $auc['id'] . '&yes=1">确定购买</a>　<a href="auction.php?a=view&id=' . $auc['id'] . '">取消</a><br>';
+        nav_line();
+        wap_end(false);
+        exit;
+    }
     if ($auc['currency'] === 'diamond') {
         $u['diamonds'] = (int) $u['diamonds'] - $price;
     } else {
@@ -400,11 +410,15 @@ if ($a === 'browse') {
     $fset = (string) ($_GET['set'] ?? 'all');
     $fminlv = max(0, (int) ($_GET['minlv'] ?? 0));
     $fkw = trim((string) ($_GET['kw'] ?? ''));
+    $fcur = (string) ($_GET['cur'] ?? 'all');
+    if (!in_array($fcur, ['all', 'gold', 'diamond'], true)) {
+        $fcur = 'all';
+    }
     $sort = (string) ($_GET['sort'] ?? 'end');
     $p = max(1, (int) ($_GET['p'] ?? 1));
     $per = 5;
-    $bl = function (array $over = []) use ($cat, $fq, $fset, $fminlv, $fkw, $sort, $p) {
-        $q = array_merge(['a' => 'browse', 'cat' => $cat, 'q' => $fq, 'set' => $fset, 'minlv' => $fminlv, 'kw' => $fkw, 'sort' => $sort, 'p' => $p], $over);
+    $bl = function (array $over = []) use ($cat, $fq, $fset, $fminlv, $fkw, $fcur, $sort, $p) {
+        $q = array_merge(['a' => 'browse', 'cat' => $cat, 'q' => $fq, 'set' => $fset, 'minlv' => $fminlv, 'kw' => $fkw, 'cur' => $fcur, 'sort' => $sort, 'p' => $p], $over);
         return 'auction.php?' . http_build_query($q);
     };
     echo '【浏览拍卖品】<br>';
@@ -420,6 +434,10 @@ if ($a === 'browse') {
     foreach (['all' => '全部', 'swamp' => '沼泽', 'abyss' => '深渊'] as $k => $n) {
         echo ($k === $fset ? '<b>' . $n . '</b>' : '<a href="' . h($bl(['set' => $k, 'p' => 1])) . '">' . $n . '</a>') . ' ';
     }
+    echo '<br>货币：';
+    foreach (['all' => '全部', 'gold' => '金币区', 'diamond' => '魔钻区'] as $k => $n) {
+        echo ($k === $fcur ? '<b>' . $n . '</b>' : '<a href="' . h($bl(['cur' => $k, 'p' => 1])) . '">' . $n . '</a>') . ' ';
+    }
     echo '<br>排序：';
     foreach (['end' => '将结束', 'price_asc' => '价格↑', 'price_desc' => '价格↓', 'quality' => '品级', 'level' => '等级'] as $k => $n) {
         echo ($k === $sort ? '<b>' . $n . '</b>' : '<a href="' . h($bl(['sort' => $k, 'p' => 1])) . '">' . $n . '</a>') . ' ';
@@ -430,6 +448,7 @@ if ($a === 'browse') {
     echo '<input type="hidden" name="cat" value="' . h($cat) . '">';
     echo '<input type="hidden" name="q" value="' . $fq . '">';
     echo '<input type="hidden" name="set" value="' . h($fset) . '">';
+    echo '<input type="hidden" name="cur" value="' . h($fcur) . '">';
     echo '<input type="hidden" name="sort" value="' . h($sort) . '">';
     echo '等级≥<input name="minlv" size="3" value="' . $fminlv . '"> 名称<input name="kw" size="8" value="' . h($fkw) . '"><input type="submit" value="搜">';
     echo '</form>';
@@ -455,6 +474,9 @@ if ($a === 'browse') {
     }
     if ($fkw !== '') {
         $where .= ' AND item_name LIKE ' . db()->quote('%' . $fkw . '%');
+    }
+    if ($fcur === 'gold' || $fcur === 'diamond') {
+        $where .= ' AND currency=' . db()->quote($fcur);
     }
     $effPrice = '(CASE WHEN cur_price>0 THEN cur_price ELSE start_price END)';
     $order = match ($sort) {

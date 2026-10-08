@@ -469,6 +469,11 @@ function is_tradable_equip(array $eq): bool
     return (int) ($eq['quality'] ?? 0) >= 3;
 }
 
+function guild_wh_log(int $gid, int $uid, string $username, string $action, string $detail): void
+{
+    db()->prepare('INSERT INTO guild_warehouse_log (gid, uid, username, action, detail, created_at) VALUES (?, ?, ?, ?, ?, ?)')->execute([(int) $gid, (int) $uid, (string) $username, (string) $action, mb_substr((string) $detail, 0, 80), time()]);
+}
+
 function guild_add_exp(int $gid, int $exp): string
 {
     $st = db()->prepare('SELECT * FROM guilds WHERE id=?');

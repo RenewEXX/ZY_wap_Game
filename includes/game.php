@@ -306,6 +306,12 @@ function offline_tick(array &$u): void
     $tried = 0;
     $dead = false;
     $emptyRounds = 0;
+    $onlyBoss = count($mlist) === 1 && $mlist[0] === boss_of_map((string) ($u['loc'] ?? ''));
+    $maxFights = min($onlyBoss ? 2000 : 120, intdiv($gap, 30), intdiv($pool, 30));
+    if ($maxFights <= 0) {
+        flash_set('离线' . dummy_fmt($gap) . '，人偶剩' . dummy_fmt($pool) . '不够打一场，去续费。');
+        return;
+    }
     for ($f = 0; $f < $maxFights; $f++) {
         $mid = $mlist[array_rand($mlist)];
         $m = $allm[$mid];
@@ -316,8 +322,14 @@ function offline_tick(array &$u): void
         $isBossOff = ($mid === boss_of_map((string) ($u['loc'] ?? '')));
         $takeOff = spawn_take((string) ($u['loc'] ?? ''), $mid, 0, $isBossOff ? 1 : 6);
         if ($takeOff <= 0) {
-            $emptyRounds++;
-            continue;
+            if ($onlyBoss) {
+                spawn_fill((string) ($u['loc'] ?? ''));
+                $takeOff = spawn_take((string) ($u['loc'] ?? ''), $mid, 0, 1);
+            }
+            if ($takeOff <= 0) {
+                $emptyRounds++;
+                continue;
+            }
         }
         $tried++;
         $numOff = $isBossOff ? 1 : min(6, $takeOff);
@@ -338,18 +350,20 @@ function offline_tick(array &$u): void
             break;
         }
         if ($r['status'] === 'dead') {
+            spawn_tick((string) ($u['loc'] ?? ''));
             $dead = true;
             break;
         }
         $wins++;
     }
     unset($_SESSION['battle']);
+    spawn_tick((string) ($u['loc'] ?? ''));
     add_mat($uid, 'dummy_time', -$tried * 30);
     mat_set($uid, 'seen_last', $now - max(0, $gap - $tried * 30));
     user_save($u);
     $eq1 = (int) db()->query('SELECT COUNT(*) FROM equips WHERE uid=' . $uid)->fetchColumn();
     $txt = '离线' . dummy_fmt($gap) . '，人偶带打' . $tried . '场胜' . $wins . '场，金+' . fmt_money(max(0, (int) $u['gold'] - $gold0)) . '，装备+' . max(0, $eq1 - $eq0) . '件';
-    if ($wins <= 0 && $emptyRounds > 0) {
+    if ($wins <= 0 && $emptyRounds > 0 && !$onlyBoss) {
         $txt .= '（图里没怪了，人偶在空转——换个怪多的图挂机）';
     }
     if ((int) $u['lv'] > $lv0) {
@@ -701,14 +715,19 @@ function boss_of_map(string $loc): string
     return $m[$loc] ?? '';
 }
 
-function spawn_tick(): void
+function spawn_tick(?string $onlyLoc = null): void
 {
-    if ((int) ($_SESSION['spawn_tick'] ?? 0) > time() - 30) {
+    if ($onlyLoc === null && (int) ($_SESSION['spawn_tick'] ?? 0) > time() - 30) {
         return;
     }
-    $_SESSION['spawn_tick'] = time();
+    if ($onlyLoc === null) {
+        $_SESSION['spawn_tick'] = time();
+    }
     $now = time();
     foreach (locations() as $loc => $L) {
+        if ($onlyLoc !== null && $loc !== $onlyLoc) {
+            continue;
+        }
         if (empty($L['monsters'])) {
             continue;
         }
@@ -723,24 +742,34 @@ function spawn_tick(): void
         if ($rs->rowCount() === 0) {
             db()->prepare('INSERT INTO map_respawn (loc, at) VALUES (?, ?)')->execute([$loc, $now]);
         }
-        $boss = boss_of_map($loc);
-        $trash = array_values(array_filter($L['monsters'], fn($mid) => $mid !== $boss));
-        db()->prepare('DELETE FROM map_spawns WHERE loc=?')->execute([$loc]);
-        $ins = db()->prepare('INSERT INTO map_spawns (loc, mid, elite, num) VALUES (?, ?, ?, ?)');
-        if ($boss !== '') {
-            $ins->execute([$loc, $boss, 0, 1]);
-        }
-        $cnt = [];
-        for ($i = 0; $i < 20 && $trash !== []; $i++) {
-            $mid = $trash[array_rand($trash)];
-            $cnt[$mid] = ($cnt[$mid] ?? 0) + 1;
-        }
-        foreach ($cnt as $mid => $num) {
-            $ins->execute([$loc, $mid, 0, $num]);
-        }
-        if ($trash !== [] && mt_rand(1, 100) <= 40) {
-            $ins->execute([$loc, $trash[array_rand($trash)], 1, 1]);
-        }
+        spawn_fill($loc);
+    }
+}
+
+function spawn_fill(string $loc): void
+{
+    $all = locations();
+    $L = $all[$loc] ?? null;
+    if (!$L || empty($L['monsters'])) {
+        return;
+    }
+    $boss = boss_of_map($loc);
+    $trash = array_values(array_filter($L['monsters'], fn($mid) => $mid !== $boss));
+    db()->prepare('DELETE FROM map_spawns WHERE loc=?')->execute([$loc]);
+    $ins = db()->prepare('INSERT INTO map_spawns (loc, mid, elite, num) VALUES (?, ?, ?, ?)');
+    if ($boss !== '') {
+        $ins->execute([$loc, $boss, 0, 1]);
+    }
+    $cnt = [];
+    for ($i = 0; $i < 20 && $trash !== []; $i++) {
+        $mid = $trash[array_rand($trash)];
+        $cnt[$mid] = ($cnt[$mid] ?? 0) + 1;
+    }
+    foreach ($cnt as $mid => $num) {
+        $ins->execute([$loc, $mid, 0, $num]);
+    }
+    if ($trash !== [] && mt_rand(1, 100) <= 40) {
+        $ins->execute([$loc, $trash[array_rand($trash)], 1, 1]);
     }
 }
 

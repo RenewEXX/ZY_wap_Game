@@ -3046,14 +3046,32 @@ function blacksmiths(): array
     ];
 }
 
+function enhance_per_level(int $lv): int
+{
+    // 每级强化给主属性加的百分比：+1~2每级5，+3~4每级10，+5~6每级15，+7起每级20
+    if ($lv <= 2) {
+        return 5;
+    }
+    if ($lv <= 4) {
+        return 10;
+    }
+    if ($lv <= 6) {
+        return 15;
+    }
+    return 20;
+}
+
 function enhance_rate(array $e): float
 {
     if ((int) ($e['broken'] ?? 0) === 1) {
         return 0.0;
     }
-    // 低强差距小（+1~+6每级+4%），+7起拉开（每级+12%）
     $lv = max(0, (int) ($e['enhance_level'] ?? 0));
-    return 1 + 0.04 * min($lv, 6) + 0.12 * max(0, $lv - 6);
+    $sum = 0;
+    for ($i = 1; $i <= $lv; $i++) {
+        $sum += enhance_per_level($i);
+    }
+    return 1 + $sum / 100;
 }
 
 function enhance_bonus_text(int $next): string

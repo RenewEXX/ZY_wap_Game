@@ -64,7 +64,7 @@ if ((int) ($e['broken'] ?? 0) === 0) {
     $rule = enhance_table()[$next] ?? null;
     if ($rule) {
         echo '下一阶：+' . $next . '　成功率' . $rule['rate'] . '%　消耗' . h(enhance_material_name($rule['mat'])) . 'x' . $rule['cost'] . h(enhance_bonus_text($next)) . '<br>';
-        echo '<span class="muted">+1~+6主属性每级+4%，+7起每级+12%。强化要找铁匠：灰雾村找布隆，白石镇找丹恩·铜须。</span><br>';
+        echo '<span class="muted">主属性加成：+1~2每级+5%，+3~4每级+10%，+5~6每级+15%，+7起每级+20%（+7/+12觉醒词缀）。强化要找铁匠：灰雾村找布隆，白石镇找丹恩·铜须。</span><br>';
     }
 }
 if ($e['pos'] === 'wear') {

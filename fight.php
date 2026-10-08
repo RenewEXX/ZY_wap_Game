@@ -51,10 +51,11 @@ if ($a === 'start' && isset($allm[$mid])) {
     if ($elite === 1 && $mid === boss_of_map((string) $u['loc'])) {
         $elite = 0;
     }
+    spawn_tick((string) $u['loc'], $mid);
     $got = spawn_take((string) $u['loc'], $mid, $elite, $n);
     if ($got <= 0) {
-        $wait = spawn_respawn_in((string) $u['loc']);
-        flash_set($elite === 1 ? '这只精英已经被宰了，蹲刷新吧。' : '这里的怪被杀光了，' . ($wait > 0 ? '剩' . gmdate('i:s', $wait) . '刷新。' : '马上刷新。'));
+        $wait = spawn_respawn_in((string) $u['loc'], $mid);
+        flash_set($elite === 1 ? '这只精英已经被宰了，蹲刷新吧。' : '这种怪被杀光了，' . ($wait > 0 ? '剩' . gmdate('i:s', $wait) . '刷新。' : '马上刷新。') . '可以打这张图别的怪。');
         header('Location: home.php');
         exit;
     }

@@ -307,7 +307,7 @@ function offline_tick(array &$u): void
     $dead = false;
     $emptyRounds = 0;
     $onlyBoss = count($mlist) === 1 && $mlist[0] === boss_of_map((string) ($u['loc'] ?? ''));
-    $maxFights = min($onlyBoss ? 2000 : 120, intdiv($gap, 30), intdiv($pool, 30));
+    $maxFights = min($onlyBoss ? 2000 : 500, intdiv($gap, 30), intdiv($pool, 30));
     if ($maxFights <= 0) {
         flash_set('离线' . dummy_fmt($gap) . '，人偶剩' . dummy_fmt($pool) . '不够打一场，去续费。');
         return;
@@ -322,10 +322,8 @@ function offline_tick(array &$u): void
         $isBossOff = ($mid === boss_of_map((string) ($u['loc'] ?? '')));
         $takeOff = spawn_take((string) ($u['loc'] ?? ''), $mid, 0, $isBossOff ? 1 : 6);
         if ($takeOff <= 0) {
-            if ($onlyBoss) {
-                spawn_fill((string) ($u['loc'] ?? ''));
-                $takeOff = spawn_take((string) ($u['loc'] ?? ''), $mid, 0, 1);
-            }
+            spawn_tick((string) ($u['loc'] ?? ''), $mid);
+            $takeOff = spawn_take((string) ($u['loc'] ?? ''), $mid, 0, $isBossOff ? 1 : 6);
             if ($takeOff <= 0) {
                 $emptyRounds++;
                 continue;
@@ -715,12 +713,18 @@ function boss_of_map(string $loc): string
     return $m[$loc] ?? '';
 }
 
-function spawn_tick(?string $onlyLoc = null): void
+// 每种怪各20只(BOSS除外仍为1只)，每种怪各自180秒刷新
+function spawn_cap(string $mid, string $loc): int
 {
-    if ($onlyLoc === null && (int) ($_SESSION['spawn_tick'] ?? 0) > time() - 30) {
+    return $mid === boss_of_map($loc) ? 1 : 20;
+}
+
+function spawn_tick(?string $onlyLoc = null, ?string $onlyMid = null): void
+{
+    if ($onlyLoc === null && $onlyMid === null && (int) ($_SESSION['spawn_tick'] ?? 0) > time() - 30) {
         return;
     }
-    if ($onlyLoc === null) {
+    if ($onlyLoc === null && $onlyMid === null) {
         $_SESSION['spawn_tick'] = time();
     }
     $now = time();
@@ -731,18 +735,51 @@ function spawn_tick(?string $onlyLoc = null): void
         if (empty($L['monsters'])) {
             continue;
         }
-        $st = db()->prepare('SELECT at FROM map_respawn WHERE loc=?');
-        $st->execute([$loc]);
-        $at = (int) ($st->fetchColumn() ?: 0);
-        if ($at > 0 && $now - $at < 180) {
-            continue;
+        foreach ($L['monsters'] as $mid) {
+            if ($onlyMid !== null && $mid !== $onlyMid) {
+                continue;
+            }
+            $st = db()->prepare('SELECT at FROM map_respawn WHERE loc=? AND mid=?');
+            $st->execute([$loc, $mid]);
+            $at = (int) ($st->fetchColumn() ?: 0);
+            if ($at > 0 && $now - $at < 180) {
+                continue;
+            }
+            $rs = db()->prepare('UPDATE map_respawn SET at=? WHERE loc=? AND mid=?');
+            $rs->execute([$now, $loc, $mid]);
+            if ($rs->rowCount() === 0) {
+                db()->prepare('INSERT OR IGNORE INTO map_respawn (loc, mid, at) VALUES (?, ?, ?)')->execute([$loc, $mid, $now]);
+            }
+            spawn_fill_one($loc, $mid);
         }
-        $rs = db()->prepare('UPDATE map_respawn SET at=? WHERE loc=?');
-        $rs->execute([$now, $loc]);
-        if ($rs->rowCount() === 0) {
-            db()->prepare('INSERT INTO map_respawn (loc, at) VALUES (?, ?)')->execute([$loc, $now]);
+        // 精英：整图最多2只，随机挑一种小怪补1只
+        $boss = boss_of_map($loc);
+        $trash = array_values(array_filter($L['monsters'], fn($m) => $m !== $boss));
+        if ($trash !== [] && (int) db()->query('SELECT COALESCE(SUM(num),0) FROM map_spawns WHERE loc=' . db()->quote($loc) . ' AND elite=1')->fetchColumn() < 2 && mt_rand(1, 100) <= 40) {
+            $em = $trash[array_rand($trash)];
+            $es = db()->prepare('UPDATE map_spawns SET num=num+1 WHERE loc=? AND mid=? AND elite=1');
+            $es->execute([$loc, $em]);
+            if ($es->rowCount() === 0) {
+                db()->prepare('INSERT INTO map_spawns (loc, mid, elite, num) VALUES (?, ?, 1, 1)')->execute([$loc, $em]);
+            }
         }
-        spawn_fill($loc);
+    }
+}
+
+function spawn_fill_one(string $loc, string $mid): void
+{
+    $cap = spawn_cap($mid, $loc);
+    $st = db()->prepare('SELECT num FROM map_spawns WHERE loc=? AND mid=? AND elite=0');
+    $st->execute([$loc, $mid]);
+    $have = (int) ($st->fetchColumn() ?: 0);
+    if ($have >= $cap) {
+        return;
+    }
+    $add = $cap - $have;
+    $up = db()->prepare('UPDATE map_spawns SET num=num+? WHERE loc=? AND mid=? AND elite=0');
+    $up->execute([$add, $loc, $mid]);
+    if ($up->rowCount() === 0) {
+        db()->prepare('INSERT INTO map_spawns (loc, mid, elite, num) VALUES (?, ?, 0, ?)')->execute([$loc, $mid, $cap]);
     }
 }
 
@@ -753,23 +790,8 @@ function spawn_fill(string $loc): void
     if (!$L || empty($L['monsters'])) {
         return;
     }
-    $boss = boss_of_map($loc);
-    $trash = array_values(array_filter($L['monsters'], fn($mid) => $mid !== $boss));
-    db()->prepare('DELETE FROM map_spawns WHERE loc=?')->execute([$loc]);
-    $ins = db()->prepare('INSERT INTO map_spawns (loc, mid, elite, num) VALUES (?, ?, ?, ?)');
-    if ($boss !== '') {
-        $ins->execute([$loc, $boss, 0, 1]);
-    }
-    $cnt = [];
-    for ($i = 0; $i < 20 && $trash !== []; $i++) {
-        $mid = $trash[array_rand($trash)];
-        $cnt[$mid] = ($cnt[$mid] ?? 0) + 1;
-    }
-    foreach ($cnt as $mid => $num) {
-        $ins->execute([$loc, $mid, 0, $num]);
-    }
-    if ($trash !== [] && mt_rand(1, 100) <= 40) {
-        $ins->execute([$loc, $trash[array_rand($trash)], 1, 1]);
+    foreach ($L['monsters'] as $mid) {
+        spawn_fill_one($loc, $mid);
     }
 }
 
@@ -806,9 +828,15 @@ function spawn_add_elite(int $uid, string $loc, string $mid): void
     }
 }
 
-function spawn_respawn_in(string $loc): int
+function spawn_respawn_in(string $loc, string $mid = ''): int
 {
-    $st = db()->prepare('SELECT at FROM map_respawn WHERE loc=?');
+    if ($mid !== '') {
+        $st = db()->prepare('SELECT at FROM map_respawn WHERE loc=? AND mid=?');
+        $st->execute([$loc, $mid]);
+        $at = (int) ($st->fetchColumn() ?: 0);
+        return max(0, 180 - (time() - $at));
+    }
+    $st = db()->prepare('SELECT MAX(at) FROM map_respawn WHERE loc=?');
     $st->execute([$loc]);
     $at = (int) ($st->fetchColumn() ?: 0);
     return max(0, 180 - (time() - $at));
@@ -1446,7 +1474,11 @@ function dummy_tick(array &$u): void
         $isBossDummy = ($mid === boss_of_map((string) ($u['loc'] ?? '')));
         $takeDummy = spawn_take((string) ($u['loc'] ?? ''), $mid, 0, $isBossDummy ? 1 : 6);
         if ($takeDummy <= 0) {
-            continue;
+            spawn_tick((string) ($u['loc'] ?? ''), $mid);
+            $takeDummy = spawn_take((string) ($u['loc'] ?? ''), $mid, 0, $isBossDummy ? 1 : 6);
+            if ($takeDummy <= 0) {
+                continue;
+            }
         }
         $numDummy = $isBossDummy ? 1 : min(6, $takeDummy);
         $b = [

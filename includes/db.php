@@ -328,6 +328,28 @@ function db_init(): void
             at INTEGER NOT NULL DEFAULT 0
         )'
     );
+    // map_respawn 从按地图计时迁移到按(地图,怪)计时
+    try {
+        $cols = db()->query("PRAGMA table_info(map_respawn)")->fetchAll();
+        $hasMid = false;
+        foreach ($cols as $c) {
+            if (($c['name'] ?? '') === 'mid') {
+                $hasMid = true;
+            }
+        }
+        if (!$hasMid) {
+            db()->exec('CREATE TABLE IF NOT EXISTS map_respawn_new (loc TEXT NOT NULL, mid TEXT NOT NULL DEFAULT "", at INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (loc, mid))');
+            $old = db()->query('SELECT loc, at FROM map_respawn')->fetchAll();
+            $ins = db()->prepare('INSERT OR IGNORE INTO map_respawn_new (loc, mid, at) VALUES (?, "", ?)');
+            foreach ($old as $r) {
+                $ins->execute([(string) ($r['loc'] ?? ''), (int) ($r['at'] ?? 0)]);
+            }
+            db()->exec('DROP TABLE map_respawn');
+            db()->exec('ALTER TABLE map_respawn_new RENAME TO map_respawn');
+        }
+    } catch (Throwable $e) {
+    }
+    db()->exec('CREATE INDEX IF NOT EXISTS idx_respawn_loc_mid ON map_respawn (loc, mid)');
     db()->exec(
         'CREATE TABLE IF NOT EXISTS horse_races (
             id INTEGER PRIMARY KEY,

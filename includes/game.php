@@ -3150,8 +3150,8 @@ function alloc_stat(int $uid, string $k): string
     } elseif ($k === 'agi') {
         $u['agi'] = (int) ($u['agi'] ?? 0) + 1;
     } elseif ($k === 'vit') {
-        $u['maxhp'] = (int) $u['maxhp'] + 5;
-        $u['hp'] = (int) $u['hp'] + 5;
+        $u['maxhp'] = (int) $u['maxhp'] + 10;
+        $u['hp'] = (int) $u['hp'] + 10;
         $u['vit'] = (int) ($u['vit'] ?? 0) + 1;
     } elseif ($k === 'int') {
         $u['maxmp'] = (int) ($u['maxmp'] ?? 0) + 3;
@@ -3200,7 +3200,7 @@ function use_reset_potion(int $uid): string
         return '没加过点，不用洗。';
     }
     add_mat((int) $uid, 'reset_potion', -1);
-    $u['maxhp'] = max(1, (int) $u['maxhp'] - (int) ($u['vit'] ?? 0) * 5);
+    $u['maxhp'] = max(1, (int) $u['maxhp'] - (int) ($u['vit'] ?? 0) * 10);
     $u['hp'] = min((int) $u['hp'], (int) $u['maxhp']);
     $u['maxmp'] = max(0, (int) ($u['maxmp'] ?? 0) - (int) ($u['int'] ?? 0) * 3);
     $u['mp'] = min((int) ($u['mp'] ?? 0), (int) ($u['maxmp'] ?? 0));

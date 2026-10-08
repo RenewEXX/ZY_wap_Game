@@ -35,12 +35,8 @@ if ($eqs === []) {
     echo '<span class="muted">你一件装备都没有，先去刷吧。</span>';
 }
 foreach ($eqs as $e) {
-    $broken = (int) ($e['broken'] ?? 0) === 1;
     $lv = (int) ($e['enhance_level'] ?? 0);
-    echo '<span style="color:' . $qcolor[(int) $e['quality']] . '">' . h(equip_shortname($e['name'])) . '</span>+' . $lv . ($broken ? '（碎裂）' : '') . '<br>';
-    if ($broken) {
-        continue;
-    }
+    echo enhance_tag_html($lv) . '<span style="color:' . $qcolor[(int) $e['quality']] . '">' . h(equip_shortname($e['name'])) . '</span><br>';
     $rule = enhance_table()[$lv + 1] ?? null;
     if (!$rule) {
         echo '<span class="muted">已满+15。</span><br>';

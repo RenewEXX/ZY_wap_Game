@@ -103,6 +103,11 @@ function db_init(): void
         } catch (Throwable $e) {
         }
     }
+    // 碎裂概念已删除：老碎裂装恢复正常
+    try {
+        db()->exec('UPDATE equips SET broken=0 WHERE broken!=0');
+    } catch (Throwable $e) {
+    }
     db()->exec('CREATE INDEX IF NOT EXISTS idx_equips_uid ON equips (uid)');
     db()->exec('CREATE INDEX IF NOT EXISTS idx_mats_uid ON mats (uid)');
     db()->exec('CREATE INDEX IF NOT EXISTS idx_spawns_loc ON map_spawns (loc)');

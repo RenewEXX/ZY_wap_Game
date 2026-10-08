@@ -396,14 +396,44 @@ if ($a === 'logs') {
 }
 if ($a === 'browse') {
     $cat = (string) ($_GET['cat'] ?? 'all');
+    $fq = (int) ($_GET['q'] ?? -1);
+    $fset = (string) ($_GET['set'] ?? 'all');
+    $fminlv = max(0, (int) ($_GET['minlv'] ?? 0));
+    $fkw = trim((string) ($_GET['kw'] ?? ''));
+    $sort = (string) ($_GET['sort'] ?? 'end');
     $p = max(1, (int) ($_GET['p'] ?? 1));
     $per = 5;
+    $bl = function (array $over = []) use ($cat, $fq, $fset, $fminlv, $fkw, $sort, $p) {
+        $q = array_merge(['a' => 'browse', 'cat' => $cat, 'q' => $fq, 'set' => $fset, 'minlv' => $fminlv, 'kw' => $fkw, 'sort' => $sort, 'p' => $p], $over);
+        return 'auction.php?' . http_build_query($q);
+    };
     echo '【浏览拍卖品】<br>';
     echo '分类：';
     foreach (['all' => '全部', 'equip' => '装备', 'mat' => '材料', 'use' => '消耗品'] as $k => $n) {
-        echo ($k === $cat ? '<b>' . $n . '</b>' : '<a href="auction.php?a=browse&cat=' . $k . '">' . $n . '</a>') . ' ';
+        echo ($k === $cat ? '<b>' . $n . '</b>' : '<a href="' . h($bl(['cat' => $k, 'p' => 1])) . '">' . $n . '</a>') . ' ';
     }
-    echo '<br><div class="hr">--------</div>';
+    echo '<br>品级：';
+    foreach ([-1 => '全部', 4 => '传说', 3 => '史诗', 2 => '稀有'] as $k => $n) {
+        echo ($k === $fq ? '<b>' . $n . '</b>' : '<a href="' . h($bl(['q' => $k, 'p' => 1])) . '">' . $n . '</a>') . ' ';
+    }
+    echo '<br>套装：';
+    foreach (['all' => '全部', 'swamp' => '沼泽', 'abyss' => '深渊'] as $k => $n) {
+        echo ($k === $fset ? '<b>' . $n . '</b>' : '<a href="' . h($bl(['set' => $k, 'p' => 1])) . '">' . $n . '</a>') . ' ';
+    }
+    echo '<br>排序：';
+    foreach (['end' => '将结束', 'price_asc' => '价格↑', 'price_desc' => '价格↓', 'quality' => '品级', 'level' => '等级'] as $k => $n) {
+        echo ($k === $sort ? '<b>' . $n . '</b>' : '<a href="' . h($bl(['sort' => $k, 'p' => 1])) . '">' . $n . '</a>') . ' ';
+    }
+    echo '<br>';
+    echo '<form method="get" action="auction.php">';
+    echo '<input type="hidden" name="a" value="browse">';
+    echo '<input type="hidden" name="cat" value="' . h($cat) . '">';
+    echo '<input type="hidden" name="q" value="' . $fq . '">';
+    echo '<input type="hidden" name="set" value="' . h($fset) . '">';
+    echo '<input type="hidden" name="sort" value="' . h($sort) . '">';
+    echo '等级≥<input name="minlv" size="3" value="' . $fminlv . '"> 名称<input name="kw" size="8" value="' . h($fkw) . '"><input type="submit" value="搜">';
+    echo '</form>';
+    echo '<div class="hr">--------</div>';
     $where = "status='open' AND ends_at>" . time();
     if ($cat === 'equip') {
         $where .= " AND kind='equip'";
@@ -412,10 +442,32 @@ if ($a === 'browse') {
     } elseif ($cat === 'use') {
         $where .= ' AND 1=0';
     }
+    if ($fq >= 0) {
+        $where .= " AND kind='equip' AND item_quality=" . $fq;
+    }
+    if ($fset === 'swamp') {
+        $where .= " AND kind='equip' AND item_name LIKE " . db()->quote('%沼泽%');
+    } elseif ($fset === 'abyss') {
+        $where .= " AND kind='equip' AND item_name LIKE " . db()->quote('%深渊%');
+    }
+    if ($fminlv > 0) {
+        $where .= ' AND item_level>=' . $fminlv;
+    }
+    if ($fkw !== '') {
+        $where .= ' AND item_name LIKE ' . db()->quote('%' . $fkw . '%');
+    }
+    $effPrice = '(CASE WHEN cur_price>0 THEN cur_price ELSE start_price END)';
+    $order = match ($sort) {
+        'price_asc' => $effPrice . ' ASC, ends_at ASC',
+        'price_desc' => $effPrice . ' DESC, ends_at ASC',
+        'quality' => 'item_quality DESC, item_level DESC, ends_at ASC',
+        'level' => 'item_level DESC, item_quality DESC, ends_at ASC',
+        default => 'ends_at ASC',
+    };
     $total = (int) db()->query('SELECT COUNT(*) FROM auctions WHERE ' . $where)->fetchColumn();
     $pages = max(1, (int) ceil($total / $per));
     $p = min($p, $pages);
-    $st = db()->prepare('SELECT * FROM auctions WHERE ' . $where . ' ORDER BY ends_at LIMIT ' . $per . ' OFFSET ' . (($p - 1) * $per));
+    $st = db()->prepare('SELECT * FROM auctions WHERE ' . $where . ' ORDER BY ' . $order . ' LIMIT ' . $per . ' OFFSET ' . (($p - 1) * $per));
     $st->execute();
     $rows = $st->fetchAll();
     if ($rows === []) {
@@ -424,15 +476,19 @@ if ($a === 'browse') {
     foreach ($rows as $r) {
         $cur = (int) $r['cur_price'] > 0 ? (int) $r['cur_price'] : (int) $r['start_price'];
         $left = (int) $r['ends_at'] - time();
-        echo '·' . h(auction_item_name($r)) . '<br>';
+        echo '·' . h(auction_item_name($r));
+        if ($r['kind'] === 'equip') {
+            echo '(' . h(equip_qualities()[(int) $r['item_quality']] ?? '') . (int) $r['item_level'] . '级)';
+        }
+        echo '<br>';
         echo '起拍' . h(auction_money_text((int) $r['start_price'], $r['currency']));
         if ((int) $r['buyout'] > 0) {
             echo ' 一口' . h(auction_money_text((int) $r['buyout'], $r['currency']));
         }
         echo ' | 剩' . h(dummy_fmt(max(0, $left))) . ' <a href="auction.php?a=view&id=' . $r['id'] . '">查看</a><br>';
     }
-    echo '[' . ($p > 1 ? '<a href="auction.php?a=browse&cat=' . h($cat) . '&p=' . ($p - 1) . '">上一页</a>' : '上一页') . '] ';
-    echo '[' . ($p < $pages ? '<a href="auction.php?a=browse&cat=' . h($cat) . '&p=' . ($p + 1) . '">下一页</a>' : '下一页') . '] ';
+    echo '[' . ($p > 1 ? '<a href="' . h($bl(['p' => $p - 1])) . '">上一页</a>' : '上一页') . '] ';
+    echo '[' . ($p < $pages ? '<a href="' . h($bl(['p' => $p + 1])) . '">下一页</a>' : '下一页') . '] ';
     echo '<a href="auction.php">返回大厅</a>';
     nav_line();
     wap_end(false);

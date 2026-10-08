@@ -458,27 +458,15 @@ function guild_level_up(int $gid): string
     if ($tot < $needGold) {
         return '全员贡献不够：共' . $tot . '金，要' . $needGold . '金贡献。';
     }
+    // 只扣仓库金，不扣成员贡献：贡献是付出记录，给会长看的
     db()->prepare('UPDATE guilds SET gold=gold-?, level=level+1 WHERE id=?')->execute([$need, (int) $gid]);
-    // 按贡献从高到低扣足升级所需贡献
-    $remain = $needGold;
-    $ms = db()->query('SELECT uid, contrib FROM guild_members WHERE gid=' . (int) $gid . ' ORDER BY contrib DESC');
-    while ($remain > 0 && ($m = $ms->fetch())) {
-        $take = min((int) $m['contrib'], $remain);
-        if ($take > 0) {
-            db()->prepare('UPDATE guild_members SET contrib=contrib-? WHERE uid=?')->execute([$take, (int) $m['uid']]);
-            $remain -= $take;
-        }
-    }
     return '消耗仓库' . fmt_money($need) . '，公会升到' . ($lv + 1) . '级！全员打怪经验+' . ($lv + 1) . '%，仓库上限' . guild_warehouse_cap($lv + 1) . '格。';
 }
 
 function is_tradable_equip(array $eq): bool
 {
-    // 碎裂装只能修不能存；穿着的调用方已过滤
-    if ((int) ($eq['broken'] ?? 0) === 1) {
-        return false;
-    }
-    return true;
+    // 公会仓库只收史诗及以上；穿着的调用方已过滤
+    return (int) ($eq['quality'] ?? 0) >= 3;
 }
 
 function guild_add_exp(int $gid, int $exp): string
@@ -2938,9 +2926,6 @@ function gear_stats(int $uid): array
     $st = db()->prepare('SELECT * FROM equips WHERE uid=? AND pos="wear"');
     $st->execute([$uid]);
     while ($row = $st->fetch()) {
-        if ((int) ($row['broken'] ?? 0) === 1) {
-            continue;
-        }
         $mult = enhance_rate($row);
         $aff = json_decode((string) $row['affixes'], true);
         if (!is_array($aff)) {
@@ -3023,12 +3008,12 @@ function enhance_table(): array
         7 => ['rate' => 50, 'fail' => 'reset', 'mat' => 'enhance_t2', 'cost' => 10],
         8 => ['rate' => 40, 'fail' => 'reset', 'mat' => 'enhance_t2', 'cost' => 10],
         9 => ['rate' => 30, 'fail' => 'reset', 'mat' => 'enhance_t3', 'cost' => 10],
-        10 => ['rate' => 20, 'fail' => 'break', 'mat' => 'enhance_t3', 'cost' => 10],
-        11 => ['rate' => 15, 'fail' => 'break', 'mat' => 'enhance_t3', 'cost' => 12],
-        12 => ['rate' => 10, 'fail' => 'break', 'mat' => 'enhance_t3', 'cost' => 12],
-        13 => ['rate' => 7, 'fail' => 'break', 'mat' => 'enhance_t3', 'cost' => 15],
-        14 => ['rate' => 5, 'fail' => 'break', 'mat' => 'enhance_t3', 'cost' => 15],
-        15 => ['rate' => 3, 'fail' => 'break', 'mat' => 'enhance_t3', 'cost' => 20],
+        10 => ['rate' => 20, 'fail' => 'down', 'mat' => 'enhance_t3', 'cost' => 10],
+        11 => ['rate' => 15, 'fail' => 'down', 'mat' => 'enhance_t3', 'cost' => 12],
+        12 => ['rate' => 10, 'fail' => 'down', 'mat' => 'enhance_t3', 'cost' => 12],
+        13 => ['rate' => 7, 'fail' => 'down', 'mat' => 'enhance_t3', 'cost' => 15],
+        14 => ['rate' => 5, 'fail' => 'down', 'mat' => 'enhance_t3', 'cost' => 15],
+        15 => ['rate' => 3, 'fail' => 'down', 'mat' => 'enhance_t3', 'cost' => 20],
     ];
 }
 
@@ -3063,9 +3048,6 @@ function enhance_per_level(int $lv): int
 
 function enhance_rate(array $e): float
 {
-    if ((int) ($e['broken'] ?? 0) === 1) {
-        return 0.0;
-    }
     $lv = max(0, (int) ($e['enhance_level'] ?? 0));
     $sum = 0;
     for ($i = 1; $i <= $lv; $i++) {
@@ -3134,9 +3116,6 @@ function enhance_equip(int $uid, int $eid): string
     if (!$e) {
         return '没有这件装备。';
     }
-    if ((int) ($e['broken'] ?? 0) === 1) {
-        return '这件装备已经碎裂，不能强化。';
-    }
     $next = (int) ($e['enhance_level'] ?? 0) + 1;
     $table = enhance_table();
     if (!isset($table[$next])) {
@@ -3167,10 +3146,11 @@ function enhance_equip(int $uid, int $eid): string
         _gear_uncache($uid);
         return '强化失败！装备强化等级归零。';
     }
-    if ($rule['fail'] === 'break') {
-        db()->prepare('UPDATE equips SET broken=1, pos="", enhance_fail=enhance_fail+1 WHERE id=? AND uid=?')->execute([$eid, $uid]);
+    if ($rule['fail'] === 'down') {
+        $down = max(0, (int) ($e['enhance_level'] ?? 0) - 1);
+        db()->prepare('UPDATE equips SET enhance_level=?, enhance_fail=enhance_fail+1 WHERE id=? AND uid=?')->execute([$down, $eid, $uid]);
         _gear_uncache($uid);
-        return '强化失败！装备碎裂，已无法穿戴和强化。';
+        return '强化失败！装备掉到+' . $down . '（觉醒词缀保留）。';
     }
     db()->prepare('UPDATE equips SET enhance_fail=enhance_fail+1 WHERE id=? AND uid=?')->execute([$eid, $uid]);
     return '强化失败，等级不变。';
@@ -3190,9 +3170,6 @@ function wear_equip(int $uid, int $eid): string
     $eq = $st->fetch();
     if (!$eq) {
         return '不是你的装备。';
-    }
-    if ((int) ($eq['broken'] ?? 0) === 1) {
-        return '碎裂装备不能穿戴。';
     }
     $u = user_by_id($uid);
     if ($u) {

@@ -195,7 +195,6 @@ if ($tab === 'equip') {
         }
         $has = true;
         echo enhance_tag_html((int) ($e['enhance_level'] ?? 0)) . '<a href="equip.php?id=' . $e['id'] . '"><span style="color:' . $qcolor[(int) $e['quality']] . '">' . h(equip_shortname($e['name'])) . '</span></a>[' . h($slots[$e['slot']] ?? '') . ']';
-        echo ((int) ($e['broken'] ?? 0) === 1 ? '（碎裂）' : '');
         if ((int) ($e['req_lv'] ?? 1) > 1 || (int) ($e['req_str'] ?? 0) > 0 || (int) ($e['req_agi'] ?? 0) > 0) {
             echo '（' . h(equip_req_text($e)) . '）';
         }

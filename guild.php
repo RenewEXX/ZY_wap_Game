@@ -6,6 +6,25 @@ $u = require_login();
 $uid = (int) $u['id'];
 $a = (string) ($_GET['a'] ?? '');
 
+// 重大操作二次确认：链接不带yes=1时先弹确认页，防止误触
+function guild_confirm(string $title, string $desc): void
+{
+    if ((string) ($_GET['yes'] ?? '') === '1') {
+        return;
+    }
+    $qs = $_GET;
+    $qs['yes'] = '1';
+    $yesUrl = 'guild.php?' . http_build_query($qs);
+    wap_start('确认操作');
+    echo '<div class="warn">你确定吗？</div>';
+    echo '【' . h($title) . '】<br>' . h($desc) . '<br>';
+    echo '<div class="hr">--------</div>';
+    echo '<a href="' . h($yesUrl) . '">确定</a>　<a href="guild.php">取消</a><br>';
+    nav_line();
+    wap_end(false);
+    exit;
+}
+
 if ($a === 'create' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     flash_set(guild_create($uid, (string) ($_POST['name'] ?? '')));
     header('Location: guild.php');
@@ -29,6 +48,7 @@ if ($a === 'join') {
     exit;
 }
 if ($a === 'leave') {
+    guild_confirm('退出公会', '退出后贡献清零，想回要重新申请。');
     $g = my_guild($uid);
     if (!$g) {
         flash_set('你没有公会。');
@@ -89,6 +109,7 @@ if ($a === 'wwithgold') {
     exit;
 }
 if ($a === 'disband') {
+    guild_confirm('解散公会', '公会将彻底消失，仓库金退回给你，不可恢复！');
     $g = my_guild($uid);
     if (!$g || ($g['role'] ?? '') !== 'leader') {
         flash_set('只有会长能解散。');
@@ -115,6 +136,7 @@ if ($a === 'disband') {
     exit;
 }
 if ($a === 'levelup') {
+    guild_confirm('升级公会', '将消耗仓库金升级，不可退回。');
     $g = my_guild($uid);
     if (!$g || ($g['role'] ?? '') !== 'leader') {
         flash_set('只有会长能升级公会。');
@@ -164,6 +186,7 @@ if ($a === 'role') {
     exit;
 }
 if ($a === 'transfer') {
+    guild_confirm('转让会长', '你将变成普通成员，对方成为会长！');
     $g = my_guild($uid);
     $tu = (int) ($_GET['uid'] ?? 0);
     if (!$g || ($g['role'] ?? '') !== 'leader') {
@@ -184,6 +207,7 @@ if ($a === 'transfer') {
     exit;
 }
 if ($a === 'kick') {
+    guild_confirm('踢出成员', '对方将离开公会，贡献清零。');
     $g = my_guild($uid);
     $tu = (int) ($_GET['uid'] ?? 0);
     if (!$g || !in_array($g['role'] ?? '', ['leader', 'vice', 'officer'], true)) {
@@ -236,7 +260,7 @@ if ($a === 'wput') {
                 if (!$eq) {
                     flash_set('这件装备不在背包（穿着的先脱下）。');
                 } elseif (!is_tradable_equip($eq)) {
-                    flash_set('这件装备碎裂了，修好再存。');
+                    flash_set('仓库只收史诗及以上装备。');
                 } else {
                     db()->prepare('UPDATE equips SET uid=0, pos="gwarehouse" WHERE id=?')->execute([$eid]);
                     db()->prepare('INSERT INTO guild_warehouse (gid, kind, equip_id, qty, donor_uid, donor_name, created_at) VALUES (?, "equip", ?, 1, ?, ?, ?)')->execute([(int) $g['id'], $eid, $uid, (string) $u['username'], time()]);

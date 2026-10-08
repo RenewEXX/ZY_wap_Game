@@ -33,7 +33,7 @@ if ($a === 'leave') {
     if (!$g) {
         flash_set('你没有公会。');
     } elseif (($g['role'] ?? '') === 'leader') {
-        flash_set('会长不能直接退，先转让会长再退。');
+        flash_set('会长不能直接退：有人就转让会长，只剩你就解散公会。');
     } else {
         db()->prepare('DELETE FROM guild_members WHERE uid=?')->execute([$uid]);
         flash_set('退出了公会。');
@@ -41,21 +41,75 @@ if ($a === 'leave') {
     header('Location: guild.php');
     exit;
 }
-if ($a === 'donate') {
+if ($a === 'wdepgold') {
     $g = my_guild($uid);
     $n = max(0, (int) ($_POST['gold'] ?? 0));
     if (!$g) {
         flash_set('你没有公会。');
-    } elseif ($n < 10000) {
-        flash_set('最少捐1金（10000铜）。');
+    } elseif ($n < 1) {
+        flash_set('存多少？');
     } elseif ((int) $u['gold'] < $n) {
         flash_set('钱不够。');
     } else {
         $u['gold'] = (int) $u['gold'] - $n;
         user_save($u);
-        db()->prepare('UPDATE guild_members SET contrib=contrib+? WHERE uid=?')->execute([$n, $uid]);
-        $msg = guild_add_exp((int) $g['id'], (int) ($n / 100));
-        flash_set('捐献' . fmt_money($n) . '，个人贡献+' . $n . '。' . $msg);
+        db()->prepare('UPDATE guilds SET gold=gold+? WHERE id=?')->execute([$n, (int) $g['id']]);
+        $cg = intdiv($n, 10000);
+        if ($cg > 0) {
+            db()->prepare('UPDATE guild_members SET contrib=contrib+? WHERE uid=?')->execute([$cg, $uid]);
+        }
+        flash_set('存入仓库' . fmt_money($n) . '，个人贡献+' . $cg . '金' . ($cg <= 0 ? '（不足1金不计贡献）' : '') . '。');
+    }
+    header('Location: guild.php?tab=wh');
+    exit;
+}
+if ($a === 'wwithgold') {
+    $g = my_guild($uid);
+    $n = max(0, (int) ($_POST['gold'] ?? 0));
+    if (!$g) {
+        flash_set('你没有公会。');
+    } elseif (!guild_can_take_warehouse($g)) {
+        flash_set('副会长以上才能取出。');
+    } elseif ($n < 1) {
+        flash_set('取多少？');
+    } elseif ((int) ($g['gold'] ?? 0) < $n) {
+        flash_set('仓库没这么多金。');
+    } else {
+        db()->prepare('UPDATE guilds SET gold=gold-? WHERE id=?')->execute([$n, (int) $g['id']]);
+        $u['gold'] = (int) $u['gold'] + $n;
+        user_save($u);
+        // 取金扣取金者自己的贡献，防止存取反复刷
+        $cg = intdiv($n, 10000);
+        if ($cg > 0) {
+            db()->prepare('UPDATE guild_members SET contrib=CASE WHEN contrib>? THEN contrib-? ELSE 0 END WHERE uid=?')->execute([$cg, $cg, $uid]);
+        }
+        flash_set('取出' . fmt_money($n) . '，个人贡献-' . $cg . '金。');
+    }
+    header('Location: guild.php?tab=wh');
+    exit;
+}
+if ($a === 'disband') {
+    $g = my_guild($uid);
+    if (!$g || ($g['role'] ?? '') !== 'leader') {
+        flash_set('只有会长能解散。');
+    } else {
+        $cnt = (int) (db()->query('SELECT COUNT(*) FROM guild_members WHERE gid=' . (int) $g['id'])->fetchColumn() ?: 0);
+        if ($cnt > 1) {
+            flash_set('还有其他成员，先转让会长或请他们离开。');
+        } elseif (guild_warehouse_count((int) $g['id']) > 0) {
+            flash_set('仓库还有物品，先取出来再解散。');
+        } else {
+            $back = (int) ($g['gold'] ?? 0);
+            if ($back > 0) {
+                $u['gold'] = (int) $u['gold'] + $back;
+                user_save($u);
+            }
+            db()->prepare('DELETE FROM guild_members WHERE gid=?')->execute([(int) $g['id']]);
+            db()->prepare('DELETE FROM guild_warehouse WHERE gid=?')->execute([(int) $g['id']]);
+            db()->prepare('UPDATE guild_invites SET status="done" WHERE gid=? AND status="open"')->execute([(int) $g['id']]);
+            db()->prepare('DELETE FROM guilds WHERE id=?')->execute([(int) $g['id']]);
+            flash_set('公会已解散' . ($back > 0 ? '，仓库' . fmt_money($back) . '已退回给你' : '') . '。');
+        }
     }
     header('Location: guild.php');
     exit;
@@ -181,6 +235,8 @@ if ($a === 'wput') {
                 $eq = $st->fetch();
                 if (!$eq) {
                     flash_set('这件装备不在背包（穿着的先脱下）。');
+                } elseif (!is_tradable_equip($eq)) {
+                    flash_set('这件装备碎裂了，修好再存。');
                 } else {
                     db()->prepare('UPDATE equips SET uid=0, pos="gwarehouse" WHERE id=?')->execute([$eid]);
                     db()->prepare('INSERT INTO guild_warehouse (gid, kind, equip_id, qty, donor_uid, donor_name, created_at) VALUES (?, "equip", ?, 1, ?, ?, ?)')->execute([(int) $g['id'], $eid, $uid, (string) $u['username'], time()]);
@@ -328,7 +384,7 @@ if ($g) {
     echo '<div class="hr">--------</div>';
     echo '<a href="guild.php">总览</a> <a href="guild.php?tab=wh">仓库(' . guild_warehouse_count((int) $g['id']) . '/' . guild_warehouse_cap((int) $g['level']) . ')</a><br>';
     echo '【我的公会】' . h($g['name']) . ' ' . (int) $g['level'] . '级（经验' . (int) $g['exp'] . '/' . guild_level_need((int) $g['level']) . '）<br>';
-    echo '身份：' . h(guild_role_name((string) ($g['role'] ?? 'member'))) . '　贡献：' . (int) $g['contrib'] . '<br>';
+    echo '身份：' . h(guild_role_name((string) ($g['role'] ?? 'member'))) . '　贡献：' . (int) $g['contrib'] . '金　仓库金：' . fmt_money((int) ($g['gold'] ?? 0)) . '<br>';
     echo '公告：' . h($g['notice'] === '' ? '暂无' : $g['notice']) . '<br>';
     echo '加成：全员打怪经验+' . guild_exp_bonus((int) $g['level']) . '%　仓库' . guild_warehouse_cap((int) $g['level']) . '格<br>';
     $w = open_war((int) $g['id']);
@@ -339,6 +395,15 @@ if ($g) {
     }
     if ($tab === 'wh') {
         echo '<div class="hr">--------</div>【公会仓库】' . guild_warehouse_count((int) $g['id']) . '/' . guild_warehouse_cap((int) $g['level']) . '格（成员可存可交易物，副会长以上可取）<br>';
+        echo '仓库金：' . fmt_money((int) ($g['gold'] ?? 0)) . '<br>';
+        echo '<form method="post" action="guild.php?a=wdepgold">';
+        echo '存金<input name="gold" size="8" value="10000"><input type="submit" value="存入（满1金+1贡献）">';
+        echo '</form>';
+        if (guild_can_take_warehouse($g)) {
+            echo '<form method="post" action="guild.php?a=wwithgold">';
+            echo '取金<input name="gold" size="8" value="10000"><input type="submit" value="取出（扣自己贡献）">';
+            echo '</form>';
+        }
         $st = db()->prepare('SELECT * FROM guild_warehouse WHERE gid=? ORDER BY id DESC LIMIT 50');
         $st->execute([(int) $g['id']]);
         $has = false;
@@ -360,30 +425,41 @@ if ($g) {
         }
         echo '存入：<a href="bag.php?tab=mat">去材料背包</a> <a href="bag.php?tab=equip">去装备背包</a><br>';
     } else {
-        $st = db()->prepare('SELECT u.id, u.username, u.lv, m.role, m.contrib FROM guild_members m JOIN users u ON u.id=m.uid WHERE m.gid=? ORDER BY m.contrib DESC LIMIT 30');
+        $st = db()->prepare('SELECT u.* FROM guild_members m JOIN users u ON u.id=m.uid WHERE m.gid=? LIMIT 60');
         $st->execute([(int) $g['id']]);
-        echo '成员：<br>';
+        $members = [];
         while ($m = $st->fetch()) {
-            echo '·' . h($m['username']) . (int) $m['lv'] . '级(' . h(guild_role_name((string) $m['role'])) . ',贡献' . (int) $m['contrib'] . ')';
+            $m['_power'] = power_score($m);
+            $members[] = $m;
+        }
+        usort($members, fn($a, $b) => (int) $b['_power'] <=> (int) $a['_power']);
+        echo '成员（按战力排行）：<br>';
+        foreach ($members as $m) {
+            echo '·Lv' . (int) $m['lv'] . ' ' . h($m['username']) . ' | 战力' . (int) $m['_power'] . ' | 贡献' . (int) $m['contrib'] . '金 | ' . h(guild_role_name((string) $m['role']));
             if (($g['role'] ?? '') === 'leader' && (int) $m['id'] !== $uid) {
-                echo ' <a href="guild.php?a=role&uid=' . $m['id'] . '&r=vice">设副会长</a> <a href="guild.php?a=role&uid=' . $m['id'] . '&r=officer">设管理</a> <a href="guild.php?a=role&uid=' . $m['id'] . '&r=member">撤职</a> <a href="guild.php?a=transfer&uid=' . $m['id'] . '">转让会长</a>';
+                echo '<br>　<a href="guild.php?a=role&uid=' . $m['id'] . '&r=vice">设副会长</a> <a href="guild.php?a=role&uid=' . $m['id'] . '&r=officer">设管理</a> <a href="guild.php?a=role&uid=' . $m['id'] . '&r=member">撤职</a> <a href="guild.php?a=transfer&uid=' . $m['id'] . '">转让会长</a>';
             }
             if (in_array($g['role'] ?? '', ['leader', 'vice', 'officer'], true) && (int) $m['id'] !== $uid) {
                 echo ' <a href="guild.php?a=kick&uid=' . $m['id'] . '">踢</a>';
             }
             echo '<br>';
         }
-        echo '<form method="post" action="guild.php?a=donate">';
-        echo '捐铜<input name="gold" size="6" value="10000"><input type="submit" value="捐献(最少1金)">';
-        echo '</form>';
         if (($g['role'] ?? '') === 'leader') {
-            echo '<a href="guild.php?a=levelup">升级公会(消耗全员贡献)</a><br>';
+            $needNext = (int) $g['level'] >= 10 ? '' : '（下级要仓库' . fmt_money(guild_level_need((int) $g['level'])) . '）';
+            echo '<a href="guild.php?a=levelup">升级公会（消耗仓库金）</a>' . $needNext . '<br>';
             echo '<form method="post" action="guild.php?a=notice">';
             echo '<input name="notice" maxlength="60" placeholder="改公告"><input type="submit" value="发布">';
             echo '</form>';
         }
     }
-    echo '<a href="guild.php?a=leave">退出公会</a><br>';
+    if (($g['role'] ?? '') === 'leader') {
+        $cnt = (int) (db()->query('SELECT COUNT(*) FROM guild_members WHERE gid=' . (int) $g['id'])->fetchColumn() ?: 0);
+        if ($cnt <= 1) {
+            echo '<a href="guild.php?a=disband">解散公会（仅你一人）</a><br>';
+        }
+    } else {
+        echo '<a href="guild.php?a=leave">退出公会</a><br>';
+    }
 }
 nav_line();
 wap_end(false);

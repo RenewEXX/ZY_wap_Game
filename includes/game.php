@@ -384,7 +384,8 @@ function my_guild(int $uid): ?array
 
 function guild_level_need(int $lv): int
 {
-    return $lv >= 10 ? 999999999 : $lv * 5000;
+    // 升级消耗仓库金（铜）：1升2要100金，之后每级+100金
+    return $lv >= 10 ? 999999999 : 1000000 * $lv;
 }
 
 function guild_role_name(string $role): string
@@ -456,13 +457,36 @@ function guild_level_up(int $gid): string
         return '公会已满级。';
     }
     $need = guild_level_need($lv);
-    $tot = (int) (db()->query('SELECT COALESCE(SUM(contrib),0) FROM guild_members WHERE gid=' . (int) $gid)->fetchColumn() ?: 0);
-    $used = (int) (db()->query('SELECT COALESCE(SUM(exp),0) FROM guilds WHERE id=' . (int) $gid)->fetchColumn() ?: 0);
-    if ($tot - $used < $need) {
-        return '全员累计贡献' . $tot . '，已用' . $used . '，升级要' . $need . '贡献。';
+    $needGold = intdiv($need, 10000);
+    $gold = (int) ($g['gold'] ?? 0);
+    if ($gold < $need) {
+        return '仓库金不够：有' . fmt_money($gold) . '，升级要' . fmt_money($need) . '。';
     }
-    $msg = guild_add_exp((int) $gid, $need);
-    return '消耗' . $need . '贡献升级！' . $msg . '仓库上限' . guild_warehouse_cap($lv + 1) . '格。';
+    $tot = (int) (db()->query('SELECT COALESCE(SUM(contrib),0) FROM guild_members WHERE gid=' . (int) $gid)->fetchColumn() ?: 0);
+    if ($tot < $needGold) {
+        return '全员贡献不够：共' . $tot . '金，要' . $needGold . '金贡献。';
+    }
+    db()->prepare('UPDATE guilds SET gold=gold-?, level=level+1 WHERE id=?')->execute([$need, (int) $gid]);
+    // 按贡献从高到低扣足升级所需贡献
+    $remain = $needGold;
+    $ms = db()->query('SELECT uid, contrib FROM guild_members WHERE gid=' . (int) $gid . ' ORDER BY contrib DESC');
+    while ($remain > 0 && ($m = $ms->fetch())) {
+        $take = min((int) $m['contrib'], $remain);
+        if ($take > 0) {
+            db()->prepare('UPDATE guild_members SET contrib=contrib-? WHERE uid=?')->execute([$take, (int) $m['uid']]);
+            $remain -= $take;
+        }
+    }
+    return '消耗仓库' . fmt_money($need) . '，公会升到' . ($lv + 1) . '级！全员打怪经验+' . ($lv + 1) . '%，仓库上限' . guild_warehouse_cap($lv + 1) . '格。';
+}
+
+function is_tradable_equip(array $eq): bool
+{
+    // 碎裂装只能修不能存；穿着的调用方已过滤
+    if ((int) ($eq['broken'] ?? 0) === 1) {
+        return false;
+    }
+    return true;
 }
 
 function guild_add_exp(int $gid, int $exp): string

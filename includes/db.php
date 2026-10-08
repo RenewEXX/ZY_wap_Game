@@ -252,6 +252,7 @@ function db_init(): void
             level INTEGER NOT NULL DEFAULT 1,
             exp INTEGER NOT NULL DEFAULT 0,
             notice TEXT NOT NULL DEFAULT "",
+            gold INTEGER NOT NULL DEFAULT 0,
             created_at INTEGER NOT NULL DEFAULT 0
         )'
     );
@@ -265,6 +266,12 @@ function db_init(): void
         )'
     );
     db()->exec('CREATE INDEX IF NOT EXISTS idx_gm_gid ON guild_members (gid)');
+    try {
+        db()->exec('ALTER TABLE guilds ADD COLUMN gold INTEGER NOT NULL DEFAULT 0');
+        // 贡献单位从铜改成金，老数据一次性折算
+        db()->exec('UPDATE guild_members SET contrib = CAST(contrib / 10000 AS INTEGER)');
+    } catch (Throwable $e) {
+    }
     db()->exec(
         'CREATE TABLE IF NOT EXISTS guild_warehouse (
             id INTEGER PRIMARY KEY AUTOINCREMENT,

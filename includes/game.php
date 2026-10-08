@@ -1813,6 +1813,8 @@ function equip_affix_html(array $aff, int $enhanceLv = 0): string
         $line = '·' . $mk . h(affix_fmt($id, $v, !empty($x['legend']) ? null : ($x['tier'] ?? null)));
         if (!empty($x['legend'])) {
             $line = '<b style="color:#fc3">' . $line . '</b>';
+        } elseif (!empty($x['main'])) {
+            $line = '<b>' . $line . '</b>';
         }
         if (!empty($x['main']) || !empty($x['legend'])) {
             $top[] = $line;

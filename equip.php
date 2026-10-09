@@ -24,6 +24,10 @@ if (!$e) {
 }
 
 wap_start('装备');
+$equipFlash = flash_get();
+if ($equipFlash !== '') {
+    echo '<div class="warn">' . h($equipFlash) . '</div><div class="hr">--------</div>';
+}
 $qname = equip_qualities()[(int) $e['quality']] ?? '';
 echo '<span style="color:' . equip_color($e) . '">' . h(equip_shortname($e['name'])) . '</span>' . (equip_is_set(equip_shortname((string) $e['name'])) ? '<span style="color:#3f6">【套装】</span>' : '') . '<br>';
 echo '部位：' . h(equip_slots()[$e['slot']] ?? '') . '<br>';
@@ -52,7 +56,7 @@ foreach (mats_of((int) $u['id']) as $mid => $num) {
         $myStones[$mid] = $num;
     }
 }
-if ($myStones !== []) {
+if ($myStones !== [] && !in_array(($e['slot'] ?? ''), ['ring', 'necklace'], true)) {
     echo '附魔（武器加属性伤害，防具加属性抗性，戒指项链不可附魔；同石重附只在区间内波动）：<br>';
     foreach ($myStones as $mid => $num) {
         echo '·' . h(enchant_mat_name($mid)) . 'x' . $num . ' <a href="equip.php?a=enchant&id=' . $eid . '&stone=' . h($mid) . '">附魔</a><br>';

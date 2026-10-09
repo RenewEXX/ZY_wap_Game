@@ -165,7 +165,7 @@ if ($flash !== '') {
     echo '<div class="warn">' . h($flash) . '</div>';
 }
 if ($tab === 'equip') {
-    $eqs = my_equips((int) $u['id']);
+    $eqs = equip_sort_by_slot(my_equips((int) $u['id']));
     echo '身上：<br>';
     $slots = equip_slots();
     $wornBy = [];

@@ -16,7 +16,7 @@ echo '<span class="gold">' . h(fmt_money((int) $u['gold'])) . '</span><br>';
 echo '经验 ' . (int) $u['exp'] . '/' . exp_need((int) $u['lv']) . '<br>';
 $st = db()->prepare('SELECT * FROM equips WHERE uid=? AND pos="wear"');
 $st->execute([(int) $u['id']]);
-$worn = $st->fetchAll();
+$worn = equip_sort_by_slot($st->fetchAll());
 if ($worn !== []) {
     echo '穿戴：<br>';
     foreach ($worn as $e) {

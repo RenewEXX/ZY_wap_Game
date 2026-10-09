@@ -253,7 +253,7 @@ if ($here['monsters'] !== []) {
     foreach ($here['monsters'] as $mid) {
         $m = monsters()[$mid];
         $diff = monster_lv($mid) - (int) ($u['lv'] ?? 1);
-        $tag = $diff <= -4 ? '经验衰减' : ($diff > 0 ? '越级+' . (int) min(50, $diff * 5) . '%' : '');
+        $tag = $diff <= -4 ? '经验衰减' : ($diff > 0 ? '越级+' . (int) min(20, $diff * 5) . '%' : '');
         $isBoss = ($mid === boss_of_map($cur));
         $left = $spawns[$mid . '|0'] ?? 0;
         if ($left <= 0) {

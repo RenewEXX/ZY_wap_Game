@@ -32,7 +32,7 @@ echo '他的装备：<br>';
 $wst = db()->prepare('SELECT * FROM equips WHERE uid=? AND pos="wear"');
 $wst->execute([(int) $t['id']]);
 $hasGear = false;
-while ($we = $wst->fetch()) {
+foreach (equip_sort_by_slot($wst->fetchAll()) as $we) {
     $hasGear = true;
     echo enhance_tag_html((int) ($we['enhance_level'] ?? 0)) . '<span style="color:' . equip_color($we) . '">' . h(equip_shortname((string) $we['name'])) . '</span><br>';
 }

@@ -29,7 +29,7 @@ $flash = flash_get();
 if ($flash !== '') {
     echo '<div class="warn">' . h($flash) . '</div>';
 }
-$eqs = my_equips((int) $u['id']);
+$eqs = equip_sort_by_slot(my_equips((int) $u['id']));
 if ($eqs === []) {
     echo '<span class="muted">你一件装备都没有，先去刷吧。</span>';
 }

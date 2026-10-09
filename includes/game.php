@@ -1893,6 +1893,21 @@ function job_can_twohand(string $job): bool
     return $job === 'warrior';
 }
 
+// 穿戴展示固定顺序：主手/副手/上身/头部/下身/手套/鞋子/背部/戒指/项链
+function equip_sort_by_slot(array $eqs): array
+{
+    $order = array_flip(array_keys(equip_slots()));
+    usort($eqs, function ($a, $b) use ($order) {
+        $oa = $order[$a['slot'] ?? ''] ?? 99;
+        $ob = $order[$b['slot'] ?? ''] ?? 99;
+        if ($oa !== $ob) {
+            return $oa <=> $ob;
+        }
+        return (int) ($a['id'] ?? 0) <=> (int) ($b['id'] ?? 0);
+    });
+    return $eqs;
+}
+
 function twohand_bases(): array
 {
     return ['堕落骑士大剑', '君王蚀影刃'];
@@ -2070,9 +2085,15 @@ function affix_roll(string $k, int $q, int $itemLevel = 1): array
     }
     $range = $a['data']['tiers'][$tierIndex] ?? $a['data']['tiers'][0];
     $value = $range[0] + mt_rand() / mt_getrandmax() * ($range[1] - $range[0]);
-    $value *= (float) (equip_quality_config()[$q]['multiplier'] ?? 1) * (1 + max(1, $itemLevel) * 0.02);
+    $lv = max(1, (int) $itemLevel);
+    $qmult = (float) (equip_quality_config()[$q]['multiplier'] ?? 1);
     $flat = ['atk', 'def', 'hp', 'element', 'thorns', 'energy', 'all_attr'];
-    $value *= in_array($k, $flat, true) ? 0.1 : 0.3;
+    if (in_array($k, $flat, true)) {
+        // 固定值随等级1.36次方成长（10级≈原来，130级约50倍），否则高级装主属性永远是个位数
+        $value *= $qmult * 0.0072 * pow($lv, 1.36);
+    } else {
+        $value *= $qmult * (1 + $lv * 0.02) * 0.3;
+    }
     $precision = (int) $a['data']['precision'];
     $value = $precision === 0 ? (float) max(1, round($value)) : round($value, $precision);
     return ['tier' => ['T5', 'T4', 'T3', 'T2', 'T1'][$tierIndex] ?? 'T5', 'v' => $value];
@@ -3537,21 +3558,28 @@ function monster_lv(string $mid): int
     return $lv[$mid] ?? 1;
 }
 
-// 等级差决定实际经验：低4级以上刷怪只给2成（防跨级碾压），越级打给加成
-function exp_gain_for(array $u, string $mid): int
+// 经验按怪物等级锚定升级需求：同级怪约(10+人物等级)只升一级，越级加成封顶20%
+function exp_gain_for(array $u, string $mid, int $elite = 0): int
 {
-    $base = (int) (monsters()[$mid]['exp'] ?? 5);
-    $diff = monster_lv($mid) - (int) ($u['lv'] ?? 1);
+    $mlv = monster_lv($mid);
+    $plv = max(1, (int) ($u['lv'] ?? 1));
+    $base = exp_need($mlv) / (10 + $plv);
+    $diff = $mlv - $plv;
     if ($diff <= -4) {
-        return max(1, (int) ($base * 0.2));
+        $v = $base * 0.2;
+    } elseif ($diff < 0) {
+        $v = $base * (1 + $diff * 0.1);
+    } elseif ($diff === 0) {
+        $v = $base;
+    } else {
+        $v = $base * min(1.2, 1 + $diff * 0.05);
     }
-    if ($diff < 0) {
-        return max(1, (int) ($base * (1 + $diff * 0.1)));
+    if ($elite === 1) {
+        $v *= 3;
+    } elseif ($mid === boss_of_map((string) ($u['loc'] ?? ''))) {
+        $v *= 8;
     }
-    if ($diff === 0) {
-        return $base;
-    }
-    return (int) ($base * min(1.5, 1 + $diff * 0.05));
+    return max(1, (int) $v);
 }
 
 function death_penalty(array &$u): string
@@ -3860,7 +3888,7 @@ function battle_round(array &$u, array &$b, string $mode): array
     if ((int) $b['hp'] <= 0) {
         $killed = (int) ($b['num'] ?? 1) - (int) ($b['left'] ?? 1) + 1;
         if ((int) ($b['left'] ?? 1) > 1) {
-            $b['wexp'] = (int) ($b['wexp'] ?? 0) + exp_gain_for($u, (string) ($b['id'] ?? ''));
+            $b['wexp'] = (int) ($b['wexp'] ?? 0) + exp_gain_for($u, (string) ($b['id'] ?? ''), (int) ($b['elite'] ?? 0));
             $b['wgold'] = (int) ($b['wgold'] ?? 0) + monster_gold_reward((int) $b['gold']);
             $b['left'] = (int) $b['left'] - 1;
             $b['hp'] = (int) $b['maxhp'];
@@ -4026,7 +4054,7 @@ function battle_round(array &$u, array &$b, string $mode): array
         }
         $g = (int) ($b['wgold'] ?? 0) + monster_gold_reward((int) $b['gold']);
         $u['gold'] = (int) $u['gold'] + $g;
-        $rawExp = (int) (((int) ($b['wexp'] ?? 0) + exp_gain_for($u, (string) ($b['id'] ?? ''))) * guild_exp_mult((int) $u['id']) * party_bonus_mult((int) $u['id']));
+        $rawExp = (int) (((int) ($b['wexp'] ?? 0) + exp_gain_for($u, (string) ($b['id'] ?? ''), (int) ($b['elite'] ?? 0))) * guild_exp_mult((int) $u['id']) * party_bonus_mult((int) $u['id']));
         war_add_score((int) $u['id'], (string) ($b['id'] ?? ''));
         $msg = ($msg ?? '') . gain_exp($u, $rawExp);
         $petLvMsg = pet_gain_exp((int) $u['id'], (int) ($b['wexp'] ?? 0) + exp_gain_for($u, (string) ($b['id'] ?? '')));

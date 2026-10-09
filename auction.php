@@ -265,7 +265,7 @@ if ($a === 'bid') {
 }
 if ($a === 'sell') {
     echo '【选择上架物品】只收：入场券、沼泽套装3件。<br>';
-    $eqs = my_equips($uid);
+    $eqs = equip_sort_by_slot(my_equips($uid));
     $i = 0;
     foreach ($eqs as $e) {
         if (!auction_listable_equip($e)) {

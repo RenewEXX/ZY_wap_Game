@@ -29,14 +29,13 @@ $flash = flash_get();
 if ($flash !== '') {
     echo '<div class="warn">' . h($flash) . '</div>';
 }
-$qcolor = ['#999', '#fff', '#6cf', '#c6f', '#fc3'];
 $eqs = my_equips((int) $u['id']);
 if ($eqs === []) {
     echo '<span class="muted">你一件装备都没有，先去刷吧。</span>';
 }
 foreach ($eqs as $e) {
     $lv = (int) ($e['enhance_level'] ?? 0);
-    echo enhance_tag_html($lv) . '<span style="color:' . $qcolor[(int) $e['quality']] . '">' . h(equip_shortname($e['name'])) . '</span><br>';
+    echo enhance_tag_html($lv) . '<span style="color:' . equip_color($e) . '">' . h(equip_shortname($e['name'])) . '</span><br>';
     $rule = enhance_table()[$lv + 1] ?? null;
     if (!$rule) {
         echo '<span class="muted">已满+15。</span><br>';

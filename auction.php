@@ -198,7 +198,11 @@ if ($a === 'view') {
         exit;
     }
     echo '【物品详情】<br>';
-    echo '<b>' . h(auction_item_name($auc)) . '</b><br>';
+    if ($auc['kind'] === 'equip') {
+        echo '<b style="color:' . equip_color_by((string) $auc['item_name'], (int) $auc['item_quality']) . '">' . h(auction_item_name($auc)) . '</b><br>';
+    } else {
+        echo '<b>' . h(auction_item_name($auc)) . '</b><br>';
+    }
     if ($auc['kind'] === 'equip') {
         echo '类型：' . h(equip_slots()[$auc['item_slot']] ?? '') . ' | 强化：' . enhance_tag_html((int) $auc['enhance_level']) . '<br>';
         $aff = json_decode((string) $auc['item_affixes'], true);
@@ -498,9 +502,11 @@ if ($a === 'browse') {
     foreach ($rows as $r) {
         $cur = (int) $r['cur_price'] > 0 ? (int) $r['cur_price'] : (int) $r['start_price'];
         $left = (int) $r['ends_at'] - time();
-        echo '·' . h(auction_item_name($r));
         if ($r['kind'] === 'equip') {
+            echo '·<span style="color:' . equip_color_by((string) $r['item_name'], (int) $r['item_quality']) . '">' . h(auction_item_name($r)) . '</span>';
             echo '(' . h(equip_qualities()[(int) $r['item_quality']] ?? '') . (int) $r['item_level'] . '级)';
+        } else {
+            echo '·' . h(auction_item_name($r));
         }
         echo '<br>';
         echo '起拍' . h(auction_money_text((int) $r['start_price'], $r['currency']));

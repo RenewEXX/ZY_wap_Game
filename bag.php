@@ -164,8 +164,6 @@ $flash = flash_get();
 if ($flash !== '') {
     echo '<div class="warn">' . h($flash) . '</div>';
 }
-$qcolor = ['#999', '#fff', '#6cf', '#c6f', '#fc3'];
-
 if ($tab === 'equip') {
     $eqs = my_equips((int) $u['id']);
     echo '身上：<br>';
@@ -186,12 +184,12 @@ if ($tab === 'equip') {
         if ($sid === 'ring') {
             for ($i = 0; $i < 2; $i++) {
                 $r = $rings[$i] ?? null;
-                echo $sname . ($i + 1) . '：' . ($r ? enhance_tag_html((int) ($r['enhance_level'] ?? 0)) . '<a href="equip.php?id=' . $r['id'] . '"><span style="color:' . $qcolor[(int) $r['quality']] . '">' . h(equip_shortname($r['name'])) . '</span></a>' : '空') . '<br>';
+                echo $sname . ($i + 1) . '：' . ($r ? enhance_tag_html((int) ($r['enhance_level'] ?? 0)) . '<a href="equip.php?id=' . $r['id'] . '"><span style="color:' . equip_color($r) . '">' . h(equip_shortname($r['name'])) . '</span></a>' : '空') . '<br>';
             }
             continue;
         }
         $e = $wornBy[$sid] ?? null;
-        echo $sname . '：' . ($e ? enhance_tag_html((int) ($e['enhance_level'] ?? 0)) . '<a href="equip.php?id=' . $e['id'] . '"><span style="color:' . $qcolor[(int) $e['quality']] . '">' . h(equip_shortname($e['name'])) . '</span></a>' : '空') . '<br>';
+        echo $sname . '：' . ($e ? enhance_tag_html((int) ($e['enhance_level'] ?? 0)) . '<a href="equip.php?id=' . $e['id'] . '"><span style="color:' . equip_color($e) . '">' . h(equip_shortname($e['name'])) . '</span></a>' : '空') . '<br>';
     }
     echo '<div class="hr">--------</div>';
     echo '库存：<br>';
@@ -201,7 +199,7 @@ if ($tab === 'equip') {
             continue;
         }
         $has = true;
-        echo enhance_tag_html((int) ($e['enhance_level'] ?? 0)) . '<a href="equip.php?id=' . $e['id'] . '"><span style="color:' . $qcolor[(int) $e['quality']] . '">' . h(equip_shortname($e['name'])) . '</span></a>[' . h($slots[$e['slot']] ?? '') . ']';
+        echo enhance_tag_html((int) ($e['enhance_level'] ?? 0)) . '<a href="equip.php?id=' . $e['id'] . '"><span style="color:' . equip_color($e) . '">' . h(equip_shortname($e['name'])) . '</span></a>[' . h($slots[$e['slot']] ?? '') . ']';
         if ((int) ($e['req_lv'] ?? 1) > 1 || (int) ($e['req_str'] ?? 0) > 0 || (int) ($e['req_agi'] ?? 0) > 0) {
             echo '（' . h(equip_req_text($e)) . '）';
         }

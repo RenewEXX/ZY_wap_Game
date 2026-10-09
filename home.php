@@ -229,10 +229,20 @@ foreach ($nears as $nu) {
     echo '·<a href="look.php?id=' . (int) $nu['id'] . '">' . h($nu['username']) . '</a>(' . (int) $nu['lv'] . '级' . h(job_of(['job' => (string) $nu['job']])['name']) . ')<br>';
 }
 
-// 打怪：在行动画面直接开打（3分钟一刷新，每种怪各20只，精英2只，BOSS独苗）
+// 打怪：在行动画面直接开打（1分钟一刷新，每种怪各20只，精英2只，BOSS独苗）
 if ($here['monsters'] !== []) {
     echo '动手：<br>';
     spawn_tick($cur);
+    $spawns = [];
+    foreach (map_spawns($cur) as $s) {
+        $spawns[$s['mid'] . '|' . $s['elite']] = (int) $s['num'];
+    }
+    // 自愈：计时已到却还是0只，说明漏补了，直接按本图补满再读一次，杜绝串图/假刷新中
+    foreach ($here['monsters'] as $hmid) {
+        if (($spawns[$hmid . '|0'] ?? 0) <= 0 && spawn_respawn_in($cur, $hmid) <= 0) {
+            spawn_fill_one($cur, $hmid);
+        }
+    }
     $spawns = [];
     foreach (map_spawns($cur) as $s) {
         $spawns[$s['mid'] . '|' . $s['elite']] = (int) $s['num'];

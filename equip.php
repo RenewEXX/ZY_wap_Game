@@ -24,9 +24,8 @@ if (!$e) {
 }
 
 wap_start('装备');
-$qcolor = ['#999', '#fff', '#6cf', '#c6f', '#fc3'];
 $qname = equip_qualities()[(int) $e['quality']] ?? '';
-echo '<span style="color:' . $qcolor[(int) $e['quality']] . '">' . h(equip_shortname($e['name'])) . '</span><br>';
+echo '<span style="color:' . equip_color($e) . '">' . h(equip_shortname($e['name'])) . '</span>' . (equip_is_set(equip_shortname((string) $e['name'])) ? '<span style="color:#3f6">【套装】</span>' : '') . '<br>';
 echo '部位：' . h(equip_slots()[$e['slot']] ?? '') . '<br>';
 echo '品级：' . h($qname) . '<br>';
 echo '穿戴要求：' . h(equip_req_text($e)) . '<br>';

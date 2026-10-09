@@ -993,10 +993,15 @@ function boss_of_map(string $loc): string
     return $m[$loc] ?? '';
 }
 
-// 每种怪各20只(BOSS除外仍为1只)，每种怪各自180秒刷新
+// 每种怪各20只(BOSS除外仍为1只)，每种怪各自60秒刷新
 function spawn_cap(string $mid, string $loc): int
 {
     return $mid === boss_of_map($loc) ? 1 : 20;
+}
+
+function spawn_period(): int
+{
+    return 60;
 }
 
 function spawn_tick(?string $onlyLoc = null, ?string $onlyMid = null): void
@@ -1022,7 +1027,7 @@ function spawn_tick(?string $onlyLoc = null, ?string $onlyMid = null): void
             $st = db()->prepare('SELECT at FROM map_respawn WHERE loc=? AND mid=?');
             $st->execute([$loc, $mid]);
             $at = (int) ($st->fetchColumn() ?: 0);
-            if ($at > 0 && $now - $at < 180) {
+            if ($at > 0 && $now - $at < spawn_period()) {
                 continue;
             }
             $rs = db()->prepare('UPDATE map_respawn SET at=? WHERE loc=? AND mid=?');
@@ -1059,7 +1064,7 @@ function spawn_fill_one(string $loc, string $mid): void
     $up = db()->prepare('UPDATE map_spawns SET num=num+? WHERE loc=? AND mid=? AND elite=0');
     $up->execute([$add, $loc, $mid]);
     if ($up->rowCount() === 0) {
-        db()->prepare('INSERT INTO map_spawns (loc, mid, elite, num) VALUES (?, ?, 0, ?)')->execute([$loc, $mid, $cap]);
+        db()->prepare('INSERT OR IGNORE INTO map_spawns (loc, mid, elite, num) VALUES (?, ?, 0, ?)')->execute([$loc, $mid, $cap]);
     }
 }
 
@@ -1114,12 +1119,12 @@ function spawn_respawn_in(string $loc, string $mid = ''): int
         $st = db()->prepare('SELECT at FROM map_respawn WHERE loc=? AND mid=?');
         $st->execute([$loc, $mid]);
         $at = (int) ($st->fetchColumn() ?: 0);
-        return max(0, 180 - (time() - $at));
+        return max(0, spawn_period() - (time() - $at));
     }
     $st = db()->prepare('SELECT MAX(at) FROM map_respawn WHERE loc=?');
     $st->execute([$loc]);
     $at = (int) ($st->fetchColumn() ?: 0);
-    return max(0, 180 - (time() - $at));
+    return max(0, spawn_period() - (time() - $at));
 }
 
 function horse_names(): array
@@ -1981,7 +1986,7 @@ function equip_affix_html(array $aff, int $enhanceLv = 0): string
     foreach ($aff as $x) {
         $id = (string) ($x['id'] ?? $x['k'] ?? '');
         $v = (float) ($x['v'] ?? 0);
-        if (in_array($id, ['atk', 'def', 'hp', 'all_attr'], true)) {
+        if (!empty($x['main']) || in_array($id, ['atk', 'def', 'hp', 'all_attr'], true)) {
             $v *= $mult;
         }
         if (!empty($x['main'])) {
@@ -2016,12 +2021,12 @@ function equip_affix_html(array $aff, int $enhanceLv = 0): string
     return $out;
 }
 
-// 高强外观：+7彩虹字，+10金字炫光
+// 高强外观：+7彩虹字，+10彩虹渐变+炫光
 function enhance_tag_html(int $lv): string
 {
     $lv = max(0, $lv);
     if ($lv >= 10) {
-        return '<b style="color:#fc3;text-shadow:0 0 6px #f60,0 0 12px #fc3">✦+' . $lv . '✦</b>';
+        return '<b style="background:linear-gradient(90deg,#f66,#fc3,#6f6,#6cf,#c6f,#f66);-webkit-background-clip:text;background-clip:text;color:#fc3;text-shadow:0 0 8px #f6f">✦+' . $lv . '✦</b>';
     }
     if ($lv >= 7) {
         return '<b style="background:linear-gradient(90deg,#f66,#fc3,#6f6,#6cf,#c6f);-webkit-background-clip:text;background-clip:text;color:#fc3">+' . $lv . '</b>';
@@ -2089,6 +2094,28 @@ function equip_shortname(string $name): string
     return $name;
 }
 
+// 套装件：沼泽3件/深渊3件/剧场系列，显示醒目套装绿
+function equip_is_set(string $shortName): bool
+{
+    if (str_starts_with($shortName, '剧场·')) {
+        return true;
+    }
+    return in_array($shortName, ['沼泽兜帽', '沼泽轻靴', '沼泽之心', '深渊蚀甲', '深渊腿甲', '深渊护手'], true);
+}
+
+function equip_color(array $e): string
+{
+    if (equip_is_set(equip_shortname((string) ($e['name'] ?? '')))) {
+        return '#3f6';
+    }
+    return ['#999', '#fff', '#6cf', '#c6f', '#fc3'][(int) ($e['quality'] ?? 0)] ?? '#fff';
+}
+
+function equip_color_by(string $fullName, int $q): string
+{
+    return equip_color(['name' => $fullName, 'quality' => $q]);
+}
+
 // 怪物专属掉落：小怪掉率低且多为低劣
 function monster_drops(string $mid): array
 {
@@ -2149,7 +2176,12 @@ function equip_primary(string $slot, string $offKind = ''): string
     if ($slot === 'offhand') {
         return $offKind === 'shield' ? 'def' : 'element';
     }
-    return ['weapon' => 'atk', 'body' => 'def', 'head' => 'def', 'legs' => 'def', 'gloves' => 'crit', 'shoes' => 'dodge', 'back' => 'dodge', 'ring' => 'hit', 'necklace' => 'energy'][$slot] ?? '';
+    if ($slot === 'ring') {
+        // 戒指主属性：随机一条元素抗性
+        $els = ['res_light', 'res_dark', 'res_fire', 'res_wind', 'res_ice', 'res_thunder'];
+        return $els[array_rand($els)];
+    }
+    return ['weapon' => 'atk', 'body' => 'def', 'head' => 'def', 'legs' => 'def', 'gloves' => 'crit', 'shoes' => 'dodge', 'back' => 'dodge', 'necklace' => 'energy'][$slot] ?? '';
 }
 
 function equip_reqs(int $itemLevel, int $q): array
@@ -3132,7 +3164,8 @@ function gear_stats(int $uid): array
         foreach ($aff as $a) {
             $id = (string) ($a['id'] ?? $a['k'] ?? '');
             $value = (float) ($a['v'] ?? 0);
-            if (in_array($id, ['atk', 'def', 'hp', 'all_attr'], true)) {
+            // 主属性全吃强化倍率（不限atk/def/hp：戒指抗性、手套暴击等同样生效）
+            if (!empty($a['main']) || in_array($id, ['atk', 'def', 'hp', 'all_attr'], true)) {
                 $value *= $mult;
             }
             if (isset($s[$id])) {
@@ -3144,7 +3177,7 @@ function gear_stats(int $uid): array
     $s['atk'] += $s['all_attr'];
     $s['def'] += $s['all_attr'];
     $s['hp'] += $s['all_attr'];
-    foreach (['crit' => 75, 'dodge' => 60, 'cooldown' => 50] as $key => $cap) {
+    foreach (['crit' => 75, 'dodge' => 60, 'cooldown' => 50, 'hit' => 60] as $key => $cap) {
         $s[$key] = min((float) $cap, $s[$key]);
     }
     $st2 = db()->prepare('SELECT name FROM equips WHERE uid=? AND pos="wear"');

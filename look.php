@@ -29,13 +29,12 @@ echo '位置：' . h(loc((string) $t['loc'])['name']) . '<br>';
 echo '战力：' . power_score($t) . '<br>';
 echo '<div class="hr">--------</div>';
 echo '他的装备：<br>';
-$qcolor = ['#999', '#fff', '#6cf', '#c6f', '#fc3'];
 $wst = db()->prepare('SELECT * FROM equips WHERE uid=? AND pos="wear"');
 $wst->execute([(int) $t['id']]);
 $hasGear = false;
 while ($we = $wst->fetch()) {
     $hasGear = true;
-    echo enhance_tag_html((int) ($we['enhance_level'] ?? 0)) . '<span style="color:' . $qcolor[(int) $we['quality']] . '">' . h(equip_shortname((string) $we['name'])) . '</span><br>';
+    echo enhance_tag_html((int) ($we['enhance_level'] ?? 0)) . '<span style="color:' . equip_color($we) . '">' . h(equip_shortname((string) $we['name'])) . '</span><br>';
 }
 if (!$hasGear) {
     echo '<span class="muted">空身。</span><br>';

@@ -1938,7 +1938,7 @@ function affix_catalog(): array
         'res_wind' => ['name' => '风抗性', 'slots' => ['body', 'necklace'], 'data' => $r([[1, 2], [2, 4], [4, 7], [7, 11], [10, 15]], 40, '', 1)],
         'res_ice' => ['name' => '冰抗性', 'slots' => ['body', 'necklace'], 'data' => $r([[1, 2], [2, 4], [4, 7], [7, 11], [10, 15]], 40, '', 1)],
         'res_thunder' => ['name' => '雷抗性', 'slots' => ['body', 'necklace'], 'data' => $r([[1, 2], [2, 4], [4, 7], [7, 11], [10, 15]], 40, '', 1)],
-        'allres' => ['name' => '全属性抗性', 'slots' => ['body', 'necklace'], 'data' => $r([[1, 2], [2, 4], [4, 6], [6, 9], [8, 12]], 25, '', 1)],
+        'allres' => ['name' => '全元素抗性', 'slots' => ['body', 'necklace', 'ring'], 'data' => $r([[1, 2], [2, 4], [4, 6], [6, 9], [8, 12]], 25, '', 1)],
         'penetration' => ['name' => '护甲穿透', 'slots' => ['weapon'], 'data' => $r([[1, 2], [2, 4], [4, 7], [7, 10], [8, 12]], 60, 'penetration', 1)],
         'skill_damage' => ['name' => '技能伤害', 'slots' => ['weapon'], 'data' => $r([[2, 4], [4, 7], [7, 10], [10, 14], [12, 18]], 70, 'skill_damage', 1)],
         'execute' => ['name' => '处决伤害', 'slots' => ['weapon'], 'data' => $r([[3, 6], [6, 10], [10, 16], [16, 23], [20, 30]], 40, 'execute', 1)],
@@ -2177,9 +2177,8 @@ function equip_primary(string $slot, string $offKind = ''): string
         return $offKind === 'shield' ? 'def' : 'element';
     }
     if ($slot === 'ring') {
-        // 戒指主属性：随机一条元素抗性
-        $els = ['res_light', 'res_dark', 'res_fire', 'res_wind', 'res_ice', 'res_thunder'];
-        return $els[array_rand($els)];
+        // 戒指主属性：全元素抗性（6系全吃，战斗里已对每系叠加）
+        return 'allres';
     }
     return ['weapon' => 'atk', 'body' => 'def', 'head' => 'def', 'legs' => 'def', 'gloves' => 'crit', 'shoes' => 'dodge', 'back' => 'dodge', 'necklace' => 'energy'][$slot] ?? '';
 }

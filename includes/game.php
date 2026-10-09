@@ -2015,7 +2015,7 @@ function enhance_tag_html(int $lv): string
         return '<b style="background:linear-gradient(90deg,#f66,#fc3,#6f6,#6cf,#c6f,#f66);-webkit-background-clip:text;background-clip:text;color:#fc3;-webkit-text-fill-color:transparent;text-shadow:0 0 8px #f6f">✦+' . $lv . '✦</b>';
     }
     if ($lv >= 7) {
-        return '<b style="background:linear-gradient(90deg,#f66,#fc3,#6f6,#6cf,#c6f);-webkit-background-clip:text;background-clip:text;color:#fc3;-webkit-text-fill-color:transparent">+' . $lv . '</b>';
+        return '<b style="background:linear-gradient(90deg,#cfc,#6f6,#3c6);-webkit-background-clip:text;background-clip:text;color:#6f6;-webkit-text-fill-color:transparent">+' . $lv . '</b>';
     }
     return '+' . $lv;
 }

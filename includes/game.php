@@ -320,17 +320,9 @@ function offline_tick(array &$u): void
         }
         $m = scale_monster($m, $mid, 0);
         $isBossOff = ($mid === boss_of_map((string) ($u['loc'] ?? '')));
-        $takeOff = spawn_take((string) ($u['loc'] ?? ''), $mid, 0, $isBossOff ? 1 : 6);
-        if ($takeOff <= 0) {
-            spawn_tick((string) ($u['loc'] ?? ''), $mid);
-            $takeOff = spawn_take((string) ($u['loc'] ?? ''), $mid, 0, $isBossOff ? 1 : 6);
-            if ($takeOff <= 0) {
-                $emptyRounds++;
-                continue;
-            }
-        }
+        // 离线人偶同样打幻影：不消耗地图存货（否则一次离线结算能吃光整张图），只扣人偶时间
         $tried++;
-        $numOff = $isBossOff ? 1 : min(6, $takeOff);
+        $numOff = $isBossOff ? 1 : 6;
         $b = [
             'id' => $mid, 'name' => $m['name'], 'hp' => $m['hp'], 'maxhp' => $m['hp'],
             'atk' => $m['atk'], 'exp' => $m['exp'], 'gold' => $m['gold'],
@@ -1773,15 +1765,9 @@ function dummy_tick(array &$u): void
         }
         $m = scale_monster($m, $mid, 0);
         $isBossDummy = ($mid === boss_of_map((string) ($u['loc'] ?? '')));
-        $takeDummy = spawn_take((string) ($u['loc'] ?? ''), $mid, 0, $isBossDummy ? 1 : 6);
-        if ($takeDummy <= 0) {
-            spawn_tick((string) ($u['loc'] ?? ''), $mid);
-            $takeDummy = spawn_take((string) ($u['loc'] ?? ''), $mid, 0, $isBossDummy ? 1 : 6);
-            if ($takeDummy <= 0) {
-                continue;
-            }
-        }
-        $numDummy = $isBossDummy ? 1 : min(6, $takeDummy);
+        // 人偶打的是幻影：不消耗全服共享的地图存货，只消耗人偶时间。
+        // 否则人偶会悄悄吃光你脚下这张图的怪（跨图“被清空”假象的真凶），还会饿死同图的别人。
+        $numDummy = $isBossDummy ? 1 : 6;
         $b = [
             'id' => $mid, 'name' => $m['name'], 'hp' => $m['hp'], 'maxhp' => $m['hp'],
             'atk' => $m['atk'], 'exp' => $m['exp'], 'gold' => $m['gold'],
@@ -2026,10 +2012,10 @@ function enhance_tag_html(int $lv): string
 {
     $lv = max(0, $lv);
     if ($lv >= 10) {
-        return '<b style="background:linear-gradient(90deg,#f66,#fc3,#6f6,#6cf,#c6f,#f66);-webkit-background-clip:text;background-clip:text;color:#fc3;text-shadow:0 0 8px #f6f">✦+' . $lv . '✦</b>';
+        return '<b style="background:linear-gradient(90deg,#f66,#fc3,#6f6,#6cf,#c6f,#f66);-webkit-background-clip:text;background-clip:text;color:#fc3;-webkit-text-fill-color:transparent;text-shadow:0 0 8px #f6f">✦+' . $lv . '✦</b>';
     }
     if ($lv >= 7) {
-        return '<b style="background:linear-gradient(90deg,#f66,#fc3,#6f6,#6cf,#c6f);-webkit-background-clip:text;background-clip:text;color:#fc3">+' . $lv . '</b>';
+        return '<b style="background:linear-gradient(90deg,#f66,#fc3,#6f6,#6cf,#c6f);-webkit-background-clip:text;background-clip:text;color:#fc3;-webkit-text-fill-color:transparent">+' . $lv . '</b>';
     }
     return '+' . $lv;
 }

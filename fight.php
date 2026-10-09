@@ -433,15 +433,15 @@ setInterval(async ()=>{
     document.getElementById("bhp").innerText="敌生命 "+d.bhp+"/"+d.bmax;
     if(d.num>1){ const bl=document.getElementById("bleft"); if(bl) bl.innerText="剩余 "+d.left+"/"+d.num+"只，存活怪每回合一起打你！"; }
   }catch(e){}
-},1000);
+},3000);
 // 每3秒把这3秒的战报刷到页面
 setInterval(()=>{
   if(!buf.length) return;
   const box=document.getElementById("blog");
-  box.innerHTML=(box.innerHTML+"<br>---3秒---<br>"+buf.map(s=>s.replace(/</g,"&lt;")).join("<br>")).split("<br>").slice(-20).join("<br>");
+  box.innerHTML=(box.innerHTML+"<br>---3秒---<br>"+buf.map(s=>s.replace(/</g,"&lt;")).join("<br>")).split("<br>").slice(-12).join("<br>");
   buf=[];
   window.scrollTo(0,document.body.scrollHeight);
 },3000);
 </script>';
-echo '<noscript><meta http-equiv="refresh" content="3;url=fight.php?a=skill"></noscript>';
+echo '<noscript><meta http-equiv="refresh" content="6;url=fight.php?a=skill"></noscript>';
 wap_end(false);

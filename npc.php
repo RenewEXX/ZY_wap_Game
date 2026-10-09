@@ -30,7 +30,7 @@ $people = [
     'horse_t' => ['name' => '赛马人·老霍', 'loc' => 'town_sq', 'text' => '赌马了啊！10匹马，2小时一场，1到10魔钻，冠军分奖池六成！'],
     'horse_s' => ['name' => '赛马人·阿金', 'loc' => 'silver_sq', 'text' => '白银城分场，奖池全服通用。押马要趁早，开赛不候。'],
     'horse_g' => ['name' => '赛马人·豆芽', 'loc' => 'square', 'text' => '灰雾村也有马！小注怡情，大注发家。'],
-    'rank_t' => ['name' => '榜单老人', 'loc' => 'town_sq', 'text' => '战力、活跃、充值、宠物、赛马，五榜每刻更新。扬名立万，就在此处。'],
+    'rank_t' => ['name' => '榜单老人', 'loc' => 'town_sq', 'text' => '战力、活跃、消费、宠物、赛马，五榜每刻更新。扬名立万，就在此处。'],
     'rank_s' => ['name' => '榜单老人', 'loc' => 'silver_sq', 'text' => '白银城也看榜。数据全服通用。'],
     'rank_g' => ['name' => '榜单老人', 'loc' => 'square', 'text' => '灰雾村小地方，榜可是全服的。'],
     'waldon' => ['name' => '线人·瓦尔顿', 'loc' => 'avenue', 'text' => '真正的王都二十年前就没了，这里只是深渊搭的戏台。拿着格温的信，就去中央大道杀傀儡守卫，杀够80只再回来。'],
@@ -386,7 +386,7 @@ if (in_array($who, ['horse_t', 'horse_s', 'horse_g'], true)) {
     echo '<a href="horse.php">去赌马（2小时一场）</a><br>';
 }
 if (in_array($who, ['rank_t', 'rank_s', 'rank_g', 'rank_c'], true)) {
-    echo '<a href="rank.php">看排行榜（战力/活跃/充值/宠物/赛马）</a><br>';
+    echo '<a href="rank.php">看排行榜（战力/活跃/消费/宠物/赛马）</a><br>';
 }
 if (in_array($who, ['med_g', 'med_t', 'med_s', 'med_c'], true)) {
     echo '卖药（按最大生命百分比回，战斗中手动喝，不自动）：<br>';

@@ -4,7 +4,10 @@ require __DIR__ . '/includes/bootstrap.php';
 
 $u = require_login();
 $tab = (string) ($_GET['tab'] ?? 'power');
-if (!in_array($tab, ['power', 'active', 'recharge', 'pet', 'horse'], true)) {
+if ($tab === 'recharge') {
+    $tab = 'spend';
+}
+if (!in_array($tab, ['power', 'active', 'spend', 'pet', 'horse'], true)) {
     $tab = 'power';
 }
 $job = (string) ($_GET['job'] ?? '');
@@ -13,7 +16,7 @@ if (!isset(jobs()[$job])) {
 }
 
 wap_start('排行榜');
-echo '<a href="rank.php?tab=power">战力</a> <a href="rank.php?tab=active">活跃</a> <a href="rank.php?tab=recharge">充值</a> <a href="rank.php?tab=pet">宠物</a> <a href="rank.php?tab=horse">赛马</a><br>';
+echo '<a href="rank.php?tab=power">战力</a> <a href="rank.php?tab=active">活跃</a> <a href="rank.php?tab=spend">消费</a> <a href="rank.php?tab=pet">宠物</a> <a href="rank.php?tab=horse">赛马</a><br>';
 if ($tab === 'power') {
     echo '职业：<a href="rank.php?tab=power">全部</a> ';
     foreach (jobs() as $jid => $j) {
@@ -50,13 +53,13 @@ if ($tab === 'power') {
         $i++;
         echo $i . '. ' . h($r['username']) . '【' . h(jobs()[$r['job']]['name'] ?? '战士') . '】Lv' . $r['lv'] . ' ' . h(fmt_playtime((int) $r['active_secs'])) . '<br>';
     }
-} elseif ($tab === 'recharge') {
-    echo '【充值榜】（累计获得魔钻，含兑换码+任务奖励）<br>';
-    $st = db()->query('SELECT username, job, lv, diamonds_bought, diamonds FROM users ORDER BY diamonds_bought DESC LIMIT 20');
+} elseif ($tab === 'spend') {
+    echo '【消费榜】（累计消费魔钻：商城/拍卖成交/赛马）<br>';
+    $st = db()->query('SELECT username, job, lv, diamonds_spent, diamonds FROM users ORDER BY diamonds_spent DESC LIMIT 20');
     $i = 0;
     while ($r = $st->fetch()) {
         $i++;
-        echo $i . '. ' . h($r['username']) . '【' . h(jobs()[$r['job']]['name'] ?? '战士') . '】Lv' . $r['lv'] . ' 累计' . h(fmt_diamond((int) $r['diamonds_bought'])) . '（持有' . h(fmt_diamond((int) $r['diamonds'])) . '）<br>';
+        echo $i . '. ' . h($r['username']) . '【' . h(jobs()[$r['job']]['name'] ?? '战士') . '】Lv' . $r['lv'] . ' 累计消费' . h(fmt_diamond((int) $r['diamonds_spent'])) . '（持有' . h(fmt_diamond((int) $r['diamonds'])) . '）<br>';
     }
 } elseif ($tab === 'pet') {
     echo '【宠物榜】（宠物战力=攻击×3+防御×2+生命/5+速度×2+等级×5）<br>';
@@ -86,3 +89,4 @@ if ($tab === 'power') {
 }
 nav_line();
 wap_end(false);
+

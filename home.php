@@ -218,7 +218,10 @@ $mailN = mail_unread((int) $u['id']);
 if ($mailN > 0) {
     echo '<div class="warn">【邮件】你有' . $mailN . '封未读邮件！<a href="mail.php">查看邮件</a></div>';
 }
-quest_banner($u, 'home.php');
+// 第一章结束后、或身在副本里时，主线引导只留在任务页，不在主画面占位
+if ((int) ($u['quest'] ?? 0) < 16 && !in_array($cur, array_merge(dsw_maps(), abx_maps(), mx_maps()), true)) {
+    quest_banner($u, 'home.php');
+}
 echo '<div class="hr">--------</div>';
 echo '附近的人：<br>';
 $nears = pres_close((int) $u['id']);

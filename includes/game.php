@@ -1032,7 +1032,7 @@ function spawn_tick(?string $onlyLoc = null, ?string $onlyMid = null): void
         // 精英：整图最多2只，随机挑一种小怪补1只
         $boss = boss_of_map($loc);
         $trash = array_values(array_filter($L['monsters'], fn($m) => $m !== $boss));
-        if ($trash !== [] && (int) db()->query('SELECT COALESCE(SUM(num),0) FROM map_spawns WHERE loc=' . db()->quote($loc) . ' AND elite=1')->fetchColumn() < 2 && mt_rand(1, 100) <= 40) {
+        if ($trash !== [] && (int) db()->query('SELECT COALESCE(SUM(num),0) FROM map_spawns WHERE loc=' . db()->quote($loc) . ' AND elite=1')->fetchColumn() < 2 && mt_rand(1, 100) <= 5) {
             $em = $trash[array_rand($trash)];
             $es = db()->prepare('UPDATE map_spawns SET num=num+1 WHERE loc=? AND mid=? AND elite=1');
             $es->execute([$loc, $em]);
@@ -1173,6 +1173,7 @@ function horse_bet(int $uid, int $horse, int $amount): string
     }
     $u['diamonds'] = (int) ($u['diamonds'] ?? 0) - $cost;
     user_save($u);
+    spend_diamonds((int) $uid, $cost);
     horse_race($pid);
     db()->prepare('INSERT INTO horse_bets (race_id, uid, horse, amount) VALUES (?, ?, ?, ?)')->execute([$pid, (int) $uid, $horse, $amount]);
     return '押下' . horse_names()[$horse] . ' ' . $amount . '魔钻！奖池已到' . fmt_diamond(horse_pool($pid)) . '。';
@@ -1546,6 +1547,9 @@ function settle_auction(int $aid): void
     $name = auction_item_name($a);
     if ((int) $a['cur_bidder'] > 0) {
         $price = (int) $a['cur_price'];
+        if ($a['currency'] === 'diamond') {
+            spend_diamonds((int) $a['cur_bidder'], $price);
+        }
         $dur = max(0, (int) $a['ends_at'] - (int) $a['created_at']);
         $rate = $dur >= 86400 ? '7%' : '5%';
         $fee = auction_fee($price, $dur);
@@ -1682,7 +1686,7 @@ function mat_hidden(string $mid): bool
     if (str_ends_with($mid, '_enter') || str_ends_with($mid, '_stage')) {
         return true;
     }
-    return in_array($mid, ['offline_on', 'seen_last', 'exp_card_until', 'bag_ext5_used', 'bag_ext10_used', 'dummy_total'], true);
+    return in_array($mid, ['offline_on', 'seen_last', 'exp_card_until', 'bag_ext5_used', 'bag_ext10_used', 'dummy_total', 'tank_cd_hp', 'tank_cd_mp', 'peak_force', 'peak_duel_from'], true);
 }
 
 // 当前版本真正有用的锻造材料：强化石 + 属性石/晶石/珠/神石
@@ -1812,6 +1816,15 @@ function tank_auto(array &$u, string $kind): string
     if ($max <= 0 || $cur * 100 >= $max * $pct) {
         return '';
     }
+    // 药罐20秒只能自动喝一次；致命伤害不救（血量<=0直接走死亡结算）
+    if ($cur <= 0) {
+        return '';
+    }
+    $cdKey = $kind === 'hp' ? 'tank_cd_hp' : 'tank_cd_mp';
+    $last = (int) (mats_of((int) ($u['id'] ?? 0))[$cdKey] ?? 0);
+    if (time() - $last < 20) {
+        return '';
+    }
     $order = $kind === 'hp' ? ['hp_tank_s', 'hp_tank_m', 'hp_tank_l'] : ['mp_tank_s', 'mp_tank_m', 'mp_tank_l'];
     $tanks = mall_tanks();
     $mats = mats_of((int) ($u['id'] ?? 0));
@@ -1822,6 +1835,7 @@ function tank_auto(array &$u, string $kind): string
         }
         $take = min($max - $cur, $have);
         add_mat((int) $u['id'], $tid, -$take);
+        mat_set((int) $u['id'], $cdKey, time());
         $u[$kind] = $cur + $take;
         return '自动喝下' . $tanks[$tid]['name'] . '，恢复' . $take . '点' . ($kind === 'hp' ? '生命' : '魔力') . '。';
     }
@@ -2990,8 +3004,22 @@ function job_name_of(array $u): string
     return jobs()[$jid]['name'] ?? '战士';
 }
 
+function spend_diamonds(int $uid, int $n): void
+{
+    if ($n <= 0) {
+        return;
+    }
+    db()->prepare('UPDATE users SET diamonds_spent=diamonds_spent+? WHERE id=?')->execute([(int) $n, (int) $uid]);
+}
+
 function backfill_rank_stats(): void
 {
+    // 消费榜：老号按持有与累计充值反推历史消费
+    try {
+        db()->exec('UPDATE users SET diamonds_spent=CASE WHEN diamonds_bought>diamonds THEN diamonds_bought-diamonds ELSE 0 END WHERE diamonds_spent<=0');
+    } catch (Throwable $e) {
+    }
+
     // 充值榜：历史兑换魔钻没有单独计数，老号按持有+累计消费反推
     try {
         $st = db()->query('SELECT id, diamonds, diamonds_bought FROM users WHERE diamonds_bought<=0 AND diamonds>0');
@@ -4042,7 +4070,7 @@ function battle_round(array &$u, array &$b, string $mode): array
             $kc = add_kill((int) $u['id'], $bid);
         }
         $trashMids = array_values(array_filter(loc((string) ($u['loc'] ?? ''))['monsters'] ?? [], fn($mid) => $mid !== boss_of_map((string) ($u['loc'] ?? ''))));
-        if ($trashMids !== [] && mt_rand(1, 100) <= 5) {
+        if ($trashMids !== [] && mt_rand(1, 100) <= 1) {
             $em = $trashMids[array_rand($trashMids)];
             spawn_add_elite((int) $u['id'], (string) ($u['loc'] ?? ''), $em);
             $msg .= '。一只' . monsters()[$em]['name'] . '（精英）出现了！';
@@ -4228,7 +4256,8 @@ function background_battle(array &$u): void
     }
     $b = $_SESSION['battle'];
     $now = time();
-    $rounds = min(300, $now - (int) ($b['last'] ?? $now));
+    // 前台3秒一轮，后台按同样节奏追（原来按秒追，切出去攒一大坨战报）
+    $rounds = min(100, intdiv(max(0, $now - (int) ($b['last'] ?? $now)), 3));
     if ($rounds <= 0) {
         return;
     }

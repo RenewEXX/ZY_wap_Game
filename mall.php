@@ -27,6 +27,7 @@ if ($a === 'buy') {
     } else {
         $u['diamonds'] = (int) $u['diamonds'] - $goods[$m]['price'] * $n;
         user_save($u);
+        spend_diamonds((int) $u['id'], $goods[$m]['price'] * $n);
         if ($m === 'offline_mod') {
             add_mat((int) $u['id'], 'dummy_time', 3600 * $n);
             mat_set((int) $u['id'], 'offline_on', 1);

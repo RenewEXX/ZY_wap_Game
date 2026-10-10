@@ -351,6 +351,33 @@ function db_init(): void
     );
     db()->exec('CREATE INDEX IF NOT EXISTS idx_ginv_target ON guild_invites (target_uid, status)');
     db()->exec(
+        'CREATE TABLE IF NOT EXISTS arena_ranks (
+            zone TEXT NOT NULL DEFAULT "z1",
+            uid INTEGER NOT NULL DEFAULT 0,
+            name TEXT NOT NULL DEFAULT "",
+            rank INTEGER NOT NULL DEFAULT 0,
+            is_bot INTEGER NOT NULL DEFAULT 0,
+            power INTEGER NOT NULL DEFAULT 0,
+            week TEXT NOT NULL DEFAULT "",
+            PRIMARY KEY (zone, uid)
+        )'
+    );
+    db()->exec(
+        'CREATE TABLE IF NOT EXISTS arena_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            zone TEXT NOT NULL DEFAULT "z1",
+            uid INTEGER NOT NULL DEFAULT 0,
+            kind TEXT NOT NULL DEFAULT "atk",
+            foe TEXT NOT NULL DEFAULT "",
+            win INTEGER NOT NULL DEFAULT 0,
+            old_rank INTEGER NOT NULL DEFAULT 0,
+            new_rank INTEGER NOT NULL DEFAULT 0,
+            created_at INTEGER NOT NULL DEFAULT 0
+        )'
+    );
+    db()->exec('CREATE INDEX IF NOT EXISTS idx_arena_rank ON arena_ranks (zone, rank)');
+    db()->exec('CREATE INDEX IF NOT EXISTS idx_arena_log ON arena_logs (zone, uid, id)');
+    db()->exec(
         'CREATE TABLE IF NOT EXISTS peak_join (
             uid INTEGER NOT NULL,
             day TEXT NOT NULL DEFAULT "",
@@ -485,6 +512,45 @@ function db_init(): void
             at INTEGER NOT NULL DEFAULT 0
         )'
     );
+    // 竞技场：arena_rank=排名表（uid=0是假人），arena_log=防守记录，arena_shop_log=商店限购
+    db()->exec(
+        'CREATE TABLE IF NOT EXISTS arena_rank (
+            uid INTEGER NOT NULL DEFAULT 0,
+            zone TEXT NOT NULL DEFAULT "z1",
+            rank INTEGER NOT NULL DEFAULT 0,
+            name TEXT NOT NULL DEFAULT "",
+            job TEXT NOT NULL DEFAULT "",
+            lv INTEGER NOT NULL DEFAULT 1,
+            power INTEGER NOT NULL DEFAULT 0,
+            is_dummy INTEGER NOT NULL DEFAULT 0,
+            season TEXT NOT NULL DEFAULT "",
+            PRIMARY KEY (uid, zone)
+        )'
+    );
+    db()->exec('CREATE INDEX IF NOT EXISTS idx_arena_rank ON arena_rank (zone, rank)');
+    db()->exec(
+        'CREATE TABLE IF NOT EXISTS arena_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            zone TEXT NOT NULL DEFAULT "z1",
+            defender_uid INTEGER NOT NULL DEFAULT 0,
+            attacker_name TEXT NOT NULL DEFAULT "",
+            win INTEGER NOT NULL DEFAULT 0,
+            old_rank INTEGER NOT NULL DEFAULT 0,
+            new_rank INTEGER NOT NULL DEFAULT 0,
+            created_at INTEGER NOT NULL DEFAULT 0
+        )'
+    );
+    db()->exec('CREATE INDEX IF NOT EXISTS idx_arena_log ON arena_log (defender_uid)');
+    db()->exec(
+        'CREATE TABLE IF NOT EXISTS arena_shop_log (
+            uid INTEGER NOT NULL DEFAULT 0,
+            item TEXT NOT NULL DEFAULT "",
+            period TEXT NOT NULL DEFAULT "",
+            num INTEGER NOT NULL DEFAULT 0,
+            PRIMARY KEY (uid, item, period)
+        )'
+    );
+    db()->exec('CREATE TABLE IF NOT EXISTS sys_kv (k TEXT PRIMARY KEY, num INTEGER NOT NULL DEFAULT 0)');
     db()->exec('CREATE INDEX IF NOT EXISTS idx_ground_loc ON ground_items (loc)');
     db()->exec(
         'CREATE TABLE IF NOT EXISTS mats (

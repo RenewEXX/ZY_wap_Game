@@ -41,6 +41,7 @@ $people = [
     'rank_c' => ['name' => '榜单老人', 'loc' => 'avenue', 'text' => '王都也看榜。数据全服通用。'],
     'med_g' => ['name' => '雾语药剂师·菘蓝', 'loc' => 'square', 'text' => '雾气浸透绷带，药效反而更好。按最大生命百分比回，战斗中手动喝。记住：药救得活人，救不活死人。'],
     'eventer' => ['name' => '活动专员·阿战', 'loc' => 'square', 'text' => '巅峰之战，每晚22:30~23:00！三个战场按等级分流，活到最后的人拿真龙丹（+3自由属性点）！死了、跑了、传走了，都别想再进来！'],
+    'arena_m' => ['name' => '竞技场大师·雷横', 'loc' => 'square', 'text' => '想证明自己吗？竞技场欢迎你。这里不拼手速，只拼实力。你的队伍、宠物、装备，全部自动战斗。赢了排名上升，输了排名下降。每天结算一次，排名越高，奖励越好。'],
     'med_t' => ['name' => '草药学徒·薄荷', 'loc' => 'market', 'text' => '我是艾琳的学徒，老师忙着找她哥哥，药摊我看着。绷带10%到圣水50%，按血量回，血越多越划算。'],
     'med_s' => ['name' => '银月药剂师·霜叶', 'loc' => 'silver_sq', 'text' => '白银城的影子会动，血可不能空。备瓶月影圣水吧，关键时刻能救命。'],
     'med_c' => ['name' => '王都药剂师·藏红', 'loc' => 'avenue', 'text' => '傀儡不流血，你流。银丝勒颈之前，先把血回满。'],
@@ -362,6 +363,11 @@ if ($who === 'stringer' && (int) $u['quest'] === 37 && empty(cflags((int) $u['id
 }
 if ($who === 'spider') {
     echo '<a href="npc.php?who=spider&choice=open">开启副本【银丝母巢】（150~340级，消耗入场券×1）</a><br>';
+}
+if ($who === 'arena_m') {
+    echo '<a href="arena.php">进入竞技场</a><br>';
+    echo '<a href="arena.php?a=rank">查看排名</a> <a href="arena.php?a=prize">查看奖励</a><br>';
+    echo '<a href="arena.php?a=def">查看防守记录</a><br>';
 }
 if ($who === 'eventer') {
     if (!peak_open()) {

@@ -1694,7 +1694,16 @@ function claim_mail(int $uid, int $mid): string
         } elseif (($a['t'] ?? '') === 'diamond') {
             $u['diamonds'] = (int) ($u['diamonds'] ?? 0) + max(0, (int) ($a['n'] ?? 0));
         } elseif (($a['t'] ?? '') === 'mat') {
-            add_mat($uid, (string) ($a['id'] ?? ''), max(0, (int) ($a['n'] ?? 0)));
+            $mid = (string) ($a['id'] ?? '');
+            if ($mid === 'arena_gift') {
+                // 低级附魔礼包：开出随机低级属性石
+                $els = ['el_light_stone', 'el_dark_stone', 'el_fire_stone', 'el_wind_stone', 'el_ice_stone', 'el_thunder_stone'];
+                for ($gi = 0; $gi < max(0, (int) ($a['n'] ?? 0)); $gi++) {
+                    add_mat($uid, $els[array_rand($els)], 1);
+                }
+            } else {
+                add_mat($uid, $mid, max(0, (int) ($a['n'] ?? 0)));
+            }
         } elseif (($a['t'] ?? '') === 'equip') {
             $st2 = db()->prepare('INSERT INTO equips (uid, slot, name, quality, affixes, pos, item_level, enhance_level) VALUES (?, ?, ?, ?, ?, "", ?, ?)');
             $st2->execute([$uid, (string) ($a['slot'] ?? 'weapon'), (string) ($a['name'] ?? ''), (int) ($a['q'] ?? 0), (string) ($a['aff'] ?? '[]'), max(1, (int) ($a['il'] ?? 1)), (int) ($a['el'] ?? 0)]);
@@ -1757,7 +1766,7 @@ function mat_hidden(string $mid): bool
     if (str_ends_with($mid, '_enter') || str_ends_with($mid, '_stage')) {
         return true;
     }
-    return in_array($mid, ['offline_on', 'offline_time', 'seen_last', 'exp_card_until', 'bag_ext5_used', 'bag_ext10_used', 'dummy_total', 'tank_cd_hp', 'tank_cd_mp', 'peak_force', 'peak_duel_from'], true);
+    return in_array($mid, ['offline_on', 'offline_time', 'seen_last', 'exp_card_until', 'bag_ext5_used', 'bag_ext10_used', 'dummy_total', 'tank_cd_hp', 'tank_cd_mp', 'peak_force', 'peak_duel_from', 'arena_day', 'arena_used', 'arena_bought'], true);
 }
 
 // 当前版本真正有用的锻造材料：强化石 + 属性石/晶石/珠/神石
@@ -2736,6 +2745,12 @@ function mat_name(string $id): string
     }
     if ($id === 'offline_time') {
         return '离线时长';
+    }
+    if ($id === 'arena_coin') {
+        return '竞技场币';
+    }
+    if ($id === 'arena_gift') {
+        return '低级附魔礼包';
     }
     if ($id === 'exp_card100') {
         return '升级卡100型';
@@ -3802,6 +3817,304 @@ function alloc_all_stat(int $uid, string $k): string
     }
     $nm = ['str' => '力量', 'agi' => '坚毅', 'vit' => '体质', 'int' => '智慧'][$k];
     return $n > 0 ? '全部投入' . $nm . $n . '次（-' . ($n * $cost) . '点）。' : '属性点不够一次（要' . $cost . '点）。';
+}
+
+// ============ 竞技场（异步PVP，按大区分榜） ============
+function arena_bot_names(): array
+{
+    // 像真人名的名字池，不带“假人”二字
+    return ['剑影', '风语', '夜行', '铁壁', '疾风', '暗夜', '烈焰', '冰霜', '雷霆', '毒刺', '圣光', '星辰', '青铜', '白银', '黄金', '铂金', '钻石', '王者', '大师', '宗师', '传奇', '神话', '铁剑', '钢盾', '皮甲', '布衣', '木弓', '铜戒', '银链', '金盔', '玉靴', '石拳', '新兵', '老兵', '队长', '营长', '团长', '旅长', '师长', '军长', '司令', '元帅', '学徒', '工匠', '技师', '专家', '村民', '农夫', '猎人', '矿工', '铁匠', '商人', '学者', '牧师', '盗贼', '战士', '新手', '菜鸟', '萌新', '路人', '闲人', '过客', '游客', '旅者', '冒险者', '探索者', '战神', '龙王', '影皇', '圣骑', '魔导', '剑圣', '弓神', '刺客', '狂战', '元素', '孤狼', '残阳', '墨白', '听雨', '逐风', '踏雪', '无痕', '长歌', '醉剑', '寒江', '落雁', '平沙', '远山', '近水', '流云', '飞鹤', '老酒鬼', '种田人', '打铁匠', '卖药郎', '守夜人', '拾荒者'];
+}
+
+function arena_bot_power(int $rank): int
+{
+    // 排名越高战力越高：1名50万线性衰减到2000名5000
+    if ($rank <= 10) {
+        return 500000 - ($rank - 1) * 10000;
+    }
+    if ($rank <= 20) {
+        return 400000 - ($rank - 11) * 5000;
+    }
+    if ($rank <= 50) {
+        return 340000 - ($rank - 21) * 3000;
+    }
+    if ($rank <= 100) {
+        return 240000 - ($rank - 51) * 1800;
+    }
+    if ($rank <= 300) {
+        return 140000 - ($rank - 101) * 300;
+    }
+    if ($rank <= 600) {
+        return 70000 - ($rank - 301) * 100;
+    }
+    if ($rank <= 1000) {
+        return 35000 - ($rank - 601) * 37;
+    }
+    return max(5000, 15000 - ($rank - 1001) * 10);
+}
+
+function arena_week(): string
+{
+    return date('Y-W');
+}
+
+function arena_ensure_bots(string $zone): void
+{
+    $n = (int) db()->query("SELECT COUNT(*) FROM arena_ranks WHERE zone=" . db()->quote($zone) . ' AND is_bot=1')->fetchColumn();
+    if ($n >= 2000) {
+        return;
+    }
+    $pool = arena_bot_names();
+    $have = [];
+    foreach (db()->query("SELECT name FROM arena_ranks WHERE zone=" . db()->quote($zone))->fetchAll() as $r) {
+        $have[$r['name']] = true;
+    }
+    // 每天凌晨5点假人回初始位：删掉全部假人重排
+    db()->prepare('DELETE FROM arena_ranks WHERE zone=? AND is_bot=1')->execute([$zone]);
+    $i = 0;
+    $pi = 0;
+    for ($rank = 1; $rank <= 2000; $rank++) {
+        $nm = '';
+        for ($t = 0; $t < 200; $t++) {
+            $cand = $pool[($pi + $t) % count($pool)];
+            if ($t > 0) {
+                $cand .= ($t + 1);
+            }
+            if (empty($have[$cand])) {
+                $nm = $cand;
+                break;
+            }
+        }
+        $pi += 7;
+        $i++;
+        $have[$nm] = true;
+        db()->prepare('INSERT INTO arena_ranks (zone, uid, name, rank, is_bot, power, week) VALUES (?, ?, ?, ?, 1, ?, ?)')->execute([$zone, -$rank, $nm, $rank, arena_bot_power($rank), arena_week()]);
+    }
+}
+
+function arena_my(int $uid): ?array
+{
+    $st = db()->prepare('SELECT * FROM arena_ranks WHERE uid=?');
+    $st->execute([(int) $uid]);
+    $row = $st->fetch();
+    return $row ?: null;
+}
+
+function arena_join(int $uid): string
+{
+    $u = user_by_id((int) $uid);
+    if (!$u) {
+        return '角色不存在。';
+    }
+    if ((int) ($u['lv'] ?? 1) < 30) {
+        return '30级才能进竞技场。';
+    }
+    if (arena_my($uid)) {
+        return '你已经在竞技场了。';
+    }
+    $zone = (string) ($u['zone'] ?? 'z1');
+    arena_ensure_bots($zone);
+    $maxRank = (int) db()->query("SELECT COALESCE(MAX(rank),0) FROM arena_ranks WHERE zone=" . db()->quote($zone))->fetchColumn();
+    $rank = $maxRank + 1;
+    $st = db()->prepare('INSERT INTO arena_ranks (zone, uid, name, rank, is_bot, power, week) VALUES (?, ?, ?, ?, 0, ?, ?)');
+    $st->execute([$zone, (int) $uid, (string) $u['username'], $rank, power_score($u), arena_week()]);
+    return '欢迎来到竞技场！你的初始排名：第' . $rank . '名。';
+}
+
+function arena_targets(int $uid): array
+{
+    $me = arena_my($uid);
+    if (!$me) {
+        return [];
+    }
+    $zone = (string) $me['zone'];
+    $r = (int) $me['rank'];
+    // 可挑战范围：往上34名
+    $low = max(1, $r - 34);
+    $st = db()->prepare('SELECT * FROM arena_ranks WHERE zone=? AND rank>=? AND rank<? ORDER BY rank ASC');
+    $st->execute([$zone, $low, $r]);
+    $all = $st->fetchAll();
+    // 挑5个间隔开的
+    $out = [];
+    $step = max(1, intdiv(count($all), 5));
+    for ($i = count($all) - 1; $i >= 0 && count($out) < 5; $i -= $step) {
+        $out[] = $all[$i];
+    }
+    return $out;
+}
+
+function arena_chances(int $uid): array
+{
+    $day = date('Y-m-d');
+    $mats = mats_of((int) $uid);
+    $free = 5 - (int) ($mats['arena_free_' . $day] ?? 0);
+    $buy = (int) ($mats['arena_buy_' . $day] ?? 0);
+    return ['free' => max(0, $free), 'buy' => $buy];
+}
+
+function arena_fight(int $uid, int $foeRank): array
+{
+    $me = arena_my($uid);
+    if (!$me) {
+        return ['err' => '先加入竞技场。'];
+    }
+    $zone = (string) $me['zone'];
+    $myRank = (int) $me['rank'];
+    if ($foeRank < max(1, $myRank - 34) || $foeRank >= $myRank) {
+        return ['err' => '只能挑战比自己高34名以内的对手。'];
+    }
+    $st = db()->prepare('SELECT * FROM arena_ranks WHERE zone=? AND rank=?');
+    $st->execute([$zone, $foeRank]);
+    $foe = $st->fetch();
+    if (!$foe) {
+        return ['err' => '对手不在。'];
+    }
+    $u = user_by_id($uid);
+    if (!$u) {
+        return ['err' => '角色不存在。'];
+    }
+    $ch = arena_chances($uid);
+    if ($ch['free'] > 0) {
+        $day = date('Y-m-d');
+        mat_set($uid, 'arena_free_' . $day, 5 - $ch['free'] + 1);
+    } elseif ($ch['buy'] > 0) {
+        $day = date('Y-m-d');
+        mat_set($uid, 'arena_buy_' . $day, $ch['buy'] - 1);
+    } elseif ((int) $u['gold'] >= 100000) {
+        $u['gold'] = (int) $u['gold'] - 100000;
+        user_save($u);
+    } else {
+        return ['err' => '今日免费5次用完，额外挑战要10银（或1魔钻买5次）。'];
+    }
+    // 模拟战斗：双方战力+随机
+    $myPow = power_score($u);
+    $foePow = (int) $foe['power'];
+    if ((int) $foe['is_bot'] === 0) {
+        $fu = user_by_id((int) $foe['uid']);
+        if ($fu) {
+            $foePow = power_score($fu);
+        }
+    }
+    $myRoll = $myPow * (0.9 + mt_rand() / mt_getrandmax() * 0.2);
+    $foeRoll = $foePow * (0.9 + mt_rand() / mt_getrandmax() * 0.2);
+    $win = $myRoll >= $foeRoll;
+    $log = '你挑战' . $foe['name'] . '（第' . $foeRank . '名）。你的战力' . $myPow . '，对手战力' . $foePow . '。';
+    if ($win) {
+        // 互换排名
+        db()->prepare('UPDATE arena_ranks SET rank=? WHERE zone=? AND uid=?')->execute([$myRank, $zone, (int) $foe['uid']]);
+        db()->prepare('UPDATE arena_ranks SET rank=?, power=? WHERE zone=? AND uid=?')->execute([$foeRank, $myPow, $zone, (int) $uid]);
+        $log .= '战斗结束。你获胜！你的排名从第' . $myRank . '名上升至第' . $foeRank . '名。';
+        if ((int) $foe['is_bot'] === 0) {
+            send_mail((int) $foe['uid'], '竞技场', 'arena', '你被' . $u['username'] . '挑战，你失败了', '你的排名从第' . $foeRank . '名下降至第' . $myRank . '名。', []);
+        }
+    } else {
+        db()->prepare('UPDATE arena_ranks SET power=? WHERE zone=? AND uid=?')->execute([$myPow, $zone, (int) $uid]);
+        $log .= '战斗结束。你失败了，排名不变（第' . $myRank . '名）。';
+        if ((int) $foe['is_bot'] === 0) {
+            send_mail((int) $foe['uid'], '竞技场', 'arena', '你被' . $u['username'] . '挑战，你胜利了', '你的排名不变（第' . $foeRank . '名）。', []);
+        }
+    }
+    db()->prepare('INSERT INTO arena_logs (zone, uid, kind, foe, win, old_rank, new_rank, created_at) VALUES (?, ?, "atk", ?, ?, ?, ?, ?)')->execute([$zone, (int) $uid, (string) $foe['name'], $win ? 1 : 0, $myRank, $win ? $foeRank : $myRank, time()]);
+    if ((int) $foe['is_bot'] === 0) {
+        db()->prepare('INSERT INTO arena_logs (zone, uid, kind, foe, win, old_rank, new_rank, created_at) VALUES (?, ?, "def", ?, ?, ?, ?, ?)')->execute([$zone, (int) $foe['uid'], (string) $u['username'], $win ? 0 : 1, $foeRank, $win ? $myRank : $foeRank, time()]);
+    }
+    return ['win' => $win, 'log' => $log, 'old' => $myRank, 'new' => $win ? $foeRank : $myRank];
+}
+
+function arena_prizes(): array
+{
+    return [
+        1 => ['gold' => 100000, 'arena_coin' => 200, 'gift' => 10],
+        2 => ['gold' => 50000, 'arena_coin' => 150, 'gift' => 5],
+        3 => ['gold' => 30000, 'arena_coin' => 120, 'gift' => 3],
+        10 => ['gold' => 10000, 'arena_coin' => 80, 'gift' => 2],
+        50 => ['gold' => 5000, 'arena_coin' => 50, 'gift' => 1],
+        200 => ['gold' => 2000, 'arena_coin' => 30, 'gift' => 0],
+        1000000 => ['gold' => 500, 'arena_coin' => 10, 'gift' => 0],
+    ];
+}
+
+function arena_prize_for(int $rank): array
+{
+    foreach (arena_prizes() as $top => $p) {
+        if ($rank <= $top) {
+            return $p;
+        }
+    }
+    return ['gold' => 500, 'arena_coin' => 10, 'gift' => 0];
+}
+
+function arena_settle_daily(): void
+{
+    $day = date('Y-m-d');
+    $done = db()->query("SELECT COUNT(*) FROM arena_logs WHERE kind='settle' AND foe=" . db()->quote($day))->fetchColumn();
+    if ((int) $done > 0) {
+        return;
+    }
+    // 每天凌晨5点后第一次访问触发
+    if ((int) date('H') < 5) {
+        return;
+    }
+    foreach (zones() as $zid => $z) {
+        arena_ensure_bots($zid);
+        // 假人回初始位
+        $bots = db()->query("SELECT uid, rank FROM arena_ranks WHERE zone=" . db()->quote($zid) . ' AND is_bot=1 ORDER BY uid DESC')->fetchAll();
+        foreach ($bots as $b) {
+            db()->prepare('UPDATE arena_ranks SET rank=? WHERE zone=? AND uid=?')->execute([-(int) $b['uid'], $zid, (int) $b['uid']]);
+        }
+        $rows = db()->query("SELECT * FROM arena_ranks WHERE zone=" . db()->quote($zid) . ' AND is_bot=0 ORDER BY rank ASC')->fetchAll();
+        foreach ($rows as $r) {
+            $p = arena_prize_for((int) $r['rank']);
+            $att = [];
+            if ($p['arena_coin'] > 0) {
+                $att[] = ['t' => 'mat', 'id' => 'arena_coin', 'n' => $p['arena_coin']];
+            }
+            if ($p['gold'] > 0) {
+                $att[] = ['t' => 'gold', 'n' => $p['gold']];
+            }
+            if ($p['gift'] > 0) {
+                $att[] = ['t' => 'mat', 'id' => 'arena_gift', 'n' => $p['gift']];
+            }
+            send_mail((int) $r['uid'], '竞技场', 'arena', '竞技场每日结算：第' . $r['rank'] . '名', '今日排名奖励已发放，请查收邮件。排名第' . $r['rank'] . '名：' . fmt_money($p['gold']) . '、竞技场币' . $p['arena_coin'] . ($p['gift'] > 0 ? '、低级附魔礼包' . $p['gift'] . '个' : '') . '。', $att);
+        }
+        db()->prepare('INSERT INTO arena_logs (zone, uid, kind, foe, win, old_rank, new_rank, created_at) VALUES (?, 0, "settle", ?, 0, 0, 0, ?)')->execute([$zid, $day, time()]);
+    }
+}
+
+function arena_reset_weekly(): void
+{
+    $week = arena_week();
+    foreach (zones() as $zid => $z) {
+        $rows = db()->query("SELECT * FROM arena_ranks WHERE zone=" . db()->quote($zid) . " AND is_bot=0 AND week!=" . db()->quote($week))->fetchAll();
+        if ($rows === []) {
+            continue;
+        }
+        foreach ($rows as $r) {
+            $p = arena_prize_for((int) $r['rank']);
+            $bonus = (int) ($p['arena_coin'] * 2);
+            send_mail((int) $r['uid'], '竞技场', 'arena', '竞技场每周重置', '竞技场每周重置完成，你上周第' . $r['rank'] . '名，额外奖励竞技场币' . $bonus . '。你的排名从第2001名开始。', $bonus > 0 ? [['t' => 'mat', 'id' => 'arena_coin', 'n' => $bonus]] : []);
+        }
+        $maxBot = 2000;
+        $i = 0;
+        foreach ($rows as $r) {
+            $i++;
+            db()->prepare('UPDATE arena_ranks SET rank=?, week=? WHERE zone=? AND uid=?')->execute([$maxBot + $i, $week, $zid, (int) $r['uid']]);
+        }
+        foreach ($rows as $r) {
+            db()->prepare('UPDATE arena_ranks SET week=? WHERE zone=? AND uid=?')->execute([$week, $zid, (int) $r['uid']]);
+        }
+    }
+}
+
+function arena_shop(): array
+{
+    return [
+        'enhance_t1' => ['name' => '下级强化石', 'price' => 10, 'day' => 10, 'month' => 0],
+        'enhance_t2' => ['name' => '中级强化石', 'price' => 30, 'day' => 5, 'month' => 0],
+        'enhance_t3' => ['name' => '上级强化石', 'price' => 80, 'day' => 5, 'month' => 0],
+        'pet_food' => ['name' => '宠物粮', 'price' => 50, 'day' => 0, 'month' => 5],
+        'egg_unknown' => ['name' => '随机宠物蛋', 'price' => 100, 'day' => 0, 'month' => 1],
+    ];
 }
 
 function use_rename_card(int $uid, string $newName): string

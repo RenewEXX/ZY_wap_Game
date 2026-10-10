@@ -74,11 +74,47 @@ function db_init(): void
         db()->exec('UPDATE users SET str=COALESCE(s_atk,0), agi=COALESCE(s_def,0), vit=COALESCE(s_hp,0), atk=atk-COALESCE(s_atk,0), def=def-COALESCE(s_def,0), maxhp=maxhp-COALESCE(s_hp,0)*5 WHERE (COALESCE(s_atk,0)+COALESCE(s_def,0)+COALESCE(s_hp,0))>0 AND (COALESCE(str,0)+COALESCE(agi,0)+COALESCE(vit,0))=0');
     } catch (Throwable $e) {
     }
-    foreach (['job', 'quest', 'chapter_flags', 'diamonds', 'mp', 'maxmp'] as $col) {
+    foreach (['job', 'quest', 'chapter_flags', 'diamonds', 'mp', 'maxmp', 'account'] as $col) {
         try {
             db()->exec("ALTER TABLE users ADD COLUMN {$col} " . (in_array($col, ['quest', 'diamonds', 'mp', 'maxmp'], true) ? 'INTEGER NOT NULL DEFAULT 0' : 'TEXT NOT NULL DEFAULT ""'));
         } catch (Throwable $e) {
         }
+    }
+    try {
+        db()->exec("UPDATE users SET account=username WHERE account=''");
+    } catch (Throwable $e) {
+    }
+    foreach (['zone'] as $tcol) {
+        foreach (['chat_msgs', 'auctions', 'guilds', 'parties', 'horse_races'] as $tbl) {
+            try {
+                db()->exec("ALTER TABLE {$tbl} ADD COLUMN {$tcol} TEXT NOT NULL DEFAULT 'z1'");
+            } catch (Throwable $e) {
+            }
+        }
+    }
+    // peak_result主键加zone（分大区各自夺冠）
+    try {
+        $cols = db()->query('PRAGMA table_info(peak_result)')->fetchAll();
+        $hasZone = false;
+        foreach ($cols as $c) {
+            if (($c['name'] ?? '') === 'zone') {
+                $hasZone = true;
+            }
+        }
+        if (!$hasZone) {
+            db()->exec('CREATE TABLE IF NOT EXISTS peak_result_new (day TEXT NOT NULL, arena TEXT NOT NULL, zone TEXT NOT NULL DEFAULT "z1", winner_uid INTEGER NOT NULL DEFAULT 0, winner_name TEXT NOT NULL DEFAULT "", created_at INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (day, arena, zone))');
+            foreach (db()->query('SELECT day, arena, winner_uid, winner_name, created_at FROM peak_result')->fetchAll() as $r) {
+                $z = db()->query('SELECT zone FROM users WHERE id=' . (int) ($r['winner_uid'] ?? 0))->fetchColumn();
+                db()->prepare('INSERT OR IGNORE INTO peak_result_new (day, arena, zone, winner_uid, winner_name, created_at) VALUES (?, ?, ?, ?, ?, ?)')->execute([(string) ($r['day'] ?? ''), (string) ($r['arena'] ?? ''), $z ?: 'z1', (int) ($r['winner_uid'] ?? 0), (string) ($r['winner_name'] ?? ''), (int) ($r['created_at'] ?? 0)]);
+            }
+            db()->exec('DROP TABLE peak_result');
+            db()->exec('ALTER TABLE peak_result_new RENAME TO peak_result');
+        }
+    } catch (Throwable $e) {
+    }
+    try {
+        db()->exec("UPDATE auctions SET zone=COALESCE((SELECT zone FROM users WHERE users.id=auctions.seller_uid), 'z1') WHERE seller_uid>0");
+    } catch (Throwable $e) {
     }
     try {
         db()->exec('ALTER TABLE users ADD COLUMN zone TEXT NOT NULL DEFAULT "z1"');
@@ -478,6 +514,16 @@ function user_by_name(string $name): ?array
 
 function account_rows(string $name): array
 {
+    // 账号与角色名分离后，按account列归属账号
+    try {
+        $st = db()->prepare('SELECT * FROM users WHERE account = ? ORDER BY id');
+        $st->execute([$name]);
+        $rows = $st->fetchAll();
+        if ($rows !== []) {
+            return $rows;
+        }
+    } catch (Throwable $e) {
+    }
     $st = db()->prepare('SELECT * FROM users WHERE username = ? ORDER BY id');
     $st->execute([$name]);
     return $st->fetchAll();
@@ -504,13 +550,13 @@ function user_save_flags(array $u): void
     }
 }
 
-function user_create(string $name, string $pass, string $job = '', string $zone = 'z1', bool $hashed = false): int
+function user_create(string $name, string $pass, string $job = '', string $zone = 'z1', bool $hashed = false, string $account = ''): int
 {
     $j = jobs()[$job] ?? jobs()['warrior'];
     $st = db()->prepare(
-        'INSERT INTO users (username, pass, lv, exp, hp, maxhp, mp, maxmp, atk, def, gold, loc, weapon, armor, potion, job, quest, zone, created_at) VALUES (?, ?, 1, 0, ?, ?, ?, ?, ?, ?, 20, "smithy", "", "", 2, ?, 0, ?, ?)'
+        'INSERT INTO users (username, pass, lv, exp, hp, maxhp, mp, maxmp, atk, def, gold, loc, weapon, armor, potion, job, quest, zone, account, created_at) VALUES (?, ?, 1, 0, ?, ?, ?, ?, ?, ?, 20, "smithy", "", "", 2, ?, 0, ?, ?, ?)'
     );
-    $st->execute([$name, $hashed ? $pass : password_hash($pass, PASSWORD_DEFAULT), $j['hp'], $j['hp'], $j['mp'] ?? 30, $j['mp'] ?? 30, $j['atk'], $j['def'], $job, $zone, time()]);
+    $st->execute([$name, $hashed ? $pass : password_hash($pass, PASSWORD_DEFAULT), $j['hp'], $j['hp'], $j['mp'] ?? 30, $j['mp'] ?? 30, $j['atk'], $j['def'], $job, $zone, $account !== '' ? $account : $name, time()]);
     $id = (int) db()->lastInsertId();
     // 出身武器直接发新装备并穿上
     $wnames = ['warrior' => '生锈铁剑', 'mage' => '桦木法杖', 'hunter' => '猎弓', 'priest' => '白木槌'];

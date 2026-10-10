@@ -46,9 +46,27 @@ if ((string) ($_GET['a'] ?? '') === 'reset') {
     header('Location: status.php?a=all');
     exit;
 }
+if ((string) ($_GET['a'] ?? '') === 'renamedo' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    flash_set(use_rename_card((int) $u['id'], (string) ($_POST['newname'] ?? '')));
+    header('Location: status.php');
+    exit;
+}
 $stFlash = flash_get();
 if ($stFlash !== '') {
     echo '<div class="warn">' . h($stFlash) . '</div>';
+}
+if ((string) ($_GET['a'] ?? '') === 'rename') {
+    echo '<div class="hr">--------</div>【改名】当前：' . h($u['username']) . '（本大区唯一）<br>';
+    $rc = (int) (mats_of((int) $u['id'])['rename_card'] ?? 0);
+    if ($rc <= 0) {
+        echo '<span class="muted">没有改名卡，去<a href="mall.php">商城·功能道具</a>买（100魔钻/张）。</span><br>';
+    } else {
+        echo '剩改名卡x' . $rc . '<br>';
+        echo '<form method="post" action="status.php?a=renamedo">';
+        echo '新名<br><input name="newname" maxlength="12" required><br><br>';
+        echo '<input type="submit" value="确认改名">';
+        echo '</form>';
+    }
 }
 echo '<div class="hr">--------</div>【属性加点】<br>';
 echo '潜力：存' . (int) ($u['s_pts'] ?? 0) . '点（力量/坚毅3点1次，体质/智慧1点1次）<br>';

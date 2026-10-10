@@ -289,6 +289,10 @@ if ($tab === 'equip') {
         $func = true;
         echo '·属性洗点药x' . $mats['reset_potion'] . ' <a href="bag.php?a=usereset">使用</a><br>';
     }
+    if (!empty($mats['rename_card'])) {
+        $func = true;
+        echo '·改名卡x' . $mats['rename_card'] . ' <a href="status.php?a=rename">去状态页改名</a><br>';
+    }
     if (!empty($mats['dragon_pill'])) {
         $func = true;
         echo '·真龙丹x' . $mats['dragon_pill'] . '(不可交易) <a href="bag.php?a=usedragon">使用(+3自由属性点)</a><br>';
@@ -338,7 +342,7 @@ if ($tab === 'equip') {
     }
     echo !empty($dmats['dummy_on']) ? '（开着） <a href="bag.php?a=dummy&v=0">停止</a>' : ' <a href="bag.php?a=dummy&v=1">启动</a>';
     echo '<br>';
-    echo '离线模块：' . (!empty($dmats['offline_on']) ? '已开通（与人偶共用时长）' : '未开通，去<a href="mall.php">商城</a>') . '<br>';
+    echo '离线模块：' . (!empty($dmats['offline_on']) ? '已开通，剩' . h(dummy_fmt((int) ($dmats['offline_time'] ?? 0))) . '（独立计时）' : '未开通，去<a href="mall.php">商城</a>') . '<br>';
     echo '<div class="hr">--------</div>';
     echo '<a href="shop.php">去黑市</a>';
 }

@@ -52,10 +52,13 @@ if ($a === 'join') {
     if (my_guild($uid)) {
         flash_set('你已经有公会了。');
     } else {
-        $st = db()->prepare('SELECT id FROM guilds WHERE id=?');
+        $st = db()->prepare('SELECT zone FROM guilds WHERE id=?');
         $st->execute([$gid]);
-        if (!$st->fetch()) {
+        $grow = $st->fetch();
+        if (!$grow) {
             flash_set('没有这个公会。');
+        } elseif (($grow['zone'] ?? 'z1') !== (string) ($u['zone'] ?? 'z1')) {
+            flash_set('跨大区不能加入别人的公会。');
         } else {
             db()->prepare('INSERT INTO guild_members (uid, gid, role, contrib, joined_at) VALUES (?, ?, "member", 0, ?)')->execute([$uid, $gid, time()]);
             flash_set('加入成功！');
@@ -422,8 +425,8 @@ if ($g === null) {
         echo '<div class="hr">--------</div>';
     }
 }
-echo '【公会排行】<br>';
-foreach (guild_rank() as $r) {
+echo '【公会排行·本大区】<br>';
+foreach (guild_rank((string) ($u['zone'] ?? 'z1')) as $r) {
     echo '·' . (int) $r['level'] . '级【' . h($r['name']) . '】' . (int) $r['num'] . '人';
     if ($g === null) {
         echo ' <a href="guild.php?a=join&gid=' . $r['id'] . '">加入</a>';

@@ -66,8 +66,14 @@ if ($a === 'send' && $_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         $target = user_by_name($toName);
+        if (!$target || ($target['zone'] ?? 'z1') !== (string) ($u['zone'] ?? 'z1')) {
+            $target = null;
+            $st = db()->prepare('SELECT * FROM users WHERE username=? AND zone=?');
+            $st->execute([$toName, (string) ($u['zone'] ?? 'z1')]);
+            $target = $st->fetch() ?: null;
+        }
         if (!$target) {
-            flash_set('没有这个玩家。');
+            flash_set('本大区没有这个玩家。');
         } elseif ((int) $target['id'] === $uid) {
             flash_set('不能给自己写信。');
         } elseif ($wantsAtt) {

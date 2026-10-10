@@ -14,6 +14,11 @@ if ((string) $t['loc'] !== (string) $u['loc']) {
     header('Location: home.php');
     exit;
 }
+if (($t['zone'] ?? 'z1') !== (string) ($u['zone'] ?? 'z1')) {
+    flash_set('跨大区不可见。');
+    header('Location: home.php');
+    exit;
+}
 if ((int) $t['id'] === (int) $u['id']) {
     header('Location: status.php');
     exit;

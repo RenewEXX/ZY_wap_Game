@@ -16,15 +16,17 @@ $flash = flash_get();
 if ($flash !== '') {
     echo '<div class="warn">' . h($flash) . '</div>';
 }
+$uzone = (string) ($u['zone'] ?? 'z1');
 $pid = horse_period();
-$race = horse_race($pid);
+$rid = horse_race_id($pid, $uzone);
+$race = horse_race($rid);
 $left = max(0, (int) $race['ends_at'] - time());
 echo '第' . $pid . '场，剩' . gmdate('H:i:s', $left) . '开赛（每2小时一场）<br>';
-echo '奖池：<b>' . h(fmt_diamond(horse_pool($pid))) . '</b>（含系统保底50魔钻）<br>';
+echo '奖池：<b>' . h(fmt_diamond(horse_pool($rid))) . '</b>（含系统保底50魔钻，本大区独立奖池）<br>';
 echo '规则：冠军分60%，亚军25%，季军15%，同名次按押注比例分。每人每场押一匹，1~10魔钻。<br>';
 echo '<div class="hr">--------</div>';
 $st = db()->prepare('SELECT horse, amount FROM horse_bets WHERE race_id=? AND uid=?');
-$st->execute([$pid, $uid]);
+$st->execute([$rid, $uid]);
 $mine = $st->fetch();
 if ($mine) {
     echo '你押了【' . h(horse_names()[(int) $mine['horse']]) . '】' . (int) $mine['amount'] . '魔钻，等开赛。<br>';
@@ -39,8 +41,8 @@ if ($mine) {
     }
 }
 echo '<div class="hr">--------</div>【上一场结果】<br>';
-$st = db()->prepare('SELECT * FROM horse_races WHERE id<? AND status="done" ORDER BY id DESC LIMIT 1');
-$st->execute([$pid]);
+$st = db()->prepare('SELECT * FROM horse_races WHERE id<? AND id>=? AND zone=? AND status="done" ORDER BY id DESC LIMIT 1');
+$st->execute([$rid, $rid - 99, $uzone]);
 $last = $st->fetch();
 if ($last && ($last['result'] ?? '') !== '') {
     $top = explode(',', (string) $last['result']);

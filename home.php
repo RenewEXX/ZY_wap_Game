@@ -196,7 +196,7 @@ if (peak_arena_of($cur) !== '') {
     if ($tickMsg !== '') {
         echo '<div class="warn">' . $tickMsg . '</div>';
     }
-    $alive = peak_alive_in($cur);
+    $alive = peak_alive_in($cur, (string) ($u['zone'] ?? 'z1'));
     echo '<div class="warn">巅峰之战！场上还剩' . count($alive) . '人，活到23:00最后一人即胜。</div>';
     if ($alive === []) {
         echo '<span class="muted">场上只有风声。</span><br>';
@@ -207,8 +207,8 @@ if (peak_arena_of($cur) !== '') {
         }
         echo '·敌【' . h($f['username']) . '】' . (int) $f['lv'] . '级血' . (int) $f['hp'] . ' <a href="fight.php?a=peak&uid=' . $f['id'] . '">砍他</a><br>';
     }
-    $rst = db()->prepare('SELECT winner_name FROM peak_result WHERE day=? AND arena=?');
-    $rst->execute([peak_day(), $cur]);
+    $rst = db()->prepare('SELECT winner_name FROM peak_result WHERE day=? AND arena=? AND zone=?');
+    $rst->execute([peak_day(), $cur, (string) ($u['zone'] ?? 'z1')]);
     $rw = $rst->fetchColumn();
     if ($rw !== false && $rw !== null && $rw !== '') {
         echo '今日胜者：【' . h((string) $rw) . '】<br>';

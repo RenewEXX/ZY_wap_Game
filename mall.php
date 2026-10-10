@@ -28,13 +28,13 @@ if ($a === 'buy') {
         $u['diamonds'] = (int) $u['diamonds'] - $goods[$m]['price'] * $n;
         user_save($u);
         spend_diamonds((int) $u['id'], $goods[$m]['price'] * $n);
-        if ($m === 'offline_mod') {
-            add_mat((int) $u['id'], 'dummy_time', 3600 * $n);
+        if ($m === 'offline_mod' || $m === 'offline_time') {
+            add_mat((int) $u['id'], 'offline_time', 3600 * $n);
             mat_set((int) $u['id'], 'offline_on', 1);
             mat_set((int) $u['id'], 'dummy_on', 1);
             mat_set((int) $u['id'], 'dummy_last', time());
             mat_set((int) $u['id'], 'dummy_acc', 0);
-            flash_set('离线模块开通并续费' . $n . '小时（与人偶共用时长），人偶已启动。');
+            flash_set('离线模块开通并续费' . $n . '小时（独立离线时长，不吃人偶在线时间），人偶已启动。');
         } else {
             add_mat((int) $u['id'], $m, $goods[$m]['unit'] * $n);
             flash_set($m === 'dummy_time' ? '陪练人偶续费' . $n . '小时，去背包启动。' : '买下' . $n . '个' . $goods[$m]['name'] . '，已进背包材料栏。');
@@ -192,7 +192,7 @@ if ($m !== '' && isset($goods[$m])) {
         echo '<a href="mall.php?a=buy&m=exp_card100&n=5">买5</a><br>';
         echo '·<b><span style="color:#c6f">【属性洗点药】</span></b> ';
         echo '<b>' . h(fmt_diamond(300)) . '</b>/瓶(重新分配属性点，第三章结局也送) ';
-        echo '<a href="mall.php?a=buy&m=reset_potion&n=1">买1</a><br>';
+        echo '<a href="mall.php?a=buy&m=reset_potion&n=1">买1</a><br>'; echo '·<a href="mall.php?m=rename_card"><b><span style="color:#6cf">【改名卡】</span></b></a> <b>' . h(fmt_diamond(100)) . '</b>/张（本大区唯一，去状态页改名） <a href="mall.php?a=buy&m=rename_card&n=1">买1</a><br>';
     }
     echo '<div class="hr">--------</div>';
     echo '充值/兑换：<br>';

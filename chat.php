@@ -23,7 +23,7 @@ if ($ch === 'guild') {
 
 if ((string) ($_GET['a'] ?? '') === 'poll') {
     header('Content-Type: application/json; charset=utf-8');
-    echo json_encode(chat_fetch($ch, $target, (int) ($_GET['last'] ?? 0)), JSON_UNESCAPED_UNICODE);
+    echo json_encode(chat_fetch($ch, $target, (int) ($_GET['last'] ?? 0), (string) ($u['zone'] ?? 'z1')), JSON_UNESCAPED_UNICODE);
     exit;
 }
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -43,7 +43,7 @@ if ($flash !== '') {
     echo '<div class="warn">' . h($flash) . '</div>';
 }
 echo '<div id="msgs">';
-foreach (chat_fetch($ch, $target, 0) as $m) {
+foreach (chat_fetch($ch, $target, 0, (string) ($u['zone'] ?? 'z1')) as $m) {
     echo '<div>【' . h($m['username']) . '】' . h($m['text']) . '</div>';
 }
 echo '</div>';
@@ -51,9 +51,9 @@ echo '<form method="post" action="chat.php?ch=' . h($ch) . '">';
 echo '<input name="text" maxlength="60" size="18" placeholder="说点什么(60字)">';
 echo '<input type="submit" value="发送">';
 echo '</form>';
-echo '<div class="muted">5秒自动刷新。世界频道所有人可见。</div>';
+echo '<div class="muted">5秒自动刷新。世界频道仅本大区可见。</div>';
 $last = 0;
-foreach (chat_fetch($ch, $target, 0) as $m) {
+foreach (chat_fetch($ch, $target, 0, (string) ($u['zone'] ?? 'z1')) as $m) {
     $last = max($last, (int) $m['id']);
 }
 echo '<script>

@@ -74,7 +74,7 @@ foreach (zones() as $zid => $z) {
     echo '罪渊之门<a href="account.php?a=enter&zone=' . h($zid) . '">[' . h($z['name']) . ']</a>(' . h($z['tag']) . ')';
     if (isset($byZone[$zid])) {
         $c = $byZone[$zid];
-        echo ' ' . (int) $c['lv'] . '级' . h(job_of($c)['name']);
+        echo ' 【' . h($c['username']) . '】' . (int) $c['lv'] . '级' . h(job_of($c)['name']);
     } else {
         echo ' 未创建';
     }

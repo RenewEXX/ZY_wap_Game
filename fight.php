@@ -176,6 +176,9 @@ function pvp_check(array $u, int $tuid): array
     if ((string) ($t['loc'] ?? '') !== 'warfield' || (int) $t['hp'] <= 0) {
         return [null, '对方不在战场或已倒下。'];
     }
+    if (($t['zone'] ?? 'z1') !== (string) ($u['zone'] ?? 'z1')) {
+        return [null, '跨大区不能打。'];
+    }
     $g1 = my_guild((int) ($u['id'] ?? 0));
     $g2 = my_guild($tuid);
     if (!$g1 || !$g2 || (int) $g1['id'] === (int) $g2['id']) {
@@ -264,6 +267,9 @@ function peak_check(array $u, int $tuid): array
     }
     if (peak_arena_of((string) ($t['loc'] ?? '')) !== $arena || (int) $t['hp'] <= 0) {
         return [null, '对方不在战场或已倒下。'];
+    }
+    if (($t['zone'] ?? 'z1') !== (string) ($u['zone'] ?? 'z1')) {
+        return [null, '跨大区不能打。'];
     }
     $st = db()->prepare('SELECT alive FROM peak_join WHERE uid=? AND day=?');
     $st->execute([(int) $tuid, peak_day()]);
@@ -438,7 +444,7 @@ setInterval(async ()=>{
 setInterval(()=>{
   if(!buf.length) return;
   const box=document.getElementById("blog");
-  box.innerHTML=(box.innerHTML+"<br>---3秒---<br>"+buf.map(s=>s.replace(/</g,"&lt;")).join("<br>")).split("<br>").slice(-12).join("<br>");
+  box.innerHTML=(box.innerHTML+"<br>---3秒---<br>"+buf.map(s=>s.replace(/</g,"&lt;")).join("<br>")).split("<br>").slice(-3).join("<br>");
   buf=[];
   window.scrollTo(0,document.body.scrollHeight);
 },3000);

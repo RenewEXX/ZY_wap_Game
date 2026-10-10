@@ -261,7 +261,9 @@ function mall_goods(): array
         $g['el_' . $el . '_stone'] = ['name' => element_name($el) . '属性石', 'price' => 20, 'unit' => 1];
     }
     $g['dummy_time'] = ['name' => '陪练人偶', 'price' => 50, 'unit' => 3600];
+    $g['offline_time'] = ['name' => '人偶离线升级模块', 'price' => 50, 'unit' => 3600];
     $g['offline_mod'] = ['name' => '人偶离线升级模块', 'price' => 50, 'unit' => 3600];
+    $g['rename_card'] = ['name' => '改名卡', 'price' => 100, 'unit' => 1];
     return $g;
 }
 
@@ -282,9 +284,17 @@ function offline_tick(array &$u): void
     if ($gap < 60) {
         return;
     }
-    $pool = (int) ($mats['dummy_time'] ?? 0);
+    // 离线结算只吃独立离线时长（offline_time），不吃在线人偶时间
+    $pool = (int) ($mats['offline_time'] ?? 0);
+    if (empty($mats['offline_time']) && !empty($mats['dummy_time'])) {
+        // 老数据迁移：把剩余人偶时间的一半划给离线时长
+        $move = intdiv((int) $mats['dummy_time'], 2);
+        add_mat($uid, 'offline_time', $move);
+        add_mat($uid, 'dummy_time', -$move);
+        $pool = (int) (mats_of($uid)['offline_time'] ?? 0);
+    }
     if ($pool <= 0) {
-        flash_set('离线' . dummy_fmt($gap) . '，离线模块开着但人偶没时间了，去商城续费。');
+        flash_set('离线' . dummy_fmt($gap) . '，离线模块开着但离线时长没了，去商城续费离线模块（独立计时）。');
         return;
     }
     $here = loc((string) ($u['loc'] ?? ''));
@@ -348,7 +358,7 @@ function offline_tick(array &$u): void
     }
     unset($_SESSION['battle']);
     spawn_tick((string) ($u['loc'] ?? ''));
-    add_mat($uid, 'dummy_time', -$tried * 30);
+    add_mat($uid, 'offline_time', -$tried * 30);
     mat_set($uid, 'seen_last', $now - max(0, $gap - $tried * 30));
     user_save($u);
     $eq1 = (int) db()->query('SELECT COUNT(*) FROM equips WHERE uid=' . $uid)->fetchColumn();
@@ -513,11 +523,11 @@ function peak_forfeit(int $uid): void
     db()->prepare('UPDATE peak_join SET alive=0 WHERE uid=? AND day=?')->execute([(int) $uid, peak_day()]);
 }
 
-function peak_alive_in(string $arena): array
+function peak_alive_in(string $arena, string $zone = 'z1'): array
 {
     $day = peak_day();
-    $st = db()->prepare("SELECT u.id, u.username, u.lv, u.hp FROM users u JOIN peak_join j ON j.uid=u.id AND j.day=? AND j.arena=? AND j.alive=1 WHERE u.loc=? AND u.hp>0 ORDER BY u.lv DESC LIMIT 30");
-    $st->execute([$day, $arena, $arena]);
+    $st = db()->prepare("SELECT u.id, u.username, u.lv, u.hp FROM users u JOIN peak_join j ON j.uid=u.id AND j.day=? AND j.arena=? AND j.alive=1 WHERE u.loc=? AND u.zone=? AND u.hp>0 ORDER BY u.lv DESC LIMIT 30");
+    $st->execute([$day, $arena, $arena, $zone]);
     return $st->fetchAll();
 }
 
@@ -548,7 +558,7 @@ function peak_tick(array &$u): string
         return $msg;
     }
     mat_set($uid, 'peak_force', time());
-    $cands = array_values(array_filter(peak_alive_in($arena), fn($p) => (int) $p['id'] !== $uid));
+    $cands = array_values(array_filter(peak_alive_in($arena, (string) ($u['zone'] ?? 'z1')), fn($p) => (int) $p['id'] !== $uid));
     if ($cands === []) {
         return $msg;
     }
@@ -565,30 +575,32 @@ function peak_settle(): void
     }
     $day = peak_day();
     foreach (peak_arenas() as $arena => $cfg) {
-        $st = db()->prepare('SELECT winner_uid FROM peak_result WHERE day=? AND arena=?');
-        $st->execute([$day, $arena]);
-        if ($st->fetch()) {
-            continue;
-        }
-        $left = peak_alive_in($arena);
-        if (count($left) === 1) {
-            $w = $left[0];
-            $n = (int) $cfg['pills'];
-            add_mat((int) $w['id'], 'dragon_pill', $n);
-            send_mail((int) $w['id'], '巅峰裁决', 'peak', '巅峰之战冠军：真龙丹x' . $n, '你是【' . loc($arena)['name'] . '】最后的站立者！附件是真龙丹（使用+3自由属性点/枚），请查收。', []);
-            peak_world_announce('【巅峰之战】' . loc($arena)['name'] . '胜者是【' . $w['username'] . '】！真龙丹x' . $n . '已发放！');
-            db()->prepare('INSERT INTO peak_result (day, arena, winner_uid, winner_name, created_at) VALUES (?, ?, ?, ?, ?)')->execute([$day, $arena, (int) $w['id'], (string) $w['username'], time()]);
-            // 散场：胜者传回广场
-            $pu = user_by_id((int) $w['id']);
-            if ($pu && peak_arena_of((string) ($pu['loc'] ?? '')) === $arena) {
-                $pu['loc'] = 'square';
-                user_save($pu);
+        foreach (zones() as $zid => $z) {
+            $st = db()->prepare('SELECT winner_uid FROM peak_result WHERE day=? AND arena=? AND zone=?');
+            $st->execute([$day, $arena, $zid]);
+            if ($st->fetch()) {
+                continue;
             }
-        } elseif (count($left) === 0) {
-            // 场里没人了才流局
-            db()->prepare('INSERT INTO peak_result (day, arena, winner_uid, winner_name, created_at) VALUES (?, ?, 0, "", ?)')->execute([$day, $arena, time()]);
+            $left = peak_alive_in($arena, $zid);
+            if (count($left) === 1) {
+                $w = $left[0];
+                $n = (int) $cfg['pills'];
+                add_mat((int) $w['id'], 'dragon_pill', $n);
+                send_mail((int) $w['id'], '巅峰裁决', 'peak', '巅峰之战冠军：真龙丹x' . $n, '你是【' . loc($arena)['name'] . '】最后的站立者！附件是真龙丹（使用+3自由属性点/枚），请查收。', []);
+                peak_world_announce('【巅峰之战】' . loc($arena)['name'] . '胜者是【' . $w['username'] . '】！真龙丹x' . $n . '已发放！');
+                db()->prepare('INSERT INTO peak_result (day, arena, zone, winner_uid, winner_name, created_at) VALUES (?, ?, ?, ?, ?, ?)')->execute([$day, $arena, $zid, (int) $w['id'], (string) $w['username'], time()]);
+                // 散场：胜者传回广场
+                $pu = user_by_id((int) $w['id']);
+                if ($pu && peak_arena_of((string) ($pu['loc'] ?? '')) === $arena) {
+                    $pu['loc'] = 'square';
+                    user_save($pu);
+                }
+            } elseif (count($left) === 0) {
+                // 场里没人了才流局
+                db()->prepare('INSERT INTO peak_result (day, arena, zone, winner_uid, winner_name, created_at) VALUES (?, ?, ?, 0, "", ?)')->execute([$day, $arena, $zid, time()]);
+            }
+            // 还剩多人：不等了也不散场，继续等到只剩1人（不记result，下次页面访问再结算）
         }
-        // 还剩多人：不等了也不散场，继续等到只剩1人（不记result，下次页面访问再结算）
     }
 }
 
@@ -711,14 +723,19 @@ function guild_create(int $uid, string $name): string
     }
     $u['gold'] = (int) $u['gold'] - 10000;
     user_save($u);
-    db()->prepare('INSERT INTO guilds (name, leader_uid, level, exp, created_at) VALUES (?, ?, 1, 0, ?)')->execute([$name, $uid, time()]);
+    db()->prepare('INSERT INTO guilds (name, leader_uid, zone, level, exp, created_at) VALUES (?, ?, ?, 1, 0, ?)')->execute([$name, $uid, (string) ($u['zone'] ?? 'z1'), time()]);
     $gid = (int) db()->lastInsertId();
     db()->prepare('INSERT INTO guild_members (uid, gid, role, contrib, joined_at) VALUES (?, ?, "leader", 0, ?)')->execute([$uid, $gid, time()]);
     return '公会【' . $name . '】成立！你是会长。';
 }
 
-function guild_rank(): array
+function guild_rank(string $zone = ''): array
 {
+    if ($zone !== '') {
+        $st = db()->prepare('SELECT g.*, (SELECT COUNT(*) FROM guild_members m WHERE m.gid=g.id) AS num FROM guilds g WHERE g.zone=? ORDER BY g.level DESC, g.exp DESC, num DESC LIMIT 20');
+        $st->execute([$zone]);
+        return $st->fetchAll();
+    }
     return db()->query('SELECT g.*, (SELECT COUNT(*) FROM guild_members m WHERE m.gid=g.id) AS num FROM guilds g ORDER BY g.level DESC, g.exp DESC, num DESC LIMIT 20')->fetchAll();
 }
 
@@ -740,15 +757,19 @@ function declare_war(int $uid, int $targetGid): string
     if ($targetGid === $myGid) {
         return '不能打自己。';
     }
-    $st = db()->prepare('SELECT id FROM guilds WHERE id=?');
+    $st = db()->prepare('SELECT zone FROM guilds WHERE id=?');
     $st->execute([$targetGid]);
-    if (!$st->fetch()) {
+    $tg = $st->fetch();
+    if (!$tg) {
         return '没有这个公会。';
     }
     if (open_war($myGid) || open_war($targetGid)) {
         return '其中一方已经在打了，打完再来。';
     }
     $u = user_by_id($uid);
+    if (($tg['zone'] ?? 'z1') !== (string) ($u['zone'] ?? 'z1')) {
+        return '跨大区不能宣战。';
+    }
     if ((int) $u['gold'] < 5000) {
         return '宣战要50银。';
     }
@@ -853,13 +874,19 @@ function chat_post(int $uid, string $channel, int $target, string $text): string
     if (time() - $last < 5) {
         return '说太快了，歇5秒。';
     }
-    db()->prepare('INSERT INTO chat_msgs (uid, username, channel, target, text, created_at) VALUES (?, ?, ?, ?, ?, ?)')->execute([$uid, (string) $u['username'], $channel, $target, $text, time()]);
+    db()->prepare('INSERT INTO chat_msgs (uid, username, channel, target, zone, text, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)')->execute([$uid, (string) $u['username'], $channel, $target, (string) ($u['zone'] ?? 'z1'), $text, time()]);
     db()->exec('DELETE FROM chat_msgs WHERE id NOT IN (SELECT id FROM chat_msgs ORDER BY id DESC LIMIT 500)');
     return '';
 }
 
-function chat_fetch(string $channel, int $target, int $lastId): array
+function chat_fetch(string $channel, int $target, int $lastId, string $zone = 'z1'): array
 {
+    // 世界频道按大区分隔，公会/队伍频道按成员归属（建会建队时已锁区）
+    if ($channel === 'world') {
+        $st = db()->prepare('SELECT id, username, text, created_at FROM chat_msgs WHERE channel=? AND target=? AND zone=? AND id>? ORDER BY id ASC LIMIT 30');
+        $st->execute([$channel, $target, $zone, $lastId]);
+        return $st->fetchAll();
+    }
     $st = db()->prepare('SELECT id, username, text, created_at FROM chat_msgs WHERE channel=? AND target=? AND id>? ORDER BY id ASC LIMIT 30');
     $st->execute([$channel, $target, $lastId]);
     return $st->fetchAll();
@@ -974,8 +1001,8 @@ function war_enemies(int $uid): array
     if (!$u || !$g) {
         return [];
     }
-    $st = db()->prepare("SELECT u.id, u.username, u.lv, u.hp, u.maxhp, u.atk, u.def, g.name AS gname FROM users u JOIN guild_members m ON m.uid=u.id JOIN guilds g ON g.id=m.gid WHERE u.loc='warfield' AND u.id!=? AND m.gid!=? ORDER BY u.lv DESC LIMIT 20");
-    $st->execute([(int) $uid, (int) $g['id']]);
+    $st = db()->prepare("SELECT u.id, u.username, u.lv, u.hp, u.maxhp, u.atk, u.def, g.name AS gname FROM users u JOIN guild_members m ON m.uid=u.id JOIN guilds g ON g.id=m.gid WHERE u.loc='warfield' AND u.zone=? AND u.id!=? AND m.gid!=? ORDER BY u.lv DESC LIMIT 20");
+    $st->execute([(string) ($u['zone'] ?? 'z1'), (int) $uid, (int) $g['id']]);
     return $st->fetchAll();
 }
 
@@ -1124,6 +1151,24 @@ function horse_names(): array
     return ['疾风', '逐影', '烈焰', '奔雷', '踏雪', '流星', '狂沙', '碧蹄', '夜魈', '金鬃'];
 }
 
+function horse_zone_id(string $zone): int
+{
+    $i = 0;
+    foreach (array_keys(zones()) as $zid) {
+        if ($zid === $zone) {
+            return $i;
+        }
+        $i++;
+    }
+    return 0;
+}
+
+function horse_race_id(int $pid, string $zone): int
+{
+    // 各大区独立场次：pid*100+区号
+    return $pid * 100 + horse_zone_id($zone);
+}
+
 function horse_period(): int
 {
     return (int) floor(time() / 7200);
@@ -1135,7 +1180,15 @@ function horse_race(int $pid): array
     $st->execute([$pid]);
     $row = $st->fetch();
     if (!$row) {
-        db()->prepare('INSERT INTO horse_races (id, starts_at, ends_at, status, base_pool) VALUES (?, ?, ?, "open", 500)')->execute([$pid, $pid * 7200, $pid * 7200 + 7200]);
+        // id=pid*100+区号，反推原始期号算起止时间
+        $base = intdiv($pid, 100);
+        $zone = 'z1';
+        foreach (zones() as $zid => $z) {
+            if (horse_race_id($base, $zid) === $pid) {
+                $zone = $zid;
+            }
+        }
+        db()->prepare('INSERT INTO horse_races (id, zone, starts_at, ends_at, status, base_pool) VALUES (?, ?, ?, ?, "open", 500)')->execute([$pid, $zone, $base * 7200, $base * 7200 + 7200]);
         $st->execute([$pid]);
         $row = $st->fetch();
     }
@@ -1151,7 +1204,9 @@ function horse_pool(int $pid): int
 
 function horse_bet(int $uid, int $horse, int $amount): string
 {
-    $pid = horse_period();
+    $u0 = user_by_id((int) $uid);
+    $zone = (string) ($u0['zone'] ?? 'z1');
+    $pid = horse_race_id(horse_period(), $zone);
     if ($horse < 0 || $horse > 9) {
         return '没这匹马。';
     }
@@ -1181,9 +1236,10 @@ function horse_bet(int $uid, int $horse, int $amount): string
 
 function settle_horse(): void
 {
-    $pid = horse_period();
+    // 分大区结算：截止期号=当前期*100+最大区号
+    $cutoff = horse_period() * 100 + count(zones());
     $st = db()->prepare('SELECT * FROM horse_races WHERE id<? AND status="open"');
-    $st->execute([$pid]);
+    $st->execute([$cutoff]);
     while ($r = $st->fetch()) {
         $rid = (int) $r['id'];
         $horses = range(0, 9);
@@ -1193,6 +1249,8 @@ function settle_horse(): void
         $pool = (int) $r['base_pool'] + (int) (db()->query('SELECT COALESCE(SUM(amount),0) FROM horse_bets WHERE race_id=' . $rid)->fetchColumn() ?: 0) * 10;
         $shares = [0 => 0.6, 1 => 0.25, 2 => 0.15];
         $names = horse_names();
+        $rankTxt = '本场名次：冠【' . $names[(int) $top[0]] . '】亚【' . $names[(int) $top[1]] . '】季【' . $names[(int) $top[2]] . '】，其余：第4【' . $names[(int) $horses[3]] . '】第5【' . $names[(int) $horses[4]] . '】第6【' . $names[(int) $horses[5]] . '】第7【' . $names[(int) $horses[6]] . '】第8【' . $names[(int) $horses[7]] . '】第9【' . $names[(int) $horses[8]] . '】第10【' . $names[(int) $horses[9]] . '】。';
+        $winners = [];
         foreach ($top as $rank => $h) {
             $wb = db()->query('SELECT uid, amount FROM horse_bets WHERE race_id=' . $rid . ' AND horse=' . $h)->fetchAll();
             $tot = 0;
@@ -1214,8 +1272,17 @@ function settle_horse(): void
                     $tu['horse_won'] = (int) ($tu['horse_won'] ?? 0) + $win;
                     user_save($tu);
                 }
-                send_mail((int) $w['uid'], '赛马场', 'horse', '赌马中了！' . $names[$h] . '拿了' . ['冠', '亚', '季'][$rank] . '军', '你押' . ((int) $w['amount']) . '魔钻，分得' . fmt_diamond($win) . '。', [['t' => 'diamond', 'n' => $win]]);
+                $winners[(int) $w['uid']] = true;
+                send_mail((int) $w['uid'], '赛马场', 'horse', '赌马中了！' . $names[$h] . '拿了' . ['冠', '亚', '季'][$rank] . '军', '你押的是【' . $names[$h] . '】' . ((int) $w['amount']) . '魔钻，分得' . fmt_diamond($win) . '。' . $rankTxt, [['t' => 'diamond', 'n' => $win]]);
             }
+        }
+        // 输家也发邮件：告知没中+押的是哪匹+全场名次
+        $losers = db()->query('SELECT uid, horse, amount FROM horse_bets WHERE race_id=' . $rid)->fetchAll();
+        foreach ($losers as $loser) {
+            if (!empty($winners[(int) $loser['uid']])) {
+                continue;
+            }
+            send_mail((int) $loser['uid'], '赛马场', 'horse', '赌马没中：你押的【' . $names[(int) $loser['horse']] . '】落空了', '你押的是【' . $names[(int) $loser['horse']] . '】' . ((int) $loser['amount']) . '魔钻，本场没进前三。' . $rankTxt, []);
         }
     }
 }
@@ -1690,7 +1757,7 @@ function mat_hidden(string $mid): bool
     if (str_ends_with($mid, '_enter') || str_ends_with($mid, '_stage')) {
         return true;
     }
-    return in_array($mid, ['offline_on', 'seen_last', 'exp_card_until', 'bag_ext5_used', 'bag_ext10_used', 'dummy_total', 'tank_cd_hp', 'tank_cd_mp', 'peak_force', 'peak_duel_from'], true);
+    return in_array($mid, ['offline_on', 'offline_time', 'seen_last', 'exp_card_until', 'bag_ext5_used', 'bag_ext10_used', 'dummy_total', 'tank_cd_hp', 'tank_cd_mp', 'peak_force', 'peak_duel_from'], true);
 }
 
 // 当前版本真正有用的锻造材料：强化石 + 属性石/晶石/珠/神石
@@ -1816,17 +1883,12 @@ function tank_auto(array &$u, string $kind): string
     $maxk = $kind === 'hp' ? 'maxhp' : 'maxmp';
     $max = (int) ($u[$maxk] ?? 0);
     $cur = (int) ($u[$kind] ?? 0);
-    $pct = $kind === 'hp' ? 15 : 30;
-    if ($max <= 0 || $cur * 100 >= $max * $pct) {
+    // 血罐：血量<10%才自动喝，无冷却；PVP（巅峰/公会战/切磋）不生效；致命伤害不救
+    $pct = $kind === 'hp' ? 10 : 30;
+    if ($max <= 0 || $cur <= 0 || $cur * 100 >= $max * $pct) {
         return '';
     }
-    // 药罐20秒只能自动喝一次；致命伤害不救（血量<=0直接走死亡结算）
-    if ($cur <= 0) {
-        return '';
-    }
-    $cdKey = $kind === 'hp' ? 'tank_cd_hp' : 'tank_cd_mp';
-    $last = (int) (mats_of((int) ($u['id'] ?? 0))[$cdKey] ?? 0);
-    if (time() - $last < 20) {
+    if ($kind === 'hp' && in_array((string) ($u['loc'] ?? ''), array_merge(array_keys(peak_arenas()), ['warfield']), true)) {
         return '';
     }
     $order = $kind === 'hp' ? ['hp_tank_s', 'hp_tank_m', 'hp_tank_l'] : ['mp_tank_s', 'mp_tank_m', 'mp_tank_l'];
@@ -1839,7 +1901,6 @@ function tank_auto(array &$u, string $kind): string
         }
         $take = min($max - $cur, $have);
         add_mat((int) $u['id'], $tid, -$take);
-        mat_set((int) $u['id'], $cdKey, time());
         $u[$kind] = $cur + $take;
         return '自动喝下' . $tanks[$tid]['name'] . '，恢复' . $take . '点' . ($kind === 'hp' ? '生命' : '魔力') . '。';
     }
@@ -2636,6 +2697,9 @@ function mat_name(string $id): string
             $all[$m[0]] = $m[1];
         }
     }
+    if ($id === 'rename_card') {
+        return '改名卡';
+    }
     if (isset(skill_books()[$id])) {
         return skill_books()[$id]['name'];
     }
@@ -2669,6 +2733,9 @@ function mat_name(string $id): string
     }
     if ($id === 'offline_mod') {
         return '人偶离线升级模块';
+    }
+    if ($id === 'offline_time') {
+        return '离线时长';
     }
     if ($id === 'exp_card100') {
         return '升级卡100型';
@@ -3735,6 +3802,35 @@ function alloc_all_stat(int $uid, string $k): string
     }
     $nm = ['str' => '力量', 'agi' => '坚毅', 'vit' => '体质', 'int' => '智慧'][$k];
     return $n > 0 ? '全部投入' . $nm . $n . '次（-' . ($n * $cost) . '点）。' : '属性点不够一次（要' . $cost . '点）。';
+}
+
+function use_rename_card(int $uid, string $newName): string
+{
+    $newName = trim($newName);
+    if (preg_match('/^[\x{4e00}-\x{9fff}A-Za-z0-9_]{2,12}$/u', $newName) !== 1) {
+        return '角色名2-12字，汉字、字母、数字或下划线。';
+    }
+    $u = user_by_id($uid);
+    if (!$u) {
+        return '角色不存在。';
+    }
+    $mats = mats_of($uid);
+    if (empty($mats['rename_card'])) {
+        return '你没有改名卡，去商城功能道具买。';
+    }
+    if ($newName === (string) $u['username']) {
+        return '和现在的名字一样，不用改。';
+    }
+    $st = db()->prepare('SELECT id FROM users WHERE username=? AND zone=? AND id!=?');
+    $st->execute([$newName, (string) ($u['zone'] ?? 'z1'), (int) $uid]);
+    if ($st->fetch()) {
+        return '这个名字在本大区已经被拿走了。';
+    }
+    add_mat($uid, 'rename_card', -1);
+    $old = (string) $u['username'];
+    db()->prepare('UPDATE users SET username=? WHERE id=?')->execute([$newName, (int) $uid]);
+    db()->prepare('UPDATE chat_msgs SET username=? WHERE uid=?')->execute([$newName, (int) $uid]);
+    return '改名成功：' . $old . '→' . $newName . '！';
 }
 
 function use_reset_potion(int $uid): string

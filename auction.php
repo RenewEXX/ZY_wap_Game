@@ -17,7 +17,7 @@ if ($a === 'bid' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $st = db()->prepare("SELECT * FROM auctions WHERE id=? AND status='open'");
     $st->execute([(int) ($_GET['id'] ?? 0)]);
     $auc = $st->fetch();
-    if (!$auc) {
+    if (!$auc || ($auc['zone'] ?? 'z1') !== (string) ($u['zone'] ?? 'z1')) {
         flash_set('拍卖已结束。');
         auction_back();
     }
@@ -72,7 +72,7 @@ if ($a === 'buyout') {
     $st = db()->prepare("SELECT * FROM auctions WHERE id=? AND status='open'");
     $st->execute([(int) ($_GET['id'] ?? 0)]);
     $auc = $st->fetch();
-    if (!$auc || (int) $auc['buyout'] <= 0) {
+    if (!$auc || ($auc['zone'] ?? 'z1') !== (string) ($u['zone'] ?? 'z1') || (int) $auc['buyout'] <= 0) {
         flash_set('没有一口价。');
         auction_back();
     }
@@ -191,7 +191,7 @@ if ($a === 'view') {
     $st = db()->prepare('SELECT * FROM auctions WHERE id=?');
     $st->execute([(int) ($_GET['id'] ?? 0)]);
     $auc = $st->fetch();
-    if (!$auc) {
+    if (!$auc || ($auc['zone'] ?? 'z1') !== (string) ($u['zone'] ?? 'z1')) {
         echo '没这个拍卖。<br><a href="auction.php">返回大厅</a>';
         nav_line();
         wap_end(false);
@@ -238,7 +238,7 @@ if ($a === 'bid') {
     $st = db()->prepare("SELECT * FROM auctions WHERE id=? AND status='open'");
     $st->execute([(int) ($_GET['id'] ?? 0)]);
     $auc = $st->fetch();
-    if (!$auc) {
+    if (!$auc || ($auc['zone'] ?? 'z1') !== (string) ($u['zone'] ?? 'z1')) {
         echo '拍卖已结束。<br><a href="auction.php">返回大厅</a>';
         nav_line();
         wap_end(false);
@@ -464,7 +464,7 @@ if ($a === 'browse') {
     echo '等级≥<input name="minlv" size="3" value="' . $fminlv . '"> 名称<input name="kw" size="8" value="' . h($fkw) . '"><input type="submit" value="搜">';
     echo '</form>';
     echo '<div class="hr">--------</div>';
-    $where = "status='open' AND ends_at>" . time();
+    $where = "status='open' AND ends_at>" . time() . " AND zone=" . db()->quote((string) ($u['zone'] ?? 'z1'));
     if ($cat === 'equip') {
         $where .= " AND kind='equip'";
     } elseif ($cat === 'mat') {

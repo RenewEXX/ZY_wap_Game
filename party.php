@@ -10,7 +10,7 @@ if ($a === 'create') {
     if (my_party($uid)) {
         flash_set('你已经在队伍里了。');
     } else {
-        db()->prepare('INSERT INTO parties (leader_uid, created_at) VALUES (?, ?)')->execute([$uid, time()]);
+        db()->prepare('INSERT INTO parties (leader_uid, zone, created_at) VALUES (?, ?, ?)')->execute([$uid, (string) ($u['zone'] ?? 'z1'), time()]);
         $pid = (int) db()->lastInsertId();
         db()->prepare('INSERT INTO party_members (uid, pid, joined_at) VALUES (?, ?, ?)')->execute([$uid, $pid, time()]);
         flash_set('建队成功，你是队长。叫人来同张地图，经验+10%。');
@@ -23,10 +23,13 @@ if ($a === 'join') {
     if (my_party($uid)) {
         flash_set('先退出现队伍。');
     } else {
-        $st = db()->prepare('SELECT id FROM parties WHERE id=?');
+        $st = db()->prepare('SELECT zone FROM parties WHERE id=?');
         $st->execute([$pid]);
-        if (!$st->fetch()) {
+        $prow = $st->fetch();
+        if (!$prow) {
             flash_set('没有这支队伍。');
+        } elseif (($prow['zone'] ?? 'z1') !== (string) ($u['zone'] ?? 'z1')) {
+            flash_set('跨大区不能加入别人的队伍。');
         } elseif ((int) db()->query('SELECT COUNT(*) FROM party_members WHERE pid=' . $pid)->fetchColumn() >= 5) {
             flash_set('队伍满了（5人）。');
         } else {
@@ -87,7 +90,8 @@ if ($p) {
 } else {
     echo '<a href="party.php?a=create">创建队伍</a><br>';
     echo '<div class="hr">--------</div>【附近队伍】<br>';
-    $st = db()->query('SELECT p.id, u.username AS lname, (SELECT COUNT(*) FROM party_members m WHERE m.pid=p.id) AS num FROM parties p JOIN users u ON u.id=p.leader_uid ORDER BY p.id DESC LIMIT 20');
+    $st = db()->prepare('SELECT p.id, u.username AS lname, (SELECT COUNT(*) FROM party_members m WHERE m.pid=p.id) AS num FROM parties p JOIN users u ON u.id=p.leader_uid WHERE p.zone=? ORDER BY p.id DESC LIMIT 20');
+    $st->execute([(string) ($u['zone'] ?? 'z1')]);
     $n = 0;
     while ($r = $st->fetch()) {
         $n++;

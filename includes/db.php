@@ -351,33 +351,6 @@ function db_init(): void
     );
     db()->exec('CREATE INDEX IF NOT EXISTS idx_ginv_target ON guild_invites (target_uid, status)');
     db()->exec(
-        'CREATE TABLE IF NOT EXISTS arena_ranks (
-            zone TEXT NOT NULL DEFAULT "z1",
-            uid INTEGER NOT NULL DEFAULT 0,
-            name TEXT NOT NULL DEFAULT "",
-            rank INTEGER NOT NULL DEFAULT 0,
-            is_bot INTEGER NOT NULL DEFAULT 0,
-            power INTEGER NOT NULL DEFAULT 0,
-            week TEXT NOT NULL DEFAULT "",
-            PRIMARY KEY (zone, uid)
-        )'
-    );
-    db()->exec(
-        'CREATE TABLE IF NOT EXISTS arena_logs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            zone TEXT NOT NULL DEFAULT "z1",
-            uid INTEGER NOT NULL DEFAULT 0,
-            kind TEXT NOT NULL DEFAULT "atk",
-            foe TEXT NOT NULL DEFAULT "",
-            win INTEGER NOT NULL DEFAULT 0,
-            old_rank INTEGER NOT NULL DEFAULT 0,
-            new_rank INTEGER NOT NULL DEFAULT 0,
-            created_at INTEGER NOT NULL DEFAULT 0
-        )'
-    );
-    db()->exec('CREATE INDEX IF NOT EXISTS idx_arena_rank ON arena_ranks (zone, rank)');
-    db()->exec('CREATE INDEX IF NOT EXISTS idx_arena_log ON arena_logs (zone, uid, id)');
-    db()->exec(
         'CREATE TABLE IF NOT EXISTS peak_join (
             uid INTEGER NOT NULL,
             day TEXT NOT NULL DEFAULT "",

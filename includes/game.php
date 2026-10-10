@@ -1486,7 +1486,11 @@ function auction_listable_equip(array $e): bool
     if (($e['pos'] ?? '') !== '') {
         return false;
     }
-    return in_array(equip_shortname((string) $e['name']), ['沼泽兜帽', '沼泽轻靴', '沼泽之心', '深渊蚀甲', '深渊腿甲', '深渊护手'], true);
+    // 史诗/传说/套装可交易
+    if ((int) ($e['quality'] ?? 0) >= 3) {
+        return true;
+    }
+    return equip_is_set(equip_shortname((string) ($e['name'] ?? '')));
 }
 
 function auction_min_inc(int $cur): int
@@ -2135,6 +2139,64 @@ function equip_color(array $e): string
 function equip_color_by(string $fullName, int $q): string
 {
     return equip_color(['name' => $fullName, 'quality' => $q]);
+}
+
+// 套装效果说明：有其中一件就展示整套，勾引玩家刷齐
+function equip_set_id(string $shortName): string
+{
+    if (in_array($shortName, ['沼泽兜帽', '沼泽轻靴', '沼泽之心'], true)) {
+        return 'swamp';
+    }
+    if (in_array($shortName, ['深渊蚀甲', '深渊腿甲', '深渊护手'], true)) {
+        return 'abyss';
+    }
+    if (str_starts_with($shortName, '剧场·')) {
+        return 'theater';
+    }
+    return '';
+}
+
+function equip_set_pieces(string $set): array
+{
+    if ($set === 'swamp') {
+        return ['沼泽兜帽', '沼泽轻靴', '沼泽之心'];
+    }
+    if ($set === 'abyss') {
+        return ['深渊蚀甲', '深渊腿甲', '深渊护手'];
+    }
+    return [];
+}
+
+function equip_set_owned_count(int $uid, string $set): int
+{
+    if ($set === 'theater') {
+        $st = db()->prepare('SELECT COUNT(*) FROM equips WHERE uid=? AND pos="wear" AND name LIKE ?');
+        $st->execute([(int) $uid, '%剧场·%']);
+        return (int) $st->fetchColumn();
+    }
+    $n = 0;
+    $st = db()->prepare('SELECT name FROM equips WHERE uid=? AND pos="wear"');
+    $st->execute([(int) $uid]);
+    while ($r = $st->fetch()) {
+        if (in_array(equip_shortname((string) $r['name']), equip_set_pieces($set), true)) {
+            $n++;
+        }
+    }
+    return $n;
+}
+
+function equip_set_bonus_text(string $set, int $owned): string
+{
+    if ($set === 'swamp') {
+        return '【沼泽套装】已穿' . $owned . '/3（兜帽/轻靴/之心），集齐3件：能量+300，防御+20。';
+    }
+    if ($set === 'abyss') {
+        return '【深渊套装】已穿' . $owned . '/3（蚀甲/腿甲/护手），集齐3件：攻击+25，防御+15。';
+    }
+    if ($set === 'theater') {
+        return '【剧场套装】已穿' . $owned . '件——3件：攻击+15%；5件：元素伤害+80；7件：减伤+12%，技能伤害+20%。';
+    }
+    return '';
 }
 
 // 怪物专属掉落：小怪掉率低且多为低劣
@@ -3023,6 +3085,12 @@ function job_name_of(array $u): string
 {
     $jid = job_id_of($u);
     return jobs()[$jid]['name'] ?? '战士';
+}
+
+// 魔钻输入都是“钻”单位（可小数到0.1），库里是0.1钻整数，统一在这里换算
+function diamond_to_internal($input): int
+{
+    return max(0, (int) round(((float) $input) * 10));
 }
 
 function spend_diamonds(int $uid, int $n): void

@@ -274,7 +274,7 @@ if ($tab === 'equip') {
             continue;
         }
         $hasBook = true;
-        echo '·' . h($b['name']) . 'x' . $mats[$bid] . ' <a href="bag.php?a=usebook&id=' . h($bid) . '">使用</a><br>';
+        echo '·' . h($b['name']) . 'x' . $mats[$bid] . ' <a href="bag.php?a=usebook&id=' . h($bid) . '">使用</a> <a href="bag.php?a=drop&id=' . h($bid) . '&tab=quest">扔</a><br>';
     }
     if (!$hasBook) {
         echo '<span class="muted">空。</span>';

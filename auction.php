@@ -33,7 +33,7 @@ if ($a === 'bid' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $cur = (int) $auc['cur_price'] > 0 ? (int) $auc['cur_price'] : (int) $auc['start_price'];
     $min = $cur + auction_min_inc($cur);
     if ($auc['currency'] === 'diamond') {
-        $price = max(0, (int) ($_POST['diamond'] ?? 0));
+        $price = diamond_to_internal($_POST['diamond'] ?? 0);
     } else {
         $price = max(0, (int) ($_POST['g'] ?? 0)) * 10000 + max(0, (int) ($_POST['s'] ?? 0)) * 100 + max(0, (int) ($_POST['c'] ?? 0));
     }
@@ -119,8 +119,8 @@ if ($a === 'selldo' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     $currency = (string) ($_POST['currency'] ?? 'gold') === 'diamond' ? 'diamond' : 'gold';
     if ($currency === 'diamond') {
-        $start = max(1, (int) ($_POST['diamond_s'] ?? 0));
-        $buy = max(0, (int) ($_POST['diamond_b'] ?? 0));
+        $start = max(1, diamond_to_internal($_POST['diamond_s'] ?? 0));
+        $buy = max(0, diamond_to_internal($_POST['diamond_b'] ?? 0));
     } else {
         $start = max(1, (int) ($_POST['g_s'] ?? 0)) * 10000 + max(0, (int) ($_POST['s_s'] ?? 0)) * 100 + max(0, (int) ($_POST['c_s'] ?? 0));
         $buy = max(0, (int) ($_POST['g_b'] ?? 0)) * 10000 + max(0, (int) ($_POST['s_b'] ?? 0)) * 100 + max(0, (int) ($_POST['c_b'] ?? 0));
@@ -142,7 +142,7 @@ if ($a === 'selldo' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $st->execute([$eid, $uid]);
         $e = $st->fetch();
         if (!$e || !auction_listable_equip($e)) {
-            flash_set('这件装备不能上架（仅沼泽套装3件可交易）。');
+            flash_set('这件装备不能上架（仅史诗/传说/套装可交易）。');
             auction_back('auction.php?a=sell');
         }
         db()->exec('DELETE FROM equips WHERE id=' . (int) $e['id']);
@@ -150,7 +150,7 @@ if ($a === 'selldo' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $st2 = db()->prepare('INSERT INTO auctions (seller_uid, kind, item_name, item_slot, item_quality, item_level, item_affixes, enhance_level, currency, start_price, buyout, cur_price, cur_bidder, ends_at, status, created_at) VALUES (?, "equip", ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, ?, "open", ?)');
         $st2->execute([$uid, $e['name'], $e['slot'], (int) $e['quality'], (int) ($e['item_level'] ?? 1), (string) $e['affixes'], (int) ($e['enhance_level'] ?? 0), $currency, $start, $buy, time() + $dur, time()]);
         flash_set('上架成功！到期' . date('m-d H:i', time() + $dur) . '，成交扣' . ($dur >= 86400 ? '7%' : '5%') . '手续费。');
-    } elseif ($mm === 'dsw_ticket' || (isset(pet_eggs()[$mm]) && pet_eggs()[$mm]['species'] !== '')) {
+    } elseif ($mm === 'dsw_ticket' || (isset(pet_eggs()[$mm]) && pet_eggs()[$mm]['species'] !== '') || isset(skill_books()[$mm])) {
         $mats = mats_of($uid);
         if (($mats[$mm] ?? 0) < $mq) {
             flash_set('数量不够。');
@@ -161,7 +161,7 @@ if ($a === 'selldo' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $st2->execute([$uid, $mm, $mq, $currency, $start, $buy, time() + $dur, time()]);
         flash_set('上架成功！到期' . date('m-d H:i', time() + $dur) . '，成交扣' . ($dur >= 86400 ? '7%' : '5%') . '手续费。');
     } else {
-        flash_set('只能上架入场券、宠物蛋和沼泽套装。');
+        flash_set('只能上架入场券、宠物蛋、技能书和史诗/传说/套装。');
     }
     auction_back('auction.php?a=mine');
 }
@@ -252,7 +252,7 @@ if ($a === 'bid') {
     echo '<span class="muted">出价后货币冻结，被超价或结束退回（走邮件）。</span><br>';
     echo '<form method="post" action="auction.php?a=bid&id=' . $auc['id'] . '">';
     if ($auc['currency'] === 'diamond') {
-        echo '出价 <input name="diamond" size="6" value="' . ceil($min / 10) . '"> 魔钻（精确到0.1）<br>';
+        echo '出价 <input name="diamond" size="6" value="' . rtrim(rtrim(number_format($min / 10, 1, '.', ''), '0'), '.') . '"> 魔钻（精确到0.1）<br>';
     } else {
         echo '出价 <input name="g" size="4" value="0">金 <input name="s" size="3" value="0">银 <input name="c" size="3" value="0">铜<br>';
     }
@@ -264,7 +264,7 @@ if ($a === 'bid') {
     exit;
 }
 if ($a === 'sell') {
-    echo '【选择上架物品】只收：入场券、沼泽套装3件。<br>';
+    echo '【选择上架物品】只收：入场券、技能书、史诗/传说/套装。<br>';
     $eqs = equip_sort_by_slot(my_equips($uid));
     $i = 0;
     foreach ($eqs as $e) {
@@ -285,6 +285,13 @@ if ($a === 'sell') {
         }
         $i++;
         echo '[' . $i . '] <a href="auction.php?a=sellset&mm=' . h($eid) . '">' . h($e['name']) . 'x' . $mats[$eid] . '</a><br>';
+    }
+    foreach (skill_books() as $bid => $b) {
+        if (empty($mats[$bid])) {
+            continue;
+        }
+        $i++;
+        echo '[' . $i . '] <a href="auction.php?a=sellset&mm=' . h($bid) . '">' . h($b['name']) . 'x' . $mats[$bid] . '</a><br>';
     }
     if ($i === 0) {
         echo '<span class="muted">没有可上架的东西。</span><br>';
@@ -309,8 +316,8 @@ if ($a === 'sellset') {
             exit;
         }
         $label = equip_shortname($e['name']) . '+' . (int) ($e['enhance_level'] ?? 0);
-    } elseif ($mm === 'dsw_ticket' || (isset(pet_eggs()[$mm]) && pet_eggs()[$mm]['species'] !== '')) {
-        $label = $mm === 'dsw_ticket' ? '黑暗沼泽副本入场券' : pet_eggs()[$mm]['name'];
+    } elseif ($mm === 'dsw_ticket' || (isset(pet_eggs()[$mm]) && pet_eggs()[$mm]['species'] !== '') || isset(skill_books()[$mm])) {
+        $label = $mm === 'dsw_ticket' ? '黑暗沼泽副本入场券' : (pet_eggs()[$mm]['name'] ?? skill_books()[$mm]['name'] ?? $mm);
     } else {
         echo '不能上架。<br><a href="auction.php?a=sell">重选</a>';
         nav_line();
@@ -321,14 +328,14 @@ if ($a === 'sellset') {
     echo '<form method="post" action="auction.php?a=selldo">';
     echo '<input type="hidden" name="eid" value="' . $eid . '">';
     echo '<input type="hidden" name="mm" value="' . h($mm) . '">';
-    if ($mm === 'dsw_ticket' || isset(pet_eggs()[$mm])) {
+    if ($mm === 'dsw_ticket' || isset(pet_eggs()[$mm]) || isset(skill_books()[$mm])) {
         echo '数量 <input name="mq" size="3" value="1"><br>';
     }
     echo '货币 <input type="radio" name="currency" value="gold" checked>金币 <input type="radio" name="currency" value="diamond">魔钻<br>';
     echo '起拍价 <input name="g_s" size="4" value="0">金 <input name="s_s" size="3" value="0">银 <input name="c_s" size="3" value="0">铜<br>';
-    echo '魔钻起拍 <input name="diamond_s" size="5" value="0">魔钻<br>';
+    echo '魔钻起拍 <input name="diamond_s" size="5" value="0">魔钻（精确到0.1）<br>';
     echo '一口价(可选) <input name="g_b" size="4" value="0">金 <input name="s_b" size="3" value="0">银 <input name="c_b" size="3" value="0">铜<br>';
-    echo '魔钻一口 <input name="diamond_b" size="5" value="0">魔钻<br>';
+    echo '魔钻一口 <input name="diamond_b" size="5" value="0">魔钻（精确到0.1）<br>';
     echo '时长 <input type="radio" name="dur" value="1" checked>1小时 <input type="radio" name="dur" value="24">24小时<br>';
     echo '<span class="muted">成交扣手续费：1小时5%，24小时7%。</span><br>';
     echo '<input type="submit" value="确认上架">';
@@ -435,7 +442,7 @@ if ($a === 'browse') {
         echo ($k === $fq ? '<b>' . $n . '</b>' : '<a href="' . h($bl(['q' => $k, 'p' => 1])) . '">' . $n . '</a>') . ' ';
     }
     echo '<br>套装：';
-    foreach (['all' => '全部', 'swamp' => '沼泽', 'abyss' => '深渊'] as $k => $n) {
+    foreach (['all' => '全部', 'swamp' => '沼泽', 'abyss' => '深渊', 'theater' => '剧场'] as $k => $n) {
         echo ($k === $fset ? '<b>' . $n . '</b>' : '<a href="' . h($bl(['set' => $k, 'p' => 1])) . '">' . $n . '</a>') . ' ';
     }
     echo '<br>货币：';
@@ -472,6 +479,8 @@ if ($a === 'browse') {
         $where .= " AND kind='equip' AND item_name LIKE " . db()->quote('%沼泽%');
     } elseif ($fset === 'abyss') {
         $where .= " AND kind='equip' AND item_name LIKE " . db()->quote('%深渊%');
+    } elseif ($fset === 'theater') {
+        $where .= " AND kind='equip' AND item_name LIKE " . db()->quote('%剧场%');
     }
     if ($fminlv > 0) {
         $where .= ' AND item_level>=' . $fminlv;
@@ -484,8 +493,8 @@ if ($a === 'browse') {
     }
     $effPrice = '(CASE WHEN cur_price>0 THEN cur_price ELSE start_price END)';
     $order = match ($sort) {
-        'price_asc' => $effPrice . ' ASC, ends_at ASC',
-        'price_desc' => $effPrice . ' DESC, ends_at ASC',
+        'price_asc' => $effPrice . ' ASC, buyout ASC, ends_at ASC',
+        'price_desc' => $effPrice . ' DESC, buyout DESC, ends_at ASC',
         'quality' => 'item_quality DESC, item_level DESC, ends_at ASC',
         'level' => 'item_level DESC, item_quality DESC, ends_at ASC',
         default => 'ends_at ASC',

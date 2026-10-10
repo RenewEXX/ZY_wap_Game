@@ -45,6 +45,10 @@ if (is_array($aff)) {
 if ((int) ($e['quality'] ?? 0) === 4) {
     echo '<span style="color:#fc3"><b>◆传奇◆</b></span><br><span class="muted">' . legend_lore(equip_shortname((string) $e['name'])) . '</span><br>';
 }
+$setId = equip_set_id(equip_shortname((string) $e['name']));
+if ($setId !== '') {
+    echo '<span style="color:#3f6">' . h(equip_set_bonus_text($setId, equip_set_owned_count((int) $u['id'], $setId))) . '</span><br>';
+}
 $isWep = (($e['slot'] ?? '') === 'weapon');
 if (!empty($e['enchant_el'])) {
     echo '·附魔：' . h(element_name((string) $e['enchant_el']) . ($isWep ? '伤害+' : '抗性+') . (int) ($e['enchant_val'] ?? 0) . ($isWep ? '' : '%')) . '<br>';

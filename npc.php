@@ -678,8 +678,9 @@ if (in_array($who, ['med_g', 'med_t', 'med_s', 'med_c'], true)) {
     echo '卖药（按最大生命百分比回，战斗中手动喝，不自动）：<br>';
     $medm = mats_of((int) $u['id']);
     foreach (pct_potions() as $pmid => $pt) {
-        $pr = $pt['unit'] === 'gold' ? fmt_money($pt['price']) : fmt_money($pt['price']);
-        echo '·【' . h($pt['name']) . '】回' . $pt['pct'] . '% ' . h($pr) . '(有' . (int) ($medm[$pmid] ?? 0) . ') <a href="npc.php?who=' . $who . '&choice=buy' . $pmid . '">买</a><br>';
+        $pr = fmt_money($pt['price']);
+        $kind = (($pt['stat'] ?? 'hp') === 'mp') ? '回蓝' : '回血';
+        echo '·【' . h($pt['name']) . '】' . $kind . $pt['pct'] . '% ' . h($pr) . '(有' . (int) ($medm[$pmid] ?? 0) . ') <a href="npc.php?who=' . $who . '&choice=buy' . $pmid . '">买</a><br>';
     }
 }
 if ($who === 'reed' && (int) $u['quest'] === 21 && empty(cflags((int) $u['id'])['reed_done'])) {

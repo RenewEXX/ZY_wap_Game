@@ -260,7 +260,8 @@ if ($tab === 'equip') {
     if (!$any) {
         echo '<span class="muted">暂无任务物品。</span>';
     }
-    echo '<div class="hr">--------</div>';
+} elseif ($tab === 'book') {
+    $mats = mats_of((int) $u['id']);
     echo '技能书：<br>';
     $hasBook = false;
     foreach (skill_books() as $bid => $b) {

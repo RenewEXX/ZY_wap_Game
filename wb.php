@@ -75,16 +75,22 @@ if ($a === 'hit') {
             $pd = max(1, (int) ((player_patk($u) + random_int(0, 3)) * (float) $sk['mult'] * $pow) - monster_pdef($boss));
             if ((string) ($sk['el'] ?? '') !== '') {
                 $pd += max(0, (int) (player_matk($u) * 0.5) - (int) (monster_mdef($boss) / 2));
+                list($pd, $elTag) = apply_el_convert($u, $boss, $pd, (string) ($sk['el'] ?? ''));
+                $logEl = $elTag;
             }
         }
         add_skill_prof((int) ($u['id'] ?? 0), (string) $sk['skill']);
+        if ((string) ($sk['el'] ?? '') !== '' && !isset($logEl)) {
+            list($pd, $elTag) = apply_el_convert($u, $boss, $pd, (string) ($sk['el'] ?? ''));
+            $logEl = $elTag;
+        }
     }
     $pd += soul_truedmg((int) ($u['id'] ?? 0));
     $pd = max(1, (int) $pd);
     db()->prepare("UPDATE sys_kv SET num=CASE WHEN num<? THEN 0 ELSE num-? END WHERE k='wb_hp'")->execute([$pd, $pd]);
     wb_add_dmg((int) $u['id'], (string) $u['username'], $pd);
     $hpLeft = wb_hp_now();
-    $log = '你放出' . $skillName . '，造成' . $pd . '点。';
+    $log = '你放出' . $skillName . '，造成' . $pd . '点。' . (isset($logEl) ? $logEl : '');
     if ($hpLeft <= 0 && (int) (db()->query("SELECT num FROM sys_kv WHERE k='wb_done'")->fetchColumn() ?: 0) === 0) {
         wb_rewards();
         user_save($u);

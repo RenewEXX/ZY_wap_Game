@@ -5,7 +5,7 @@ function jobs(): array
 {
     return [
         'warrior' => ['name' => '战士', 'hp' => 62, 'mp' => 20, 'atk' => 7, 'def' => 5, 'skill' => '重斩', 'weapon' => 'axe', 'armor' => 'cloth', 'desc' => '物理近战，血多甲厚。技能重斩：150%+物理伤害，断岳斩附魔火伤。只能用斧剑锤，盾牌专精'],
-        'mage' => ['name' => '法师', 'hp' => 42, 'mp' => 55, 'atk' => 11, 'def' => 1, 'skill' => '火球术', 'weapon' => 'staff', 'armor' => 'cloth', 'desc' => '纯法术炮台，伤害看智慧+法术强度。火球/爆裂火球/寒霜全是法伤。只能用法杖法器，力量对法师无效'],
+        'mage' => ['name' => '法师', 'hp' => 42, 'mp' => 55, 'atk' => 11, 'def' => 1, 'skill' => '火球术', 'weapon' => 'staff', 'armor' => 'cloth', 'desc' => '纯法术炮台，伤害看灵力+法术强度。火球/爆裂火球/寒霜全是法伤。只能用法杖法器，力量对法师无效'],
         'hunter' => ['name' => '猎手', 'hp' => 50, 'mp' => 30, 'atk' => 8, 'def' => 3, 'skill' => '双连射', 'weapon' => 'bow', 'armor' => 'cloth', 'desc' => '物理连射+爆炸箭（火伤）。只能用弓弩匕首'],
         'priest' => ['name' => '牧师', 'hp' => 54, 'mp' => 45, 'atk' => 6, 'def' => 3, 'skill' => '治疗术', 'weapon' => 'mace', 'armor' => 'cloth', 'desc' => '治疗看法攻，神圣伤害也是法伤。能用锤杖盾'],
     ];
@@ -2317,6 +2317,12 @@ function equip_is_set(string $shortName): bool
     if (str_starts_with($shortName, '剧场·')) {
         return true;
     }
+    if (str_starts_with($shortName, '寒霜·')) {
+        return true;
+    }
+    if (str_starts_with($shortName, '烬焰·')) {
+        return true;
+    }
     return in_array($shortName, ['沼泽兜帽', '沼泽轻靴', '沼泽之心', '深渊蚀甲', '深渊腿甲', '深渊护手'], true);
 }
 
@@ -2345,6 +2351,12 @@ function equip_set_id(string $shortName): string
     if (str_starts_with($shortName, '剧场·')) {
         return 'theater';
     }
+    if (str_starts_with($shortName, '寒霜·')) {
+        return 'frost';
+    }
+    if (str_starts_with($shortName, '烬焰·')) {
+        return 'ember';
+    }
     return '';
 }
 
@@ -2357,20 +2369,22 @@ function equip_set_pieces(string $set): array
         return ['深渊蚀甲', '深渊腿甲', '深渊护手'];
     }
     if ($set === 'frost') {
-        return ['寒霜·战斧', '寒霜·冰盾', '寒霜·骑士铠'];
+        return ['寒霜·战斧', '寒霜·法杖', '寒霜·战锤', '寒霜·长弓', '寒霜·冰盾', '寒霜·骑士铠', '寒霜·胫甲'];
     }
     if ($set === 'ember') {
-        return ['烬焰·龙裔刃', '烬焰·熔盾', '烬焰·守卫铠', '烬焰·祭司冠', '烬焰·熔核锤', '烬焰·灰烬戒', '烬焰·余火链'];
+        return ['烬焰·龙裔刃', '烬焰·灰烬法杖', '烬焰·熔核锤', '烬焰·焚心弓', '烬焰·熔盾', '烬焰·余烬囊', '烬焰·守卫铠', '烬焰·祭司冠', '烬焰·熔渣腿', '烬焰·灰烬戒', '烬焰·余火链'];
     }
     return [];
 }
 
 function equip_set_owned_count(int $uid, string $set): int
 {
-    if ($set === 'theater') {
+    if ($set === 'theater' || $set === 'frost' || $set === 'ember') {
+        $mark = ['theater' => '%剧场·%', 'frost' => '%寒霜·%', 'ember' => '%烬焰·%'][$set];
+        $cap = ['theater' => 99, 'frost' => 3, 'ember' => 7][$set];
         $st = db()->prepare('SELECT COUNT(*) FROM equips WHERE uid=? AND pos="wear" AND name LIKE ?');
-        $st->execute([(int) $uid, '%剧场·%']);
-        return (int) $st->fetchColumn();
+        $st->execute([(int) $uid, $mark]);
+        return min($cap, (int) $st->fetchColumn());
     }
     $n = 0;
     $st = db()->prepare('SELECT name FROM equips WHERE uid=? AND pos="wear"');
@@ -2457,12 +2471,12 @@ function monster_drops(string $mid): array
         'silk_mother' => ['slot' => 'weapon', 'base' => '剧场·断线刃'],
         // 第四章·冰原
         'frost_wolf' => ['slot' => 'weapon', 'base' => '寒霜·战斧'],
-        'ice_specter' => ['slot' => 'offhand', 'off' => 'magic', 'base' => '冰隙法器'],
+        'ice_specter' => ['slot' => 'offhand', 'off' => 'magic', 'base' => '寒霜·法杖'],
         'snow_mammoth' => ['slot' => 'body', 'base' => '雪原皮甲'],
-        'blizzard_shaman' => ['slot' => 'weapon', 'base' => '萨满骨杖'],
+        'blizzard_shaman' => ['slot' => 'weapon', 'base' => '寒霜·战锤'],
         'glacier_golem' => ['slot' => 'offhand', 'off' => 'shield', 'base' => '寒霜·冰盾'],
-        'frost_giant' => ['slot' => 'legs', 'base' => '霜巨人胫甲'],
-        'aurora_serpent' => ['slot' => 'necklace', 'base' => '极光蛇牙'],
+        'frost_giant' => ['slot' => 'legs', 'base' => '寒霜·胫甲'],
+        'aurora_serpent' => ['slot' => 'weapon', 'base' => '寒霜·长弓'],
         'icewyrm' => ['slot' => 'ring', 'base' => '冰渊指环'],
         'winter_knight' => ['slot' => 'body', 'base' => '寒霜·骑士铠'],
         'frost_matriarch' => ['slot' => 'head', 'base' => '霜母之冠'],
@@ -2476,13 +2490,13 @@ function monster_drops(string $mid): array
         // 第五章·雾森与火山
         'mist_treant' => ['slot' => 'body', 'base' => '雾森树皮甲'],
         'spore_colony' => ['slot' => 'head', 'base' => '孢子冠'],
-        'thorn_hunter' => ['slot' => 'weapon', 'base' => '荆棘短弓'],
+        'thorn_hunter' => ['slot' => 'offhand', 'base' => '烬焰·余烬囊'],
         'ancient_boa' => ['slot' => 'legs', 'base' => '巨蚺皮裙'],
         'mist_apeman' => ['slot' => 'gloves', 'base' => '雾猿拳套'],
         'rot_sage' => ['slot' => 'offhand', 'off' => 'magic', 'base' => '腐叶法器'],
         'ember_imp' => ['slot' => 'ring', 'base' => '余烬指环'],
         'lava_hound' => ['slot' => 'shoes', 'base' => '熔岩蹄靴'],
-        'ash_cultist' => ['slot' => 'weapon', 'base' => '灰烬法杖'],
+        'ash_cultist' => ['slot' => 'weapon', 'base' => '烬焰·灰烬法杖'],
         'magma_golem' => ['slot' => 'offhand', 'off' => 'shield', 'base' => '烬焰·熔盾'],
         'flame_djinn' => ['slot' => 'necklace', 'base' => '烬焰·余火链'],
         'cinder_dragonspawn' => ['slot' => 'weapon', 'base' => '烬焰·龙裔刃'],
@@ -2490,8 +2504,8 @@ function monster_drops(string $mid): array
         'ash_wyrm' => ['slot' => 'back', 'base' => '灰烬龙翼'],
         'south_flame_guard' => ['slot' => 'body', 'base' => '烬焰·守卫铠'],
         'ancient_ruin_golem' => ['slot' => 'offhand', 'off' => 'shield', 'base' => '遗迹壁垒', 'rate' => 0.3, 'q' => [0, 0, 20, 50, 30], 'legendary' => ['base' => '遗迹壁垒·不陨', 'extra' => ['k' => 'damage_reduction', 'v' => 4.0]]],
-        'em_slag' => ['slot' => 'legs', 'base' => '熔渣护腿'],
-        'em_fiend' => ['slot' => 'gloves', 'base' => '焚心手套'],
+        'em_slag' => ['slot' => 'legs', 'base' => '烬焰·熔渣腿'],
+        'em_fiend' => ['slot' => 'weapon', 'base' => '烬焰·焚心弓'],
         'em_magma' => ['slot' => 'weapon', 'base' => '烬焰·熔核锤'],
         'em_ashlord' => ['slot' => 'ring', 'base' => '烬焰·灰烬戒'],
         'em_heart' => ['slot' => 'offhand', 'off' => 'magic', 'base' => '熔心', 'rate' => 0.3, 'q' => [0, 0, 20, 50, 30], 'legendary' => ['base' => '熔心·世界之血', 'extra' => ['k' => 'skill_damage', 'v' => 8.0]]],
@@ -2539,6 +2553,28 @@ function equip_req_text(array $e): string
         $t .= ' 毅' . (int) $e['req_agi'];
     }
     return $t;
+}
+
+// 装备详情用：哪些职业能穿
+function equip_job_text(array $e): string
+{
+    $names = ['warrior' => '战士', 'mage' => '法师', 'hunter' => '猎手', 'priest' => '牧师'];
+    $slot = (string) ($e['slot'] ?? '');
+    if ($slot === 'weapon') {
+        $jobs = weapon_jobs(weapon_sub((string) ($e['name'] ?? '')));
+    } elseif ($slot === 'offhand') {
+        $nm = (string) ($e['name'] ?? '');
+        if (str_contains($nm, '盾')) {
+            $jobs = ['warrior', 'priest'];
+        } elseif (str_contains($nm, '法器') || str_contains($nm, '法杖') || str_contains($nm, '提灯')) {
+            $jobs = ['mage', 'priest'];
+        } else {
+            $jobs = ['warrior', 'mage', 'hunter', 'priest'];
+        }
+    } else {
+        $jobs = ['warrior', 'mage', 'hunter', 'priest'];
+    }
+    return implode('/', array_map(fn($j) => $names[$j] ?? $j, $jobs));
 }
 
 function equip_can_wear(array $u, array $e): string
@@ -2849,10 +2885,12 @@ function roll_abx_skillbook(int $uid, string $mid): string
 function pct_potions(): array
 {
     return [
-        'hp_pct10' => ['name' => '雾纹绷带', 'pct' => 10, 'price' => 200, 'unit' => 'silver'],
-        'hp_pct20' => ['name' => '苔语药膏', 'pct' => 20, 'price' => 600, 'unit' => 'silver'],
-        'hp_pct35' => ['name' => '龙血愈合剂', 'pct' => 35, 'price' => 3000, 'unit' => 'silver'],
-        'hp_pct50' => ['name' => '月影圣水', 'pct' => 50, 'price' => 10000, 'unit' => 'gold'],
+        'hp_pct10' => ['name' => '雾纹绷带', 'pct' => 10, 'price' => 100, 'unit' => 'silver', 'stat' => 'hp'],
+        'hp_pct20' => ['name' => '苔语药膏', 'pct' => 20, 'price' => 300, 'unit' => 'silver', 'stat' => 'hp'],
+        'hp_pct35' => ['name' => '龙血愈合剂', 'pct' => 35, 'price' => 1200, 'unit' => 'silver', 'stat' => 'hp'],
+        'hp_pct50' => ['name' => '月影圣水', 'pct' => 50, 'price' => 3000, 'unit' => 'silver', 'stat' => 'hp'],
+        'mp_pct25' => ['name' => '蓝纹清液', 'pct' => 25, 'price' => 300, 'unit' => 'silver', 'stat' => 'mp'],
+        'mp_pct50' => ['name' => '月露凝浆', 'pct' => 50, 'price' => 1500, 'unit' => 'silver', 'stat' => 'mp'],
     ];
 }
 
@@ -2889,6 +2927,16 @@ function drink_pct_potion(array &$u, string $mid): string
     if ((int) ($mats[$mid] ?? 0) <= 0) {
         return '你没有【' . $tab['name'] . '】。';
     }
+    if (($tab['stat'] ?? 'hp') === 'mp') {
+        if ((int) $u['mp'] >= (int) $u['maxmp']) {
+            return '蓝是满的，别浪费药。';
+        }
+        add_mat((int) ($u['id'] ?? 0), $mid, -1);
+        $heal = min((int) $u['maxmp'] - (int) $u['mp'], (int) ((int) $u['maxmp'] * $tab['pct'] / 100));
+        $u['mp'] = (int) $u['mp'] + $heal;
+        user_save($u);
+        return '喝下【' . $tab['name'] . '】，回复魔力' . $heal . '（' . $tab['pct'] . '%）。';
+    }
     if ((int) $u['hp'] >= (int) $u['maxhp']) {
         return '血是满的，别浪费药。';
     }
@@ -2899,6 +2947,13 @@ function drink_pct_potion(array &$u, string $mid): string
     return '喝下【' . $tab['name'] . '】，回复' . $heal . '（' . $tab['pct'] . '%）。';
 }
 
+// 任务完成送药：每环都送，低级不断药
+function quest_potion_gift(int $uid, int $ch): string
+{
+    $g = [1 => ['hp_pct10', 3], 2 => ['hp_pct20', 3], 3 => ['hp_pct35', 2], 5 => ['hp_pct35', 3], 6 => ['hp_pct50', 2]][$ch] ?? ['hp_pct10', 2];
+    add_mat($uid, $g[0], $g[1]);
+    return '。任务奖励【' . mat_name($g[0]) . '×' . $g[1] . '】！';
+}
 function mat_name(string $id): string
 {
     $all = [];
@@ -2940,7 +2995,7 @@ function mat_name(string $id): string
     }
     if (isset(pct_potions()[$id])) {
         $t = pct_potions()[$id];
-        return $t['name'] . '(回' . $t['pct'] . '%)';
+        return $t['name'] . '(' . ((($t['stat'] ?? 'hp') === 'mp') ? '回蓝' : '回血') . $t['pct'] . '%)';
     }
     if ($id === 'offline_mod') {
         return '人偶离线升级模块';
@@ -4119,15 +4174,15 @@ function player_patk(array $u): int
     return $base;
 }
 
-// 魔法攻击（无属性）：智慧+法术强度装备。法师另吃本体攻击一半（科班出身）
+// 魔法攻击（无属性）：灵力+法术强度装备。法师另吃本体攻击四分之一（科班出身，但不再像以前那么恐怖）
 function player_matk(array $u): int
 {
-    $base = (int) ($u['int'] ?? 0) + (int) gear_stats((int) ($u['id'] ?? 0))['matk'];
+    $base = (int) ($u['spi'] ?? 0) + (int) gear_stats((int) ($u['id'] ?? 0))['matk'];
     if (job_id_of($u) === 'mage') {
-        $base += (int) ((int) $u['atk'] / 2);
+        $base += (int) ((int) $u['atk'] / 4);
     }
     if (job_id_of($u) === 'priest') {
-        $base += (int) ((int) $u['atk'] / 4);
+        $base += (int) ((int) $u['atk'] / 8);
     }
     return $base;
 }
@@ -4143,10 +4198,10 @@ function player_pdef(array $u): int
     return (int) $u['def'] + (int) ($u['agi'] ?? 0) + (int) gear_stats((int) ($u['id'] ?? 0))['def'];
 }
 
-// 魔法防御：护甲一半+智慧一半+抗性装备
+// 魔法防御：护甲一半+灵力一半+抗性装备（智慧只加魔力，不加防）
 function player_mdef(array $u): int
 {
-    return (int) ((int) $u['def'] / 2) + (int) ((int) ($u['int'] ?? 0) / 2) + (int) gear_stats((int) ($u['id'] ?? 0))['mdef'];
+    return (int) ((int) $u['def'] / 2) + (int) ((int) ($u['spi'] ?? 0) / 2) + (int) gear_stats((int) ($u['id'] ?? 0))['mdef'];
 }
 
 function exp_need(int $lv): int
@@ -4237,9 +4292,9 @@ function gain_exp(array &$u, int $exp): string
         $u['lv'] = (int) $u['lv'] + 1;
         $u['maxhp'] = (int) $u['maxhp'] + 10;
         $u['maxmp'] = (int) ($u['maxmp'] ?? 0) + 5;
-        // 升级成长按职业：战士猎手长物攻，法师牧师长智慧（法师不长物理）
+        // 升级成长按职业：战士猎手长物攻，法师牧师长灵力（法师不长物理）
         if (in_array(job_id_of($u), ['mage', 'priest'], true)) {
-            $u['int'] = (int) ($u['int'] ?? 0) + 1;
+            $u['spi'] = (int) ($u['spi'] ?? 0) + 1;
         } else {
             $u['atk'] = (int) $u['atk'] + 1;
         }
@@ -4258,16 +4313,16 @@ function alloc_stat(int $uid, string $k): string
     if (!$u) {
         return '角色不存在。';
     }
-    $cost = ['str' => 3, 'agi' => 3, 'vit' => 1, 'int' => 1][$k] ?? 0;
+    $cost = ['str' => 3, 'agi' => 3, 'vit' => 1, 'int' => 1, 'spi' => 1][$k] ?? 0;
     if ($cost <= 0) {
-        return '只能加力量/坚毅/体质/智慧（力量坚毅3点1次，体质智慧1点1次）。';
+        return '只能加力量/坚毅/体质/智慧/灵力（力量坚毅3点1次，体质智慧灵力1点1次）。';
     }
     if ((int) ($u['s_pts'] ?? 0) < $cost) {
         return '属性点不够（剩' . (int) ($u['s_pts'] ?? 0) . '点，要' . $cost . '点），升级获取。';
     }
     if ($k === 'str') {
         if (job_id_of($u) === 'mage') {
-            return '法师的身体练不出物理伤害，别浪费点数，去加智慧吧。';
+            return '法师的身体练不出物理伤害，别浪费点数，去加灵力吧。';
         }
         $u['str'] = (int) ($u['str'] ?? 0) + 1;
     } elseif ($k === 'agi') {
@@ -4280,6 +4335,8 @@ function alloc_stat(int $uid, string $k): string
         $u['maxmp'] = (int) ($u['maxmp'] ?? 0) + 3;
         $u['mp'] = (int) ($u['mp'] ?? 0) + 3;
         $u['int'] = (int) ($u['int'] ?? 0) + 1;
+    } elseif ($k === 'spi') {
+        $u['spi'] = (int) ($u['spi'] ?? 0) + 1;
     }
     $u['s_pts'] = (int) ($u['s_pts'] ?? 0) - $cost;
     user_save($u);
@@ -4288,16 +4345,16 @@ function alloc_stat(int $uid, string $k): string
 
 function alloc_all_stat(int $uid, string $k): string
 {
-    $cost = ['str' => 3, 'agi' => 3, 'vit' => 1, 'int' => 1][$k] ?? 0;
+    $cost = ['str' => 3, 'agi' => 3, 'vit' => 1, 'int' => 1, 'spi' => 1][$k] ?? 0;
     if ($cost <= 0) {
-        return '只能全加力量/坚毅/体质/智慧。';
+        return '只能全加力量/坚毅/体质/智慧/灵力。';
     }
     $u = user_by_id((int) $uid);
     if (!$u) {
         return '角色不存在。';
     }
     if ($k === 'str' && job_id_of($u) === 'mage') {
-        return '法师的身体练不出物理伤害，别浪费点数，去加智慧吧。';
+        return '法师的身体练不出物理伤害，别浪费点数，去加灵力吧。';
     }
     $n = 0;
     while ((int) ($u['s_pts'] ?? 0) >= $cost) {
@@ -4353,7 +4410,7 @@ function use_reset_potion(int $uid): string
     if (!$u) {
         return '角色不存在。';
     }
-    $back = (int) ($u['str'] ?? 0) + (int) ($u['agi'] ?? 0) + (int) ($u['vit'] ?? 0) + (int) ($u['int'] ?? 0);
+    $back = (int) ($u['str'] ?? 0) + (int) ($u['agi'] ?? 0) + (int) ($u['vit'] ?? 0) + (int) ($u['int'] ?? 0) + (int) ($u['spi'] ?? 0);
     if ($back <= 0) {
         return '没加过点，不用洗。';
     }
@@ -4367,6 +4424,7 @@ function use_reset_potion(int $uid): string
     $u['agi'] = 0;
     $u['vit'] = 0;
     $u['int'] = 0;
+    $u['spi'] = 0;
     user_save($u);
     return '重修成功，返还' . $back . '潜力点。';
 }
@@ -4437,7 +4495,24 @@ function dmg_to_player(array $u, array $m): int
     // 怪物伤害拆两段：物理段吃物防，法术段吃法防
     $phys = max(0, monster_patk($m) + random_int(0, 2) - player_pdef($u));
     $mag = max(0, monster_matk($m) + random_int(0, 1) - player_mdef($u));
+    // 怪物元素攻击全额转对应属性：吃玩家同系抗性（装备+附魔，上限80%）
+    $mel = monster_element((string) ($m['id'] ?? ''));
+    if ($mel !== '' && $mag > 0) {
+        $pres = (float) ($gs['res_' . $mel] ?? 0) + enchant_el_res((int) ($u['id'] ?? 0), $mel);
+        $mag = (int) ($mag * (1 - min(80, max(0, $pres)) / 100));
+    }
     return max(1, $phys + $mag);
+}
+
+// 技能全额转属性：伤害整体吃克制与抗性
+function apply_el_convert(array $u, array $b, int $pd, string $el): array
+{
+    $meld = monster_element((string) ($b['id'] ?? ''));
+    $chart = element_chart($el, $meld);
+    $mres = monster_resist((string) ($b['id'] ?? ''), $el);
+    $pd = max(1, (int) ($pd * $chart * (1 - $mres / 100)));
+    $tag = '(' . element_name($el) . '转化' . ($chart > 1 ? '·克制' : ($chart < 1 ? '·被抵抗' : '')) . ')';
+    return [$pd, $tag];
 }
 
 function battle_round(array &$u, array &$b, string $mode): array
@@ -4480,7 +4555,9 @@ function battle_round(array &$u, array &$b, string $mode): array
                 $pd = max(1, (int) ((player_patk($u) + random_int(0, 3)) * (float) $sk['mult'] * $pow) - monster_pdef($b));
                 if ($skEl !== '') {
                     $pd += max(0, (int) (player_matk($u) * 0.4) - (int) (monster_mdef($b) / 2));
-                    $logHeal .= '(附魔)';
+                    [$pd, $elTag] = apply_el_convert($u, $b, $pd, $skEl);
+                    $logHeal .= $elTag;
+                    $b['fullEl'] = 1;
                 }
                 if ($sid === 'w3' && $sTier >= 10 && mt_rand(1, 100) <= 5) {
                     $b['stun'] = 1;
@@ -4504,8 +4581,13 @@ function battle_round(array &$u, array &$b, string $mode): array
                     $logHeal .= '(烬灭暴击)';
                 }
             } elseif ($sk['kind'] === 'magic') {
-                // 纯法术：看法攻，过一半法防（法师和怪斗法，拼的是理解）
+                // 纯法术：看法攻，过一半法防；带属性的整体转化（火球术就是全额火伤）
                 $pd = max(1, (int) ((player_matk($u) + random_int(4, 7) + ($sid === 'm2' ? 10 : ($sid === 'm3' ? 8 : 5))) * $pow) - (int) (monster_mdef($b) / 2));
+                if ($skEl !== '') {
+                    [$pd, $elTag] = apply_el_convert($u, $b, $pd, $skEl);
+                    $logHeal .= $elTag;
+                    $b['fullEl'] = 1;
+                }
                 if ($sTier >= 10) {
                     $pd = (int) ($pd * 1.3);
                 }
@@ -4521,11 +4603,13 @@ function battle_round(array &$u, array &$b, string $mode): array
                     $logHeal .= '(冰葬冻结)';
                 }
             } elseif ($sk['kind'] === 'multi2') {
-                // 猎手连射：物理段过物防；爆炸箭（h2火）/淬毒箭（h3暗）再加一段法伤
+                // 猎手连射：物理段过物防；爆炸箭（h2火）/淬毒箭（h3暗）再加一段法伤，整体转属性
                 $pd = max(1, (int) ((player_patk($u) + random_int(0, 3)) * (float) $sk['mult'] * $pow) - monster_pdef($b));
                 if ($skEl !== '') {
                     $pd += max(0, (int) (player_matk($u) * 0.5) - (int) (monster_mdef($b) / 2));
-                    $logHeal .= $sid === 'h2' ? '(爆炸)' : '(淬毒)';
+                    [$pd, $elTag] = apply_el_convert($u, $b, $pd, $skEl);
+                    $logHeal .= $elTag;
+                    $b['fullEl'] = 1;
                 }
                 if ($sTier >= 10) {
                     $pd = (int) ($pd * 1.5);
@@ -4542,7 +4626,7 @@ function battle_round(array &$u, array &$b, string $mode): array
                     $logHeal .= '(龙裔杀手)';
                 }
             } elseif ($sk['kind'] === 'heal') {
-                // 牧师治疗量吃智慧（法攻两成加成）
+                // 牧师治疗量吃灵力（法攻两成加成）
                 $heal = (int) ($sk['heal'] * $pow) + (int) (player_matk($u) * 0.2);
                 if ($sTier >= 10) {
                     $heal += in_array($sid, ['p2', 'p3'], true) ? 25 : 15;
@@ -4557,6 +4641,11 @@ function battle_round(array &$u, array &$b, string $mode): array
                     $logHeal .= '(回蓝10)';
                 }
                 $pd = max(1, (int) (player_matk($u) * (float) $sk['mult'] * $pow) - (int) (monster_mdef($b) / 2));
+                if ($skEl !== '') {
+                    [$pd, $elTag] = apply_el_convert($u, $b, $pd, $skEl);
+                    $logHeal .= $elTag;
+                    $b['fullEl'] = 1;
+                }
                 if ($sLv >= 20) {
                     $pd = (int) ($pd * 1.15);
                 }
@@ -4608,7 +4697,7 @@ function battle_round(array &$u, array &$b, string $mode): array
         $b['poison'] = (int) $b['poison'] - 1;
         $log .= '剧毒发作，' . $b['name'] . '掉' . $pt . '点生命。';
     }
-    if ($skEl !== '' && (int) $b['hp'] > 0) {
+    if ($skEl !== '' && empty($b['fullEl']) && (int) $b['hp'] > 0) {
         $meld = monster_element((string) ($b['id'] ?? ''));
         $chart = element_chart($skEl, $meld);
         $mres = monster_resist((string) ($b['id'] ?? ''), $skEl);
@@ -4799,15 +4888,15 @@ function battle_round(array &$u, array &$b, string $mode): array
             if ($bid === 'goblin') {
                 $msg .= '。玛莎给你燕麦肉汤，伤全好了';
                 $u['hp'] = (int) $u['maxhp'];
-                add_mat((int) $u['id'], 'hp_pct10', 1);
+                add_mat((int) $u['id'], 'hp_pct10', 3);
                 $msg .= '，得雾纹绷带×1';
             }
             if ($bid === 'banshee') {
                 $msg .= '。女妖散去：“别往下听……”莉娜加入';
             }
             if ($bid === 'ogre') {
-                $msg .= '。咕噜让路，送你大骨棒+黑币！桥通了，去白石镇吧';
-                $bb = make_equip((int) $u['id'], 'weapon', '大骨棒', 1);
+                $msg .= '。咕噜让路，送你本命武器+黑币！桥通了，去白石镇吧';
+                $bb = make_equip((int) $u['id'], 'weapon', (['warrior' => '大骨棒', 'mage' => '雾纹法杖', 'hunter' => '断弦短弓', 'priest' => '燕麦木槌'][job_id_of($u)] ?? '大骨棒'), 1);
                 $msg .= '。【' . $bb . '】已放进背包，去穿上吧';
                 add_mat((int) $u['id'], 'blackcoin', 1);
                 $msg .= '。获得任务物品【不断下坠的黑币】';
@@ -4843,6 +4932,7 @@ function battle_round(array &$u, array &$b, string $mode): array
             $qs = ch1_quests()[$cur];
             if (check_ch1_done((int) $u['id'], $qs)) {
                 $u['quest'] = $cur + 1;
+                $txt .= quest_potion_gift((int) $u['id'], 1);
                 if ($cur === 10) {
                     $u['quest'] = 11;
                     $txt .= '。艾琳给你铜牌！';
@@ -4867,6 +4957,7 @@ function battle_round(array &$u, array &$b, string $mode): array
             $qs2 = ch2_quests()[$cur] + ['id' => $cur];
             if (check_ch2_done((int) $u['id'], $qs2)) {
                 $u['quest'] = $cur + 1;
+                $txt .= quest_potion_gift((int) $u['id'], 2);
                 if ($cur === 27) {
                     $up3 = job_skillset(job_id_of($u))[2] ?? '';
                     if ($up3 !== '') {
@@ -4889,6 +4980,7 @@ function battle_round(array &$u, array &$b, string $mode): array
             $qs3 = ch3_quests()[$cur] + ['id' => $cur];
             if (check_ch3_done((int) $u['id'], $qs3)) {
                 $u['quest'] = $cur + 1;
+                $txt .= quest_potion_gift((int) $u['id'], 3);
                 $u['gold'] = (int) $u['gold'] + [30 => 2000, 31 => 3000, 32 => 4000, 33 => 5000, 34 => 6000, 35 => 7000, 36 => 8000, 37 => 10000][$cur];
                 $gear3 = [31 => ['weapon', '傀儡短剑', 150], 32 => ['body', '傀儡皮甲', 180], 33 => ['weapon', '傀儡长弓', 210], 34 => ['body', '傀儡铠甲', 240], 35 => ['back', '傀儡斗篷', 270]][$cur] ?? null;
                 if ($gear3 !== null) {
@@ -4918,8 +5010,9 @@ function battle_round(array &$u, array &$b, string $mode): array
             $qs4 = ch4_quests()[$cur] + ['id' => $cur];
             if (check_ch3_done((int) $u['id'], $qs4)) {
                 $u['quest'] = $cur + 1;
+                $txt .= quest_potion_gift((int) $u['id'], 5);
                 $u['gold'] = (int) $u['gold'] + [50 => 50000, 51 => 60000, 52 => 70000, 53 => 80000, 54 => 90000, 55 => 100000, 56 => 120000, 57 => 140000, 58 => 160000, 59 => 180000, 60 => 220000, 61 => 300000][$cur];
-                $gear4 = [52 => ['body', '雪原皮甲', 2, 370], 54 => ['necklace', '极光蛇牙', 2, 410], 55 => ['weapon', '萨满骨杖', 2, 380], 57 => ['head', '霜母之冠', 2, 450], 58 => ['body', '冰河重铠', 3, 465], 59 => ['offhand', '寒霜·冰盾', 3, 460]][$cur] ?? null;
+                if ($cur === 55) { $gear4 = ['warrior' => ['weapon', '寒霜·战斧', 2, 380], 'mage' => ['offhand', '寒霜·法杖', 2, 380], 'hunter' => ['weapon', '寒霜·长弓', 2, 380], 'priest' => ['weapon', '寒霜·战锤', 2, 380]][job_id_of($u)] ?? null; } elseif ($cur === 59) { $gear4 = ['warrior' => ['offhand', '寒霜·冰盾', 3, 460], 'mage' => ['offhand', '寒霜·法杖', 3, 460], 'hunter' => ['body', '寒霜·骑士铠', 3, 460], 'priest' => ['offhand', '寒霜·冰盾', 3, 460]][job_id_of($u)] ?? null; } else { $gear4 = [52 => ['body', '雪原皮甲', 2, 370], 54 => ['legs', '寒霜·胫甲', 2, 410], 57 => ['head', '霜母之冠', 2, 450], 58 => ['body', '冰河重铠', 3, 465]][$cur] ?? null; }
                 if ($gear4 !== null) {
                     $gn4 = make_equip((int) $u['id'], $gear4[0], $gear4[1], $gear4[2], $gear4[3]);
                     if ($gn4 !== '') {
@@ -4939,7 +5032,7 @@ function battle_round(array &$u, array &$b, string $mode): array
                     add_mat((int) $u['id'], 'frost_heart', 1);
                     add_mat((int) $u['id'], 'ch4_proof', 1);
                     add_mat((int) $u['id'], 'frost_egg', 1);
-                    $gn4b = make_equip((int) $u['id'], 'weapon', '寒霜·战斧', 3, 480);
+                    if (job_id_of($u) === 'mage') { $gn4b = make_equip((int) $u['id'], 'offhand', '寒霜·法杖', 3, 480); } elseif (job_id_of($u) === 'hunter') { $gn4b = make_equip((int) $u['id'], 'weapon', '寒霜·长弓', 3, 480); } elseif (job_id_of($u) === 'priest') { $gn4b = make_equip((int) $u['id'], 'weapon', '寒霜·战锤', 3, 480); } else { $gn4b = make_equip((int) $u['id'], 'weapon', '寒霜·战斧', 3, 480); }
                     if ($gn4b !== '') {
                         $txt .= '。获得【' . $gn4b . '】！';
                     }
@@ -4957,8 +5050,9 @@ function battle_round(array &$u, array &$b, string $mode): array
             $qs5 = ch5_quests()[$cur] + ['id' => $cur];
             if (check_ch3_done((int) $u['id'], $qs5)) {
                 $u['quest'] = $cur + 1;
+                $txt .= quest_potion_gift((int) $u['id'], 6);
                 $u['gold'] = (int) $u['gold'] + [62 => 300000, 63 => 320000, 64 => 350000, 65 => 380000, 66 => 400000, 67 => 430000, 68 => 460000, 69 => 500000, 70 => 550000, 71 => 600000, 72 => 650000, 73 => 700000, 74 => 800000, 75 => 1000000][$cur];
-                $gear5 = [64 => ['weapon', '荆棘短弓', 2, 530], 67 => ['offhand', '腐叶法器', 2, 575], 71 => ['offhand', '烬焰·熔盾', 3, 635], 73 => ['weapon', '烬焰·龙裔刃', 3, 665], 74 => ['weapon', '烬焰·熔核锤', 3, 680]][$cur] ?? null;
+                if ($cur === 67) { $gear5 = ['warrior' => ['legs', '烬焰·熔渣腿', 2, 575], 'mage' => ['offhand', '腐叶法器', 2, 575], 'hunter' => ['weapon', '烬焰·焚心弓', 2, 575], 'priest' => ['offhand', '腐叶法器', 2, 575]][job_id_of($u)] ?? null; } elseif ($cur === 71) { $gear5 = ['warrior' => ['offhand', '烬焰·熔盾', 3, 635], 'mage' => ['necklace', '烬焰·余火链', 3, 635], 'hunter' => ['offhand', '烬焰·余烬囊', 3, 635], 'priest' => ['offhand', '烬焰·熔盾', 3, 635]][job_id_of($u)] ?? null; } elseif ($cur === 73) { $gear5 = ['warrior' => ['weapon', '烬焰·龙裔刃', 3, 665], 'mage' => ['weapon', '烬焰·灰烬法杖', 3, 665], 'hunter' => ['weapon', '烬焰·焚心弓', 3, 665], 'priest' => ['weapon', '烬焰·熔核锤', 3, 665]][job_id_of($u)] ?? null; } else { $gear5 = [64 => ['offhand', '烬焰·余烬囊', 2, 530], 74 => ['legs', '烬焰·熔渣腿', 3, 680]][$cur] ?? null; }
                 if ($gear5 !== null) {
                     $gn5 = make_equip((int) $u['id'], $gear5[0], $gear5[1], $gear5[2], $gear5[3]);
                     if ($gn5 !== '') {
@@ -5606,8 +5700,6 @@ function em_locations(): array
 {
     $m = [];
     $m['em_gate'] = ['name' => '熔心入口', 'desc' => '火山麓裂开的口子。探火人·老灰：45分钟，绳子是石棉的，人不是。', 'exits' => ['em_flow' => '熔流道'], 'monsters' => ['em_slag']];
-    $m['em_flow'] = ['name' => '熔流道', 'desc' => '脚下是凝固的岩浆，踩上去咯吱响。熔渣怪从裂缝里渗出来，专找凉快的东西抱。', 'exits' => ['em_gate' => '入口', 'em_chamber' => '焚心室'], 'monsters' => ['em_slag', 'em_fiend']];
-    $m['em_chamber'] = ['name' => '焚心室', 'desc' => '四壁通红。焚心魔把心掏出来当灯使，照得人心里发慌。', 'exits' => ['em_flow' => '熔流道', 'em_vein' => '熔脉'], 'monsters' => ['em_fiend', 'em_magma']];
     $m['em_vein'] = ['name' => '熔脉', 'desc' => '岩浆像血一样在岩管里走。熔核行者顺着脉走，找heart的位置。', 'exits' => ['em_chamber' => '焚心室', 'em_core' => '熔核之心'], 'monsters' => ['em_magma', 'em_ashlord']];
     $m['em_core'] = ['name' => '熔核之心', 'desc' => '熔心化身悬在岩浆海上。它每跳一下，你的心就跟着跳一下。', 'exits' => ['em_vein' => '熔脉'], 'monsters' => ['em_heart']];
     return $m;

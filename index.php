@@ -16,10 +16,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = trim((string) ($_POST['u'] ?? ''));
     $pass = (string) ($_POST['p'] ?? '');
     $ok = false;
-    foreach (account_rows($name) as $row) {
-        if (password_verify($pass, $row['pass'])) {
-            $ok = true;
-            break;
+    $accFile = DATA_DIR . '/accounts/' . $name . '.json';
+    if (is_file($accFile)) {
+        $acc = json_decode((string) file_get_contents($accFile), true);
+        if (password_verify($pass, (string) ($acc['pass'] ?? ''))) { $ok = true; }
+    }
+    if (!$ok) {
+        foreach (account_rows($name) as $row) {
+            if (password_verify($pass, $row['pass'])) {
+                $ok = true;
+                break;
+            }
         }
     }
     if ($ok) {

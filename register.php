@@ -11,10 +11,6 @@ $err = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = trim((string) ($_POST['u'] ?? ''));
     $pass = (string) ($_POST['p'] ?? '');
-    $job = (string) ($_POST['job'] ?? 'warrior');
-    if (!isset(jobs()[$job])) {
-        $job = 'warrior';
-    }
     if ($name === '' || preg_match('/^[\x{4e00}-\x{9fff}A-Za-z0-9_]{2,12}$/u', $name) !== 1) {
         $err = '名号用2-12字，汉字、字母、数字或下划线。';
     } elseif (strlen($pass) < 4) {
@@ -22,9 +18,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (user_by_name($name)) {
         $err = '这名号已经被别人拿走了。';
     } else {
-        user_create($name, $pass, $job);
-        $id = (int) db()->lastInsertId();
-        send_mail($id, '系统', 'system', '欢迎来到白石镇', '欢迎来到白石镇，年轻的冒险者！这是为你准备的新手补给，请查收。', [['t' => 'mat', 'id' => 'enhance_t1', 'n' => 10], ['t' => 'potion', 'n' => 5], ['t' => 'gold', 'n' => 500]], 1);
+        @mkdir(DATA_DIR . '/accounts', 0777, true);
+        file_put_contents(DATA_DIR . '/accounts/' . $name . '.json', json_encode(['pass' => password_hash($pass, PASSWORD_DEFAULT), 'created' => time()], JSON_UNESCAPED_UNICODE));
         $_SESSION['account'] = $name;
         header('Location: account.php');
         exit;
@@ -39,11 +34,6 @@ if ($err !== '') {
 echo '<form method="post">';
 echo '名号<br><input name="u" maxlength="12" required><br>';
 echo '口令<br><input name="p" type="password" maxlength="32" required><br><br>';
-echo '出身职业<br><select name="job">';
-foreach (jobs() as $id => $j) {
-    echo '<option value="' . h($id) . '">' . h($j['name']) . '：' . h($j['desc']) . '</option>';
-}
-echo '</select><br><br>';
 echo '<input type="submit" value="登记">';
 echo '</form>';
 echo '<div class="hr">--------</div>';

@@ -75,7 +75,7 @@ echo '坚毅(影响防御)：' . (int) ($u['agi'] ?? 0) . ' <a href="status.php?
 echo '体质(影响生命)：' . (int) ($u['vit'] ?? 0) . ' <a href="status.php?a=alloc&k=vit">+速加</a><br>';
 echo '智慧(影响魔力)：' . (int) ($u['int'] ?? 0) . ' <a href="status.php?a=alloc&k=int">+速加</a><br>';
 echo '快速：<a href="status.php?a=allocall&k=str">全加力量</a> <a href="status.php?a=allocall&k=agi">全加坚毅</a> <a href="status.php?a=allocall&k=vit">全加体质</a> <a href="status.php?a=allocall&k=int">全加智慧</a><br>';
-echo '<span class="muted">注意：强力装备有属性点要求，不要只加一种。可用<a href="bag.php?tab=other">洗点药</a>重修。</span><br>';
+echo '<span class="muted">注意：强力装备有属性点要求，不要只加一种。可用<a href="bag.php?tab=func">洗点药</a>重修。</span><br>';
 echo '<div class="hr">--------</div>';
 echo '<a href="status.php?a=all">查看全部属性</a><br>';
 if ((string) ($_GET['a'] ?? '') === 'all') {

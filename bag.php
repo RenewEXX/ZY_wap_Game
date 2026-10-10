@@ -5,7 +5,7 @@ require __DIR__ . '/includes/bootstrap.php';
 $u = require_login();
 $a = (string) ($_GET['a'] ?? '');
 $tab = (string) ($_GET['tab'] ?? 'equip');
-if (!in_array($tab, ['equip', 'mat', 'quest', 'other'], true)) {
+if (!in_array($tab, ['equip', 'mat', 'book', 'func', 'potion', 'quest'], true)) {
     $tab = 'equip';
 }
 
@@ -23,7 +23,12 @@ if ($a === 'drink') {
         user_save($u);
         flash_set('回复' . $heal . '点生命。');
     }
-    header('Location: bag.php?tab=other');
+    header('Location: bag.php?tab=potion');
+    exit;
+}
+if ($a === 'drinkpct') {
+    flash_set(drink_pct_potion($u, (string) ($_GET['m'] ?? '')));
+    header('Location: bag.php?tab=potion');
     exit;
 }
 if ($a === 'wear') {
@@ -55,7 +60,7 @@ if ($a === 'sellall') {
 }
 if ($a === 'useext') {
     flash_set(use_bag_ext((int) $u['id'], (string) ($_GET['id'] ?? '')));
-    header('Location: bag.php?tab=other');
+    header('Location: bag.php?tab=func');
     exit;
 }
 if ($a === 'sell') {
@@ -77,7 +82,7 @@ if ($a === 'sell') {
 if ($a === 'drop') {
     $did = (string) ($_GET['id'] ?? '');
     $dtab = (string) ($_GET['tab'] ?? 'mat');
-    if (!in_array($dtab, ['mat', 'quest', 'other'], true)) {
+    if (!in_array($dtab, ['mat', 'book', 'func', 'potion', 'quest'], true)) {
         $dtab = 'mat';
     }
     $st = db()->prepare('SELECT num FROM mats WHERE uid=? AND mat=?');
@@ -123,7 +128,7 @@ if ($a === 'dummy') {
         db()->prepare('DELETE FROM mats WHERE uid=? AND mat=?')->execute([(int) $u['id'], 'dummy_on']);
         flash_set('陪练人偶停止。');
     }
-    header('Location: bag.php?tab=other');
+    header('Location: bag.php?tab=func');
     exit;
 }
 if ($a === 'usebook') {
@@ -133,7 +138,7 @@ if ($a === 'usebook') {
 }
 if ($a === 'usecard') {
     flash_set(use_exp_card((int) $u['id']));
-    header('Location: bag.php?tab=other');
+    header('Location: bag.php?tab=func');
     exit;
 }
 if ($a === 'usereset') {
@@ -157,8 +162,10 @@ echo '<span class="gold">' . h(fmt_money((int) $u['gold'])) . '</span><br>';
 echo '容量：' . bag_count((int) $u['id']) . '/' . bag_size((int) $u['id']) . (bag_full((int) $u['id']) ? '<span style="color:#f00">（满了！新装备会烂地上）</span>' : '') . ' <a href="bag.php?a=sellall">一键卖稀有及以下</a><br>';
 echo '<a href="bag.php?tab=equip">装备</a> . ';
 echo '<a href="bag.php?tab=mat">材料</a> . ';
-echo '<a href="bag.php?tab=quest">任务</a> . ';
-echo '<a href="bag.php?tab=other">其他</a>';
+echo '<a href="bag.php?tab=book">秘籍</a> . ';
+echo '<a href="bag.php?tab=func">功能</a> . ';
+echo '<a href="bag.php?tab=potion">药水</a> . ';
+echo '<a href="bag.php?tab=quest">任务</a>';
 echo '<div class="hr">--------</div>';
 $flash = flash_get();
 if ($flash !== '') {
@@ -274,11 +281,13 @@ if ($tab === 'equip') {
             continue;
         }
         $hasBook = true;
-        echo '·' . h($b['name']) . 'x' . $mats[$bid] . ' <a href="bag.php?a=usebook&id=' . h($bid) . '">使用</a> <a href="bag.php?a=drop&id=' . h($bid) . '&tab=quest">扔</a><br>';
+        echo '·' . h($b['name']) . 'x' . $mats[$bid] . ' <a href="bag.php?a=usebook&id=' . h($bid) . '">使用</a> <a href="bag.php?a=drop&id=' . h($bid) . '&tab=book">扔</a><br>';
     }
     if (!$hasBook) {
         echo '<span class="muted">空。</span>';
     }
+} elseif ($tab === 'func') {
+    $mats = mats_of((int) $u['id']);
     echo '功能道具：<br>';
     $func = false;
     if (!empty($mats['exp_card100'])) {
@@ -313,10 +322,24 @@ if ($tab === 'equip') {
     if (!$func) {
         echo '<span class="muted">空。</span>';
     }
-} else {
+} elseif ($tab === 'potion') {
     echo '回血药：' . (int) $u['potion'] . '<br>';
     if ((int) $u['potion'] > 0) {
-        echo '<a href="bag.php?a=drink">喝一瓶药</a><br>';
+        echo '<a href="bag.php?a=drink&tab=potion">喝一瓶药</a><br>';
+    }
+    echo '<div class="hr">--------</div>';
+    echo '百分比药（战斗中可手动喝）：<br>';
+    $pmats = mats_of((int) $u['id']);
+    $hasPct = false;
+    foreach (pct_potions() as $pmid => $pt) {
+        if (empty($pmats[$pmid])) {
+            continue;
+        }
+        $hasPct = true;
+        echo '·' . h($pt['name']) . '（回' . $pt['pct'] . '%）x' . $pmats[$pmid] . ' <a href="bag.php?a=drinkpct&m=' . h($pmid) . '">喝一瓶</a><br>';
+    }
+    if (!$hasPct) {
+        echo '<span class="muted">空。去药剂师那买。</span><br>';
     }
     echo '<div class="hr">--------</div>';
     echo '药罐（点进商城可续）：<br>';

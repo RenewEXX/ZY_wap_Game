@@ -19,12 +19,19 @@ foreach (account_rows($name) as $row) {
         exit;
     }
 }
+$accFile = DATA_DIR . '/accounts/' . $name . '.json';
 $hash = null;
-foreach (account_rows($name) as $row) {
-    $hash = (string) $row['pass'];
-    break;
+if (is_file($accFile)) {
+    $acc = json_decode((string) file_get_contents($accFile), true);
+    $hash = (string) ($acc['pass'] ?? '');
 }
-if ($hash === null) {
+if ($hash === '' || $hash === null) {
+    foreach (account_rows($name) as $row) {
+        $hash = (string) $row['pass'];
+        break;
+    }
+}
+if ($hash === '' || $hash === null) {
     header('Location: index.php');
     exit;
 }

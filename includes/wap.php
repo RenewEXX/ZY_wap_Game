@@ -104,6 +104,9 @@ function require_login(): array
     if (function_exists('arena_tick')) {
         arena_tick();
     }
+    if (function_exists('wb_tick')) {
+        wb_tick();
+    }
     ground_tick();
     if (function_exists('backfill_rank_stats')) {
         backfill_rank_stats();

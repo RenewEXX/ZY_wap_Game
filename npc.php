@@ -51,6 +51,13 @@ $people = [
     'rb_samuel' => ['name' => '大主教·塞缪尔', 'loc' => 'cathedral', 'text' => '牧师的路，是取舍。你救不了所有人。十份药，十个病人，怎么分，你定。救满六人，算过。'],
     'med_c' => ['name' => '王都药剂师·藏红', 'loc' => 'avenue', 'text' => '傀儡不流血，你流。银丝勒颈之前，先把血回满。'],
     'priest_c' => ['name' => '传教神父·奥古', 'loc' => 'silver_sq', 'text' => '孩子，每周在这世上好好活够2小时（有效游玩），圣光就记你一功，赏你10魔钻。每周一刷新，可领一次。'],
+    'northwind' => ['name' => '守夜人·北风', 'loc' => 'capital_gate', 'text' => '北门外就是冰原。凛冬之王醒了，霜狼下山了。你要是活得不耐烦，我送你一程——去风雪小径杀120只霜狼，算投名状。'],
+    'dora' => ['name' => '猎户·朵拉', 'loc' => 'ice_village', 'text' => '湖上有怨灵，场上有猛犸，隘口有魔像收买路钱。认路再走，肉干管饱，命自己管。'],
+    'oldfish' => ['name' => '潜水人·老咸鱼', 'loc' => 'ice_village', 'text' => '冰渊底下有大家伙，利维坦。我这绳子45分钟，入场券拿来，人送到。'],
+    'qingya' => ['name' => '森语者·青芽', 'loc' => 'fo_gate', 'text' => '林子认得路，人不认。雾森往南是火山，火山里住着一位老邻居——别吵它，吵醒了，柱子会倒。'],
+    'oldash' => ['name' => '探火人·老灰', 'loc' => 'ember_foothill', 'text' => '熔心底下有化身，见过的人都说心跳会跟它走。我这绳子也是45分钟，入场券拿来。'],
+    'watcher' => ['name' => '熔火守望者', 'loc' => 'volcano_heart', 'text' => '嘘——柱子后面就是南炎柱，烬焰领主·火龙多伊尔在睡觉。你只是来看看，对吧？看一眼，留下名字，赶紧走。想磨它？每天它醒一次，全服一起上。'],
+    'soulmaster' => ['name' => '神魂师·墨老', 'loc' => 'silver_sq', 'text' => '神魂碎片十个一合，天地人三级看命。神魂无等级限制，戴上就加真伤。我这能升级，I级起，X级顶，越往上越吃碎片。'],
 ];
 if (!isset($people[$who]) || $people[$who]['loc'] !== $cur) {
     flash_set('这个人不在这里。');
@@ -390,6 +397,77 @@ if ($who === 'priest_c' && $choice === 'diamond') {
     else { mat_set((int) $u['id'], 'priest_wid', (int) $wid); $u['diamonds'] = (int) ($u['diamonds'] ?? 0) + 10; user_save($u); flash_set('圣光见证！领到10魔钻，下周再来。'); }
     header('Location: npc.php?who=priest_c'); exit;
 }
+if ($who === 'northwind' && $choice === 'start' && in_array((int) $u['quest'], [38, 46], true)) {
+    $u['quest'] = 50;
+    user_save($u);
+    quest3_baseline((int) $u['id'], 50);
+    flash_set('北风：第四章·凛冬冰原开启！去风雪小径杀冻原霜狼×120。挂机也能刷，等级到了再往下走。');
+    header('Location: npc.php?who=northwind');
+    exit;
+}
+if ($who === 'oldfish' && $choice === 'open') {
+    $lv = (int) ($u['lv'] ?? 1);
+    $mats = mats_of((int) $u['id']);
+    if ($lv < 350) {
+        flash_set('老咸鱼摇头：冰渊只要350级以上的冒险者，你现在' . $lv . '级。');
+    } elseif (empty($mats['fr_ticket'])) {
+        flash_set('老咸鱼：没有【冰渊副本入场券】进不去，打完碎冰洞的任务找我之前先有券（55环奖励）。');
+    } else {
+        add_mat((int) $u['id'], 'fr_ticket', -1);
+        foreach (['fr_item1', 'fr_item2'] as $it) {
+            db()->prepare('DELETE FROM mats WHERE uid=? AND mat=?')->execute([(int) $u['id'], $it]);
+        }
+        mat_set((int) $u['id'], 'fr_stage', 1);
+        mat_set((int) $u['id'], 'fr_enter', time());
+        $u['loc'] = 'fr_gate';
+        user_save($u);
+        flash_set('老咸鱼把你顺进冰渊！45分钟倒计时开始！');
+    }
+    header('Location: home.php');
+    exit;
+}
+if ($who === 'oldash' && $choice === 'open') {
+    $lv = (int) ($u['lv'] ?? 1);
+    $mats = mats_of((int) $u['id']);
+    if ($lv < 580) {
+        flash_set('老灰摇头：熔心只要580级以上的冒险者，你现在' . $lv . '级。');
+    } elseif (empty($mats['em_ticket'])) {
+        flash_set('老灰：没有【熔心副本入场券】进不去，火山麓69环奖励。');
+    } else {
+        add_mat((int) $u['id'], 'em_ticket', -1);
+        foreach (['em_item1', 'em_item2'] as $it) {
+            db()->prepare('DELETE FROM mats WHERE uid=? AND mat=?')->execute([(int) $u['id'], $it]);
+        }
+        mat_set((int) $u['id'], 'em_stage', 1);
+        mat_set((int) $u['id'], 'em_enter', time());
+        $u['loc'] = 'em_gate';
+        user_save($u);
+        flash_set('老灰把你送进熔心！45分钟倒计时开始！');
+    }
+    header('Location: home.php');
+    exit;
+}
+if ($who === 'watcher' && $choice === 'meet' && (int) $u['quest'] === 75) {
+    if (!empty(cflags((int) $u['id'])['doyle_met'])) {
+        flash_set('守望者：名字留过了，别出声，走。');
+    } else {
+        cflag_set((int) $u['id'], 'doyle_met', 1);
+        user_save($u);
+        flash_set('柱子后面睁开一只眼睛，又闭上了。多伊尔翻了个身，岩浆涨了三尺。你活下来了——任务能交了，它没醒。');
+    }
+    header('Location: npc.php?who=watcher');
+    exit;
+}
+if ($who === 'soulmaster' && $choice === 'craft') {
+    flash_set(soul_craft((int) $u['id']));
+    header('Location: npc.php?who=soulmaster');
+    exit;
+}
+if ($who === 'soulmaster' && $choice === 'up') {
+    flash_set(soul_upgrade((int) $u['id'], (int) ($_GET['eid'] ?? 0)));
+    header('Location: npc.php?who=soulmaster');
+    exit;
+}
     $lv = (int) ($u['lv'] ?? 1);
     $mats = mats_of((int) $u['id']);
     if ($lv < 150 || $lv > 340) {
@@ -523,6 +601,34 @@ if ($who === 'stringer' && (int) $u['quest'] === 37 && empty(cflags((int) $u['id
 }
 if ($who === 'spider') {
     echo '<a href="npc.php?who=spider&choice=open">开启副本【银丝母巢】（150~340级，消耗入场券×1）</a><br>';
+if ($who === 'northwind' && in_array((int) $u['quest'], [38, 46], true)) {
+    echo '<a href="npc.php?who=northwind&choice=start">接下投名状，开启第四章·凛冬冰原</a><br>';
+}
+if ($who === 'oldfish') {
+    echo '<a href="npc.php?who=oldfish&choice=open">开启副本【冰渊】（350级+，消耗入场券×1，45分钟）</a><br>';
+}
+if ($who === 'oldash') {
+    echo '<a href="npc.php?who=oldash&choice=open">开启副本【熔心】（580级+，消耗入场券×1，45分钟）</a><br>';
+}
+if ($who === 'qingya') {
+    echo '雾森往南是火山，火山里住着一位老邻居。你的主线：<a href="quest.php">查看任务</a><br>';
+}
+if ($who === 'watcher') {
+    if ((int) $u['quest'] === 75 && empty(cflags((int) $u['id'])['doyle_met'])) {
+        echo '<a href="npc.php?who=watcher&choice=meet">屏住呼吸，留下名字（见巨龙，不战斗）</a><br>';
+    }
+    echo '<a href="wb.php">世界BOSS·烬焰领主（每天刷新，全服磨血）</a><br>';
+}
+if ($who === 'soulmaster') {
+    echo '当前真伤加成：' . soul_truedmg((int) $u['id']) . '<br>';
+    echo '<a href="npc.php?who=soulmaster&choice=craft">合成神魂（10碎片，随机天地人）</a><br>';
+    $st = db()->prepare('SELECT id, name FROM equips WHERE uid=? AND slot="soul" ORDER BY id DESC');
+    $st->execute([(int) $u['id']]);
+    foreach ($st->fetchAll() as $so) {
+        $lv = soul_lv((int) $u['id'], (int) $so['id']);
+        echo '·' . h(equip_shortname((string) $so['name'])) . '（' . $lv . '级） <a href="npc.php?who=soulmaster&choice=up&eid=' . (int) $so['id'] . '">升级</a><br>';
+    }
+}
 }
 if ($who === 'priest_c') {
     $pm = mats_of((int) $u['id']);

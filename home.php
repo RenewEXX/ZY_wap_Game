@@ -122,7 +122,7 @@ $npcLinks = [
     'gate' => [['lily', '神秘少女·莉莉']], 'mansion' => [['augustus', '镇长·奥古斯都']], 'church' => [['thomas', '牧师·托马斯']],
     'town_sq' => [['alice', '修女·爱丽丝'], ['horse_t', '赛马人·老霍'], ['rank_t', '榜单老人']],
     'silver_gate' => [['sentry', '守卫·布雷']], 'sguild' => [['gwen', '会长·格温'], ['gmaster', '公会管理员·霍尔']],
-    'silver_sq' => [['vera', '守渊人·薇拉'], ['horse_s', '赛马人·阿金'], ['rank_s', '榜单老人'], ['med_s', '银月药剂师·霜叶'], ['priest_c', '传教神父·奥古']],
+    'silver_sq' => [['vera', '守渊人·薇拉'], ['horse_s', '赛马人·阿金'], ['rank_s', '榜单老人'], ['med_s', '银月药剂师·霜叶'], ['priest_c', '传教神父·奥古'], ['soulmaster', '神魂师·墨老']],
     'square' => [['horse_g', '赛马人·豆芽'], ['rank_g', '榜单老人'], ['med_g', '雾语药剂师·菘蓝'], ['eventer', '活动专员·阿战'], ['arena_m', '竞技场大师·雷横']],
     'guild' => [['greg', '公会接待·格雷']],
     'dsewer1' => [['reed', '守卫·雷德']], 'dsewer2' => [['lily2', '少女·莉莉']],
@@ -132,8 +132,12 @@ $npcLinks = [
     'farm' => [['grocer', '菜商·豆豆']],
     'arena_gate' => [['rb_iron', '铁拳']],
     'library' => [['rb_mori', '莫里亚蒂院长']],
-    'capital_gate' => [['rb_hawk', '老猎人·霍克']],
+    'capital_gate' => [['rb_hawk', '老猎人·霍克'], ['northwind', '守夜人·北风']],
     'cathedral' => [['rb_samuel', '大主教·塞缪尔']],
+    'ice_village' => [['dora', '猎户·朵拉'], ['oldfish', '潜水人·老咸鱼']],
+    'fo_gate' => [['qingya', '森语者·青芽']],
+    'ember_foothill' => [['oldash', '探火人·老灰']],
+    'volcano_heart' => [['watcher', '熔火守望者']],
 ];
 $npcHere = 0;
 foreach ($npcLinks[$cur] ?? [] as [$npcId, $npcName]) {

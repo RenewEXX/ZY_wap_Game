@@ -548,6 +548,15 @@ function db_init(): void
             PRIMARY KEY (uid, mat)
         )'
     );
+    db()->exec(
+        'CREATE TABLE IF NOT EXISTS wb_dmg (
+            uid INTEGER NOT NULL,
+            name TEXT NOT NULL DEFAULT "",
+            day INTEGER NOT NULL DEFAULT 0,
+            dmg INTEGER NOT NULL DEFAULT 0,
+            PRIMARY KEY (uid, day)
+        )'
+    );
 }
 
 function user_by_id(int $id): ?array

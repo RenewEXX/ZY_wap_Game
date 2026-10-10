@@ -8,21 +8,8 @@ $tab = (string) ($_GET['tab'] ?? 'equip');
 if (!in_array($tab, ['equip', 'mat', 'book', 'func', 'potion', 'quest'], true)) {
     $tab = 'equip';
 }
-
 if ($a === 'drink') {
-    if (peak_arena_of((string) ($u['loc'] ?? '')) !== '') {
-        flash_set('巅峰战场禁药！全靠刀硬砍。');
-    } elseif ((int) $u['potion'] <= 0) {
-        flash_set('药空了。');
-    } elseif ((int) $u['hp'] >= (int) $u['maxhp']) {
-        flash_set('你没有伤。');
-    } else {
-        $u['potion'] = (int) $u['potion'] - 1;
-        $heal = min(20, (int) $u['maxhp'] - (int) $u['hp']);
-        $u['hp'] = (int) $u['hp'] + $heal;
-        user_save($u);
-        flash_set('回复' . $heal . '点生命。');
-    }
+    flash_set(drink_pct_potion($u, 'hp_pct10'));
     header('Location: bag.php?tab=potion');
     exit;
 }
@@ -323,10 +310,6 @@ if ($tab === 'equip') {
         echo '<span class="muted">空。</span>';
     }
 } elseif ($tab === 'potion') {
-    echo '回血药：' . (int) $u['potion'] . '<br>';
-    if ((int) $u['potion'] > 0) {
-        echo '<a href="bag.php?a=drink&tab=potion">喝一瓶药</a><br>';
-    }
     echo '<div class="hr">--------</div>';
     echo '百分比药（战斗中可手动喝）：<br>';
     $pmats = mats_of((int) $u['id']);

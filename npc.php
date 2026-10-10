@@ -50,6 +50,7 @@ $people = [
     'rb_hawk' => ['name' => '老猎人·霍克', 'loc' => 'capital_gate', 'text' => '猎手的路，是耐心。追那头白鹿，别惊动它。树冠快但险，溪谷稳但慢，草丛要等。你选。'],
     'rb_samuel' => ['name' => '大主教·塞缪尔', 'loc' => 'cathedral', 'text' => '牧师的路，是取舍。你救不了所有人。十份药，十个病人，怎么分，你定。救满六人，算过。'],
     'med_c' => ['name' => '王都药剂师·藏红', 'loc' => 'avenue', 'text' => '傀儡不流血，你流。银丝勒颈之前，先把血回满。'],
+    'priest_c' => ['name' => '传教神父·奥古', 'loc' => 'silver_sq', 'text' => '孩子，每周在这世上好好活够2小时（有效游玩），圣光就记你一功，赏你10魔钻。每周一刷新，可领一次。'],
 ];
 if (!isset($people[$who]) || $people[$who]['loc'] !== $cur) {
     flash_set('这个人不在这里。');
@@ -380,6 +381,15 @@ if ($who === 'stringer' && in_array($choice, ['ask', 'kill', 'purify'], true) &&
     exit;
 }
 if ($who === 'spider' && $choice === 'open') {
+if ($who === 'priest_c' && $choice === 'diamond') {
+    $mats = mats_of((int) $u['id']);
+    $wid = date('oW');
+    $week = (int) ($mats['active_week'] ?? 0);
+    if ((string) ($mats['priest_wid'] ?? '') === $wid) { flash_set('本周领过了，下周一再来。'); }
+    elseif ($week < 7200) { flash_set('本周有效游玩还差' . gmdate('H:i:s', 7200 - $week) . '，够2小时再来。'); }
+    else { mat_set((int) $u['id'], 'priest_wid', (int) $wid); $u['diamonds'] = (int) ($u['diamonds'] ?? 0) + 10; user_save($u); flash_set('圣光见证！领到10魔钻，下周再来。'); }
+    header('Location: npc.php?who=priest_c'); exit;
+}
     $lv = (int) ($u['lv'] ?? 1);
     $mats = mats_of((int) $u['id']);
     if ($lv < 150 || $lv > 340) {
@@ -514,8 +524,13 @@ if ($who === 'stringer' && (int) $u['quest'] === 37 && empty(cflags((int) $u['id
 if ($who === 'spider') {
     echo '<a href="npc.php?who=spider&choice=open">开启副本【银丝母巢】（150~340级，消耗入场券×1）</a><br>';
 }
+if ($who === 'priest_c') {
+    $pm = mats_of((int) $u['id']);
+    $pw = (int) ($pm['active_week'] ?? 0);
+    echo '本周有效游玩：' . gmdate('H:i:s', min($pw, 86399)) . '/02:00:00<br>';
+    echo '<a href="npc.php?who=priest_c&choice=diamond">兑换10魔钻（每周一次）</a><br>';
+}
 if ($who === 'arena_m') {
-    // 80级引导任务：与雷横交互完成，得20银（一次性）
     if ((int) ($u['lv'] ?? 1) >= 80 && empty(cflags((int) ($u['id'] ?? 0))['arena_guide_done']) && (int) ($u['quest'] ?? 0) === 28) {
         cflag_set((int) $u['id'], 'arena_guide_done', 1);
         $u['gold'] = (int) ($u['gold'] ?? 0) + 2000;

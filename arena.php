@@ -18,6 +18,69 @@ if ($a === 'join') {
     header('Location: arena.php');
     exit;
 }
+// 查看类页面未加入也能看（不然按钮点进去是空的）
+if (in_array($a, ['rank', 'prize', 'def', 'shop', 'shopbuy'], true)) {
+    $zone = (string) ($me['zone'] ?? $u['zone'] ?? 'z1');
+    $season = (string) ($me['season'] ?? arena_season());
+    $coin = (int) (mats_of($uid)['arena_coin'] ?? 0);
+    if ($a === 'rank') {
+        echo '【排 名】本大区前50<br>';
+        $st = db()->prepare('SELECT * FROM arena_rank WHERE zone=? AND season=? ORDER BY rank ASC LIMIT 50');
+        $st->execute([$zone, $season]);
+        foreach ($st->fetchAll() as $row) {
+            echo '第' . (int) $row['rank'] . '名：' . h($row['name']) . ' Lv' . (int) $row['lv'] . ' 战力' . (int) $row['power'] . ((int) $row['uid'] === $uid ? '（你）' : '') . '<br>';
+        }
+        echo '<a href="arena.php">返回</a>';
+        nav_line();
+        wap_end(false);
+        exit;
+    }
+    if ($a === 'prize') {
+        echo '【奖 励】每日凌晨5点结算（邮件），每周一赛季重置（上周奖励再发一份）。<br>';
+        foreach ([1, 2, 3, 10, 50, 100, 300, 1000, 999999] as $top) {
+            [$gold, $coinP, $stones] = arena_rewards($top);
+            $label = $top === 999999 ? '第1001名以后' : '第' . $top . '名档';
+            $txt = $label . '：' . h(fmt_money($gold)) . '/竞技场币' . $coinP;
+            foreach ($stones as $sid => $n) {
+                $txt .= '/' . h(mat_name($sid)) . 'x' . $n;
+            }
+            echo $txt . '<br>';
+        }
+        echo '<a href="arena.php">返回</a>';
+        nav_line();
+        wap_end(false);
+        exit;
+    }
+    if ($a === 'def') {
+        echo '【防 守 记 录】<br>';
+        $rows = arena_defense_log($uid);
+        if ($rows === []) {
+            echo '<span class="muted">还没有人挑战过你。</span><br>';
+        }
+        foreach ($rows as $row) {
+            echo date('m-d H:i', (int) $row['created_at']) . ' 被' . h($row['attacker_name']) . '挑战，你' . ((int) $row['win'] === 1 ? '胜利，排名不变' : '失败，排名降至第' . (int) $row['new_rank'] . '名') . '。<br>';
+        }
+        echo '<a href="arena.php">返回</a>';
+        nav_line();
+        wap_end(false);
+        exit;
+    }
+    if ($a === 'shop') {
+        echo '【竞 技 场 商 店】竞技场币：' . $coin . '<br>';
+        foreach (arena_shop() as $mid => $g) {
+            echo '·' . h($g['name']) . ' ' . $g['price'] . '币（' . ($g['period'] === 'day' ? '每日' : '每月') . '限购' . $g['limit'] . '） <a href="arena.php?a=shopbuy&m=' . h($mid) . '">购买</a><br>';
+        }
+        echo '<a href="arena.php">返回</a>';
+        nav_line();
+        wap_end(false);
+        exit;
+    }
+    if ($a === 'shopbuy') {
+        flash_set(arena_shop_buy($uid, (string) ($_GET['m'] ?? '')));
+        header('Location: arena.php?a=shop');
+        exit;
+    }
+}
 if (!$me) {
     echo '【竞 技 场】<br>';
     echo '想证明自己吗？80级可进。异步PVP，自动战斗，赢了排名上升，输了下降。每日凌晨5点结算，每周一重置赛季。<br>';
@@ -53,69 +116,6 @@ if ($a === 'fight') {
     wap_end(false);
     exit;
 }
-if ($a === 'rank') {
-    $zone = (string) $me['zone'];
-    $season = (string) $me['season'];
-    echo '【排 名】本大区前50<br>';
-    $st = db()->prepare('SELECT * FROM arena_rank WHERE zone=? AND season=? ORDER BY rank ASC LIMIT 50');
-    $st->execute([$zone, $season]);
-    foreach ($st->fetchAll() as $row) {
-        echo '第' . (int) $row['rank'] . '名：' . h($row['name']) . ' Lv' . (int) $row['lv'] . ' 战力' . (int) $row['power'] . ((int) $row['uid'] === $uid ? '（你）' : '') . '<br>';
-    }
-    echo '<a href="arena.php">返回</a>';
-    nav_line();
-    wap_end(false);
-    exit;
-}
-if ($a === 'prize') {
-    echo '【奖 励】每日凌晨5点结算（邮件），每周一赛季重置（上周奖励再发一份）。<br>';
-    foreach ([1, 2, 3, 10, 50, 100, 300, 1000, 999999] as $top) {
-        [$gold, $coinP, $stones] = arena_rewards($top);
-        $label = $top === 999999 ? '第1001名以后' : '第' . $top . '名档';
-        $txt = $label . '：' . h(fmt_money($gold)) . '/竞技场币' . $coinP;
-        foreach ($stones as $sid => $n) {
-            $txt .= '/' . h(mat_name($sid)) . 'x' . $n;
-        }
-        echo $txt . '<br>';
-    }
-    echo '<a href="arena.php">返回</a>';
-    nav_line();
-    wap_end(false);
-    exit;
-}
-if ($a === 'def') {
-    echo '【防 守 记 录】<br>';
-    $rows = arena_defense_log($uid);
-    if ($rows === []) {
-        echo '<span class="muted">还没有人挑战过你。</span><br>';
-    }
-    foreach ($rows as $row) {
-        echo date('m-d H:i', (int) $row['created_at']) . ' 被' . h($row['attacker_name']) . '挑战，你' . ((int) $row['win'] === 1 ? '胜利，排名不变' : '失败，排名降至第' . (int) $row['new_rank'] . '名') . '。<br>';
-    }
-    echo '<a href="arena.php">返回</a>';
-    nav_line();
-    wap_end(false);
-    exit;
-}
-if ($a === 'shop') {
-    echo '【竞 技 场 商 店】竞技场币：' . $coin . '<br>';
-    foreach (arena_shop() as $mid => $g) {
-        echo '·' . h($g['name']) . ' ' . $g['price'] . '币（' . ($g['period'] === 'day' ? '每日' : '每月') . '限购' . $g['limit'] . '） <a href="arena.php?a=shopbuy&m=' . h($mid) . '">购买</a><br>';
-    }
-    echo '<a href="arena.php">返回</a>';
-    nav_line();
-    wap_end(false);
-    exit;
-}
-if ($a === 'shopbuy') {
-    flash_set(arena_shop_buy($uid, (string) ($_GET['m'] ?? '')));
-    header('Location: arena.php?a=shop');
-    exit;
-}
-
-echo '【竞 技 场】<br>';
-echo '我的排名：第' . (int) $me['rank'] . '名<br>';
-echo '我的战力：' . $myPower . '<br>';
 echo '今日挑战：免费剩' . $ch['free'] . '/5，可用' . $ch['left'] . '次<br>';
 echo '[<a href="arena.php?a=targets">挑战对手</a>] [<a href="arena.php?a=rank">查看排名</a>] [<a href="arena.php?a=prize">查看奖励</a>] [<a href="arena.php?a=def">防守记录</a>] [<a href="arena.php?a=shop">竞技场商店</a>]<br>';
 if ($a === 'targets') {

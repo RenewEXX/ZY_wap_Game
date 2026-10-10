@@ -80,6 +80,17 @@ function require_login(): array
     }
     $u['last_seen'] = $nowA;
     user_save($u);
+    // 每周有效游玩时间（传教神父兑魔钻用，自然周一刷新）
+    $wid = date('oW');
+    $mats = mats_of((int) $u['id']);
+    if ((string) ($mats['active_wid'] ?? '') !== $wid) {
+        mat_set((int) $u['id'], 'active_wid', (int) $wid);
+        mat_set((int) $u['id'], 'active_week', 0);
+        $mats = mats_of((int) $u['id']);
+    }
+    if ($lastA > 0) {
+        add_mat((int) $u['id'], 'active_week', min(300, max(0, $nowA - $lastA)));
+    }
     quest_stuck_fix($u);
     background_battle($u);
     offline_tick($u);
@@ -90,6 +101,9 @@ function require_login(): array
     settle_war_rewards();
     spawn_tick();
     settle_horse();
+    if (function_exists('arena_tick')) {
+        arena_tick();
+    }
     ground_tick();
     if (function_exists('backfill_rank_stats')) {
         backfill_rank_stats();

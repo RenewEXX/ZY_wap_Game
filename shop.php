@@ -27,11 +27,6 @@ if ($buy !== '' && isset($all[$buy])) {
     $it = $all[$buy];
     if ((int) $u['gold'] < (int) $it['gold']) {
         flash_set('钱不够。');
-    } elseif ($it['slot'] === 'potion') {
-        $u['gold'] = (int) $u['gold'] - (int) $it['gold'];
-        $u['potion'] = (int) $u['potion'] + 1;
-        user_save($u);
-        flash_set('买下回血药。');
     } else {
         // 商店旧货直接换成新装备系统的正式装备（普通随机2词缀）
         $u['gold'] = (int) $u['gold'] - (int) $it['gold'];
@@ -59,9 +54,6 @@ foreach ($all as $id => $it) {
     }
     if ((int) $it['def'] > 0) {
         $extra = ' 防+' . $it['def'];
-    }
-    if ($id === 'potion') {
-        $extra = ' 生命+20';
     }
     echo '· <a href="shop.php?buy=' . h($id) . '">' . h($it['name']) . '</a>';
     echo ' <span class="gold">' . h(fmt_money((int) $it['gold'])) . '</span>' . h($extra) . '<br>';

@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if ($cerr === '') {
         $id = user_create($cname, $hash, $job, $zone, true, $name);
-    send_mail($id, '系统', 'system', '欢迎来到白石镇', '欢迎来到白石镇，年轻的冒险者！这是为你准备的新手补给，请查收。', [['t' => 'mat', 'id' => 'enhance_t1', 'n' => 10], ['t' => 'potion', 'n' => 5], ['t' => 'gold', 'n' => 500]], 1);
+    send_mail($id, '系统', 'system', '欢迎来到白石镇', '欢迎来到白石镇，年轻的冒险者！这是为你准备的新手补给，请查收。', [['t' => 'mat', 'id' => 'enhance_t1', 'n' => 10], ['t' => 'mat', 'id' => 'hp_pct50', 'n' => 10], ['t' => 'gold', 'n' => 500]], 1);
     $_SESSION['uid'] = $id;
     header('Location: home.php');
     exit;

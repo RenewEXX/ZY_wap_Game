@@ -525,6 +525,21 @@ function db_init(): void
     );
     db()->exec('CREATE TABLE IF NOT EXISTS sys_kv (k TEXT PRIMARY KEY, num INTEGER NOT NULL DEFAULT 0)');
     db()->exec('CREATE INDEX IF NOT EXISTS idx_ground_loc ON ground_items (loc)');
+    // 一次性迁移：回血药删除，老玩家剩余数量按1:1换成雾纹绷带
+    try {
+        $done = (int) (db()->query("SELECT num FROM sys_kv WHERE k='mig_potion_rm'")->fetchColumn() ?: 0);
+        if ($done === 0) {
+            foreach (db()->query('SELECT id, potion FROM users WHERE potion>0')->fetchAll() as $pr) {
+                $pid = (int) $pr['id'];
+                $pn = (int) $pr['potion'];
+                db()->prepare('INSERT OR IGNORE INTO mats (uid, mat, num) VALUES (?, ?, 0)')->execute([$pid, 'hp_pct10']);
+                db()->prepare('UPDATE mats SET num=num+? WHERE uid=? AND mat=?')->execute([$pn, $pid, 'hp_pct10']);
+                db()->prepare('UPDATE users SET potion=0 WHERE id=?')->execute([$pid]);
+            }
+            db()->prepare("INSERT OR REPLACE INTO sys_kv (k, num) VALUES ('mig_potion_rm', 1)")->execute();
+        }
+    } catch (Throwable $e) {
+    }
     db()->exec(
         'CREATE TABLE IF NOT EXISTS mats (
             uid INTEGER NOT NULL,
@@ -593,12 +608,23 @@ function user_create(string $name, string $pass, string $job = '', string $zone 
 {
     $j = jobs()[$job] ?? jobs()['warrior'];
     $st = db()->prepare(
-        'INSERT INTO users (username, pass, lv, exp, hp, maxhp, mp, maxmp, atk, def, gold, loc, weapon, armor, potion, job, quest, zone, account, created_at) VALUES (?, ?, 1, 0, ?, ?, ?, ?, ?, ?, 20, "smithy", "", "", 2, ?, 0, ?, ?, ?)'
+        'INSERT INTO users (username, pass, lv, exp, hp, maxhp, mp, maxmp, atk, def, gold, loc, weapon, armor, potion, job, quest, zone, account, created_at) VALUES (?, ?, 1, 0, ?, ?, ?, ?, ?, ?, 20, "smithy", "", "", 0, ?, 0, ?, ?, ?)'
     );
     $st->execute([$name, $hashed ? $pass : password_hash($pass, PASSWORD_DEFAULT), $j['hp'], $j['hp'], $j['mp'] ?? 30, $j['mp'] ?? 30, $j['atk'], $j['def'], $job, $zone, $account !== '' ? $account : $name, time()]);
     $id = (int) db()->lastInsertId();
-    // 出身武器直接发新装备并穿上
-    $wnames = ['warrior' => '生锈铁剑', 'mage' => '桦木法杖', 'hunter' => '猎弓', 'priest' => '白木槌'];
+    // 出身加点：战士力量5，法师智慧8，猎手力量3坚毅2，牧师智慧5体质2（法师从创建就不长物理）
+    $born = ['warrior' => ['str' => 5], 'mage' => ['int' => 8], 'hunter' => ['str' => 3, 'agi' => 2], 'priest' => ['int' => 5, 'vit' => 2]][$job] ?? [];
+    foreach ($born as $k => $v) {
+        if ($k === 'vit') {
+            db()->prepare('UPDATE users SET maxhp=maxhp+?, hp=hp+?, vit=vit+? WHERE id=?')->execute([$v * 10, $v * 10, $v, $id]);
+        } elseif ($k === 'int') {
+            db()->prepare('UPDATE users SET maxmp=maxmp+?, mp=mp+?, `int`=`int`+? WHERE id=?')->execute([$v * 3, $v * 3, $v, $id]);
+        } else {
+            db()->prepare('UPDATE users SET `' . $k . '`=`' . $k . '`+? WHERE id=?')->execute([$v, $id]);
+        }
+    }
+    // 出身武器直接发新装备并穿上（职业限定：斧/杖/弓/锤）
+    $wnames = ['warrior' => '生锈战斧', 'mage' => '桦木法杖', 'hunter' => '猎弓', 'priest' => '白木槌'];
     $wbase = $wnames[$job] ?? '生锈铁剑';
     make_equip($id, 'weapon', $wbase, 0, 1);
     $ins = db()->prepare('UPDATE equips SET pos="wear" WHERE id=(SELECT id FROM equips WHERE uid=? AND slot=? ORDER BY id DESC LIMIT 1)');

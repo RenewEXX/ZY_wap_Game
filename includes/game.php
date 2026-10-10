@@ -4,10 +4,10 @@ declare(strict_types=1);
 function jobs(): array
 {
     return [
-        'warrior' => ['name' => '战士', 'hp' => 62, 'mp' => 20, 'atk' => 7, 'def' => 5, 'skill' => '重斩', 'weapon' => 'rusty', 'armor' => 'cloth', 'desc' => '血多甲厚，正面硬扛。技能重斩：造成150%物理伤害'],
-        'mage' => ['name' => '法师', 'hp' => 42, 'mp' => 55, 'atk' => 11, 'def' => 1, 'skill' => '火球术', 'weapon' => 'staff', 'armor' => 'cloth', 'desc' => '攻击最高，身板最脆。技能火球术：无视敌方防御的高额法术伤害'],
-        'hunter' => ['name' => '猎手', 'hp' => 50, 'mp' => 30, 'atk' => 8, 'def' => 3, 'skill' => '双连射', 'weapon' => 'bow', 'armor' => 'cloth', 'desc' => '出手灵活稳定。技能双连射：连续射出两箭，共约160%伤害'],
-        'priest' => ['name' => '牧师', 'hp' => 54, 'mp' => 45, 'atk' => 6, 'def' => 3, 'skill' => '治疗术', 'weapon' => 'mace', 'armor' => 'cloth', 'desc' => '能打能奶，容错最高。技能治疗术：恢复25点生命并造成一次小额神圣伤害'],
+        'warrior' => ['name' => '战士', 'hp' => 62, 'mp' => 20, 'atk' => 7, 'def' => 5, 'skill' => '重斩', 'weapon' => 'axe', 'armor' => 'cloth', 'desc' => '物理近战，血多甲厚。技能重斩：150%+物理伤害，断岳斩附魔火伤。只能用斧剑锤，盾牌专精'],
+        'mage' => ['name' => '法师', 'hp' => 42, 'mp' => 55, 'atk' => 11, 'def' => 1, 'skill' => '火球术', 'weapon' => 'staff', 'armor' => 'cloth', 'desc' => '纯法术炮台，伤害看智慧+法术强度。火球/爆裂火球/寒霜全是法伤。只能用法杖法器，力量对法师无效'],
+        'hunter' => ['name' => '猎手', 'hp' => 50, 'mp' => 30, 'atk' => 8, 'def' => 3, 'skill' => '双连射', 'weapon' => 'bow', 'armor' => 'cloth', 'desc' => '物理连射+爆炸箭（火伤）。只能用弓弩匕首'],
+        'priest' => ['name' => '牧师', 'hp' => 54, 'mp' => 45, 'atk' => 6, 'def' => 3, 'skill' => '治疗术', 'weapon' => 'mace', 'armor' => 'cloth', 'desc' => '治疗看法攻，神圣伤害也是法伤。能用锤杖盾'],
     ];
 }
 
@@ -201,7 +201,6 @@ function items(): array
         'brand' => ['name' => '罪纹短剑', 'slot' => 'weapon', 'atk' => 12, 'def' => 0, 'gold' => 5000],
         'cloth' => ['name' => '破布甲', 'slot' => 'armor', 'atk' => 0, 'def' => 2, 'gold' => 200],
         'bone' => ['name' => '骨甲', 'slot' => 'armor', 'atk' => 0, 'def' => 5, 'gold' => 1500],
-        'potion' => ['name' => '回血药', 'slot' => 'potion', 'atk' => 0, 'def' => 0, 'gold' => 60],
     ];
 }
 
@@ -1654,7 +1653,8 @@ function mail_att_text(array $att): string
         if (($a['t'] ?? '') === 'gold') {
             $parts[] = fmt_money((int) ($a['n'] ?? 0));
         } elseif (($a['t'] ?? '') === 'potion') {
-            $parts[] = '回血药x' . (int) ($a['n'] ?? 0);
+            // 回血药已删除：旧邮件显示为雾纹绷带
+            $parts[] = '雾纹绷带x' . (int) ($a['n'] ?? 0);
         } elseif (($a['t'] ?? '') === 'diamond') {
             $parts[] = fmt_diamond((int) ($a['n'] ?? 0));
         } elseif (($a['t'] ?? '') === 'mat') {
@@ -1690,7 +1690,8 @@ function claim_mail(int $uid, int $mid): string
         if (($a['t'] ?? '') === 'gold') {
             $u['gold'] = (int) $u['gold'] + max(0, (int) ($a['n'] ?? 0));
         } elseif (($a['t'] ?? '') === 'potion') {
-            $u['potion'] = (int) $u['potion'] + max(0, (int) ($a['n'] ?? 0));
+            // 回血药已删除：旧邮件按雾纹绷带发放
+            add_mat($uid, 'hp_pct10', max(0, (int) ($a['n'] ?? 0)));
         } elseif (($a['t'] ?? '') === 'diamond') {
             $u['diamonds'] = (int) ($u['diamonds'] ?? 0) + max(0, (int) ($a['n'] ?? 0));
         } elseif (($a['t'] ?? '') === 'mat') {
@@ -1766,7 +1767,7 @@ function mat_hidden(string $mid): bool
     if (str_ends_with($mid, '_enter') || str_ends_with($mid, '_stage')) {
         return true;
     }
-    return in_array($mid, ['offline_on', 'offline_time', 'seen_last', 'exp_card_until', 'bag_ext5_used', 'bag_ext10_used', 'dummy_total', 'tank_cd_hp', 'tank_cd_mp', 'peak_force', 'peak_duel_from', 'arena_day', 'arena_used', 'arena_bought'], true);
+    return in_array($mid, ['offline_on', 'offline_time', 'seen_last', 'exp_card_until', 'bag_ext5_used', 'bag_ext10_used', 'dummy_total', 'tank_cd_hp', 'tank_cd_mp', 'peak_force', 'peak_duel_from', 'arena_day', 'arena_used', 'arena_bought', 'active_wid', 'active_week', 'priest_wid'], true);
 }
 
 // 当前版本真正有用的锻造材料：强化石 + 属性石/晶石/珠/神石
@@ -1780,6 +1781,11 @@ function is_craft_mat(string $mid): bool
 
 function mat_set(int $uid, string $mat, int $n): void
 {
+    if ($n <= 0) {
+        db()->prepare('DELETE FROM mats WHERE uid=? AND mat=?')->execute([(int) $uid, $mat]);
+        mats_bust();
+        return;
+    }
     $st = db()->prepare('UPDATE mats SET num=? WHERE uid=? AND mat=?');
     $st->execute([$n, (int) $uid, $mat]);
     if ($st->rowCount() === 0) {
@@ -1967,6 +1973,71 @@ function job_can_twohand(string $job): bool
     return $job === 'warrior';
 }
 
+// 主手武器细分：按名判定种类，管职业限定+双持判定
+function weapon_sub(string $base): string
+{
+    foreach (['杖', '法器', '魔杖', '圣杖', '提灯', '法典', '法球'] as $k) {
+        if (str_contains($base, $k)) {
+            return 'staff';
+        }
+    }
+    if (str_contains($base, '斧')) {
+        return 'axe';
+    }
+    foreach (['弓', '弩'] as $k) {
+        if (str_contains($base, $k)) {
+            return 'bow';
+        }
+    }
+    if (str_contains($base, '锤') || str_contains($base, '杵') || str_contains($base, '槌')) {
+        return 'mace';
+    }
+    if (str_contains($base, '盾')) {
+        return 'shield';
+    }
+    return 'blade';
+}
+
+function weapon_jobs(string $sub): array
+{
+    return [
+        'staff' => ['mage', 'priest'],
+        'axe' => ['warrior'],
+        'bow' => ['hunter'],
+        'mace' => ['priest', 'warrior'],
+        'shield' => ['warrior', 'priest'],
+        'blade' => ['warrior', 'hunter'],
+    ][$sub] ?? ['warrior', 'hunter', 'mage', 'priest'];
+}
+
+function weapon_is_twohand(string $base): bool
+{
+    if (in_array(equip_shortname($base), twohand_bases(), true)) {
+        return true;
+    }
+    foreach (['权杖', '战斧', '大剑', '长弓', '重锤'] as $k) {
+        if (str_contains($base, $k)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function job_can_twohand_weapon(string $job, string $base): bool
+{
+    if ($job === 'warrior') {
+        return true;
+    }
+    $sub = weapon_sub($base);
+    if ($job === 'mage' && $sub === 'staff') {
+        return true;
+    }
+    if ($job === 'hunter' && $sub === 'bow') {
+        return true;
+    }
+    return false;
+}
+
 // 穿戴展示固定顺序：主手/副手/上身/头部/下身/手套/鞋子/背部/戒指/项链
 function equip_sort_by_slot(array $eqs): array
 {
@@ -2015,6 +2086,7 @@ function affix_catalog(): array
     };
     return [
         'atk' => ['name' => '攻击力', 'slots' => ['weapon', 'gloves', 'ring', 'necklace'], 'data' => $r([[2, 5], [5, 10], [10, 18], [18, 30], [30, 50]], 100)],
+        'matk' => ['name' => '法术强度', 'slots' => ['weapon', 'offhand', 'necklace', 'ring'], 'data' => $r([[2, 5], [5, 10], [10, 18], [18, 30], [30, 50]], 90)],
         'atk_pct' => ['name' => '攻击力%', 'slots' => ['weapon'], 'data' => $r([[1, 2], [2, 4], [4, 6], [6, 9], [8, 12]], 80, 'offense_pct', 1)],
         'crit' => ['name' => '暴击率', 'slots' => ['weapon', 'head', 'gloves', 'ring', 'necklace'], 'data' => $r([[0.1, 0.3], [0.3, 0.6], [0.6, 1.0], [1.0, 1.5], [1.5, 2.0]], 100, 'crit', 1)],
         'critdmg' => ['name' => '暴击伤害', 'slots' => ['weapon', 'head', 'gloves', 'ring', 'necklace'], 'data' => $r([[1, 3], [3, 6], [6, 10], [10, 15], [15, 20]], 100, 'critdmg', 1)],
@@ -2033,6 +2105,7 @@ function affix_catalog(): array
         'execute' => ['name' => '处决伤害', 'slots' => ['weapon'], 'data' => $r([[3, 6], [6, 10], [10, 16], [16, 23], [20, 30]], 40, 'execute', 1)],
         'hp' => ['name' => '生命值', 'slots' => ['body', 'head', 'legs', 'shoes', 'ring', 'necklace', 'offhand', 'back'], 'data' => $r([[8, 15], [15, 30], [30, 55], [55, 100], [90, 150]], 100)],
         'def' => ['name' => '护甲', 'slots' => ['body', 'head', 'legs', 'gloves', 'shoes', 'offhand', 'back'], 'data' => $r([[4, 10], [10, 20], [20, 35], [35, 60], [60, 100]], 100)],
+        'mdef' => ['name' => '法术抗性', 'slots' => ['body', 'head', 'offhand', 'back', 'necklace'], 'data' => $r([[3, 8], [8, 16], [16, 28], [28, 48], [48, 80]], 90)],
         'damage_reduction' => ['name' => '伤害减免', 'slots' => ['body'], 'data' => $r([[0.5, 1], [1, 2], [2, 3.5], [3.5, 5.5], [5, 8]], 70, 'damage_reduction', 1)],
         'resist' => ['name' => '元素抗性', 'slots' => ['body', 'necklace'], 'data' => $r([[1, 2], [2, 4], [4, 7], [7, 11], [10, 15]], 80, 'element_res', 1)],
         'thorns' => ['name' => '荆棘反伤', 'slots' => ['body'], 'data' => $r([[2, 4], [4, 8], [8, 14], [14, 23], [20, 35]], 50)],
@@ -2378,6 +2451,23 @@ function equip_can_wear(array $u, array $e): string
     if ((int) ($u['agi'] ?? 0) < (int) ($e['req_agi'] ?? 0)) {
         return '坚毅不够（需' . (int) ($e['req_agi'] ?? 0) . '）。';
     }
+    $job = job_id_of($u);
+    $slot = (string) ($e['slot'] ?? '');
+    if ($slot === 'weapon') {
+        $sub = weapon_sub((string) ($e['name'] ?? ''));
+        if (!in_array($job, weapon_jobs($sub), true)) {
+            return '拿不动：' . (rebirth1_names()[$job] ?? job_of($u)['name']) . '用不了' . (['staff' => '法杖', 'axe' => '战斧', 'bow' => '弓弩', 'mace' => '战锤', 'shield' => '盾牌', 'blade' => '刀剑'][$sub] ?? '这种武器') . '。';
+        }
+    }
+    if ($slot === 'offhand') {
+        $nm = (string) ($e['name'] ?? '');
+        if (str_contains($nm, '盾') && !in_array($job, ['warrior', 'priest'], true)) {
+            return '拿不动：只有战士/牧师能举盾。';
+        }
+        if ((str_contains($nm, '法器') || str_contains($nm, '法杖') || str_contains($nm, '提灯')) && !in_array($job, ['mage', 'priest'], true)) {
+            return '拿不动：法器只有法师/牧师能用。';
+        }
+    }
     return '';
 }
 
@@ -2454,12 +2544,12 @@ function quest_mats(): array
 function skill_catalog(): array
 {
     return [
-        'w1' => ['name' => '重斩', 'job' => 'warrior', 'mp' => 8, 'kind' => 'phys', 'mult' => 1.5, 'el' => '', 't10' => '伤害+25%', 'lv20' => '狂怒：伤害+15%'],
-        'w2' => ['name' => '断岳斩', 'job' => 'warrior', 'mp' => 18, 'kind' => 'phys', 'mult' => 2.2, 'el' => 'fire', 't10' => '本次暴击率+20%', 'lv20' => '伤害+15%'],
+        'w1' => ['name' => '重斩', 'job' => 'warrior', 'mp' => 8, 'kind' => 'phys', 'mult' => 1.6, 'el' => '', 't10' => '伤害+25%', 'lv20' => '狂怒：伤害+15%'],
+        'w2' => ['name' => '断岳斩', 'job' => 'warrior', 'mp' => 18, 'kind' => 'phys', 'mult' => 2.2, 'el' => 'fire', 't10' => '本次暴击率+20%', 'lv20' => '伤害+15%，附魔火伤'],
         'm1' => ['name' => '火球术', 'job' => 'mage', 'mp' => 12, 'kind' => 'magic', 'mult' => 0, 'el' => 'fire', 't10' => '伤害+30%', 'lv20' => '伤害+15%'],
         'm2' => ['name' => '爆裂火球', 'job' => 'mage', 'mp' => 22, 'kind' => 'magic', 'mult' => 0, 'el' => 'thunder', 't10' => '伤害+30%', 'lv20' => '伤害+15%'],
-        'h1' => ['name' => '双连射', 'job' => 'hunter', 'mp' => 10, 'kind' => 'multi2', 'mult' => 1.6, 'el' => 'wind', 't10' => '追加第三箭', 'lv20' => '伤害+15%'],
-        'h2' => ['name' => '暴雨连射', 'job' => 'hunter', 'mp' => 20, 'kind' => 'multi2', 'mult' => 2.4, 'el' => 'wind', 't10' => '追加第三箭', 'lv20' => '伤害+15%'],
+        'h1' => ['name' => '双连射', 'job' => 'hunter', 'mp' => 10, 'kind' => 'multi2', 'mult' => 1.6, 'el' => '', 't10' => '追加第三箭', 'lv20' => '伤害+15%'],
+        'h2' => ['name' => '爆裂箭', 'job' => 'hunter', 'mp' => 20, 'kind' => 'multi2', 'mult' => 2.0, 'el' => 'fire', 't10' => '追加第三箭', 'lv20' => '伤害+15%，爆炸火伤'],
         'p1' => ['name' => '治疗术', 'job' => 'priest', 'mp' => 10, 'kind' => 'heal', 'mult' => 0.7, 'heal' => 25, 'el' => 'light', 't10' => '治疗+15', 'lv20' => '治疗+20%，伤害+15%'],
         'p2' => ['name' => '圣光庇佑', 'job' => 'priest', 'mp' => 20, 'kind' => 'heal', 'mult' => 1.0, 'heal' => 45, 'el' => 'light', 't10' => '治疗+25', 'lv20' => '治疗+20%，伤害+15%'],
         'w3' => ['name' => '裂地猛击', 'job' => 'warrior', 'mp' => 30, 'kind' => 'phys', 'mult' => 3.0, 'el' => 'thunder', 't10' => '5%眩晕敌人1轮', 'lv20' => '伤害+15%'],
@@ -2482,7 +2572,7 @@ function skill_books(): array
         'book_m1' => ['skill' => 'm1', 'name' => '火球术秘籍'],
         'book_m2' => ['skill' => 'm2', 'name' => '爆裂火球秘籍'],
         'book_h1' => ['skill' => 'h1', 'name' => '双连射秘籍'],
-        'book_h2' => ['skill' => 'h2', 'name' => '暴雨连射秘籍'],
+        'book_h2' => ['skill' => 'h2', 'name' => '爆裂箭秘籍'],
         'book_p1' => ['skill' => 'p1', 'name' => '治疗术秘籍'],
         'book_p2' => ['skill' => 'p2', 'name' => '圣光秘籍'],
         'book_w3' => ['skill' => 'w3', 'name' => '裂地秘籍'],
@@ -2778,6 +2868,8 @@ function add_mat(int $uid, string $mat, int $n): void
     if ($st->rowCount() === 0) {
         db()->prepare('INSERT INTO mats (uid, mat, num) VALUES (?, ?, ?)')->execute([(int) $uid, $mat, max(0, $n)]);
     }
+    // 数量归零直接删行，背包不再出现xxx0
+    db()->prepare('DELETE FROM mats WHERE uid=? AND num<=0')->execute([(int) $uid]);
     mats_bust();
 }
 
@@ -3158,8 +3250,8 @@ function scale_monster(array $m, string $mid, int $elite = 0): array
 function power_score(array $u): int
 {
     $gs = gear_stats((int) ($u['id'] ?? 0));
-    $atk = (int) $u['atk'] + (int) ($u['str'] ?? 0) + (int) $gs['atk'];
-    $def = (int) $u['def'] + (int) ($u['agi'] ?? 0) + (int) $gs['def'];
+    $atk = max(player_patk($u), player_matk($u));
+    $def = max(player_pdef($u), player_mdef($u));
     return (int) ($atk * 2 + $def * 1.5 + (int) $u['maxhp'] / 10 + (int) ($u['maxmp'] ?? 0) / 5 + (int) $u['lv'] * 5);
 }
 
@@ -3335,7 +3427,7 @@ function gear_stats(int $uid): array
         return $cache[$uid];
     }
     unset($GLOBALS['_gear_bust']);
-    $keys = ['atk', 'def', 'hp', 'crit', 'critdmg', 'dodge', 'lifesteal', 'atk_pct', 'speed', 'element', 'penetration', 'skill_damage', 'execute', 'damage_reduction', 'resist', 'thorns', 'regen', 'energy', 'cooldown', 'hit', 'exp_gain', 'move_speed', 'control_resist', 'slow_resist', 'all_attr', 'gold_gain', 'magic_find', 'res_light', 'res_dark', 'res_fire', 'res_wind', 'res_ice', 'res_thunder', 'allres'];
+    $keys = ['atk', 'matk', 'def', 'mdef', 'hp', 'crit', 'critdmg', 'dodge', 'lifesteal', 'atk_pct', 'speed', 'element', 'penetration', 'skill_damage', 'execute', 'damage_reduction', 'resist', 'thorns', 'regen', 'energy', 'cooldown', 'hit', 'exp_gain', 'move_speed', 'control_resist', 'slow_resist', 'all_attr', 'gold_gain', 'magic_find', 'res_light', 'res_dark', 'res_fire', 'res_wind', 'res_ice', 'res_thunder', 'allres'];
     $s = array_fill_keys($keys, 0.0);
     $st = db()->prepare('SELECT * FROM equips WHERE uid=? AND pos="wear"');
     $st->execute([$uid]);
@@ -3349,7 +3441,7 @@ function gear_stats(int $uid): array
             $id = (string) ($a['id'] ?? $a['k'] ?? '');
             $value = (float) ($a['v'] ?? 0);
             // 主属性全吃强化倍率（不限atk/def/hp：戒指抗性、手套暴击等同样生效）
-            if (!empty($a['main']) || in_array($id, ['atk', 'def', 'hp', 'all_attr'], true)) {
+            if (!empty($a['main']) || in_array($id, ['atk', 'matk', 'def', 'mdef', 'hp', 'all_attr'], true)) {
                 $value *= $mult;
             }
             if (isset($s[$id])) {
@@ -3593,16 +3685,16 @@ function wear_equip(int $uid, int $eid): string
             return $reqErr . '（' . equip_req_text($eq) . '）';
         }
     }
-    $isTwo = in_array(equip_shortname((string) $eq['name']), twohand_bases(), true);
+    $isTwo = weapon_is_twohand((string) $eq['name']);
     if ($isTwo) {
         $uo = user_by_id($uid);
-        if (!job_can_twohand((string) ($uo['job'] ?? ''))) {
-            return '双手武器太沉，需要战士（或相关转职）才能挥动。';
+        if (!job_can_twohand_weapon((string) ($uo['job'] ?? ''), (string) $eq['name'])) {
+            return '双手武器太沉，你这个职业抡不动（战士全能，法师限双手法杖，猎手限长弓）。';
         }
     }
     if (($eq['slot'] ?? '') === 'offhand') {
         $mw = db()->query('SELECT name FROM equips WHERE uid=' . $uid . ' AND slot="weapon" AND pos="wear" LIMIT 1')->fetchColumn();
-        if ($mw && in_array(equip_shortname((string) $mw), twohand_bases(), true)) {
+        if ($mw && weapon_is_twohand((string) $mw)) {
             return '主手是双手武器，副手没空位。';
         }
     }
@@ -3675,7 +3767,14 @@ function take_off_equip(int $uid, int $eid): string
 
 function player_atk(array $u): int
 {
-    $base = (int) $u['atk'] + (int) ($u['str'] ?? 0) + (int) gear_stats((int) ($u['id'] ?? 0))['atk'];
+    return player_patk($u);
+}
+
+// 物理攻击：力量+装备。法师练不出肌肉（力量不加物攻），只能靠装备
+function player_patk(array $u): int
+{
+    $str = (job_id_of($u) === 'mage') ? 0 : (int) ($u['str'] ?? 0);
+    $base = (int) $u['atk'] + $str + (int) gear_stats((int) ($u['id'] ?? 0))['atk'];
     // 一转·浴血：生命每降低10%，攻击+4%，最多+32%
     if (!empty(cflags((int) ($u['id'] ?? 0))['rb1_job']) && cflags((int) ($u['id'] ?? 0))['rb1_job'] === 'warrior' && (int) ($u['maxhp'] ?? 0) > 0) {
         $lost = 1 - (int) $u['hp'] / max(1, (int) $u['maxhp']);
@@ -3687,9 +3786,34 @@ function player_atk(array $u): int
     return $base;
 }
 
+// 魔法攻击（无属性）：智慧+法术强度装备。法师另吃本体攻击一半（科班出身）
+function player_matk(array $u): int
+{
+    $base = (int) ($u['int'] ?? 0) + (int) gear_stats((int) ($u['id'] ?? 0))['matk'];
+    if (job_id_of($u) === 'mage') {
+        $base += (int) ((int) $u['atk'] / 2);
+    }
+    if (job_id_of($u) === 'priest') {
+        $base += (int) ((int) $u['atk'] / 4);
+    }
+    return $base;
+}
+
 function player_def(array $u): int
 {
+    return player_pdef($u);
+}
+
+// 物理防御：护甲+坚毅+装备
+function player_pdef(array $u): int
+{
     return (int) $u['def'] + (int) ($u['agi'] ?? 0) + (int) gear_stats((int) ($u['id'] ?? 0))['def'];
+}
+
+// 魔法防御：护甲一半+智慧一半+抗性装备
+function player_mdef(array $u): int
+{
+    return (int) ((int) $u['def'] / 2) + (int) ((int) ($u['int'] ?? 0) / 2) + (int) gear_stats((int) ($u['id'] ?? 0))['mdef'];
 }
 
 function exp_need(int $lv): int
@@ -3770,7 +3894,12 @@ function gain_exp(array &$u, int $exp): string
         $u['lv'] = (int) $u['lv'] + 1;
         $u['maxhp'] = (int) $u['maxhp'] + 10;
         $u['maxmp'] = (int) ($u['maxmp'] ?? 0) + 5;
-        $u['atk'] = (int) $u['atk'] + 1;
+        // 升级成长按职业：战士猎手长物攻，法师牧师长智慧（法师不长物理）
+        if (in_array(job_id_of($u), ['mage', 'priest'], true)) {
+            $u['int'] = (int) ($u['int'] ?? 0) + 1;
+        } else {
+            $u['atk'] = (int) $u['atk'] + 1;
+        }
         $u['def'] = (int) $u['def'] + 1;
         $u['hp'] = (int) $u['maxhp'];
         $u['mp'] = (int) ($u['maxmp'] ?? 0);
@@ -3794,6 +3923,9 @@ function alloc_stat(int $uid, string $k): string
         return '属性点不够（剩' . (int) ($u['s_pts'] ?? 0) . '点，要' . $cost . '点），升级获取。';
     }
     if ($k === 'str') {
+        if (job_id_of($u) === 'mage') {
+            return '法师的身体练不出物理伤害，别浪费点数，去加智慧吧。';
+        }
         $u['str'] = (int) ($u['str'] ?? 0) + 1;
     } elseif ($k === 'agi') {
         $u['agi'] = (int) ($u['agi'] ?? 0) + 1;
@@ -3806,8 +3938,48 @@ function alloc_stat(int $uid, string $k): string
         $u['mp'] = (int) ($u['mp'] ?? 0) + 3;
         $u['int'] = (int) ($u['int'] ?? 0) + 1;
     }
+    $u['s_pts'] = (int) ($u['s_pts'] ?? 0) - $cost;
+    user_save($u);
+    return '加点成功，剩' . (int) $u['s_pts'] . '点。';
+}
+
+function alloc_all_stat(int $uid, string $k): string
+{
+    $cost = ['str' => 3, 'agi' => 3, 'vit' => 1, 'int' => 1][$k] ?? 0;
+    if ($cost <= 0) {
+        return '只能全加力量/坚毅/体质/智慧。';
+    }
+    $u = user_by_id((int) $uid);
     if (!$u) {
         return '角色不存在。';
+    }
+    if ($k === 'str' && job_id_of($u) === 'mage') {
+        return '法师的身体练不出物理伤害，别浪费点数，去加智慧吧。';
+    }
+    $n = 0;
+    while ((int) ($u['s_pts'] ?? 0) >= $cost) {
+        $r = alloc_stat((int) $uid, $k);
+        if (!str_starts_with($r, '加点成功')) {
+            break;
+        }
+        $u = user_by_id((int) $uid);
+        $n++;
+        if ($n > 5000) {
+            break;
+        }
+    }
+    return $n > 0 ? '全加成功，共加' . $n . '次。' : '属性点不够。';
+}
+
+function use_rename_card(int $uid, string $newName): string
+{
+    $u = user_by_id((int) $uid);
+    if (!$u) {
+        return '角色不存在。';
+    }
+    $newName = trim($newName);
+    if ($newName === '' || preg_match('/^[\x{4e00}-\x{9fff}A-Za-z0-9_]{2,12}$/u', $newName) !== 1) {
+        return '名字2-12字，汉字、字母、数字或下划线。';
     }
     $mats = mats_of($uid);
     if (empty($mats['rename_card'])) {
@@ -3880,9 +4052,32 @@ function use_exp_card(int $uid): string
     return '升级卡生效！1小时内双倍经验（可叠加延长）。';
 }
 
-function dmg_to_monster(array $u): int
+// 怪物攻防拆分：物攻占7成，法攻占3成（有元素亲和的怪法攻占5成）；物防/法防按攻击折算
+function monster_patk(array $m): int
 {
-    $d = max(1, player_atk($u) + random_int(0, 3));
+    return (int) ((int) ($m['atk'] ?? 0) * 0.7);
+}
+
+function monster_matk(array $m): int
+{
+    $ratio = monster_element((string) ($m['id'] ?? '')) !== '' ? 0.5 : 0.3;
+    return (int) ((int) ($m['atk'] ?? 0) * $ratio);
+}
+
+function monster_pdef(array $m): int
+{
+    return (int) ((int) ($m['atk'] ?? 0) * 0.2);
+}
+
+function monster_mdef(array $m): int
+{
+    return (int) ((int) ($m['atk'] ?? 0) * 0.15);
+}
+
+function dmg_to_monster(array $u, array $m = []): int
+{
+    // 普攻是物理的：物攻-怪物业防
+    $d = max(1, player_patk($u) + random_int(0, 3) - monster_pdef($m));
     $gs = gear_stats((int) ($u['id'] ?? 0));
     if ($gs['crit'] > 0 && mt_rand(1, 10000) / 100 <= $gs['crit']) {
         $d = (int) ($d * (1 + $gs['critdmg'] / 100));
@@ -3896,12 +4091,15 @@ function dmg_to_player(array $u, array $m): int
     if ($gs['dodge'] > 0 && mt_rand(1, 10000) / 100 <= $gs['dodge']) {
         return 0;
     }
-    return max(1, (int) $m['atk'] + random_int(0, 2) - player_def($u));
+    // 怪物伤害拆两段：物理段吃物防，法术段吃法防
+    $phys = max(0, monster_patk($m) + random_int(0, 2) - player_pdef($u));
+    $mag = max(0, monster_matk($m) + random_int(0, 1) - player_mdef($u));
+    return max(1, $phys + $mag);
 }
 
 function battle_round(array &$u, array &$b, string $mode): array
 {
-    $pd = dmg_to_monster($u);
+    $pd = dmg_to_monster($u, $b);
     $isSkill = false;
     $skillName = '';
     $logHeal = '';
@@ -3916,12 +4114,13 @@ function battle_round(array &$u, array &$b, string $mode): array
             if ($job === 'warrior') {
                 $pd = (int) ($pd * 1.5);
             } elseif ($job === 'mage') {
-                $pd = player_atk($u) + random_int(4, 7);
+                // 法师平A也是搓魔力弹：看法攻
+                $pd = max(1, player_matk($u) + random_int(4, 7) - (int) (monster_mdef($b) / 2));
             } elseif ($job === 'hunter') {
                 $pd = (int) ($pd * 0.8) + (int) ($pd * 0.8);
             } elseif ($job === 'priest') {
                 $u['hp'] = min((int) $u['maxhp'], (int) $u['hp'] + 25);
-                $pd = (int) ($pd * 0.7) + 2;
+                $pd = max(1, (int) (player_matk($u) * 0.5) + 2 - (int) (monster_mdef($b) / 2));
             }
             $skillName = job_of($u)['skill'];
         } elseif ((int) ($u['mp'] ?? 0) >= (int) $sk['mp']) {
@@ -3934,7 +4133,12 @@ function battle_round(array &$u, array &$b, string $mode): array
             $sTier = (int) $sk['tier'];
             $sLv = (int) $sk['level'];
             if ($sk['kind'] === 'phys') {
-                $pd = (int) ($pd * (float) $sk['mult'] * $pow);
+                // 物理技：物攻×倍率后过怪物业防；带元素 rider 的再加一段法伤（过半法防）
+                $pd = max(1, (int) ((player_patk($u) + random_int(0, 3)) * (float) $sk['mult'] * $pow) - monster_pdef($b));
+                if ($skEl !== '') {
+                    $pd += max(0, (int) (player_matk($u) * 0.4) - (int) (monster_mdef($b) / 2));
+                    $logHeal .= '(附魔)';
+                }
                 if ($sid === 'w3' && $sTier >= 10 && mt_rand(1, 100) <= 5) {
                     $b['stun'] = 1;
                     $logHeal .= '(眩晕)';
@@ -3953,7 +4157,8 @@ function battle_round(array &$u, array &$b, string $mode): array
                     $logHeal .= '(暴击)';
                 }
             } elseif ($sk['kind'] === 'magic') {
-                $pd = (int) ((player_atk($u) + random_int(4, 7) + ($sid === 'm2' ? 10 : ($sid === 'm3' ? 8 : 5))) * $pow);
+                // 纯法术：看法攻，过一半法防（法师和怪斗法，拼的是理解）
+                $pd = max(1, (int) ((player_matk($u) + random_int(4, 7) + ($sid === 'm2' ? 10 : ($sid === 'm3' ? 8 : 5))) * $pow) - (int) (monster_mdef($b) / 2));
                 if ($sTier >= 10) {
                     $pd = (int) ($pd * 1.3);
                 }
@@ -3965,7 +4170,12 @@ function battle_round(array &$u, array &$b, string $mode): array
                     $logHeal .= '(冻结)';
                 }
             } elseif ($sk['kind'] === 'multi2') {
-                $pd = (int) ($pd * (float) $sk['mult'] * $pow);
+                // 猎手连射：物理段过物防；爆炸箭（h2火）/淬毒箭（h3暗）再加一段法伤
+                $pd = max(1, (int) ((player_patk($u) + random_int(0, 3)) * (float) $sk['mult'] * $pow) - monster_pdef($b));
+                if ($skEl !== '') {
+                    $pd += max(0, (int) (player_matk($u) * 0.5) - (int) (monster_mdef($b) / 2));
+                    $logHeal .= $sid === 'h2' ? '(爆炸)' : '(淬毒)';
+                }
                 if ($sTier >= 10) {
                     $pd = (int) ($pd * 1.5);
                 }
@@ -3977,7 +4187,8 @@ function battle_round(array &$u, array &$b, string $mode): array
                     $logHeal .= '(剧毒)';
                 }
             } elseif ($sk['kind'] === 'heal') {
-                $heal = (int) ($sk['heal'] * $pow);
+                // 牧师治疗量吃智慧（法攻两成加成）
+                $heal = (int) ($sk['heal'] * $pow) + (int) (player_matk($u) * 0.2);
                 if ($sTier >= 10) {
                     $heal += in_array($sid, ['p2', 'p3'], true) ? 25 : 15;
                 }
@@ -3990,7 +4201,7 @@ function battle_round(array &$u, array &$b, string $mode): array
                     $u['mp'] = min((int) ($u['maxmp'] ?? 0), (int) ($u['mp'] ?? 0) + 10);
                     $logHeal .= '(回蓝10)';
                 }
-                $pd = (int) ($pd * (float) $sk['mult'] * $pow);
+                $pd = max(1, (int) (player_matk($u) * (float) $sk['mult'] * $pow) - (int) (monster_mdef($b) / 2));
                 if ($sLv >= 20) {
                     $pd = (int) ($pd * 1.15);
                 }
@@ -4043,7 +4254,7 @@ function battle_round(array &$u, array &$b, string $mode): array
         $meld = monster_element((string) ($b['id'] ?? ''));
         $chart = element_chart($skEl, $meld);
         $mres = monster_resist((string) ($b['id'] ?? ''), $skEl);
-        $eldmg = max(0, (int) ((player_atk($u) * 0.3 + $gs['element']) * $chart * (1 - $mres / 100)));
+        $eldmg = max(0, (int) ((player_matk($u) * 0.3 + $gs['element']) * $chart * (1 - $mres / 100)));
         $eldmg += enchant_el_dmg((int) ($u['id'] ?? 0), $skEl);
         if ($eldmg > 0) {
             $b['hp'] = (int) $b['hp'] - $eldmg;
@@ -4230,7 +4441,8 @@ function battle_round(array &$u, array &$b, string $mode): array
             if ($bid === 'goblin') {
                 $msg .= '。玛莎给你燕麦肉汤，伤全好了';
                 $u['hp'] = (int) $u['maxhp'];
-                $u['potion'] = (int) $u['potion'] + 1;
+                add_mat((int) $u['id'], 'hp_pct10', 1);
+                $msg .= '，得雾纹绷带×1';
             }
             if ($bid === 'banshee') {
                 $msg .= '。女妖散去：“别往下听……”莉娜加入';

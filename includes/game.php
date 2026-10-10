@@ -3828,29 +3828,9 @@ function arena_bot_names(): array
 
 function arena_bot_power(int $rank): int
 {
-    // 排名越高战力越高：1名50万线性衰减到2000名5000
-    if ($rank <= 10) {
-        return 500000 - ($rank - 1) * 10000;
-    }
-    if ($rank <= 20) {
-        return 400000 - ($rank - 11) * 5000;
-    }
-    if ($rank <= 50) {
-        return 340000 - ($rank - 21) * 3000;
-    }
-    if ($rank <= 100) {
-        return 240000 - ($rank - 51) * 1800;
-    }
-    if ($rank <= 300) {
-        return 140000 - ($rank - 101) * 300;
-    }
-    if ($rank <= 600) {
-        return 70000 - ($rank - 301) * 100;
-    }
-    if ($rank <= 1000) {
-        return 35000 - ($rank - 601) * 37;
-    }
-    return max(5000, 15000 - ($rank - 1001) * 10);
+    // 第1名3278线性衰减到第2000名79
+    $rank = max(1, min(2000, $rank));
+    return max(79, (int) round(3278 - ($rank - 1) * (3278 - 79) / 1999));
 }
 
 function arena_week(): string
@@ -3861,7 +3841,14 @@ function arena_week(): string
 function arena_ensure_bots(string $zone): void
 {
     $n = (int) db()->query("SELECT COUNT(*) FROM arena_ranks WHERE zone=" . db()->quote($zone) . ' AND is_bot=1')->fetchColumn();
+    // 存量假人按新公式刷新战力
     if ($n >= 2000) {
+        db()->prepare('UPDATE arena_ranks SET power=? WHERE zone=? AND is_bot=1 AND rank=1')->execute([arena_bot_power(1), $zone]);
+        $rows = db()->query("SELECT uid, rank FROM arena_ranks WHERE zone=" . db()->quote($zone) . ' AND is_bot=1')->fetchAll();
+        $st = db()->prepare('UPDATE arena_ranks SET power=? WHERE zone=? AND uid=?');
+        foreach ($rows as $r) {
+            $st->execute([arena_bot_power((int) $r['rank']), $zone, (int) $r['uid']]);
+        }
         return;
     }
     $pool = arena_bot_names();

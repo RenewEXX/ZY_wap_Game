@@ -3893,8 +3893,8 @@ function arena_join(int $uid): string
     if (!$u) {
         return '角色不存在。';
     }
-    if ((int) ($u['lv'] ?? 1) < 30) {
-        return '30级才能进竞技场。';
+    if ((int) ($u['lv'] ?? 1) < 80) {
+        return '80级才能进竞技场。';
     }
     if (arena_my($uid)) {
         return '你已经在竞技场了。';
@@ -5430,6 +5430,10 @@ function quest_state(array $u): array
         return ['name' => '雾散之后', 'step' => '完成', 'todo' => '第一章完成，自由探索。30级后去白银城公会大厅找格温', 'loc' => 'town_sq', 'locname' => '白石镇广场', 'id' => 16, 'ch' => 1, 'need' => []];
     }
     if ($q === 28) {
+        // 80级竞技场引导：找雷横对话完成，得20银（一次性，不挡主线）
+        if ((int) ($u['lv'] ?? 1) >= 80 && empty(cflags((int) ($u['id'] ?? 0))['arena_guide_done'])) {
+            return ['name' => '竞技场征召', 'step' => '引导', 'todo' => '80级了！去灰雾村广场找竞技场大师·雷横，参加竞技场（奖励20银）', 'loc' => 'square', 'locname' => '灰雾村广场', 'id' => 28, 'ch' => 2, 'need' => []];
+        }
         return ['name' => '第三章·傀儡之夜', 'step' => '序', 'todo' => '第二章完成！带着格温的推荐信，去王都中央大道找瓦尔顿', 'loc' => 'avenue', 'locname' => '中央大道', 'id' => 28, 'ch' => 2, 'need' => []];
     }
     if ($q >= 30 && $q <= 37) {

@@ -365,6 +365,15 @@ if ($who === 'spider') {
     echo '<a href="npc.php?who=spider&choice=open">开启副本【银丝母巢】（150~340级，消耗入场券×1）</a><br>';
 }
 if ($who === 'arena_m') {
+    // 80级引导任务：与雷横交互完成，得20银（一次性）
+    if ((int) ($u['lv'] ?? 1) >= 80 && empty(cflags((int) ($u['id'] ?? 0))['arena_guide_done']) && (int) ($u['quest'] ?? 0) === 28) {
+        cflag_set((int) $u['id'], 'arena_guide_done', 1);
+        $u['gold'] = (int) ($u['gold'] ?? 0) + 2000;
+        user_save($u);
+        flash_set('雷横拍了拍你的肩：好，80级了，有胆！竞技场欢迎你。任务完成，奖励20银！');
+        header('Location: npc.php?who=arena_m');
+        exit;
+    }
     echo '<a href="arena.php">进入竞技场</a><br>';
     echo '<a href="arena.php?a=rank">查看排名</a> <a href="arena.php?a=prize">查看奖励</a><br>';
     echo '<a href="arena.php?a=def">查看防守记录</a><br>';

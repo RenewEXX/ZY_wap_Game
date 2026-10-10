@@ -3675,7 +3675,16 @@ function take_off_equip(int $uid, int $eid): string
 
 function player_atk(array $u): int
 {
-    return (int) $u['atk'] + (int) ($u['str'] ?? 0) + (int) gear_stats((int) ($u['id'] ?? 0))['atk'];
+    $base = (int) $u['atk'] + (int) ($u['str'] ?? 0) + (int) gear_stats((int) ($u['id'] ?? 0))['atk'];
+    // 一转·浴血：生命每降低10%，攻击+4%，最多+32%
+    if (!empty(cflags((int) ($u['id'] ?? 0))['rb1_job']) && cflags((int) ($u['id'] ?? 0))['rb1_job'] === 'warrior' && (int) ($u['maxhp'] ?? 0) > 0) {
+        $lost = 1 - (int) $u['hp'] / max(1, (int) $u['maxhp']);
+        $steps = min(8, (int) floor($lost * 10));
+        if ($steps > 0) {
+            $base = (int) ($base * (1 + $steps * 0.04));
+        }
+    }
+    return $base;
 }
 
 function player_def(array $u): int
@@ -3748,6 +3757,11 @@ function gain_exp(array &$u, int $exp): string
     $card = mats_of((int) ($u['id'] ?? 0))['exp_card_until'] ?? 0;
     if ($card > time()) {
         $exp = $exp * 2;
+    }
+    // 一转卡级：三章通关（quest>=38）未一转（rb1_job为空），299级经验冻结
+    $rbDone = !empty(cflags((int) ($u['id'] ?? 0))['rb1_job']);
+    if ((int) ($u['quest'] ?? 0) >= 38 && !$rbDone && (int) ($u['lv'] ?? 1) >= 299) {
+        return '经验+' . $exp . '（299级瓶颈：一转后继续累积，去找瓦尔顿）';
     }
     $u['exp'] = (int) $u['exp'] + $exp;
     $msg = '经验+' . $exp;
@@ -3990,6 +4004,10 @@ function battle_round(array &$u, array &$b, string $mode): array
         if ($isSkill && $skillName !== '拳击' && ($b['id'] ?? '') === 'banshee') {
             $pd += 4;
         }
+    // 一转被动：法师元素亲和/猎手标记
+    $rbJob = cflags((int) ($u['id'] ?? 0))['rb1_job'] ?? '';
+    if ($rbJob === 'mage' && $skEl !== '') { $pd = (int)($pd * 1.12); $logHeal .= '(元素亲和)'; }
+    if ($rbJob === 'hunter' && $pd > 0 && ($b['hp'] ?? 1) > 0) { $b['mark'] = 2; if (mt_rand(1, 100) <= 15) { $pd = (int)($pd * 1.1); $logHeal .= '(猎物标记)'; } }
     }
     $u['mp'] = min((int) ($u['maxmp'] ?? 0), (int) ($u['mp'] ?? 0) + 2);
     $tankMp = tank_auto($u, 'mp');
@@ -4001,6 +4019,8 @@ function battle_round(array &$u, array &$b, string $mode): array
         $pd = 0;
     }
     $b['hp'] = (int) $b['hp'] - $pd;
+    // 一转·猎手标记：目标易伤10%（剩余轮数在受伤时结算）
+    if ($pd > 0 && !empty($b['mark']) && ($b['hp'] ?? 1) > 0) { $pd = (int)($pd * 1.1); $b['hp'] = (int)$b['hp'] - (int)($pd * 0.1); $b['mark'] = (int)$b['mark'] - 1; $logHeal .= '(易伤)'; }
     $verb = $skillName === '拳击' ? '你挥出一拳，造成' : ($isSkill ? '你放出' . $skillName . '，造成' : '你劈出');
     $log = $pd === 0 ? '你的攻击被' . $b['name'] . '闪避了。' : $verb . $pd . '点。' . $logHeal . $logNoMp . $profMsg . $tankMp;
     $gs = gear_stats((int) ($u['id'] ?? 0));
@@ -4324,6 +4344,12 @@ function battle_round(array &$u, array &$b, string $mode): array
                 $txt .= '。【' . $qs3['name'] . '】' . quest_progress3_text((int) $u['id'], $qs3);
             }
         }
+        if ($cur >= 40 && $cur <= 41) {
+            $rrf = cflags((int) $u['id']);
+            if ($cur === 40 && !empty($rrf['rb1_start'])) { $u['quest'] = 41; user_save($u); $txt .= '。瓦尔顿为你打开四重试炼，去见四位导师！'; }
+            elseif ($cur === 41 && !empty($rrf['rb1_war']) && !empty($rrf['rb1_mag']) && !empty($rrf['rb1_hun']) && !empty($rrf['rb1_pri'])) { $u['quest'] = 45; user_save($u); $txt .= '。四重试炼完成！回中央大道找瓦尔顿抉择！'; }
+            else { $txt .= '。【' . rebirth1_quests()[$cur]['name'] . '】试炼进度（战法猎牧）：' . (empty($rrf['rb1_war']) ? 0 : 1) . (empty($rrf['rb1_mag']) ? 0 : 1) . (empty($rrf['rb1_hun']) ? 0 : 1) . (empty($rrf['rb1_pri']) ? 0 : 1); }
+        }
         if ($bid === 'ogre' && (int) ($u['quest'] ?? 0) === 3) {
             $u['quest'] = 10;
             $base = job_skillset(job_id_of($u))[0];
@@ -4383,8 +4409,14 @@ function battle_round(array &$u, array &$b, string $mode): array
         }
     }
     $u['hp'] = (int) $u['hp'] - $md;
+    // 一转被动（牧师）：5%减伤40%，每轮回3%
+    $rbJob2 = cflags((int) ($u['id'] ?? 0))['rb1_job'] ?? '';
+    if ($rbJob2 === 'priest' && $md > 0) {
+        if (mt_rand(1, 100) <= 5) { $u['hp'] = (int)$u['hp'] + (int)($md * 0.4); $md = (int)($md * 0.6); $log .= '(圣光庇护)'; }
+        $rh = min((int)$u['maxhp'] - (int)$u['hp'], (int)((int)$u['maxhp'] * 0.03));
+        if ($rh > 0) { $u['hp'] = (int)$u['hp'] + $rh; $log .= '(圣光+' . $rh . ')'; }
+    }
     $tankHp = tank_auto($u, 'hp');
-    $log .= $alive > 1 ? $b['name'] . '合击x' . $alive . '共' . $md . '点。' : $b['name'] . '回击' . $md . '点。';
     $log .= $tankHp;
     $petHurt = pet_hurt((int) ($u['id'] ?? 0), $md);
     if ($petHurt !== '') {
@@ -4836,6 +4868,7 @@ function ch3_locations(): array
     $m['slum'] = ['name' => '贫民窟', 'desc' => '黑市里有人在偷偷剪断银丝。剪线人的刀很快，刺客的刀更快。', 'exits' => ['avenue' => '中央大道', 'observatory' => '皇家天文台'], 'monsters' => ['silver_assassin']];
     $m['cathedral'] = ['name' => '光明大教堂', 'desc' => '大主教塞缪尔被银丝吊了二十年，还在布道。牵线牧师说：莉莉是钥匙，也是锁。', 'exits' => ['noble' => '贵族区', 'theater' => '傀儡剧场'], 'monsters' => ['puppet_priest']];
     $m['observatory'] = ['name' => '皇家天文台', 'desc' => '观星者白天看星星，晚上看深渊。牵线者已经不满足于傀儡剧场，它要整个王国都变成舞台。', 'exits' => ['slum' => '贫民窟', 'theater' => '傀儡剧场'], 'monsters' => ['star_puppet']];
+    $m['arena_gate'] = ['name' => '王都竞技场·试炼门', 'desc' => '铁拳的学徒在热身。战士试炼：只能普通攻击，撑十回合。', 'exits' => ['avenue' => '中央大道'], 'monsters' => []];
     $m['theater'] = ['name' => '王宫地下·傀儡剧场', 'desc' => '巨大的舞台。中央吊着真正的国王雷金纳德。牵线者从天花板降下来：我不是深渊，我是国王。', 'exits' => ['cathedral' => '大教堂', 'observatory' => '皇家天文台'], 'monsters' => ['silver_puppet', 'string_puller']];
     return $m;
 }
@@ -5124,8 +5157,20 @@ function quest_state(array $u): array
         }
         return $all[$q] + ['id' => $q, 'ch' => 3, 'step' => ($q - 29) . '/8'];
     }
+    if ($q >= 40 && $q <= 45) {
+        $all = rebirth1_quests();
+        if (!isset($all[$q])) {
+            return ['name' => '影子伙伴', 'step' => '完成', 'todo' => '一转完成！你的路已经选定（被动生效），继续练级吧', 'loc' => 'avenue', 'locname' => '中央大道', 'id' => 99, 'ch' => 4, 'need' => []];
+        }
+        // 试炼类任务不需要杀怪，need为空
+        return $all[$q] + ['id' => $q, 'ch' => 4, 'step' => ($q - 39) . '/6'];
+    }
     if ($q >= 38) {
-        return ['name' => '影子伙伴', 'step' => '完成', 'todo' => '第三章完成！农场、母巢、公会战等你（影子伙伴：全属性+5%）', 'loc' => 'farm', 'locname' => '王都农场', 'id' => 99, 'ch' => 3, 'need' => []];
+        // 三章通关但没299：自由探索；299了进一转
+        if ((int) ($u['lv'] ?? 1) >= 299) {
+            return ['name' => '一转·觉醒之路', 'step' => '序', 'todo' => '299级了！去王都中央大道找总会长瓦尔顿，开启一转（不转职卡299级）', 'loc' => 'avenue', 'locname' => '中央大道', 'id' => 38, 'ch' => 3, 'need' => []];
+        }
+        return ['name' => '影子伙伴', 'step' => '完成', 'todo' => '第三章完成！农场、母巢、公会战等你（影子伙伴：全属性+5%）。299级后找瓦尔顿一转', 'loc' => 'farm', 'locname' => '王都农场', 'id' => 99, 'ch' => 3, 'need' => []];
     }
     if ($q >= 20 && $q <= 27) {
         $all = ch2_quests();
@@ -5167,6 +5212,34 @@ function ch3_quests(): array
         36 => ['name' => '天文台的观众', 'todo' => '皇家天文台：观星傀儡×200', 'loc' => 'observatory', 'locname' => '皇家天文台', 'need' => ['star_puppet' => 200], 'flag' => null],
         37 => ['name' => '傀儡剧场', 'todo' => '王宫地下：银丝傀儡×250、击败牵线者', 'loc' => 'theater', 'locname' => '傀儡剧场', 'need' => ['silver_puppet' => 250, 'string_puller' => 1], 'flag' => null],
     ];
+}
+
+// 一转·觉醒之路（quest 40~45）：四试炼+抉择，不杀怪，纯NPC交互
+function rebirth1_quests(): array
+{
+    return [
+        40 => ['name' => '一转·抉择之始', 'todo' => '去王都中央大道找总会长瓦尔顿，听他讲四条路', 'loc' => 'avenue', 'locname' => '中央大道', 'need' => [], 'flag' => 'rb1_start'],
+        41 => ['name' => '一转·四重试炼', 'todo' => '完成四重试炼：竞技场铁拳（承伤）/图书馆莫里亚蒂（答题）/郊野霍克（追鹿）/大教堂塞缪尔（舍药），顺序不限', 'loc' => 'avenue', 'locname' => '中央大道', 'need' => [], 'flag' => null],
+        42 => ['name' => '一转·战士试炼', 'todo' => '（已并入四重试炼）', 'loc' => 'arena', 'locname' => '王都竞技场', 'need' => [], 'flag' => 'rb1_war'],
+        43 => ['name' => '一转·法师试炼', 'todo' => '（已并入四重试炼）', 'loc' => 'library', 'locname' => '皇家图书馆', 'need' => [], 'flag' => 'rb1_mag'],
+        44 => ['name' => '一转·猎手试炼', 'todo' => '（已并入四重试炼）', 'loc' => 'suburb', 'locname' => '外城郊野', 'need' => [], 'flag' => 'rb1_hun'],
+        45 => ['name' => '一转·抉择', 'todo' => '四试炼完成，回中央大道找瓦尔顿选择你的路（牧师试炼在大教堂找塞缪尔）', 'loc' => 'avenue', 'locname' => '中央大道', 'need' => [], 'flag' => null],
+    ];
+}
+
+function rebirth1_names(): array
+{
+    return ['warrior' => '狂战士', 'mage' => '元素使', 'hunter' => '追猎者', 'priest' => '圣光牧师'];
+}
+
+function rebirth1_passive_desc(string $job): string
+{
+    return [
+        'warrior' => '浴血：生命每降低10%，攻击+4%（最多+32%，保底不亏）',
+        'mage' => '元素亲和：元素伤害+12%',
+        'hunter' => '鹰眼：暴击+8%，命中+8%，15%概率标记使目标易伤10%持续2轮',
+        'priest' => '圣光庇护：每轮回3%最大生命，受伤5%概率减伤40%',
+    ][$job] ?? '';
 }
 
 function check_ch3_done(int $uid, array $qs): bool

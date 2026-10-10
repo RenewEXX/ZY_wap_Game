@@ -16,6 +16,7 @@ $newSteps = [
 $ch1 = ch1_quests();
 $ch2 = ch2_quests();
 $ch3 = ch3_quests();
+$ch4 = rebirth1_quests();
 
 wap_start('任务');
 echo '<a href="quest.php?tab=done">已完成</a> . ';
@@ -52,6 +53,12 @@ if ($q >= 16 && $q < 28) {
             $laterQuests[] = $id;
         }
     }
+} elseif ($q >= 38) {
+    foreach (array_keys($ch4) as $id) {
+        if ($id > $q || ($q === 38 && $id >= 40)) {
+            $laterQuests[] = $id;
+        }
+    }
 }
 if ($q >= 16) {
     $doingId = null;
@@ -61,7 +68,7 @@ if ($q >= 16) {
             $doneIds[] = $id;
         }
     }
-    foreach (array_merge(array_keys($ch2), array_keys($ch3)) as $id) {
+    foreach (array_merge(array_keys($ch2), array_keys($ch3), array_keys($ch4)) as $id) {
         if ($id < $q && !in_array($id, $doneIds, true)) {
             $doneIds[] = $id;
         }
@@ -69,17 +76,17 @@ if ($q >= 16) {
     sort($doneIds);
 }
 
-$nameOf = function ($id) use ($newSteps, $ch1, $ch2, $ch3) {
+$nameOf = function ($id) use ($newSteps, $ch1, $ch2, $ch3, $ch4) {
     if (isset($newSteps[$id])) {
         return $newSteps[$id]['t'];
     }
-    return $ch1[$id]['name'] ?? $ch2[$id]['name'] ?? $ch3[$id]['name'] ?? ('任务' . $id);
+    return $ch1[$id]['name'] ?? $ch2[$id]['name'] ?? $ch3[$id]['name'] ?? $ch4[$id]['name'] ?? ('任务' . $id);
 };
-$descOf = function ($id) use ($newSteps, $ch1, $ch2, $ch3) {
+$descOf = function ($id) use ($newSteps, $ch1, $ch2, $ch3, $ch4) {
     if (isset($newSteps[$id])) {
         return $newSteps[$id]['d'];
     }
-    return $ch1[$id]['todo'] ?? $ch2[$id]['todo'] ?? $ch3[$id]['todo'] ?? '';
+    return $ch1[$id]['todo'] ?? $ch2[$id]['todo'] ?? $ch3[$id]['todo'] ?? $ch4[$id]['todo'] ?? '';
 };
 
 if ($tab === 'doing') {

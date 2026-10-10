@@ -44,6 +44,11 @@ $people = [
     'arena_m' => ['name' => '竞技场大师·雷横', 'loc' => 'square', 'text' => '想证明自己吗？竞技场欢迎你。这里不拼手速，只拼实力。你的队伍、宠物、装备，全部自动战斗。赢了排名上升，输了排名下降。每天结算一次，排名越高，奖励越好。'],
     'med_t' => ['name' => '草药学徒·薄荷', 'loc' => 'market', 'text' => '我是艾琳的学徒，老师忙着找她哥哥，药摊我看着。绷带10%到圣水50%，按血量回，血越多越划算。'],
     'med_s' => ['name' => '银月药剂师·霜叶', 'loc' => 'silver_sq', 'text' => '白银城的影子会动，血可不能空。备瓶月影圣水吧，关键时刻能救命。'],
+    'rb_waldon' => ['name' => '总会长·瓦尔顿', 'loc' => 'avenue', 'text' => '你的力量到瓶颈了。再往上，要选自己的路。四条路，四种命运。去体验它们，再回来选。'],
+    'rb_iron' => ['name' => '铁拳', 'loc' => 'arena_gate', 'text' => '战士的路，是承受。不是杀死敌人，是活下来。和我的学徒打一场，撑十回合不死，就算过。不许用技能，只能砍。'],
+    'rb_mori' => ['name' => '莫里亚蒂院长', 'loc' => 'library', 'text' => '法师的路，是理解。力量来自知识，不是蛮力。答对我三道题。答错一次1银，交了再答。'],
+    'rb_hawk' => ['name' => '老猎人·霍克', 'loc' => 'capital_gate', 'text' => '猎手的路，是耐心。追那头白鹿，别惊动它。树冠快但险，溪谷稳但慢，草丛要等。你选。'],
+    'rb_samuel' => ['name' => '大主教·塞缪尔', 'loc' => 'cathedral', 'text' => '牧师的路，是取舍。你救不了所有人。十份药，十个病人，怎么分，你定。救满六人，算过。'],
     'med_c' => ['name' => '王都药剂师·藏红', 'loc' => 'avenue', 'text' => '傀儡不流血，你流。银丝勒颈之前，先把血回满。'],
 ];
 if (!isset($people[$who]) || $people[$who]['loc'] !== $cur) {
@@ -227,6 +232,120 @@ if ($who === 'gwen' && $choice === 'start' && (int) $u['quest'] === 16) {
     header('Location: npc.php?who=gwen');
     exit;
 }
+if ($who === 'rb_waldon' && $choice === 'start' && (int) $u['quest'] === 38 && (int) ($u['lv'] ?? 1) >= 299) {
+    $u['quest'] = 40;
+    user_save($u);
+    cflag_set((int) $u['id'], 'rb1_start', 1);
+    flash_set('瓦尔顿：一转·觉醒之路开启！去见四位导师，完成四重试炼再回来。');
+    header('Location: npc.php?who=rb_waldon');
+}
+// 一转四试炼：铁拳承伤/莫里亚蒂答题/霍克追鹿/塞缪尔舍药
+if ($who === 'rb_iron' && $choice === 'try' && in_array((int) $u['quest'], [40, 41], true)) {
+    $f = cflags((int) $u['id']);
+    if (!empty($f['rb1_war'])) { flash_set('铁拳：这关你过了，别再来找打。'); }
+    elseif (!empty($f['rb1_war_try'])) {
+        cflag_set((int) $u['id'], 'rb1_war', 1);
+        $u['gold'] = (int)($u['gold'] ?? 0) + 5000; user_save($u);
+        flash_set('铁拳：十回合，站着！战士试炼通过！奖励5银。');
+    } else {
+        cflag_set((int) $u['id'], 'rb1_war_try', 1); user_save($u);
+        flash_set('铁拳的学徒上场了！他只会砍你，你只能普通攻击（去打一架再回来，技能不许用）。');
+    }
+    header('Location: npc.php?who=rb_iron'); exit;
+}
+if ($who === 'rb_mori' && $choice === 'quiz' && in_array((int) $u['quest'], [40, 41], true)) {
+    $f = cflags((int) $u['id']);
+    $a1 = (string)($_GET['a1'] ?? ''); $a2 = (string)($_GET['a2'] ?? ''); $a3 = (string)($_GET['a3'] ?? '');
+    if (!empty($f['rb1_mag'])) { flash_set('莫里亚蒂：你已经懂了，去别处看看吧。'); }
+    elseif ($a1 !== '' && $a2 !== '' && $a3 !== '') {
+        if ($a1 === 'light' && $a2 === 'holy' && $a3 === 'arcane') { cflag_set((int) $u['id'], 'rb1_mag', 1); $u['gold'] = (int)($u['gold'] ?? 0) + 5000; user_save($u); flash_set('莫里亚蒂：全对！法师试炼通过！奖励5银。'); }
+        elseif ((int)($u['gold'] ?? 0) < 1000) { flash_set('答错了，重答一次1银，你钱不够。'); }
+        else { $u['gold'] = (int)$u['gold'] - 1000; user_save($u); flash_set('答错了，扣1银，再想想（光/圣光/奥术）。'); }
+    }
+    header('Location: npc.php?who=rb_mori'); exit;
+}
+if ($who === 'rb_hawk' && in_array($choice, ['tree', 'vale', 'grass'], true) && in_array((int) $u['quest'], [40, 41], true)) {
+    $f = cflags((int) $u['id']);
+    if (!empty($f['rb1_hun'])) { flash_set('霍克：鹿已经认得你了，去忙别的吧。'); }
+    elseif ($choice === 'tree' && mt_rand(1, 100) > 50) { flash_set('树冠太吵，白鹿跑了！再试一次（换条路更稳）。'); }
+    elseif ($choice === 'vale') { cflag_set((int) $u['id'], 'rb1_hun_wait', time() + 600); flash_set('你沿溪谷跟了上去……十分钟后再来找我（先去干别的）。'); }
+    elseif ($choice === 'grass') { cflag_set((int) $u['id'], 'rb1_hun_wait', time() + 300); flash_set('你趴进草丛……五分钟后再来找我。'); }
+    else { cflag_set((int) $u['id'], 'rb1_hun', 1); $u['gold'] = (int)($u['gold'] ?? 0) + 5000; user_save($u); flash_set('树冠突袭成功！猎手试炼通过！奖励5银。'); }
+    header('Location: npc.php?who=rb_hawk'); exit;
+if ($who === 'rb_samuel' && $choice === 'give' && in_array((int) $u['quest'], [40, 41], true)) {
+    $f = cflags((int) $u['id']);
+    $pick = array_map('intval', explode(',', (string)($_GET['p'] ?? '')));
+    if (!empty($f['rb1_pri'])) { flash_set('塞缪尔：你已经做过取舍了。'); }
+    elseif ($pick === []) { flash_set('先选人再交给我。'); }
+    else {
+        $need = [1,1,1,2,2,2,2,3,3,5]; $cost = 0; $saved = 0;
+        foreach ($pick as $pi) { if ($pi >= 1 && $pi <= 10) { $cost += $need[$pi - 1]; $saved++; } }
+        $pick = array_values(array_unique($pick)); $cost = 0; $saved = 0;
+        foreach ($pick as $pi) { if ($pi >= 1 && $pi <= 10) { $cost += $need[$pi - 1]; $saved++; } }
+        if ($cost > 10) { flash_set($cost . '份药不够分，只有十份。'); }
+        elseif ($saved >= 6) { cflag_set((int) $u['id'], 'rb1_pri', 1); $u['gold'] = (int)($u['gold'] ?? 0) + 5000; user_save($u); $m = '塞缪尔：救下' . $saved . '人！牧师试炼通过！奖励5银。'; flash_set($m); }
+        else { $m2 = '只救下' . $saved . '人，不到六人。再想想（先救药少的人）。'; flash_set($m2); }
+    }
+    header('Location: npc.php?who=rb_samuel'); exit;
+}
+if ($who === 'rb_waldon' && in_array($choice, ['warrior','mage','hunter','priest'], true) && (int) $u['quest'] === 45) {
+    $f = cflags((int) $u['id']);
+    if (empty($f['rb1_war']) || empty($f['rb1_mag']) || empty($f['rb1_hun']) || empty($f['rb1_pri'])) { flash_set('瓦尔顿：四重试炼还没完，别急。'); }
+    elseif (!empty($f['rb1_job'])) { flash_set('路已经选了，走下去吧。'); }
+    else {
+        cflag_set((int) $u['id'], 'rb1_job', $choice);
+        $u['quest'] = 46; $u['gold'] = (int)($u['gold'] ?? 0) + 20000; user_save($u);
+        $sk = ['warrior' => 'w3', 'mage' => 'm3', 'hunter' => 'h3', 'priest' => 'p3'][$choice] ?? '';
+        if ($sk !== "") { $bk = "book_" . $sk; add_mat((int) $u["id"], $bk, 1); }
+        $rn = rebirth1_names()[$choice] ?? $choice; $pd2 = rebirth1_passive_desc($choice);
+        send_mail((int) $u['id'], '总会长', 'rebirth', '一转', $rn . $pd2, []);
+        $rn2 = rebirth1_names()[$choice] ?? $choice;
+        flash_set('一转完成' . $rn2);
+    }
+    header('Location: npc.php?who=rb_waldon'); exit;
+}
+}
+if ($who === 'rb_hawk' && $choice === 'back' && in_array((int) $u['quest'], [40, 41], true)) {
+    $f = cflags((int) $u['id']);
+    if (!empty($f['rb1_hun'])) { flash_set('霍克：鹿已经认得你了。'); }
+    elseif (!empty($f['rb1_hun_wait']) && (int)$f['rb1_hun_wait'] > time()) { $left = gmdate('i:s', (int)$f['rb1_hun_wait'] - time()); flash_set('还不到时候，白鹿还没回来（剩' . $left . '）。'); }
+    elseif (!empty($f['rb1_hun_wait'])) { cflag_set((int) $u['id'], 'rb1_hun', 1); $u['gold'] = (int)($u['gold'] ?? 0) + 5000; user_save($u); flash_set('你跟着白鹿到了林间空地！猎手试炼通过！奖励5银。'); }
+    else { flash_set('先选一条路再回来。'); }
+    header('Location: npc.php?who=rb_hawk'); exit;
+if ($who === 'rb_samuel' && $choice === 'give' && in_array((int) $u['quest'], [40, 41], true)) {
+    $f = cflags((int) $u['id']);
+    $pick = array_map('intval', explode(',', (string)($_GET['p'] ?? '')));
+    if (!empty($f['rb1_pri'])) { flash_set('塞缪尔：你已经做过取舍了。'); }
+    elseif ($pick === []) { flash_set('先选人再交给我。'); }
+    else {
+        $need = [1,1,1,2,2,2,2,3,3,5]; $cost = 0; $saved = 0;
+        foreach ($pick as $pi) { if ($pi >= 1 && $pi <= 10) { $cost += $need[$pi - 1]; $saved++; } }
+        $pick = array_values(array_unique($pick)); $cost = 0; $saved = 0;
+        foreach ($pick as $pi) { if ($pi >= 1 && $pi <= 10) { $cost += $need[$pi - 1]; $saved++; } }
+        if ($cost > 10) { flash_set($cost . '份药不够分，只有十份。'); }
+        elseif ($saved >= 6) { cflag_set((int) $u['id'], 'rb1_pri', 1); $u['gold'] = (int)($u['gold'] ?? 0) + 5000; user_save($u); $m = '塞缪尔：救下' . $saved . '人！牧师试炼通过！奖励5银。'; flash_set($m); }
+        else { $m2 = '只救下' . $saved . '人，不到六人。再想想（先救药少的人）。'; flash_set($m2); }
+    }
+    header('Location: npc.php?who=rb_samuel'); exit;
+}
+if ($who === 'rb_waldon' && in_array($choice, ['warrior','mage','hunter','priest'], true) && (int) $u['quest'] === 45) {
+    $f = cflags((int) $u['id']);
+    if (empty($f['rb1_war']) || empty($f['rb1_mag']) || empty($f['rb1_hun']) || empty($f['rb1_pri'])) { flash_set('瓦尔顿：四重试炼还没完，别急。'); }
+    elseif (!empty($f['rb1_job'])) { flash_set('路已经选了，走下去吧。'); }
+    else {
+        cflag_set((int) $u['id'], 'rb1_job', $choice);
+        $u['quest'] = 46; $u['gold'] = (int)($u['gold'] ?? 0) + 20000; user_save($u);
+        $sk = ['warrior' => 'w3', 'mage' => 'm3', 'hunter' => 'h3', 'priest' => 'p3'][$choice] ?? '';
+        if ($sk !== "") { $bk = "book_" . $sk; add_mat((int) $u["id"], $bk, 1); }
+        $rn = rebirth1_names()[$choice] ?? $choice; $pd2 = rebirth1_passive_desc($choice);
+        $body = "rb1:" . $rn . "|" . $pd2;
+        send_mail((int) $u["id"], "w2", "rebirth", "t2", $body, []);
+        $rn2 = rebirth1_names()[$choice] ?? $choice;
+        flash_set("rb1done:" . $rn2);
+    }
+    header('Location: npc.php?who=rb_waldon'); exit;
+}
+}
 if ($who === 'waldon' && $choice === 'start' && (int) $u['quest'] === 28) {
     $u['quest'] = 30;
     user_save($u);
@@ -354,6 +473,37 @@ if ($who === 'gwen' && (int) $u['quest'] === 16 && (int) ($u['lv'] ?? 1) >= 30) 
 }
 if ($who === 'waldon' && (int) $u['quest'] === 28) {
     echo '<a href="npc.php?who=waldon&choice=start">递上推荐信，开启第三章·傀儡之夜</a><br>';
+}
+if ($who === 'rb_waldon' && (int) $u['quest'] === 38 && (int) ($u['lv'] ?? 1) >= 299) {
+    echo '<a href="npc.php?who=rb_waldon&choice=start">聆听四条路，开启一转·觉醒之路</a><br>';
+}
+if ($who === 'rb_waldon' && (int) $u['quest'] === 45) {
+    $rf = cflags((int) $u['id']);
+    if (!empty($rf['rb1_war']) && !empty($rf['rb1_mag']) && !empty($rf['rb1_hun']) && !empty($rf['rb1_pri']) && empty($rf['rb1_job'])) {
+        foreach (rebirth1_names() as $jid => $jname) {
+            echo '<a href="npc.php?who=rb_waldon&choice=' . $jid . '">选择【' . h($jname) . '】：' . h(rebirth1_passive_desc($jid)) . '</a><br>';
+        }
+    }
+}
+if ($who === 'rb_iron' && in_array((int) $u['quest'], [40, 41], true) && empty(cflags((int) $u['id'])['rb1_war'])) {
+    echo '<a href="npc.php?who=rb_iron&choice=try">接受战士试炼（只能普攻，撑十回合）</a><br>';
+}
+if ($who === 'rb_mori' && in_array((int) $u['quest'], [40, 41], true) && empty(cflags((int) $u['id'])['rb1_mag'])) {
+    echo '三道题（答错1银）：<br>';
+    echo '一、什么克制深渊？二、什么净化影蚀？三、什么冻结时间？<br>';
+    echo '<a href="npc.php?who=rb_mori&choice=quiz&a1=light&a2=holy&a3=arcane">交卷：光·圣光·奥术</a><br>';
+    echo '<a href="npc.php?who=rb_mori&choice=quiz&a1=fire&a2=fire&a3=ice">交卷：火·火·冰（试试答错）</a><br>';
+}
+if ($who === 'rb_hawk' && in_array((int) $u['quest'], [40, 41], true) && empty(cflags((int) $u['id'])['rb1_hun'])) {
+    echo '<a href="npc.php?who=rb_hawk&choice=tree">走树冠（快，50%惊鹿）</a><br>';
+    echo '<a href="npc.php?who=rb_hawk&choice=vale">走溪谷（稳，10分钟）</a><br>';
+    echo '<a href="npc.php?who=rb_hawk&choice=grass">走草丛（稳，5分钟）</a><br>';
+    echo '<a href="npc.php?who=rb_hawk&choice=back">回去找霍克交差</a><br>';
+}
+if ($who === 'rb_samuel' && in_array((int) $u['quest'], [40, 41], true) && empty(cflags((int) $u['id'])['rb1_pri'])) {
+    echo '十份药，十个病人（需求1/1/1/2/2/2/2/3/3/5），救满6人即过：<br>';
+    echo '<a href="npc.php?who=rb_samuel&choice=give&p=1,2,3,4,5,6">救1~6号（3份+6份=9份，救6人）</a><br>';
+    echo '<a href="npc.php?who=rb_samuel&choice=give&p=10">只救10号（5份，救1人，会失败）</a><br>';
 }
 if ($who === 'guard_captain' && (int) $u['quest'] === 31 && empty(cflags((int) $u['id'])['gc_done'])) {
     echo '抉择：<a href="npc.php?who=guard_captain&choice=kill">杀了他</a> <a href="npc.php?who=guard_captain&choice=cut">切断银丝(+1银)</a> <a href="npc.php?who=guard_captain&choice=leave">离开</a><br>';

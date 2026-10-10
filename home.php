@@ -123,14 +123,17 @@ $npcLinks = [
     'town_sq' => [['alice', '修女·爱丽丝'], ['horse_t', '赛马人·老霍'], ['rank_t', '榜单老人']],
     'silver_gate' => [['sentry', '守卫·布雷']], 'sguild' => [['gwen', '会长·格温'], ['gmaster', '公会管理员·霍尔']],
     'silver_sq' => [['vera', '守渊人·薇拉'], ['horse_s', '赛马人·阿金'], ['rank_s', '榜单老人'], ['med_s', '银月药剂师·霜叶']],
-    'square' => [['horse_g', '赛马人·豆芽'], ['rank_g', '榜单老人'], ['med_g', '雾语药剂师·菘蓝'], ['eventer', '活动专员·阿战']],
+    'square' => [['horse_g', '赛马人·豆芽'], ['rank_g', '榜单老人'], ['med_g', '雾语药剂师·菘蓝'], ['eventer', '活动专员·阿战'], ['arena_m', '竞技场大师·雷横']],
     'guild' => [['greg', '公会接待·格雷']],
     'dsewer1' => [['reed', '守卫·雷德']], 'dsewer2' => [['lily2', '少女·莉莉']],
     'manor' => [['lord', '城主·瓦伦丁']],
     'noble' => [['guard_captain', '守卫队长']],
     'theater' => [['stringer', '牵线者'], ['spider', '断线人·阿蛛']],
     'farm' => [['grocer', '菜商·豆豆']],
-    'avenue' => [['waldon', '线人·瓦尔顿'], ['rank_c', '榜单老人'], ['med_c', '王都药剂师·藏红']],
+    'arena_gate' => [['rb_iron', '铁拳']],
+    'library' => [['rb_mori', '莫里亚蒂院长']],
+    'capital_gate' => [['rb_hawk', '老猎人·霍克']],
+    'cathedral' => [['rb_samuel', '大主教·塞缪尔']],
 ];
 $npcHere = 0;
 foreach ($npcLinks[$cur] ?? [] as [$npcId, $npcName]) {

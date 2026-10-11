@@ -3,6 +3,7 @@ declare(strict_types=1);
 require __DIR__ . '/includes/bootstrap.php';
 
 $u = require_login();
+grant_chapter_titles((int) $u['id']);
 $who = (string) ($_GET['who'] ?? '');
 $choice = (string) ($_GET['choice'] ?? '');
 $cur = (string) $u['loc'];
@@ -376,7 +377,8 @@ if ($who === 'soulmaster' && $choice === 'up') {
     header('Location: npc.php?who=soulmaster');
     exit;
 }
-if (in_array($who, ['bounty_boss', 'bounty_elder', 'bounty_frost'], true) && ($choice === 'take' || $choice === 'claim')) {    flash_set(bounty_claim((int) $u['id'], (int) ($_GET['i'] ?? 0)));    header('Location: npc.php?who=' . $who);    exit;}    $lv = (int) ($u['lv'] ?? 1);if ($who === 'oldash' && $choice === 'open2') {
+if (in_array($who, ['bounty_boss', 'bounty_elder', 'bounty_frost'], true) && ($choice === 'take' || $choice === 'claim')) {    flash_set(bounty_claim((int) $u['id'], (int) ($_GET['i'] ?? 0)));    header('Location: npc.php?who=' . $who);    exit;}    $lv = (int) ($u['lv'] ?? 1);
+if ($who === 'oldash' && $choice === 'open2') {
     $lv = (int) ($u['lv'] ?? 1);
     if ($lv < 580) {
         flash_set('老灰摇头：灰烬深渊只要580级以上的冒险者，你现在' . $lv . '级。');
@@ -703,7 +705,8 @@ if (in_array($who, ['bounty_boss', 'bounty_elder', 'bounty_frost'], true)) {
         echo '·' . h(monsters()[$b['mid']]['name']) . '×' . $b['need'] . '（赏' . h(fmt_money($b['gold'])) . '+' . h(mat_name($b['pot'])) . '×2）';
         echo ' <a href="npc.php?who=' . $who . '&choice=take&i=' . $i . '">接</a> <a href="npc.php?who=' . $who . '&choice=claim&i=' . $i . '">交</a><br>';
     }
-}if ($who === 'rb_iron' && in_array((int) $u['quest'], [40, 41], true) && empty(cflags((int) $u['id'])['rb1_war'])) {
+}
+if ($who === 'rb_iron' && in_array((int) $u['quest'], [40, 41], true) && empty(cflags((int) $u['id'])['rb1_war'])) {
     echo '<a href="npc.php?who=rb_iron&choice=try">接受战士试炼（只能普攻，撑十回合）</a><br>';
 }
 if ($who === 'rb_mori' && in_array((int) $u['quest'], [40, 41], true) && empty(cflags((int) $u['id'])['rb1_mag'])) {
@@ -781,7 +784,7 @@ if (in_array($who, ['med_g', 'med_t', 'med_s', 'med_c'], true)) {
     $medm = mats_of((int) $u['id']);
     foreach (pct_potions() as $pmid => $pt) {
         $pr = $pt['unit'] === 'gold' ? fmt_money($pt['price']) : fmt_money($pt['price']);
-        echo '·【' . h($pt['name']) . '】回' . $pt['pct'] . '% ' . h($pr) . '(有' . (int) ($medm[$pmid] ?? 0) . ') <a href="npc.php?who=' . $who . '&choice=buy' . $pmid . '">买</a><br>';
+        echo '·【' . h($pt['name']) . '】回' . $pt['pct'] . '%' . ((($pt['stat'] ?? 'hp') === 'mp') ? '蓝' : '血') . ' ' . h($pr) . '(有' . (int) ($medm[$pmid] ?? 0) . ') <a href="npc.php?who=' . $who . '&choice=buy' . $pmid . '">买</a><br>';
     }
 }
 if ($who === 'reed' && (int) $u['quest'] === 21 && empty(cflags((int) $u['id'])['reed_done'])) {

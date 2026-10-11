@@ -45,20 +45,6 @@ if ($a === 'sellall') {
     header('Location: bag.php?tab=equip');
     exit;
 }
-if ($a === 'usetent') {
-    $mats = mats_of((int) $u['id']);
-    if (empty($mats['tent'])) {
-        flash_set('没有帐篷，去商城装扮栏买。');
-    } else {
-        add_mat((int) $u['id'], 'tent', -1);
-        $u['hp'] = (int) $u['maxhp'];
-        $u['mp'] = (int) ($u['maxmp'] ?? 0);
-        user_save($u);
-        flash_set('支起帐篷睡了一觉，伤全好了！');
-    }
-    header('Location: bag.php?tab=func');
-    exit;
-}
 if ($a === 'useext') {
     flash_set(use_bag_ext((int) $u['id'], (string) ($_GET['id'] ?? '')));
     header('Location: bag.php?tab=func');
@@ -150,6 +136,16 @@ if ($a === 'usereset') {
 if ($a === 'usedragon') {
     flash_set(use_dragon_pill((int) $u['id']));
     header('Location: status.php?a=all');
+    exit;
+}
+if ($a === 'usebox') {
+    flash_set(open_dragon_box((int) $u['id']));
+    header('Location: bag.php?tab=func');
+    exit;
+}
+if ($a === 'usetent') {
+    flash_set(use_tent((int) $u['id']));
+    header('Location: bag.php?tab=func');
     exit;
 }
 if ($a === 'synth') {
@@ -274,8 +270,7 @@ if ($tab === 'equip') {
     if (!$any) {
         echo '<span class="muted">暂无任务物品。</span>';
     }
-} elseif ($tab === 'book') {
-    $mats = mats_of((int) $u['id']);
+    echo '<div class="hr">--------</div>';
     echo '技能书：<br>';
     $hasBook = false;
     foreach (skill_books() as $bid => $b) {
@@ -299,10 +294,6 @@ if ($tab === 'equip') {
     if (!empty($mats['reset_potion'])) {
         $func = true;
         echo '·属性洗点药x' . $mats['reset_potion'] . ' <a href="bag.php?a=usereset">使用</a><br>';
-    if (!empty($mats['tent'])) {
-        $func = true;
-        echo '·随身帐篷x' . $mats['tent'] . ' <a href="bag.php?a=usetent">使用(野外回满)</a><br>';
-    }
     }
     if (!empty($mats['rename_card'])) {
         $func = true;
@@ -311,6 +302,14 @@ if ($tab === 'equip') {
     if (!empty($mats['dragon_pill'])) {
         $func = true;
         echo '·真龙丹x' . $mats['dragon_pill'] . '(不可交易) <a href="bag.php?a=usedragon">使用(+3自由属性点)</a><br>';
+    }
+    if (!empty($mats['dragon_box'])) {
+        $func = true;
+        echo '·龙鳞宝箱x' . $mats['dragon_box'] . '(强化石+宠物蛋+陪练+抽称号) <a href="bag.php?a=usebox">开启</a><br>';
+    }
+    if (!empty($mats['tent'])) {
+        $func = true;
+        echo '·随身帐篷(野外扎营回满，不消耗) <a href="bag.php?a=usetent">扎营</a><br>';
     }
     if (!empty($mats['bag_ext5'])) {
         $func = true;

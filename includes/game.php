@@ -5,7 +5,7 @@ function jobs(): array
 {
     return [
         'warrior' => ['name' => '战士', 'hp' => 62, 'mp' => 20, 'atk' => 7, 'def' => 5, 'skill' => '重斩', 'weapon' => 'axe', 'armor' => 'cloth', 'desc' => '物理近战，血多甲厚。技能重斩：150%+物理伤害，断岳斩附魔火伤。只能用斧剑锤，盾牌专精'],
-        'mage' => ['name' => '法师', 'hp' => 42, 'mp' => 55, 'atk' => 11, 'def' => 1, 'skill' => '火球术', 'weapon' => 'staff', 'armor' => 'cloth', 'desc' => '纯法术炮台，伤害看灵力+法术强度。火球/爆裂火球/寒霜全是法伤。只能用法杖法器，力量对法师无效'],
+        'mage' => ['name' => '法师', 'hp' => 42, 'mp' => 55, 'atk' => 11, 'def' => 1, 'skill' => '火球术', 'weapon' => 'staff', 'armor' => 'cloth', 'desc' => '纯法术炮台，伤害看智慧+法攻。火球/爆裂火球/寒霜全是法伤。只能用法杖法器，力量对法师无效'],
         'hunter' => ['name' => '猎手', 'hp' => 50, 'mp' => 30, 'atk' => 8, 'def' => 3, 'skill' => '双连射', 'weapon' => 'bow', 'armor' => 'cloth', 'desc' => '物理连射+爆炸箭（火伤）。只能用弓弩匕首'],
         'priest' => ['name' => '牧师', 'hp' => 54, 'mp' => 45, 'atk' => 6, 'def' => 3, 'skill' => '治疗术', 'weapon' => 'mace', 'armor' => 'cloth', 'desc' => '治疗看法攻，神圣伤害也是法伤。能用锤杖盾'],
     ];
@@ -112,7 +112,7 @@ function locations(): array
             'exits' => ['gate' => '罪渊入口'],
             'monsters' => [],
         ],
-    ] + ch1_locations() + dsw_locations() + ch2_locations() + abx_locations() + ch3_locations() + mx_locations() + farm_locations() + ice_locations() + fr_locations() + fo_locations() + em_locations() + wb_locations() + pz_locations() + sen_locations() + wild3_locations() + frostburg_locations() + greenheart_locations() + wild45_locations() + as_locations() + vx_locations();
+    ] + ch1_locations() + dsw_locations() + ch2_locations() + abx_locations() + ch3_locations() + mx_locations() + farm_locations() + ice_locations() + fr_locations() + fo_locations() + em_locations() + wb_locations() + pz_locations() + sen_locations() + wild3_locations() + frostburg_locations() + greenheart_locations() + wild45_locations() + as_locations() + vx_locations() + gr_locations();
 }
 
 function loc(string $id): array
@@ -271,6 +271,26 @@ function monsters(): array
         'vx_herald' => ['name' => '裂隙传令官', 'hp' => 2200000, 'atk' => 5400, 'exp' => 4200000, 'gold' => 2000000],
         'vx_tyrant' => ['name' => '虚空暴君', 'hp' => 3000000, 'atk' => 6000, 'exp' => 9000000, 'gold' => 4300000],        // 世界BOSS（999级，世界BOSS系统专用，野外不可遇敌）
         'doyle' => ['name' => '烬焰领主·火龙多伊尔', 'hp' => 80000000, 'atk' => 9000, 'exp' => 0, 'gold' => 0],
+        'gr_hyena' => ['name' => '灰烬鬣狗', 'hp' => 2200000, 'atk' => 5600, 'exp' => 4200000, 'gold' => 2000000],
+        'gr_vulture' => ['name' => '食腐秃鹫', 'hp' => 2250000, 'atk' => 5700, 'exp' => 4300000, 'gold' => 2050000],
+        'gr_worm' => ['name' => '流沙蠕虫', 'hp' => 2300000, 'atk' => 5800, 'exp' => 4400000, 'gold' => 2100000],
+        'gr_raider' => ['name' => '荒原掠夺者', 'hp' => 2350000, 'atk' => 5900, 'exp' => 4500000, 'gold' => 2150000],
+        'gr_storm' => ['name' => '沙暴元素', 'hp' => 2400000, 'atk' => 6000, 'exp' => 4600000, 'gold' => 2200000],
+        'gr_bat' => ['name' => '洞穴巨蝠', 'hp' => 2500000, 'atk' => 6100, 'exp' => 4800000, 'gold' => 2300000],
+        'gr_guard' => ['name' => '巢穴守卫', 'hp' => 2550000, 'atk' => 6200, 'exp' => 4900000, 'gold' => 2350000],
+        'gr_whelp' => ['name' => '咕噜崽子', 'hp' => 2600000, 'atk' => 6300, 'exp' => 5000000, 'gold' => 2400000],
+        'gr_wraith' => ['name' => '骨堆怨灵', 'hp' => 2650000, 'atk' => 6400, 'exp' => 5100000, 'gold' => 2450000],
+        'gr_spider' => ['name' => '毒涎蜘蛛', 'hp' => 2700000, 'atk' => 6500, 'exp' => 5200000, 'gold' => 2500000],
+        'gr_retainer' => ['name' => '暴食亲卫', 'hp' => 2800000, 'atk' => 6600, 'exp' => 5400000, 'gold' => 2600000],
+        'gr_shaman' => ['name' => '咕噜萨满', 'hp' => 2850000, 'atk' => 6700, 'exp' => 5500000, 'gold' => 2650000],
+        'gr_fang' => ['name' => '断牙斗士', 'hp' => 2900000, 'atk' => 6800, 'exp' => 5600000, 'gold' => 2700000],
+        'gr_idol' => ['name' => '王座傀儡', 'hp' => 2950000, 'atk' => 6900, 'exp' => 5700000, 'gold' => 2750000],
+        'gr_guru' => ['name' => '食人魔·咕噜', 'hp' => 3500000, 'atk' => 7200, 'exp' => 7000000, 'gold' => 3400000],
+        'gr_brood' => ['name' => '蠕虫母巢', 'hp' => 3100000, 'atk' => 7000, 'exp' => 6000000, 'gold' => 2900000],
+        'gr_shard' => ['name' => '碎片灵体', 'hp' => 3150000, 'atk' => 7100, 'exp' => 6100000, 'gold' => 2950000],
+        'gr_shadow' => ['name' => '咕噜之影', 'hp' => 3200000, 'atk' => 7200, 'exp' => 6200000, 'gold' => 3000000],
+        'gr_nightmare' => ['name' => '荒原梦魇', 'hp' => 3250000, 'atk' => 7300, 'exp' => 6300000, 'gold' => 3050000],
+        'gr_ancient' => ['name' => '远古暴食者', 'hp' => 3400000, 'atk' => 7500, 'exp' => 6600000, 'gold' => 3200000],
     ];
 }
 
@@ -338,7 +358,9 @@ function mall_goods(): array
         $g[$tid] = ['name' => $t['name'], 'price' => $t['price'], 'unit' => $t['cap']];
     }
     $g['egg_unknown'] = ['name' => '未知宠物蛋', 'price' => 10, 'unit' => 1];
-    $g['witch_egg'] = ['name' => '魔女之茧（限时）', 'price' => 500, 'unit' => 1];
+    // 下架：传奇宠物不直购（魔女之茧）
+    $g['dragon_box'] = ['name' => '龙鳞宝箱', 'price' => 200, 'unit' => 1];
+    $g['tent'] = ['name' => '随身帐篷', 'price' => 100, 'unit' => 1];
     $g['exp_card100'] = ['name' => '升级卡100型', 'price' => 100, 'unit' => 1];
     $g['reset_potion'] = ['name' => '属性洗点药', 'price' => 300, 'unit' => 1];
     $g['bag_ext5'] = ['name' => '5格背包扩充', 'price' => 200, 'unit' => 1];
@@ -350,10 +372,10 @@ function mall_goods(): array
     $g['offline_time'] = ['name' => '人偶离线升级模块', 'price' => 50, 'unit' => 3600];
     $g['offline_mod'] = ['name' => '人偶离线升级模块', 'price' => 50, 'unit' => 3600];
     $g['rename_card'] = ['name' => '改名卡', 'price' => 100, 'unit' => 1];
-    $g['title_iron'] = ['name' => '称号·黑铁冒险者', 'price' => 50, 'unit' => 1];
-    $g['title_silver'] = ['name' => '称号·秘银冒险者', 'price' => 150, 'unit' => 1];
-    $g['title_gold'] = ['name' => '称号·精金传说', 'price' => 300, 'unit' => 1];
-    $g['tent'] = ['name' => '随身帐篷', 'price' => 100, 'unit' => 1];
+    // 下架：$g['title_iron'] = ['name' => '称号·黑铁冒险者', 'price' => 50, 'unit' => 1];
+    // 下架：$g['title_silver'] = ['name' => '称号·秘银冒险者', 'price' => 150, 'unit' => 1];
+    // 下架：$g['title_gold'] = ['name' => '称号·精金传说', 'price' => 300, 'unit' => 1];
+    // 下架：$g['tent'] = ['name' => '随身帐篷', 'price' => 100, 'unit' => 1];
     return $g;
 }
 
@@ -1449,8 +1471,8 @@ function witch_event_active(): bool
 
 function shop_egg_pool(): array
 {
+    // 传奇宠物不直购：蛋池只到史诗（幼龙/霜狼幼崽），魔女传奇只能活动掉落
     $pool = ['egg_slime' => 500, 'egg_stone' => 200, 'egg_ember' => 120, 'egg_ghost' => 80, 'egg_fox' => 40, 'egg_bird' => 30, 'egg_dragon' => 20, 'frost_egg' => 8];
-    if (witch_event_active()) { $pool['witch_egg'] = 2; }
     return $pool;
 }
 
@@ -2090,7 +2112,12 @@ function fmt_money(int $copper): string
     if ($s > 0) {
         $out .= $s . '银';
     }
-    $out .= $c . '铜';
+    if ($c > 0) {
+        $out .= $c . '铜';
+    }
+    if ($out === '') {
+        $out = '0铜';
+    }
     return $out;
 }
 
@@ -2222,9 +2249,9 @@ function affix_catalog(): array
         return ['tiers' => $t, 'weight' => $weight, 'group' => $group, 'precision' => $precision];
     };
     return [
-        'atk' => ['name' => '攻击力', 'slots' => ['weapon', 'gloves', 'ring', 'necklace'], 'data' => $r([[2, 5], [5, 10], [10, 18], [18, 30], [30, 50]], 100)],
-        'matk' => ['name' => '法术强度', 'slots' => ['weapon', 'offhand', 'necklace', 'ring'], 'data' => $r([[2, 5], [5, 10], [10, 18], [18, 30], [30, 50]], 90)],
-        'atk_pct' => ['name' => '攻击力%', 'slots' => ['weapon'], 'data' => $r([[1, 2], [2, 4], [4, 6], [6, 9], [8, 12]], 80, 'offense_pct', 1)],
+        'atk' => ['name' => '物攻', 'slots' => ['weapon', 'gloves', 'ring', 'necklace'], 'data' => $r([[2, 5], [5, 10], [10, 18], [18, 30], [30, 50]], 100)],
+        'matk' => ['name' => '法攻', 'slots' => ['weapon', 'offhand', 'necklace', 'ring'], 'data' => $r([[2, 5], [5, 10], [10, 18], [18, 30], [30, 50]], 90)],
+        'atk_pct' => ['name' => '物攻%', 'slots' => ['weapon'], 'data' => $r([[1, 2], [2, 4], [4, 6], [6, 9], [8, 12]], 80, 'offense_pct', 1)],
         'crit' => ['name' => '暴击率', 'slots' => ['weapon', 'head', 'gloves', 'ring', 'necklace'], 'data' => $r([[0.1, 0.3], [0.3, 0.6], [0.6, 1.0], [1.0, 1.5], [1.5, 2.0]], 100, 'crit', 1)],
         'critdmg' => ['name' => '暴击伤害', 'slots' => ['weapon', 'head', 'gloves', 'ring', 'necklace'], 'data' => $r([[1, 3], [3, 6], [6, 10], [10, 15], [15, 20]], 100, 'critdmg', 1)],
         'speed' => ['name' => '攻击速度', 'slots' => ['weapon', 'gloves'], 'data' => $r([[1, 2], [2, 4], [4, 6], [6, 8], [7, 10]], 90, 'speed', 1)],
@@ -2509,22 +2536,22 @@ function equip_set_bonus_text(string $set, int $owned): string
         return '【沼泽套装】已穿' . $owned . '/3（兜帽/轻靴/之心），集齐3件：能量+300，防御+20。';
     }
     if ($set === 'abyss') {
-        return '【深渊套装】已穿' . $owned . '/3（蚀甲/腿甲/护手），集齐3件：攻击+25，防御+15。';
+        return '【深渊套装】已穿' . $owned . '/3（蚀甲/腿甲/护手），集齐3件：物攻+25，防御+15。';
     }
     if ($set === 'theater') {
-        return '【剧场套装】已穿' . $owned . '件——3件：攻击+15%；5件：元素伤害+80；7件：减伤+12%，技能伤害+20%。';
+        return '【剧场套装】已穿' . $owned . '件——3件：物攻+15%；5件：元素伤害+80；7件：减伤+12%，技能伤害+20%。';
     }
     if ($set === 'frost') {
-        return '【寒霜套装】已穿' . $owned . '/3：3件：攻击+8%，法防+80。';
+        return '【寒霜套装】已穿' . $owned . '/3：3件：物攻+8%，法防+80。';
     }
     if ($set === 'ember') {
-        return '【烬焰套装】已穿' . $owned . '/7：2件攻击+10%，4件元素伤害+120，7件真伤+500、减伤+10%、技能伤害+15%。';
+        return '【烬焰套装】已穿' . $owned . '/7：2件物攻+10%，4件元素伤害+120，7件真伤+500、减伤+10%、技能伤害+15%。';
     }
     if ($set === 'puppet') {
         return '【傀儡套装】已穿' . $owned . '/5：2件技能伤害+10%，5件元素伤害+100、减伤+8%。';
     }
     if ($set === 'thorn') {
-        return '【荆棘套装】已穿' . $owned . '/4：3件攻击+6%，4件吸血+3%。';
+        return '【荆棘套装】已穿' . $owned . '/4：3件物攻+6%，4件吸血+3%。';
     }
     return '';
 }
@@ -2552,6 +2579,36 @@ function monster_drops(string $mid): array
         'guard' => ['slot' => 'legs', 'base' => '祭坛护腿', 'rate' => 0.06, 'q' => [0, 20, 50, 30, 0]],
         'jailer' => ['slot' => 'body', 'base' => '狱卒重铠', 'rate' => 0.07, 'q' => [0, 0, 65, 35, 0]],
         'knight' => ['slot' => 'weapon', 'base' => '骑士残剑', 'rate' => 0.25, 'q' => [0, 0, 0, 70, 30], 'legendary' => ['base' => '堕落骑士大剑', 'extra' => ['k' => 'execute', 'v' => 5.0]]],
+        'doyle' => ['slot' => 'necklace', 'base' => '烬焰龙牙链', 'rate' => 0.5, 'q' => [0, 0, 0, 50, 50], 'legendary' => ['base' => '烬焰龙心·焚天', 'extra' => ['k' => 'truedmg', 'v' => 300.0]]],
+        'string_puller' => ['slot' => 'gloves', 'base' => '牵线丝手套', 'rate' => 0.2, 'q' => [0, 0, 30, 50, 20], 'legendary' => ['base' => '提线主宰·傀儡戏', 'extra' => ['k' => 'skill_damage', 'v' => 6.0]]],
+        'swamp_king' => ['slot' => 'body', 'base' => '沼泽王袍', 'rate' => 0.25, 'q' => [0, 0, 20, 50, 30], 'legendary' => ['base' => '沼泽王冠·腐殖', 'extra' => ['k' => 'regen', 'v' => 50.0]]],
+        'ink_puppet' => ['slot' => 'weapon', 'base' => '墨傀之笔', 'rate' => 0.1, 'q' => [0, 20, 50, 30, 0], 'legendary' => ['base' => '墨傀之笔·点睛', 'extra' => ['k' => 'critdmg', 'v' => 8.0]]],
+        'masked_noble' => ['slot' => 'shoes', 'base' => '假面夜行靴', 'rate' => 0.1, 'q' => [0, 20, 50, 30, 0], 'legendary' => ['base' => '假面贵胄·夜宴', 'extra' => ['k' => 'dodge', 'v' => 3.0]]],
+        'puppet_guard' => ['slot' => 'body', 'base' => '铁卫傀儡甲', 'rate' => 0.08, 'q' => [0, 30, 50, 20, 0], 'legendary' => ['base' => '铁卫傀儡·忠骸', 'extra' => ['k' => 'damage_reduction', 'v' => 4.0]]],
+        'puppet_priest' => ['slot' => 'head', 'base' => '圣骸祭司帽', 'rate' => 0.08, 'q' => [0, 30, 50, 20, 0], 'legendary' => ['base' => '圣骸祭司·赎罪', 'extra' => ['k' => 'mdef', 'v' => 60.0]]],
+        'silver_assassin' => ['slot' => 'weapon', 'base' => '银丝刺刃', 'rate' => 0.12, 'q' => [0, 10, 50, 40, 0], 'legendary' => ['base' => '银月影刺·无痕', 'extra' => ['k' => 'crit', 'v' => 4.0]]],
+        'silver_puppet' => ['slot' => 'back', 'base' => '银丝之茧', 'rate' => 0.1, 'q' => [0, 20, 50, 30, 0], 'legendary' => ['base' => '银丝之茧·重生', 'extra' => ['k' => 'lifesteal', 'v' => 2.0]]],
+        'silver_undead' => ['slot' => 'legs', 'base' => '不死银卫铠', 'rate' => 0.1, 'q' => [0, 20, 50, 30, 0], 'legendary' => ['base' => '不死银卫·永生', 'extra' => ['k' => 'hp', 'v' => 2500.0]]],
+        'gr_hyena' => ['slot' => 'weapon', 'base' => '鬣狗之牙', 'rate' => 0.06, 'q' => [0, 0, 60, 40, 0], 'legendary' => ['base' => '鬣狗之牙·噬月', 'extra' => ['k' => 'execute', 'v' => 6.0]]],
+        'gr_vulture' => ['slot' => 'head', 'base' => '秃鹫之眼', 'rate' => 0.06, 'q' => [0, 0, 60, 40, 0], 'legendary' => ['base' => '秃鹫之眼·俯瞰', 'extra' => ['k' => 'hit', 'v' => 5.0]]],
+        'gr_worm' => ['slot' => 'body', 'base' => '蠕虫之皮', 'rate' => 0.06, 'q' => [0, 0, 60, 40, 0], 'legendary' => ['base' => '蠕虫之皮·流沙', 'extra' => ['k' => 'damage_reduction', 'v' => 5.0]]],
+        'gr_raider' => ['slot' => 'weapon', 'base' => '掠夺者弯刀', 'rate' => 0.07, 'q' => [0, 0, 55, 45, 0], 'legendary' => ['base' => '掠夺者弯刀·血债', 'extra' => ['k' => 'lifesteal', 'v' => 3.0]]],
+        'gr_storm' => ['slot' => 'necklace', 'base' => '沙暴之心', 'rate' => 0.07, 'q' => [0, 0, 55, 45, 0], 'legendary' => ['base' => '沙暴之心·无垠', 'extra' => ['k' => 'move_speed', 'v' => 8.0]]],
+        'gr_bat' => ['slot' => 'back', 'base' => '巨蝠之翼', 'rate' => 0.06, 'q' => [0, 0, 60, 40, 0], 'legendary' => ['base' => '巨蝠之翼·夜幕', 'extra' => ['k' => 'dodge', 'v' => 4.0]]],
+        'gr_guard' => ['slot' => 'body', 'base' => '巢穴壁垒', 'rate' => 0.07, 'q' => [0, 0, 55, 45, 0], 'legendary' => ['base' => '巢穴壁垒·磐石', 'extra' => ['k' => 'thorns', 'v' => 200.0]]],
+        'gr_whelp' => ['slot' => 'gloves', 'base' => '雏魔之牙', 'rate' => 0.07, 'q' => [0, 0, 55, 45, 0], 'legendary' => ['base' => '雏魔之牙·初啼', 'extra' => ['k' => 'crit', 'v' => 5.0]]],
+        'gr_wraith' => ['slot' => 'head', 'base' => '骨堆王冠', 'rate' => 0.07, 'q' => [0, 0, 55, 45, 0], 'legendary' => ['base' => '骨堆王冠·怨语', 'extra' => ['k' => 'skill_damage', 'v' => 7.0]]],
+        'gr_spider' => ['slot' => 'ring', 'base' => '毒涎之囊', 'rate' => 0.07, 'q' => [0, 0, 55, 45, 0], 'legendary' => ['base' => '毒涎之囊·蚀心', 'extra' => ['k' => 'penetration', 'v' => 8.0]]],
+        'gr_retainer' => ['slot' => 'body', 'base' => '亲卫重铠', 'rate' => 0.08, 'q' => [0, 0, 50, 50, 0], 'legendary' => ['base' => '亲卫重铠·暴食', 'extra' => ['k' => 'hp', 'v' => 4000.0]]],
+        'gr_shaman' => ['slot' => 'offhand', 'base' => '萨满图腾', 'rate' => 0.08, 'q' => [0, 0, 50, 50, 0], 'legendary' => ['base' => '萨满图腾·血祭', 'extra' => ['k' => 'magic_find', 'v' => 12.0]]],
+        'gr_fang' => ['slot' => 'weapon', 'base' => '断牙之刃', 'rate' => 0.08, 'q' => [0, 0, 50, 50, 0], 'legendary' => ['base' => '断牙之刃·复仇', 'extra' => ['k' => 'critdmg', 'v' => 12.0]]],
+        'gr_idol' => ['slot' => 'legs', 'base' => '王座傀儡甲', 'rate' => 0.08, 'q' => [0, 0, 50, 50, 0], 'legendary' => ['base' => '王座傀儡·朝拜', 'extra' => ['k' => 'cooldown', 'v' => 10.0]]],
+        'gr_guru' => ['slot' => 'head', 'base' => '咕噜王冠', 'rate' => 0.35, 'q' => [0, 0, 10, 50, 40], 'legendary' => ['base' => '咕噜王冠·暴食君王', 'extra' => ['k' => 'exp_gain', 'v' => 15.0]]],
+        'gr_brood' => ['slot' => 'gloves', 'base' => '蠕虫母巢丝', 'rate' => 0.08, 'q' => [0, 0, 50, 50, 0], 'legendary' => ['base' => '蠕虫母巢·繁育', 'extra' => ['k' => 'gold_gain', 'v' => 15.0]]],
+        'gr_shard' => ['slot' => 'ring', 'base' => '碎片灵核', 'rate' => 0.08, 'q' => [0, 0, 50, 50, 0], 'legendary' => ['base' => '碎片灵核·虚无', 'extra' => ['k' => 'resist', 'v' => 30.0]]],
+        'gr_shadow' => ['slot' => 'shoes', 'base' => '咕噜之影靴', 'rate' => 0.08, 'q' => [0, 0, 50, 50, 0], 'legendary' => ['base' => '咕噜之影·真容', 'extra' => ['k' => 'dodge', 'v' => 5.0]]],
+        'gr_nightmare' => ['slot' => 'weapon', 'base' => '梦魇之角', 'rate' => 0.09, 'q' => [0, 0, 45, 55, 0], 'legendary' => ['base' => '梦魇之角·惊醒', 'extra' => ['k' => 'execute', 'v' => 8.0]]],
+        'gr_ancient' => ['slot' => 'necklace', 'base' => '远古暴食者之胃', 'rate' => 0.15, 'q' => [0, 0, 30, 50, 20], 'legendary' => ['base' => '远古暴食者·吞天', 'extra' => ['k' => 'truedmg', 'v' => 400.0]]],
         'corrupt_rat' => ['slot' => 'gloves', 'base' => '腐化鼠皮手套', 'rate' => 0.03, 'q' => [60, 35, 5, 0, 0]],
         'deep_bat' => ['slot' => 'shoes', 'base' => '深渊蝠翼靴', 'rate' => 0.04, 'q' => [20, 50, 30, 0, 0]],
         'runaway_miner' => ['slot' => 'weapon', 'base' => '矿工重锤', 'rate' => 0.05, 'q' => [0, 35, 45, 20, 0]],
@@ -2751,9 +2808,15 @@ function make_equip(int $uid, string $slot, string $base, int $q, int $itemLevel
     $reqStr = $isStr ? $req['str'] : 0;
     $reqAgi = !$isStr ? $req['str'] : 0;
     $primary = equip_primary($slot, $offKind);
+    if ($slot === 'weapon' && weapon_sub((string) $base) === 'staff') {
+        $primary = 'matk';
+    }
     $legendId = (string) ($legend['extra']['k'] ?? '');
     $legendGroup = $legendId !== '' ? (string) (affix_catalog()[$legendId]['data']['group'] ?? '') : '';
     $pool = array_values(array_filter(slot_pools()[$slot] ?? ['atk', 'def', 'hp'], fn($id) => $id !== $primary && $id !== $legendId));
+    if ($slot === 'weapon' && weapon_sub((string) $base) === 'staff') {
+        $pool = array_values(array_map(fn($id) => $id === 'atk' ? 'matk' : $id, $pool));
+    }
     if ($pool === []) {
         $pool = [$primary !== '' ? $primary : 'atk'];
     }
@@ -2824,7 +2887,7 @@ function skill_catalog(): array
         'm2' => ['name' => '爆裂火球', 'job' => 'mage', 'mp' => 22, 'kind' => 'magic', 'mult' => 0, 'el' => 'thunder', 't10' => '伤害+30%', 'lv20' => '伤害+15%'],
         'h1' => ['name' => '双连射', 'job' => 'hunter', 'mp' => 10, 'kind' => 'multi2', 'mult' => 1.6, 'el' => '', 't10' => '追加第三箭', 'lv20' => '伤害+15%'],
         'h2' => ['name' => '爆裂箭', 'job' => 'hunter', 'mp' => 20, 'kind' => 'multi2', 'mult' => 2.0, 'el' => 'fire', 't10' => '追加第三箭', 'lv20' => '伤害+15%，爆炸火伤'],
-        'p1' => ['name' => '治疗术', 'job' => 'priest', 'mp' => 10, 'kind' => 'heal', 'mult' => 0.7, 'heal' => 25, 'el' => 'light', 't10' => '治疗+15', 'lv20' => '治疗+20%，伤害+15%'],
+        'p1' => ['name' => '圣光弹', 'job' => 'priest', 'mp' => 10, 'kind' => 'heal', 'mult' => 0.7, 'heal' => 25, 'el' => 'light', 't10' => '治疗+15', 'lv20' => '治疗+20%，伤害+15%'],
         'p2' => ['name' => '圣光庇佑', 'job' => 'priest', 'mp' => 20, 'kind' => 'heal', 'mult' => 1.0, 'heal' => 45, 'el' => 'light', 't10' => '治疗+25', 'lv20' => '治疗+20%，伤害+15%'],
         'w3' => ['name' => '裂地猛击', 'job' => 'warrior', 'mp' => 30, 'kind' => 'phys', 'mult' => 3.0, 'el' => 'thunder', 't10' => '5%眩晕敌人1轮', 'lv20' => '伤害+15%'],
         'm3' => ['name' => '寒霜新星', 'job' => 'mage', 'mp' => 32, 'kind' => 'magic', 'mult' => 0, 'el' => 'ice', 't10' => '5%冻结：敌攻-15%持续3轮', 'lv20' => '伤害+15%'],
@@ -3148,6 +3211,24 @@ function mat_name(string $id): string
     if ($id === 'tent') {
         return '随身帐篷';
     }
+    if ($id === 'dragon_box') {
+        return '龙鳞宝箱';
+    }
+    $titles = [
+        'title_ch1' => '称号·灰雾行者',
+        'title_ch2' => '称号·白银守望',
+        'title_ch3' => '称号·王都破局者',
+        'title_ch4' => '称号·凛冬行者',
+        'title_ch5' => '称号·南炎见证',
+        'title_rb2' => '称号·虚空征服者',
+        'title_dragon1' => '称号·龙鳞初醒',
+        'title_dragon2' => '称号·龙血沸腾',
+        'title_dragon3' => '称号·灭世龙威',
+    ];
+    if (isset($titles[$id])) {
+        return $titles[$id];
+    }
+
     if (isset(skill_books()[$id])) {
         return skill_books()[$id]['name'];
     }
@@ -3826,7 +3907,12 @@ function gear_stats(int $uid): array
             }
         }
     }
-    // 全属性按攻击、防御、生命各加一次；百分比属性按设计上限截断。
+        $tw = (string) (mats_of($uid)['title_wear'] ?? '');
+    if ($tw !== '') {
+        $tb = ['title_ch1' => ['atk' => 30, 'hp' => 500], 'title_ch2' => ['def' => 30, 'hp' => 800], 'title_ch3' => ['crit' => 1.0, 'atk' => 50], 'title_ch4' => ['mdef' => 40, 'hp' => 1200], 'title_ch5' => ['matk' => 50, 'hp' => 1500], 'title_rb2' => ['skill_damage' => 3.0, 'hp' => 2000], 'title_dragon1' => ['critdmg' => 5.0, 'hp' => 1500], 'title_dragon2' => ['atk' => 100, 'matk' => 100], 'title_dragon3' => ['skill_damage' => 8.0, 'truedmg' => 200.0]][$tw] ?? [];
+        foreach ($tb as $tk => $tv) { $s[$tk] += $tv; }
+    }
+// 全属性按攻击、防御、生命各加一次；百分比属性按设计上限截断。
     $s['atk'] += $s['all_attr'];
     $s['def'] += $s['all_attr'];
     $s['hp'] += $s['all_attr'];
@@ -4415,7 +4501,10 @@ function player_atk(array $u): int
 // 物理攻击：力量+装备。法师练不出肌肉（力量不加物攻），只能靠装备
 function player_patk(array $u): int
 {
-    $str = (job_id_of($u) === 'mage') ? 0 : (int) ($u['str'] ?? 0);
+    if (in_array(job_id_of($u), ['mage', 'priest'], true)) {
+        return 0;
+    }
+    $str = (int) ($u['str'] ?? 0);
     $base = (int) $u['atk'] + $str + (int) gear_stats((int) ($u['id'] ?? 0))['atk'];
     // 一转·浴血：生命每降低10%，攻击+4%，最多+32%
     if (!empty(cflags((int) ($u['id'] ?? 0))['rb1_job']) && cflags((int) ($u['id'] ?? 0))['rb1_job'] === 'warrior' && (int) ($u['maxhp'] ?? 0) > 0) {
@@ -4428,10 +4517,15 @@ function player_patk(array $u): int
     return $base;
 }
 
-// 魔法攻击（无属性）：灵力+法术强度装备。法师牧师纯靠灵力，无科班加成
+// 魔法攻击（无属性）：智慧+法攻装备
 function player_matk(array $u): int
 {
-    return (int) ($u['spi'] ?? 0) + (int) gear_stats((int) ($u['id'] ?? 0))['matk'];
+    $m = (int) ($u['int'] ?? 0) + (int) gear_stats((int) ($u['id'] ?? 0))['matk'];
+    if (in_array(job_id_of($u), ['mage', 'priest'], true)) {
+        $gs = gear_stats((int) ($u['id'] ?? 0));
+        $m += (int) $gs['atk'] + (int) ($m * (float) $gs['atk_pct'] / 100);
+    }
+    return $m;
 }
 
 function player_def(array $u): int
@@ -4445,10 +4539,10 @@ function player_pdef(array $u): int
     return (int) $u['def'] + (int) ($u['agi'] ?? 0) + (int) gear_stats((int) ($u['id'] ?? 0))['def'];
 }
 
-// 魔法防御：护甲一半+灵力一半+抗性装备（智慧只加魔力，不加防）
+// 魔法防御：护甲一半+坚毅+抗性装备（坚毅既加物防也加法防）
 function player_mdef(array $u): int
 {
-    return (int) ((int) $u['def'] / 2) + (int) ((int) ($u['spi'] ?? 0) / 2) + (int) gear_stats((int) ($u['id'] ?? 0))['mdef'];
+    return (int) ((int) $u['def'] / 2) + (int) ($u['agi'] ?? 0) + (int) gear_stats((int) ($u['id'] ?? 0))['mdef'];
 }
 
 function exp_need(int $lv): int
@@ -4487,6 +4581,7 @@ function monster_lv(string $mid): int
         'frostborn_hunter' => 430,
         'vx_spawn' => 600, 'vx_stalker' => 620, 'vx_mage' => 640, 'vx_knight' => 660, 'vx_herald' => 670, 'vx_tyrant' => 680, 'avalanche_titan' => 470, 'sulfur_sprite' => 610, 'obsidian_colossus' => 700,
         'cinder_crawler' => 600, 'cinder_stalker' => 620, 'cinder_warden' => 640, 'cinder_horror' => 660, 'ash_titan' => 680,
+        'gr_hyena' => 700, 'gr_vulture' => 705, 'gr_worm' => 710, 'gr_raider' => 715, 'gr_storm' => 720, 'gr_bat' => 725, 'gr_guard' => 730, 'gr_whelp' => 735, 'gr_wraith' => 740, 'gr_spider' => 745, 'gr_retainer' => 750, 'gr_shaman' => 755, 'gr_fang' => 760, 'gr_idol' => 765, 'gr_guru' => 780, 'gr_brood' => 785, 'gr_shard' => 790, 'gr_shadow' => 795, 'gr_nightmare' => 800, 'gr_ancient' => 810,
         'doyle' => 999,
     ];
     return $lv[$mid] ?? 1;
@@ -4545,9 +4640,11 @@ function gain_exp(array &$u, int $exp): string
         $u['lv'] = (int) $u['lv'] + 1;
         $u['maxhp'] = (int) $u['maxhp'] + 10;
         $u['maxmp'] = (int) ($u['maxmp'] ?? 0) + 5;
-        // 升级成长按职业：战士猎手长物攻，法师牧师长灵力（法师不长物理）
+        // 升级成长按职业：战士猎手长物攻，法师牧师长智慧（法攻）+灵力（魔力）
         if (in_array(job_id_of($u), ['mage', 'priest'], true)) {
+            $u['int'] = (int) ($u['int'] ?? 0) + 1;
             $u['spi'] = (int) ($u['spi'] ?? 0) + 1;
+            $u['maxmp'] = (int) ($u['maxmp'] ?? 0) + 5;
         } else {
             $u['atk'] = (int) $u['atk'] + 1;
         }
@@ -4566,29 +4663,29 @@ function alloc_stat(int $uid, string $k): string
     if (!$u) {
         return '角色不存在。';
     }
-    $cost = ['str' => 3, 'agi' => 3, 'vit' => 1, 'int' => 1, 'spi' => 1][$k] ?? 0;
+    $cost = ['str' => 1, 'agi' => 1, 'vit' => 1, 'int' => 1, 'spi' => 1][$k] ?? 0;
     if ($cost <= 0) {
-        return '只能加力量/坚毅/体质/智慧/灵力（力量坚毅3点1次，体质智慧灵力1点1次）。';
+        return '只能加力量/坚毅/体质/智慧/灵力（全部1点1次）。';
     }
     if ((int) ($u['s_pts'] ?? 0) < $cost) {
         return '属性点不够（剩' . (int) ($u['s_pts'] ?? 0) . '点，要' . $cost . '点），升级获取。';
     }
     if ($k === 'str') {
-        if (job_id_of($u) === 'mage') {
-            return '法师的身体练不出物理伤害，别浪费点数，去加灵力吧。';
+        if (in_array(job_id_of($u), ['mage', 'priest'], true)) {
+            return '法师牧师的身体练不出物理伤害，别浪费点数，去加智慧吧。';
         }
         $u['str'] = (int) ($u['str'] ?? 0) + 1;
     } elseif ($k === 'agi') {
         $u['agi'] = (int) ($u['agi'] ?? 0) + 1;
     } elseif ($k === 'vit') {
         $u['maxhp'] = (int) $u['maxhp'] + 10;
-        $u['hp'] = (int) $u['hp'] + 10;
+        $u['hp'] = (int) ($u['hp'] ?? 0) + 10;
         $u['vit'] = (int) ($u['vit'] ?? 0) + 1;
     } elseif ($k === 'int') {
-        $u['maxmp'] = (int) ($u['maxmp'] ?? 0) + 3;
-        $u['mp'] = (int) ($u['mp'] ?? 0) + 3;
         $u['int'] = (int) ($u['int'] ?? 0) + 1;
     } elseif ($k === 'spi') {
+        $u['maxmp'] = (int) ($u['maxmp'] ?? 0) + 5;
+        $u['mp'] = (int) ($u['mp'] ?? 0) + 5;
         $u['spi'] = (int) ($u['spi'] ?? 0) + 1;
     }
     $u['s_pts'] = (int) ($u['s_pts'] ?? 0) - $cost;
@@ -4598,7 +4695,7 @@ function alloc_stat(int $uid, string $k): string
 
 function alloc_all_stat(int $uid, string $k): string
 {
-    $cost = ['str' => 3, 'agi' => 3, 'vit' => 1, 'int' => 1, 'spi' => 1][$k] ?? 0;
+    $cost = ['str' => 1, 'agi' => 1, 'vit' => 1, 'int' => 1, 'spi' => 1][$k] ?? 0;
     if ($cost <= 0) {
         return '只能全加力量/坚毅/体质/智慧/灵力。';
     }
@@ -4606,8 +4703,8 @@ function alloc_all_stat(int $uid, string $k): string
     if (!$u) {
         return '角色不存在。';
     }
-    if ($k === 'str' && job_id_of($u) === 'mage') {
-        return '法师的身体练不出物理伤害，别浪费点数，去加灵力吧。';
+    if ($k === 'str' && in_array(job_id_of($u), ['mage', 'priest'], true)) {
+        return '法师牧师的身体练不出物理伤害，别浪费点数，去加智慧吧。';
     }
     $n = 0;
     while ((int) ($u['s_pts'] ?? 0) >= $cost) {
@@ -4670,7 +4767,7 @@ function use_reset_potion(int $uid): string
     add_mat((int) $uid, 'reset_potion', -1);
     $u['maxhp'] = max(1, (int) $u['maxhp'] - (int) ($u['vit'] ?? 0) * 10);
     $u['hp'] = min((int) $u['hp'], (int) $u['maxhp']);
-    $u['maxmp'] = max(0, (int) ($u['maxmp'] ?? 0) - (int) ($u['int'] ?? 0) * 3);
+    $u['maxmp'] = max(0, (int) ($u['maxmp'] ?? 0) - (int) ($u['spi'] ?? 0) * 5);
     $u['mp'] = min((int) ($u['mp'] ?? 0), (int) ($u['maxmp'] ?? 0));
     $u['s_pts'] = (int) ($u['s_pts'] ?? 0) + $back;
     $u['str'] = 0;
@@ -4730,6 +4827,15 @@ function monster_mdef(array $m): int
 
 function dmg_to_monster(array $u, array $m = []): int
 {
+    // 法师牧师普攻转元素（法师火、牧师光），不再造成物理伤害
+    $job = job_id_of($u);
+    if (in_array($job, ['mage', 'priest'], true)) {
+        $el = $job === 'mage' ? 'fire' : 'light';
+        $d = max(1, player_matk($u) + random_int(1, 3) - (int) (monster_mdef($m) / 2));
+        [$d, $elTag] = apply_el_convert($u, $m, $d, $el);
+        $GLOBALS['_melee_el_tag'] = $elTag;
+        return $d;
+    }
     // 普攻是物理的：物攻-怪物业防
     $d = max(1, player_patk($u) + random_int(0, 3) - monster_pdef($m));
     $gs = gear_stats((int) ($u['id'] ?? 0));
@@ -5064,6 +5170,10 @@ function battle_round(array &$u, array &$b, string $mode): array
     
         if ($rb2 === 'wintermage' && in_array($skEl, ['ice', 'thunder'], true) && $pd > 0 && mt_rand(1, 100) <= 12) { $b['stun'] = 1; $logHeal .= '(麻痹)'; }
     $b['hp'] = (int) $b['hp'] - $pd;
+    if (!empty($GLOBALS['_melee_el_tag'])) {
+        $logHeal .= (string) $GLOBALS['_melee_el_tag'];
+        unset($GLOBALS['_melee_el_tag']);
+    }
     // 真实伤害（神魂/烬焰7件）：无视防御，闪避也躲不掉
     $trueDmg = (int) soul_truedmg((int) ($u['id'] ?? 0));
     if ($trueDmg > 0) { $b['hp'] = (int) $b['hp'] - $trueDmg; $logHeal .= '(真伤+' . $trueDmg . ')'; }
@@ -5574,7 +5684,7 @@ function battle_round(array &$u, array &$b, string $mode): array
         $emd = max(0, (int) ((int) ($b['atk'] ?? 0) * 0.3 * (1 - $eres / 100)));
         if ($emd > 0) {
             $md += $emd;
-            $log .= element_name($meld) . '属性冲击' . $emd . '点。';
+            $log .= $b['name'] . '的' . element_name($meld) . '属性冲击' . $emd . '点。';
         }
     }
     if (($b['id'] ?? '') === 'valentin') {
@@ -6036,6 +6146,55 @@ function ch2_locations(): array
 }
 
 // 二转群攻书掉落：深渊小怪2%随机w5-p6一本，泰坦40%；裂隙小怪2%随机w7-p8一本，暴君40%
+// 主线章完成奖称号（幂等，缺勤补发）
+// 龙鳞宝箱：强化石10~50（ roll 档）+未知蛋3~20+陪练1~3小时+抽称号（龙3最低）
+function open_dragon_box(int $uid): string
+{
+    $mats = mats_of($uid);
+    if (empty($mats['dragon_box'])) { return '你没有龙鳞宝箱。'; }
+    add_mat($uid, 'dragon_box', -1);
+    $tr = mt_rand(1, 100);
+    $stone = $tr <= 70 ? 'enhance_t1' : ($tr <= 95 ? 'enhance_t2' : 'enhance_t3');
+    $sn = mt_rand(10, 50);
+    add_mat($uid, $stone, $sn);
+    $en = mt_rand(3, 20);
+    add_mat($uid, 'egg_unknown', $en);
+    $dh = mt_rand(1, 3);
+    add_mat($uid, 'dummy_time', 3600 * $dh);
+    $lr = mt_rand(1, 100);
+    $tid = $lr <= 60 ? 'title_dragon1' : ($lr <= 90 ? 'title_dragon2' : 'title_dragon3');
+    add_mat($uid, $tid, 1);
+    return '龙鳞宝箱开启：' . enhance_material_name($stone) . '×' . $sn . '、未知宠物蛋×' . $en . '、陪练' . $dh . '小时、称号【' . mat_name($tid) . '】！';
+}
+
+// 随身帐篷：野外随时扎营回满（不消耗）
+function use_tent(int $uid): string
+{
+    $u = user_by_id($uid);
+    if (!$u) { return '角色不存在。'; }
+    if (empty(mats_of($uid)['tent'])) { return '你没有随身帐篷。'; }
+    $u['hp'] = (int) $u['maxhp'];
+    $u['mp'] = (int) ($u['maxmp'] ?? 0);
+    user_save($u);
+    return '支起帐篷睡了一觉，生命魔力全满！';
+}
+
+function grant_chapter_titles(int $uid): void
+{
+    $u = user_by_id($uid);
+    if (!$u) { return; }
+    $q = (int) ($u['quest'] ?? 0);
+    $map = [16 => 'title_ch1', 28 => 'title_ch2', 38 => 'title_ch3', 50 => 'title_ch4', 62 => 'title_ch5', 81 => 'title_rb2'];
+    $mats = mats_of($uid);
+    foreach ($map as $need => $tid) {
+        if ($q >= $need && empty($mats[$tid])) {
+            add_mat($uid, $tid, 1);
+            send_mail($uid, '总会长', 'title', '主线', '主线奖励称号【' . mat_name($tid) . '】已发放，去状态页佩戴！', []);
+            $mats = mats_of($uid);
+        }
+    }
+}
+
 function roll_aoe_book(int $uid, string $mid): string
 {
     $pool = [];
@@ -6145,7 +6304,7 @@ function fo_locations(): array
     $m['magma_core'] = ['name' => '熔核', 'desc' => '地心在发光。烈焰神灯灵从光里出来：许个愿吧，反正我只会实现烧掉的那个。', 'exits' => ['cult_altar' => '祭坛', 'flame_temple' => '焰神殿'], 'monsters' => ['flame_djinn', 'magma_golem']];
     $m['flame_temple'] = ['name' => '焰神殿', 'desc' => '神殿供的不是神，是鳞片。烬龙裔守着鳞片，不许人看，看了就得留下眼睛。', 'exits' => ['magma_core' => '熔核', 'ruin_gate' => '遗迹门'], 'monsters' => ['cinder_dragonspawn', 'flame_djinn']];
     $m['ruin_gate'] = ['name' => '遗迹门', 'desc' => '远古火山遗迹的大门，门缝往外冒热气。火山祭司数着人头放行，数不对就补刀。', 'exits' => ['flame_temple' => '神殿', 'volcano_heart' => '火山之心'], 'monsters' => ['volcano_priest', 'cinder_dragonspawn']];
-    $m['volcano_heart'] = ['name' => '火山之心', 'desc' => '遗迹最深处，热得睁不开眼。灰烬飞龙盘在柱子上——南炎柱。柱子后面，有呼吸声。', 'exits' => ['ruin_gate' => '遗迹门'], 'monsters' => ['ash_wyrm', 'south_flame_guard', 'ancient_ruin_golem']];
+    $m['volcano_heart'] = ['name' => '火山之心', 'desc' => '遗迹最深处，热得睁不开眼。灰烬飞龙盘在柱子上——南炎柱。柱子后面，有呼吸声。', 'exits' => ['ruin_gate' => '遗迹门', 'guru_out' => '咕噜荒原'], 'monsters' => ['ash_wyrm', 'south_flame_guard', 'ancient_ruin_golem']];
     return $m;
 }
 
@@ -6274,6 +6433,16 @@ function as_locations(): array
 function as_maps(): array
 {
     return ['as_gate', 'as_trail', 'as_vein', 'as_hollow', 'as_core'];
+}
+
+function gr_locations(): array
+{
+    $m = [];
+    $m['guru_out'] = ['name' => '咕噜荒原', 'desc' => '风沙磨骨头，远处土丘上有张大嘴在打哈欠——那是巢穴的门。', 'exits' => ['volcano_heart' => '火山之心', 'guru_den' => '咕噜巢穴'], 'monsters' => ['gr_hyena', 'gr_vulture', 'gr_worm', 'gr_raider', 'gr_storm']];
+    $m['guru_den'] = ['name' => '咕噜巢穴', 'desc' => '骨头铺路，口水当灯。越往里越大声的咀嚼。', 'exits' => ['guru_out' => '咕噜荒原', 'guru_throne' => '暴食王座'], 'monsters' => ['gr_bat', 'gr_guard', 'gr_whelp', 'gr_wraith', 'gr_spider']];
+    $m['guru_throne'] = ['name' => '暴食王座', 'desc' => '白骨堆的王座上，食人魔咕噜抱着半扇龙排啃。看见你，它笑了。', 'exits' => ['guru_den' => '咕噜巢穴', 'guru_pit' => '巢穴深渊'], 'monsters' => ['gr_retainer', 'gr_shaman', 'gr_fang', 'gr_idol', 'gr_guru']];
+    $m['guru_pit'] = ['name' => '巢穴深渊', 'desc' => '王座底下还有底。掉下去的东西，都成了它的夜宵。', 'exits' => ['guru_throne' => '暴食王座'], 'monsters' => ['gr_brood', 'gr_shard', 'gr_shadow', 'gr_nightmare', 'gr_ancient']];
+    return $m;
 }
 
 function vx_locations(): array

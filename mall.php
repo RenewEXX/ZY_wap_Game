@@ -45,10 +45,10 @@ if ($a === 'buy') {
 }
 if ($a === 'goldbuy' && $m === 'pet_food') {
     $n = max(1, min(99, (int) ($_GET['n'] ?? 1)));
-    if ((int) $u['gold'] < 2000 * $n) {
-        flash_set('金币不够，' . $n . '个粮食要' . fmt_money(2000 * $n) . '。');
+    if ((int) $u['gold'] < 10000 * $n) {
+        flash_set('金币不够，' . $n . '个粮食要' . fmt_money(10000 * $n) . '。');
     } else {
-        $u['gold'] = (int) $u['gold'] - 2000 * $n;
+        $u['gold'] = (int) $u['gold'] - 10000 * $n;
         user_save($u);
         add_mat((int) $u['id'], 'pet_food', $n);
         flash_set('买下' . $n . '个宠物粮食，去宠物页喂。');
@@ -117,10 +117,10 @@ if ($m !== '' && isset($goods[$m])) {
     echo '<a href="mall.php">回商城</a>';
 } else {
     $tab = (string) ($_GET['tab'] ?? 'hot');
-    if (!in_array($tab, ['hot', 'stone', 'tank', 'dummy', 'pet', 'func', 'deco'], true)) {
+    if (!in_array($tab, ['hot', 'stone', 'tank', 'dummy', 'pet', 'func'], true)) {
         $tab = 'hot';
     }
-    echo '<a href="mall.php?tab=hot">热卖</a> <a href="mall.php?tab=stone">强化附魔</a> <a href="mall.php?tab=tank">药罐</a> <a href="mall.php?tab=dummy">人偶</a> <a href="mall.php?tab=pet">宠物</a> <a href="mall.php?tab=func">功能</a> <a href="mall.php?tab=deco">装扮</a><br>';
+    echo '<a href="mall.php?tab=hot">热卖</a> <a href="mall.php?tab=stone">强化附魔</a> <a href="mall.php?tab=tank">药罐</a> <a href="mall.php?tab=dummy">人偶</a> <a href="mall.php?tab=pet">宠物</a> <a href="mall.php?tab=func">功能</a><br>';
     echo '<div class="hr">--------</div>';
     if ($tab === 'hot') {
         echo '【热卖推荐】<br>';
@@ -171,7 +171,7 @@ if ($m !== '' && isset($goods[$m])) {
         echo '<a href="mall.php?a=buy&m=offline_mod&n=5">买5小时</a><br>';
     }
     if ($tab === 'pet') {
-        echo '金币区：·<b>【宠物粮食】</b> <b>2000铜</b>/个(清宠物疲劳，去宠物页喂) ';
+        echo '金币区：·<b>【宠物粮食】</b> <b>1金</b>/个(清宠物疲劳，去宠物页喂) ';
         echo '<a href="mall.php?a=goldbuy&m=pet_food&n=1">买1</a> ';
         echo '<a href="mall.php?a=goldbuy&m=pet_food&n=10">买10</a><br>';
         echo '宠物蛋（1魔钻/个，砸出普通~史诗）：<br>';
@@ -179,13 +179,14 @@ if ($m !== '' && isset($goods[$m])) {
         echo '<b>' . h(fmt_diamond(10)) . '</b>/个 ';
         echo '<a href="mall.php?a=buy&m=egg_unknown&n=1">买1</a> ';
         echo '<a href="mall.php?a=buy&m=egg_unknown&n=10">买10</a><br>';
-    if (witch_event_active()) {
-        echo '·<b>【魔女之茧（限时传奇）】</b> <b>' . h(fmt_diamond(500)) . '</b>/个（11月11日下架） ';
-        echo '<a href="mall.php?a=buy&m=witch_egg&n=1">买</a><br>';
-    }
     }
     if ($tab === 'func') {
         echo '功能道具：<br>';
+        echo '·【<span style="color:#fc3">龙鳞宝箱</span>】 <b>' . h(fmt_diamond(200)) . '</b>/个(开强化石10~50+未知蛋3~20+陪练1~3小时+随机称号，龙威最低) ';
+        echo '<a href="mall.php?a=buy&m=dragon_box&n=1">买1个</a> ';
+        echo '<a href="mall.php?a=buy&m=dragon_box&n=5">买5个</a><br>';
+        echo '·【随身帐篷】 <b>' . h(fmt_diamond(100)) . '</b>/个(野外随时扎营回满，不消耗，去背包·功能使用) ';
+        echo '<a href="mall.php?a=buy&m=tent&n=1">买1个</a><br>';
         echo '·<b>【5格背包扩充】</b> <b>' . h(fmt_diamond(200)) . '</b>/个(每角色最多用5次) ';
         echo '<a href="mall.php?a=buy&m=bag_ext5&n=1">买1</a><br>';
         echo '·<b>【10格背包扩充】</b> <b>' . h(fmt_diamond(500)) . '</b>/个(每角色最多用2次) ';
@@ -197,14 +198,6 @@ if ($m !== '' && isset($goods[$m])) {
         echo '·<b><span style="color:#c6f">【属性洗点药】</span></b> ';
         echo '<b>' . h(fmt_diamond(300)) . '</b>/瓶(重新分配属性点，第三章结局也送) ';
         echo '<a href="mall.php?a=buy&m=reset_potion&n=1">买1</a><br>'; echo '·<a href="mall.php?m=rename_card"><b><span style="color:#6cf">【改名卡】</span></b></a> <b>' . h(fmt_diamond(100)) . '</b>/张（本大区唯一，去状态页改名） <a href="mall.php?a=buy&m=rename_card&n=1">买1</a><br>';
-    }
-    if ($tab === 'deco') {
-        echo '装扮（纯外观，不加属性）：<br>';
-        echo '·<b>【称号·黑铁冒险者】</b> <b>' . h(fmt_diamond(50)) . '</b> <a href="mall.php?a=buy&m=title_iron&n=1">买</a><br>';
-        echo '·<b>【称号·秘银冒险者】</b> <b>' . h(fmt_diamond(150)) . '</b> <a href="mall.php?a=buy&m=title_silver&n=1">买</a><br>';
-        echo '·<b>【称号·精金传说】</b> <b>' . h(fmt_diamond(300)) . '</b> <a href="mall.php?a=buy&m=title_gold&n=1">买</a><br>';
-        echo '·<b>【随身帐篷】</b> <b>' . h(fmt_diamond(100)) . '</b>/个（背包功能栏使用，野外回满状态） <a href="mall.php?a=buy&m=tent&n=1">买</a><br>';
-        echo '<span class="muted">称号买了去状态页佩戴。</span><br>';
     }
     echo '<div class="hr">--------</div>';
     echo '充值/兑换：<br>';

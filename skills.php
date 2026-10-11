@@ -23,7 +23,7 @@ foreach ($set as $sid) {
     $c = skill_catalog()[$sid];
     echo '<b>' . h($c['name']) . '</b>（耗蓝' . $c['mp'] . '）<br>';
     if (!isset($mine[$sid])) {
-        echo '<span class="muted">未学会（' . ($sid === $set[0] ? '新手毕业赠送' : '第一章完成赠送') . '）</span><br>';
+        $unlearned = ($unlearned ?? 0) + 1;
         continue;
     }
     $s = $mine[$sid];
@@ -32,6 +32,20 @@ foreach ($set as $sid) {
     echo ($isActive ? '◀默认 ' : '<a href="skills.php?a=set&id=' . h($sid) . '">设为默认</a> ');
     echo $s['level'] . '级·' . $s['tier'] . '阶·熟练' . $s['prof'] . '/' . tier_prof_need(min(10, (int) $s['tier'] + 1)) . '<br>';
     echo '<span class="muted">10阶：' . h($c['t10']) . '　20级：' . h($c['lv20']) . '</span><br>';
+}
+if (!empty($unlearned)) {
+    echo '<span class="muted">还有' . (int) $unlearned . '个技能未领悟（刷对应秘籍）。</span><br>';
+}
+echo '<div class="hr">--------</div>';
+$rb2j = (string) (cflags((int) $u['id'])['rb2_job'] ?? '');
+if ($rb2j !== '') {
+    $pc = rb2_passive_catalog()[$rb2j] ?? null;
+    if ($pc) {
+        echo '被动技能：<b>' . h($pc['name']) . '</b>（' . h(rebirth2_name($rb2j)) . '专属，常驻生效）<br>';
+        echo '<span class="muted">' . h($pc['desc']) . '</span><br>';
+    }
+} else {
+    echo '<span class="muted">二转后自动领悟被动技能（599级找瓦尔顿）。</span><br>';
 }
 echo '<div class="hr">--------</div>';
 echo '技能书：<br>';

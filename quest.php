@@ -3,6 +3,7 @@ declare(strict_types=1);
 require __DIR__ . '/includes/bootstrap.php';
 
 $u = require_login();
+grant_chapter_titles((int) $u['id']);
 $tab = (string) ($_GET['tab'] ?? 'doing');
 if (!in_array($tab, ['done', 'doing', 'todo'], true)) {
     $tab = 'doing';

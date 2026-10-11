@@ -112,7 +112,7 @@ function locations(): array
             'exits' => ['gate' => '罪渊入口'],
             'monsters' => [],
         ],
-    ] + ch1_locations() + dsw_locations() + ch2_locations() + abx_locations() + ch3_locations() + mx_locations() + farm_locations() + ice_locations() + fr_locations() + fo_locations() + em_locations() + wb_locations() + pz_locations() + sen_locations() + wild3_locations() + frostburg_locations() + greenheart_locations() + wild45_locations();
+    ] + ch1_locations() + dsw_locations() + ch2_locations() + abx_locations() + ch3_locations() + mx_locations() + farm_locations() + ice_locations() + fr_locations() + fo_locations() + em_locations() + wb_locations() + pz_locations() + sen_locations() + wild3_locations() + frostburg_locations() + greenheart_locations() + wild45_locations() + as_locations() + vx_locations();
 }
 
 function loc(string $id): array
@@ -250,10 +250,26 @@ function monsters(): array
         'avalanche_titan' => ['slot' => 'necklace', 'base' => '雪崩之心', 'rate' => 0.2, 'q' => [0, 0, 30, 50, 20], 'legendary' => ['base' => '雪崩之心·永冻', 'extra' => ['k' => 'hp', 'v' => 3000.0]]],
         'sulfur_sprite' => ['slot' => 'ring', 'base' => '硫磺指环'],
         'obsidian_colossus' => ['slot' => 'ring', 'base' => '黑曜石之眼', 'rate' => 0.2, 'q' => [0, 0, 30, 50, 20], 'legendary' => ['base' => '黑曜石之眼·灭世', 'extra' => ['k' => 'critdmg', 'v' => 10.0]]],
+        'cinder_crawler' => ['slot' => 'gloves', 'base' => '灰烬爬行手套'],
+        'cinder_stalker' => ['slot' => 'shoes', 'base' => '灰烬潜伏靴'],
+        'cinder_warden' => ['slot' => 'body', 'base' => '灰烬守望甲'],
+        'cinder_horror' => ['slot' => 'head', 'base' => '灰烬恐惧面'],
+        'ash_titan' => ['slot' => 'weapon', 'base' => '灰烬泰坦之握', 'rate' => 0.3, 'q' => [0, 0, 20, 50, 30], 'legendary' => ['base' => '泰坦之握·灭世', 'extra' => ['k' => 'atk_pct', 'v' => 5.0]]],
         'frostborn_hunter' => ['name' => '霜裔猎手', 'hp' => 400000, 'atk' => 2900, 'exp' => 620000, 'gold' => 300000],
         'avalanche_titan' => ['name' => '雪崩巨人', 'hp' => 1900000, 'atk' => 5000, 'exp' => 4500000, 'gold' => 2100000],
         'sulfur_sprite' => ['name' => '硫磺精', 'hp' => 1100000, 'atk' => 4900, 'exp' => 2000000, 'gold' => 960000],
-        'obsidian_colossus' => ['name' => '黑曜石巨像', 'hp' => 2400000, 'atk' => 5600, 'exp' => 5500000, 'gold' => 2600000],        // 世界BOSS（999级，世界BOSS系统专用，野外不可遇敌）
+        'obsidian_colossus' => ['name' => '黑曜石巨像', 'hp' => 2400000, 'atk' => 5600, 'exp' => 5500000, 'gold' => 2600000],        // 灰烬深渊副本（600~680级，二转群攻书掉落）
+        'cinder_crawler' => ['name' => '灰烬爬行者', 'hp' => 1900000, 'atk' => 6200, 'exp' => 3600000, 'gold' => 1720000],
+        'cinder_stalker' => ['name' => '灰烬潜伏者', 'hp' => 2100000, 'atk' => 6450, 'exp' => 4000000, 'gold' => 1900000],
+        'cinder_warden' => ['name' => '灰烬守望者', 'hp' => 2300000, 'atk' => 6700, 'exp' => 4400000, 'gold' => 2100000],
+        'cinder_horror' => ['name' => '灰烬恐惧', 'hp' => 2500000, 'atk' => 6950, 'exp' => 4800000, 'gold' => 2300000],
+        'ash_titan' => ['name' => '深渊灰烬泰坦', 'hp' => 4200000, 'atk' => 8200, 'exp' => 11000000, 'gold' => 5200000],        // 虚空裂隙副本（二转，600~680级）
+        'vx_spawn' => ['name' => '裂隙孳生体', 'hp' => 1600000, 'atk' => 4600, 'exp' => 3000000, 'gold' => 1440000],
+        'vx_stalker' => ['name' => '虚空潜伏者', 'hp' => 1750000, 'atk' => 4800, 'exp' => 3300000, 'gold' => 1580000],
+        'vx_mage' => ['name' => '裂隙低语者', 'hp' => 1900000, 'atk' => 5000, 'exp' => 3600000, 'gold' => 1720000],
+        'vx_knight' => ['name' => '虚空骑士', 'hp' => 2050000, 'atk' => 5200, 'exp' => 3900000, 'gold' => 1860000],
+        'vx_herald' => ['name' => '裂隙传令官', 'hp' => 2200000, 'atk' => 5400, 'exp' => 4200000, 'gold' => 2000000],
+        'vx_tyrant' => ['name' => '虚空暴君', 'hp' => 3000000, 'atk' => 6000, 'exp' => 9000000, 'gold' => 4300000],        // 世界BOSS（999级，世界BOSS系统专用，野外不可遇敌）
         'doyle' => ['name' => '烬焰领主·火龙多伊尔', 'hp' => 80000000, 'atk' => 9000, 'exp' => 0, 'gold' => 0],
     ];
 }
@@ -1082,7 +1098,7 @@ function war_enemies(int $uid): array
 
 function boss_of_map(string $loc): string
 {
-    static $m = ['boss' => 'knight', 'echo_room' => 'echo_rayne', 'rift' => 'abyss_eye', 'baltar' => 'dark_lily', 'dsw_throne' => 'swamp_king', 'abx_throne' => 'abaddon', 'theater' => 'string_puller', 'mx_heart' => 'silk_mother', 'frost_throne' => 'winter_king', 'fr_core' => 'fr_leviathan', 'volcano_heart' => 'ancient_ruin_golem', 'em_core' => 'em_heart', 'pz_core' => 'pz_master', 'sen_core' => 'sen_avatar', 'shadow_den' => 'shadow_claw', 'brass_chapel' => 'brass_bishop', 'wanderer_camp' => 'tundra_wanderer', 'ice_fall' => 'avalanche_titan', 'obsidian_field' => 'obsidian_colossus'];
+    static $m = ['boss' => 'knight', 'echo_room' => 'echo_rayne', 'rift' => 'abyss_eye', 'baltar' => 'dark_lily', 'dsw_throne' => 'swamp_king', 'abx_throne' => 'abaddon', 'theater' => 'string_puller', 'mx_heart' => 'silk_mother', 'frost_throne' => 'winter_king', 'fr_core' => 'fr_leviathan', 'volcano_heart' => 'ancient_ruin_golem', 'em_core' => 'em_heart', 'pz_core' => 'pz_master', 'sen_core' => 'sen_avatar', 'shadow_den' => 'shadow_claw', 'brass_chapel' => 'brass_bishop', 'wanderer_camp' => 'tundra_wanderer', 'ice_fall' => 'avalanche_titan', 'obsidian_field' => 'obsidian_colossus', 'as_core' => 'ash_titan', 'vx_core' => 'vx_tyrant'];
     return $m[$loc] ?? '';
 }
 
@@ -1887,7 +1903,7 @@ function mat_hidden(string $mid): bool
     if (str_ends_with($mid, '_enter') || str_ends_with($mid, '_stage')) {
         return true;
     }
-    return in_array($mid, ['offline_on', 'offline_time', 'seen_last', 'exp_card_until', 'bag_ext5_used', 'bag_ext10_used', 'dummy_total', 'tank_cd_hp', 'tank_cd_mp', 'peak_force', 'peak_duel_from', 'arena_day', 'arena_used', 'arena_bought', 'active_wid', 'active_week', 'priest_wid', 'fr_enter', 'fr_stage', 'em_enter', 'em_stage', 'pz_enter', 'pz_stage', 'sen_enter', 'sen_stage', 'wb_claimed'], true);
+    return in_array($mid, ['offline_on', 'offline_time', 'seen_last', 'exp_card_until', 'bag_ext5_used', 'bag_ext10_used', 'dummy_total', 'tank_cd_hp', 'tank_cd_mp', 'peak_force', 'peak_duel_from', 'arena_day', 'arena_used', 'arena_bought', 'active_wid', 'active_week', 'priest_wid', 'fr_enter', 'fr_stage', 'em_enter', 'em_stage', 'pz_enter', 'pz_stage', 'sen_enter', 'sen_stage', 'vx_enter', 'wb_claimed'], true);
 }
 
 // 当前版本真正有用的锻造材料：强化石 + 属性石/晶石/珠/神石
@@ -2621,6 +2637,12 @@ function monster_drops(string $mid): array
         'lucky_goblin' => ['slot' => 'ring', 'base' => '幸运金币', 'rate' => 0.02, 'q' => [0, 0, 0, 60, 40], 'legendary' => ['base' => '幸运哥布林·大金币', 'extra' => ['k' => 'gold_gain', 'v' => 10.0]]],
         'golden_slime' => ['slot' => 'necklace', 'base' => '金色黏液', 'rate' => 0.03, 'q' => [0, 0, 20, 60, 20], 'legendary' => ['base' => '黄金史莱姆·王冠', 'extra' => ['k' => 'exp_gain', 'v' => 8.0]]],
         'mimic_chest' => ['slot' => 'body', 'base' => '宝箱甲', 'rate' => 0.05, 'q' => [0, 0, 30, 50, 20], 'legendary' => ['base' => '宝箱怪·贪婪之胃', 'extra' => ['k' => 'magic_find', 'v' => 10.0]]],
+        'vx_spawn' => ['slot' => 'weapon', 'base' => '烬焰·龙裔刃'],
+        'vx_stalker' => ['slot' => 'shoes', 'base' => '寒霜·无声靴'],
+        'vx_mage' => ['slot' => 'offhand', 'off' => 'magic', 'base' => '烬焰·灰烬法杖'],
+        'vx_knight' => ['slot' => 'body', 'base' => '烬焰·守卫铠'],
+        'vx_herald' => ['slot' => 'necklace', 'base' => '烬焰·余火链'],
+        'vx_tyrant' => ['slot' => 'ring', 'base' => '虚空暴君之戒', 'rate' => 0.3, 'q' => [0, 0, 20, 50, 30], 'legendary' => ['base' => '虚空暴君·终焉', 'extra' => ['k' => 'skill_damage', 'v' => 8.0]]],
     ][$mid] ?? [];
 }
 
@@ -2789,7 +2811,7 @@ function quest_mats(): array
 {
     return ['blackcoin' => '不断下坠的黑币', 'aiden_badge' => '艾登·灰叶的铭牌', 'investigation_record' => '调查队记录', 'augustus_letter' => '镇长的信', 'dsw_ticket' => '黑暗沼泽副本入场券', 'dsw_item1' => '幽暗黏液', 'dsw_item2' => '沼泽之核', 'dsw_item3' => '腐泥之心', 'dsw_item4' => '王座徽记', 'abx_ticket' => '影蚀深渊入场券', 'abx_item1' => '蚀影尘', 'abx_item2' => '影蚀徽记', 'abx_item3' => '低语残章', 'abx_item4' => '王座蚀印', 'capital_badge' => '王都徽章', 'puppet_eye' => '傀儡之眼', 'ch3_proof' => '第三章通关证明', 'mx_ticket' => '银丝母巢入场券', 'mx_item1' => '黏丝束', 'mx_item2' => '茧壳碎片', 'mx_item3' => '织线梭', 'mx_item4' => '蛾翼磷粉', 'mx_item5' => '守望之瞳', 'mx_item6' => '育巢摇篮曲', 'farm_coin' => '农场币', 'seed_green' => '青菜种子', 'seed_radish' => '萝卜种子', 'seed_melon' => '南瓜种子', 'seed_tomato' => '番茄种子', 'seed_strawberry' => '草莓种子',
  'ice_badge' => '冰原徽章', 'frost_heart' => '霜王之心', 'ch4_proof' => '第四章通关证明', 'fr_ticket' => '冰渊副本入场券', 'fr_item1' => '渊底冰核', 'fr_item2' => '利维坦之牙',
- 'forest_badge' => '森语徽章', 'south_flame_token' => '南炎信物', 'ch5_proof' => '第五章通关证明', 'em_ticket' => '熔心副本入场券', 'pz_ticket' => '傀儡回廊入场券', 'sen_ticket' => '雾森祭坛入场券', 'em_item1' => '熔核碎片', 'em_item2' => '熔心之血',
+ 'forest_badge' => '森语徽章', 'south_flame_token' => '南炎信物', 'ch5_proof' => '第五章通关证明', 'rb2_proof' => '二转证明', 'em_ticket' => '熔心副本入场券', 'pz_ticket' => '傀儡回廊入场券', 'sen_ticket' => '雾森祭坛入场券', 'em_item1' => '熔核碎片', 'em_item2' => '熔心之血',
  'soul_shard' => '神魂碎片', 'wb_ticket' => '龙鳞引（世界BOSS入场券）'];
 }
 
@@ -2812,12 +2834,20 @@ function skill_catalog(): array
         'm4' => ['name' => '冰河葬', 'job' => 'mage', 'mp' => 42, 'kind' => 'magic', 'mult' => 0, 'el' => 'ice', 't10' => '伤害+30%', 'lv20' => '伤害+15%，10%冻结'],
         'h4' => ['name' => '猎龙箭', 'job' => 'hunter', 'mp' => 40, 'kind' => 'multi2', 'mult' => 2.6, 'el' => 'dark', 't10' => '追加第三箭', 'lv20' => '伤害+15%，龙裔杀手'],
         'p4' => ['name' => '熔心圣歌', 'job' => 'priest', 'mp' => 40, 'kind' => 'heal', 'mult' => 1.5, 'heal' => 90, 'el' => 'light', 't10' => '治疗+30', 'lv20' => '治疗+20%，伤害+15%'],
+        'w5' => ['name' => '烈焰旋风', 'job' => 'warrior', 'mp' => 50, 'kind' => 'aoe', 'mult' => 2.4, 'el' => 'fire', 't10' => '溅射+10%', 'lv20' => '伤害+15%'],
+        'w6' => ['name' => '撼地重击', 'job' => 'warrior', 'mp' => 50, 'kind' => 'aoe', 'mult' => 2.2, 'el' => 'thunder', 't10' => '10%眩晕', 'lv20' => '伤害+15%'],
+        'm5' => ['name' => '暴风雪', 'job' => 'mage', 'mp' => 55, 'kind' => 'aoe', 'mult' => 0, 'el' => 'ice', 't10' => '伤害+30%', 'lv20' => '伤害+15%'],
+        'm6' => ['name' => '虚空坍缩', 'job' => 'mage', 'mp' => 55, 'kind' => 'aoe', 'mult' => 0, 'el' => 'dark', 't10' => '伤害+30%', 'lv20' => '伤害+15%'],
+        'h5' => ['name' => '万箭齐发', 'job' => 'hunter', 'mp' => 50, 'kind' => 'aoe', 'mult' => 2.2, 'el' => 'wind', 't10' => '溅射+10%', 'lv20' => '伤害+15%'],
+        'h6' => ['name' => '影杀阵', 'job' => 'hunter', 'mp' => 50, 'kind' => 'aoe', 'mult' => 2.4, 'el' => 'dark', 't10' => '溅射+10%', 'lv20' => '伤害+15%'],
+        'p5' => ['name' => '暗影新星', 'job' => 'priest', 'mp' => 55, 'kind' => 'aoe', 'mult' => 1.8, 'el' => 'dark', 't10' => '伤害+30%', 'lv20' => '伤害转奶40%'],
+        'p6' => ['name' => '圣光普照', 'job' => 'priest', 'mp' => 55, 'kind' => 'aoe', 'mult' => 1.2, 'heal' => 120, 'el' => 'light', 't10' => '治疗+40', 'lv20' => '治疗+20%，队友70%'],
     ];
 }
 
 function job_skillset(string $job): array
 {
-    return ['warrior' => ['w1', 'w2', 'w3', 'w4'], 'mage' => ['m1', 'm2', 'm3', 'm4'], 'hunter' => ['h1', 'h2', 'h3', 'h4'], 'priest' => ['p1', 'p2', 'p3', 'p4']][$job] ?? ['w1', 'w2', 'w3', 'w4'];
+    return ['warrior' => ['w1', 'w2', 'w3', 'w4', 'w5', 'w6'], 'mage' => ['m1', 'm2', 'm3', 'm4', 'm5', 'm6'], 'hunter' => ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'], 'priest' => ['p1', 'p2', 'p3', 'p4', 'p5', 'p6']][$job] ?? ['w1', 'w2', 'w3', 'w4', 'w5', 'w6'];
 }
 
 function skill_books(): array
@@ -2839,6 +2869,14 @@ function skill_books(): array
         'book_m4' => ['skill' => 'm4', 'name' => '冰河秘籍'],
         'book_h4' => ['skill' => 'h4', 'name' => '猎龙秘籍'],
         'book_p4' => ['skill' => 'p4', 'name' => '熔心秘籍'],
+        'book_w5' => ['skill' => 'w5', 'name' => '旋风秘籍'],
+        'book_w6' => ['skill' => 'w6', 'name' => '撼地秘籍'],
+        'book_m5' => ['skill' => 'm5', 'name' => '暴风雪秘籍'],
+        'book_m6' => ['skill' => 'm6', 'name' => '虚空秘籍'],
+        'book_h5' => ['skill' => 'h5', 'name' => '箭雨秘籍'],
+        'book_h6' => ['skill' => 'h6', 'name' => '影杀秘籍'],
+        'book_p5' => ['skill' => 'p5', 'name' => '暗影秘籍'],
+        'book_p6' => ['skill' => 'p6', 'name' => '圣光秘籍'],
     ];
 }
 
@@ -2934,6 +2972,10 @@ function use_skill_book(int $uid, string $book): string
     $u = user_by_id($uid);
     if (!$u || job_id_of($u) !== $cat['job']) {
         return '职业不符，只有' . job_of(['job' => $cat['job']])['name'] . '能用。';
+    }
+    $needRb2 = ['w5' => 'berserker', 'w6' => 'aegis', 'm5' => 'elementalist', 'm6' => 'voidcaller', 'h5' => 'ranger', 'h6' => 'assassin', 'p5' => 'shadowbishop', 'p6' => 'holybishop'][$sid] ?? '';
+    if ($needRb2 !== '' && (cflags($uid)['rb2_job'] ?? '') !== $needRb2) {
+        return '这是二转【' . rebirth2_name($needRb2) . '】的群攻秘籍，先599级二转再学。';
     }
     $mats = mats_of($uid);
     if (empty($mats[$book])) {
@@ -3222,6 +3264,8 @@ function roll_enhance_material(int $uid, string $mid, string $loc = ''): string
         $id = 'enhance_t3';
     } elseif ($mid === 'winter_king' || $mid === 'ancient_ruin_golem') {
         $id = 'enhance_t3';
+    } elseif (in_array($loc, vx_maps(), true) && $mid === 'vx_tyrant') {
+        $id = 'enhance_t3';
     }
     if ($id === '') {
         return '';
@@ -3281,7 +3325,9 @@ function monster_element(string $mid): string
         'pz_puller' => 'dark', 'pz_dancer' => 'dark', 'pz_mask' => 'dark', 'pz_golem' => 'thunder', 'pz_master' => 'dark',
         'sen_priest' => 'wind', 'sen_thorn' => 'wind', 'sen_serpent' => 'dark', 'sen_guard' => 'wind', 'sen_avatar' => 'wind',
         'shadow_claw' => 'dark', 'brass_bishop' => 'light', 'tundra_wanderer' => 'ice', 'lucky_goblin' => 'wind', 'golden_slime' => 'light', 'mimic_chest' => 'dark',
-        'frostborn_hunter' => 'ice', 'avalanche_titan' => 'ice', 'sulfur_sprite' => 'fire', 'obsidian_colossus' => 'fire',
+        'frostborn_hunter' => 'ice',
+        'vx_spawn' => 'dark', 'vx_stalker' => 'dark', 'vx_mage' => 'dark', 'vx_knight' => 'dark', 'vx_herald' => 'dark', 'vx_tyrant' => 'dark', 'avalanche_titan' => 'ice', 'sulfur_sprite' => 'fire', 'obsidian_colossus' => 'fire',
+        'cinder_crawler' => 'fire', 'cinder_stalker' => 'dark', 'cinder_warden' => 'fire', 'cinder_horror' => 'dark', 'ash_titan' => 'fire',
         'doyle' => 'fire',
     ];
     return $m[$mid] ?? '';
@@ -3525,13 +3571,13 @@ function ground_pickup(int $uid, int $gid): string
 
 function is_boss_mid(string $mid): bool
 {
-    static $bosses = ['knight', 'echo_rayne', 'swamp_king', 'abaddon', 'abyss_eye', 'dark_lily', 'valentin', 'guardian', 'string_puller', 'silk_mother', 'winter_king', 'fr_leviathan', 'ancient_ruin_golem', 'em_heart', 'doyle', 'pz_master', 'sen_avatar', 'shadow_claw', 'brass_bishop', 'tundra_wanderer', 'avalanche_titan', 'obsidian_colossus'];
+    static $bosses = ['knight', 'echo_rayne', 'swamp_king', 'abaddon', 'abyss_eye', 'dark_lily', 'valentin', 'guardian', 'string_puller', 'silk_mother', 'winter_king', 'fr_leviathan', 'ancient_ruin_golem', 'em_heart', 'doyle', 'pz_master', 'sen_avatar', 'shadow_claw', 'brass_bishop', 'tundra_wanderer', 'avalanche_titan', 'obsidian_colossus', 'ash_titan'];
     return in_array($mid, $bosses, true);
 }
 
 function is_ch3_mid(string $mid): bool
 {
-    static $mids = ['puppet_guard', 'masked_noble', 'ink_puppet', 'silver_undead', 'silver_assassin', 'puppet_priest', 'star_puppet', 'silver_puppet', 'string_puller', 'silk_spider', 'cocoon_guard', 'thread_weaver', 'silk_moth', 'nest_watcher', 'brood_maiden', 'silk_mother', 'frost_wolf', 'ice_specter', 'snow_mammoth', 'blizzard_shaman', 'glacier_golem', 'frost_giant', 'aurora_serpent', 'icewyrm', 'winter_knight', 'frost_matriarch', 'glacier_colossus', 'winter_king', 'fr_crawler', 'fr_stalker', 'fr_warden', 'fr_horror', 'fr_leviathan', 'mist_treant', 'spore_colony', 'thorn_hunter', 'ancient_boa', 'mist_apeman', 'rot_sage', 'ember_imp', 'lava_hound', 'ash_cultist', 'magma_golem', 'flame_djinn', 'cinder_dragonspawn', 'volcano_priest', 'ash_wyrm', 'south_flame_guard', 'ancient_ruin_golem', 'em_slag', 'em_fiend', 'em_magma', 'em_ashlord', 'em_heart', 'doyle', 'frostborn_hunter', 'avalanche_titan', 'sulfur_sprite', 'obsidian_colossus', 'pz_puller', 'pz_dancer', 'pz_mask', 'pz_golem', 'pz_master', 'sen_priest', 'sen_thorn', 'sen_serpent', 'sen_guard', 'sen_avatar', 'shadow_claw', 'brass_bishop', 'tundra_wanderer', 'lucky_goblin', 'golden_slime', 'mimic_chest'];
+    static $mids = ['puppet_guard', 'masked_noble', 'ink_puppet', 'silver_undead', 'silver_assassin', 'puppet_priest', 'star_puppet', 'silver_puppet', 'string_puller', 'silk_spider', 'cocoon_guard', 'thread_weaver', 'silk_moth', 'nest_watcher', 'brood_maiden', 'silk_mother', 'frost_wolf', 'ice_specter', 'snow_mammoth', 'blizzard_shaman', 'glacier_golem', 'frost_giant', 'aurora_serpent', 'icewyrm', 'winter_knight', 'frost_matriarch', 'glacier_colossus', 'winter_king', 'fr_crawler', 'fr_stalker', 'fr_warden', 'fr_horror', 'fr_leviathan', 'mist_treant', 'spore_colony', 'thorn_hunter', 'ancient_boa', 'mist_apeman', 'rot_sage', 'ember_imp', 'lava_hound', 'ash_cultist', 'magma_golem', 'flame_djinn', 'cinder_dragonspawn', 'volcano_priest', 'ash_wyrm', 'south_flame_guard', 'ancient_ruin_golem', 'em_slag', 'em_fiend', 'em_magma', 'em_ashlord', 'em_heart', 'doyle', 'frostborn_hunter', 'avalanche_titan', 'sulfur_sprite', 'obsidian_colossus', 'pz_puller', 'pz_dancer', 'pz_mask', 'pz_golem', 'pz_master', 'sen_priest', 'sen_thorn', 'sen_serpent', 'sen_guard', 'sen_avatar', 'shadow_claw', 'brass_bishop', 'tundra_wanderer', 'lucky_goblin', 'golden_slime', 'mimic_chest', 'vx_spawn', 'vx_stalker', 'vx_mage', 'vx_knight', 'vx_herald', 'vx_tyrant'];
     return in_array($mid, $mids, true);
 }
 
@@ -4422,7 +4468,9 @@ function monster_lv(string $mid): int
         'pz_puller' => 380, 'pz_dancer' => 400, 'pz_mask' => 420, 'pz_golem' => 440, 'pz_master' => 460,
         'sen_priest' => 520, 'sen_thorn' => 540, 'sen_serpent' => 560, 'sen_guard' => 580, 'sen_avatar' => 600,
         'shadow_claw' => 320, 'brass_bishop' => 480, 'tundra_wanderer' => 450, 'lucky_goblin' => 5, 'golden_slime' => 100, 'mimic_chest' => 200,
-        'frostborn_hunter' => 430, 'avalanche_titan' => 470, 'sulfur_sprite' => 610, 'obsidian_colossus' => 700,
+        'frostborn_hunter' => 430,
+        'vx_spawn' => 600, 'vx_stalker' => 620, 'vx_mage' => 640, 'vx_knight' => 660, 'vx_herald' => 670, 'vx_tyrant' => 680, 'avalanche_titan' => 470, 'sulfur_sprite' => 610, 'obsidian_colossus' => 700,
+        'cinder_crawler' => 600, 'cinder_stalker' => 620, 'cinder_warden' => 640, 'cinder_horror' => 660, 'ash_titan' => 680,
         'doyle' => 999,
     ];
     return $lv[$mid] ?? 1;
@@ -4669,7 +4717,8 @@ function dmg_to_monster(array $u, array $m = []): int
     // 普攻是物理的：物攻-怪物业防
     $d = max(1, player_patk($u) + random_int(0, 3) - monster_pdef($m));
     $gs = gear_stats((int) ($u['id'] ?? 0));
-    if ($gs['crit'] > 0 && mt_rand(1, 10000) / 100 <= $gs['crit']) {
+    $rb2c = cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '';
+    if ($gs['crit'] + ($rb2c === 'ranger' ? 5 : 0) > 0 && mt_rand(1, 10000) / 100 <= $gs['crit'] + ($rb2c === 'ranger' ? 5 : 0)) {
         $d = (int) ($d * (1 + $gs['critdmg'] / 100));
     }
     return $d;
@@ -4678,7 +4727,8 @@ function dmg_to_monster(array $u, array $m = []): int
 function dmg_to_player(array $u, array $m): int
 {
     $gs = gear_stats((int) ($u['id'] ?? 0));
-    if ($gs['dodge'] > 0 && mt_rand(1, 10000) / 100 <= $gs['dodge']) {
+    $rb2d = cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '';
+    if ($gs['dodge'] + ($rb2d === 'assassin' ? 5 : 0) > 0 && mt_rand(1, 10000) / 100 <= $gs['dodge'] + ($rb2d === 'assassin' ? 5 : 0)) {
         return 0;
     }
     // 怪物伤害拆两段：物理段吃物防，法术段吃法防
@@ -4823,6 +4873,7 @@ function battle_round(array &$u, array &$b, string $mode): array
                 if ($sLv >= 20) {
                     $heal = (int) ($heal * 1.2);
                 }
+                if ((cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '') === 'holybishop') { $heal = (int) ($heal * 1.15); $logHeal .= '(圣光灌注)'; }
                 $u['hp'] = min((int) $u['maxhp'], (int) $u['hp'] + $heal);
                 $logHeal .= '(回' . $heal . ')';
                 if ($sid === 'p3' && $sTier >= 10) {
@@ -4839,6 +4890,68 @@ function battle_round(array &$u, array &$b, string $mode): array
                     $pd = (int) ($pd * 1.15);
                 }
             }
+            } elseif ($sk['kind'] === 'aoe') {
+                // 群攻：打当前+溅射队列（余波震死的只给经验金币，不掉落）
+                $aoePhys = in_array($sid, ['w5', 'w6', 'h5', 'h6'], true);
+                if ($aoePhys) {
+                    $pd = max(1, (int) ((player_patk($u) + random_int(0, 3)) * (float) $sk['mult'] * $pow) - monster_pdef($b));
+                } else {
+                    $pd = max(1, (int) ((player_matk($u) + random_int(4, 7)) * (float) $sk['mult'] * $pow) - (int) (monster_mdef($b) / 2));
+                }
+                if ($skEl !== '') {
+                    [$pd, $elTag] = apply_el_convert($u, $b, $pd, $skEl);
+                    $logHeal .= $elTag;
+                    $b['fullEl'] = 1;
+                }
+                if ($sTier >= 10) {
+                    $pd = (int) ($pd * 1.3);
+                }
+                if ($sLv >= 20) {
+                    $pd = (int) ($pd * 1.15);
+                }
+                if ($sid === 'w6' && $sTier >= 10 && mt_rand(1, 100) <= 10) {
+                    $b['stun'] = 1;
+                    $logHeal .= '(眩晕)';
+                }
+                // 暗影主教：伤害转奶
+                if ($sid === 'p5') {
+                    $leechRate = $sLv >= 20 ? 0.4 : 0.3;
+                    $leech = (int) ($pd * $leechRate);
+                    $u['hp'] = min((int) $u['maxhp'], (int) $u['hp'] + $leech);
+                    $logHeal .= '(暗影汲取+' . $leech . ')';
+                }
+                // 神圣主教：群奶自己+队友
+                if ($sid === 'p6') {
+                    $heal6 = (int) ($sk['heal'] * $pow) + (int) (player_matk($u) * 0.2);
+                    if ($sTier >= 10) { $heal6 += 40; }
+                    if ($sLv >= 20) { $heal6 = (int) ($heal6 * 1.2); }
+                    if ((cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '') === 'holybishop') { $heal6 = (int) ($heal6 * 1.15); $logHeal .= '(圣光灌注)'; }
+                    $u['hp'] = min((int) $u['maxhp'], (int) $u['hp'] + $heal6);
+                    $logHeal .= '(回' . $heal6 . ')';
+                    $mateRate = $sLv >= 20 ? 0.7 : 0.5;
+                    $mparty = my_party((int) ($u['id'] ?? 0));
+                    if ($mparty) {
+                        foreach (party_mates((int) $mparty['id'], (int) $u['id']) as $mate) {
+                            $mu = user_by_id((int) $mate['id']);
+                            if ($mu && (int) $mu['hp'] > 0) {
+                                $mh = (int) ($heal6 * $mateRate);
+                                $mu['hp'] = min((int) $mu['maxhp'], (int) $mu['hp'] + $mh);
+                                user_save($mu);
+                                $logHeal .= '(队友' . $mate['username'] . '+' . $mh . ')';
+                            }
+                        }
+                    }
+                }
+                // 溅射：50%伤害灌进队列，攒满一条血震死一只（只给经验金币）
+                $splashRate = $sTier >= 10 ? 0.6 : 0.5;
+                $b['splash'] = (int) (($b['splash'] ?? 0) + $pd * $splashRate);
+                while ((int) ($b['left'] ?? 1) > 1 && (int) ($b['splash'] ?? 0) >= (int) ($b['maxhp'] ?? 1)) {
+                    $b['splash'] = (int) $b['splash'] - (int) $b['maxhp'];
+                    $b['left'] = (int) $b['left'] - 1;
+                    $b['wexp'] = (int) ($b['wexp'] ?? 0) + exp_gain_for($u, (string) ($b['id'] ?? ''), (int) ($b['elite'] ?? 0));
+                    $b['wgold'] = (int) ($b['wgold'] ?? 0) + monster_gold_reward((int) $b['gold']);
+                    $logHeal .= '(余波震死一只！剩' . (int) $b['left'] . ')';
+                }
             $profMsg = add_skill_prof((int) ($u['id'] ?? 0), $sid);
         } else {
             $isSkill = true;
@@ -4862,6 +4975,10 @@ function battle_round(array &$u, array &$b, string $mode): array
     if ($pd > 0 && $eDodge > 0 && mt_rand(1, 10000) / 100 <= $eDodge) {
         $pd = 0;
     }
+    $rb2 = cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '';
+    if ($rb2 === 'berserker' && (int) $u['hp'] < (int) $u['maxhp'] / 2 && $pd > 0) { $pd = (int) ($pd * 1.15); $logHeal .= '(狂怒)'; }
+    if ($rb2 === 'elementalist' && $skEl !== '' && $pd > 0) { $pd = (int) ($pd * 1.12); $logHeal .= '(元素主宰)'; }
+    if ($rb2 === 'voidcaller' && $isSkill && $pd > 0) { $pd = (int) ($pd * 1.1); $logHeal .= '(虚空亲和)'; }
     $b['hp'] = (int) $b['hp'] - $pd;
     // 真实伤害（神魂/烬焰7件）：无视防御，闪避也躲不掉
     $trueDmg = (int) soul_truedmg((int) ($u['id'] ?? 0));
@@ -4874,6 +4991,11 @@ function battle_round(array &$u, array &$b, string $mode): array
     if ($pd > 0 && $gs['lifesteal'] > 0) {
         $hl = max(1, (int) ($pd * $gs['lifesteal'] / 100));
         $u['hp'] = min((int) $u['maxhp'], (int) $u['hp'] + $hl);
+    if ($pd > 0 && (cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '') === 'shadowbishop') {
+        $sh = max(1, (int) ($pd * 0.03));
+        $u['hp'] = min((int) $u['maxhp'], (int) $u['hp'] + $sh);
+        $log .= '(鲜血契约+' . $sh . ')';
+    }
         $log .= '(吸血+' . $hl . ')';
     }
     $petMsg = pet_attack($u, $b);
@@ -4970,6 +5092,11 @@ function battle_round(array &$u, array &$b, string $mode): array
                 $b['drops'][] = $sb;
                 $log .= '掉落【' . $sb . '】！';
             }
+            $ab = roll_aoe_book((int) $u['id'], (string) ($b['id'] ?? ''));
+            if ($ab !== '') {
+                $b['drops'][] = $ab;
+                $log .= '掉落【' . $ab . '】！';
+            }
             $log .= '第' . $killed . '只倒了！下一只扑上来(剩' . (int) $b['left'] . ')。';
         } else {
         $num = (int) ($b['num'] ?? 1);
@@ -5031,6 +5158,10 @@ function battle_round(array &$u, array &$b, string $mode): array
         $sb = roll_abx_skillbook((int) $u['id'], (string) ($b['id'] ?? ''));
         if ($sb !== '') {
             $b['drops'][] = $sb;
+        }
+        $ab = roll_aoe_book((int) $u['id'], (string) ($b['id'] ?? ''));
+        if ($ab !== '') {
+            $b['drops'][] = $ab;
         }
         if ($mi !== '') {
             $b['drops'][] = $mi;
@@ -5281,6 +5412,24 @@ function battle_round(array &$u, array &$b, string $mode): array
                 $txt .= '。【' . $qs5['name'] . '】' . quest_progress3_text((int) $u['id'], $qs5);
             }
         }
+        if ($cur >= 77 && $cur <= 80) {
+            $rrf2 = cflags((int) $u['id']);
+            if ($cur === 77 && !empty($rrf2['rb2_start'])) { $u['quest'] = 78; user_save($u); quest3_baseline((int) $u['id'], 78); $txt .= '。瓦尔顿为你打开虚空试炼，去火山之心杀南炎守卫×40、遗迹守卫！'; }
+            elseif ($cur === 78) {
+                $qs78 = rebirth2_quests()[78] + ['id' => 78];
+                if (check_ch3_done((int) $u['id'], $qs78)) { $u['quest'] = 79; user_save($u); $txt .= '。试炼完成！回中央大道找瓦尔顿，从两条路里选一条！'; }
+                else { $txt .= '。【' . $qs78['name'] . '】' . quest_progress3_text((int) $u['id'], $qs78); }
+            }
+            elseif ($cur === 79 && !empty($rrf2['rb2_job'])) { $u['quest'] = 80; user_save($u); $txt .= '。路已经选了，去加冕吧！'; }
+            elseif ($cur === 80 && !empty($rrf2['rb2_done'])) {
+                $u['quest'] = 81; $u['gold'] = (int) $u['gold'] + 1000000; user_save($u);
+                add_mat((int) $u['id'], 'reset_potion', 1);
+                add_mat((int) $u['id'], 'soul_shard', 20);
+                add_mat((int) $u['id'], 'rb2_proof', 1);
+                $txt .= '。二转·群攻之路完成！获得100万+洗点药+神魂碎片×20+二转证明！去虚空裂隙/灰烬深渊刷群攻秘籍！';
+            }
+            else { $txt .= '。【' . rebirth2_quests()[$cur]['name'] . '】找瓦尔顿继续。'; }
+        }
         if ($cur >= 40 && $cur <= 41) {
             $rrf = cflags((int) $u['id']);
             if ($cur === 40 && !empty($rrf['rb1_start'])) { $u['quest'] = 41; user_save($u); $txt .= '。瓦尔顿为你打开四重试炼，去见四位导师！'; }
@@ -5344,6 +5493,7 @@ function battle_round(array &$u, array &$b, string $mode): array
         if (!empty($cf['lord_alert'])) {
             $md = (int) ($md * 1.1);
         }
+    if ((cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '') === 'aegis') { $md = (int) ($md * 0.92); }
     }
     $u['hp'] = (int) $u['hp'] - $md;
     // 一转被动（牧师）：5%减伤40%，每轮回3%
@@ -5749,7 +5899,7 @@ function roll_abx_quest(int $uid, string $mid): string
     return $out;
 }
 
-function dungeon_tick(array &$u): void{    $loc = (string) ($u['loc'] ?? '');    $inFr = in_array($loc, fr_maps(), true);    $inEm = in_array($loc, em_maps(), true);    $inPz = in_array($loc, pz_maps(), true);    $inSen = in_array($loc, sen_maps(), true);    if (!in_array($loc, dsw_maps(), true) && !in_array($loc, abx_maps(), true) && !in_array($loc, mx_maps(), true) && !$inFr && !$inEm && !$inPz && !$inSen) {        return;    }    $inAbx = in_array($loc, abx_maps(), true);    $inMx = in_array($loc, mx_maps(), true);    $mats = mats_of((int) ($u['id'] ?? 0));    $enter = (int) ($mats[$inFr ? 'fr_enter' : ($inEm ? 'em_enter' : ($inPz ? 'pz_enter' : ($inSen ? 'sen_enter' : ($inMx ? 'mx_enter' : ($inAbx ? 'abx_enter' : 'dsw_enter')))))] ?? time());    $limit = ($inMx || $inFr || $inEm || $inPz || $inSen) ? 2700 : 1800;    if (time() - $enter > $limit) {        unset($_SESSION['battle']);        $u['loc'] = $inFr ? 'ice_village' : ($inEm ? 'ember_foothill' : ($inPz ? 'theater' : ($inSen ? 'fo_gate' : ($inMx ? 'avenue' : ($inAbx ? 'silver_sq' : 'town_sq')))));        user_save($u);        $back = $inFr ? '冰原村' : ($inEm ? '火山麓' : ($inPz ? '傀儡剧场' : ($inSen ? '雾森渡口' : ($inMx ? '中央大道' : ($inAbx ? '白银广场' : '白石镇广场')))));        flash_set(($limit >= 2700 ? '45' : '30') . '分钟到了，你被传回' . $back . '。');    }}
+function dungeon_tick(array &$u): void{    $loc = (string) ($u['loc'] ?? '');    $inFr = in_array($loc, fr_maps(), true);    $inEm = in_array($loc, em_maps(), true);    $inPz = in_array($loc, pz_maps(), true);    $inSen = in_array($loc, sen_maps(), true);    $inAs = in_array($loc, as_maps(), true); $inVx = in_array($loc, vx_maps(), true);    if (!in_array($loc, dsw_maps(), true) && !in_array($loc, abx_maps(), true) && !in_array($loc, mx_maps(), true) && !$inFr && !$inEm && !$inPz && !$inSen && !$inAs && !$inVx) {        return;    }    $inAbx = in_array($loc, abx_maps(), true);    $inMx = in_array($loc, mx_maps(), true);    $mats = mats_of((int) ($u['id'] ?? 0));    $enter = (int) ($mats[$inFr ? 'fr_enter' : ($inEm ? 'em_enter' : ($inPz ? 'pz_enter' : ($inSen ? 'sen_enter' : ($inAs ? 'as_enter' : ($inVx ? 'vx_enter' : ($inMx ? 'mx_enter' : ($inAbx ? 'abx_enter' : 'dsw_enter')))))))] ?? time());    $limit = ($inMx || $inFr || $inEm || $inPz || $inSen || $inAs || $inVx) ? 2700 : 1800;    if (time() - $enter > $limit) {        unset($_SESSION['battle']);        $u['loc'] = $inFr ? 'ice_village' : ($inEm ? 'ember_foothill' : ($inPz ? 'theater' : ($inSen ? 'fo_gate' : ($inAs ? 'ember_foothill' : ($inVx ? 'volcano_heart' : ($inMx ? 'avenue' : ($inAbx ? 'silver_sq' : 'town_sq')))))));        user_save($u);        $back = $inFr ? '冰原村' : ($inEm ? '火山麓' : ($inPz ? '傀儡剧场' : ($inSen ? '雾森渡口' : ($inAs ? '火山麓' : ($inVx ? '火山之心' : ($inMx ? '中央大道' : ($inAbx ? '白银广场' : '白石镇广场')))))));        flash_set(($limit >= 2700 ? '45' : '30') . '分钟到了，你被传回' . $back . '。');    }}// 二转群攻书掉落：深渊小怪2%随机一本，泰坦40%随机一本
 function ch2_locations(): array
 {
     $m = [];
@@ -5968,6 +6118,38 @@ function wild45_locations(): array
     $m['obsidian_field'] = ['name' => '黑曜石原', 'desc' => '满地黑曜石，亮得晃眼。黑曜石巨像站在原中央，一动不动——动起来就是灾难。', 'exits' => ['sulfur_spring' => '硫磺泉'], 'monsters' => ['obsidian_colossus']];
     $m['ash_chapel2'] = ['name' => '灰烬小教堂', 'desc' => '和废弃礼拜堂一个师傅盖的。灰烬教徒在这里排练，排的是葬礼——自己的。', 'exits' => ['fallen_city' => '废墟'], 'monsters' => ['ash_cultist', 'magma_golem']];
     return $m;
+}
+
+function as_locations(): array
+{
+    $m = [];
+    $m['as_gate'] = ['name' => '灰烬深渊·入口', 'desc' => '火山底下的裂缝，灰往上冒。引路人说：二转的群攻书，全在这底下。', 'exits' => ['as_trail' => '灰烬小径'], 'monsters' => ['cinder_crawler']];
+    $m['as_trail'] = ['name' => '灰烬小径', 'desc' => '灰没脚面。爬行者在灰里游，游出一条条沟。', 'exits' => ['as_gate' => '入口', 'as_vein' => '灰脉'], 'monsters' => ['cinder_crawler', 'cinder_stalker']];
+    $m['as_vein'] = ['name' => '灰脉', 'desc' => '灰烬像血一样流动。潜伏者在流动里眨眼。', 'exits' => ['as_trail' => '小径', 'as_hollow' => '灰烬空洞'], 'monsters' => ['cinder_stalker', 'cinder_warden']];
+    $m['as_hollow'] = ['name' => '灰烬空洞', 'desc' => '空洞里全是灰。守望者站成一圈，恐惧在圈里开花。', 'exits' => ['as_vein' => '灰脉', 'as_core' => '泰坦之座'], 'monsters' => ['cinder_warden', 'cinder_horror']];
+    $m['as_core'] = ['name' => '泰坦之座', 'desc' => '深渊灰烬泰坦坐在灰里：想学群攻？先从我的灰里活下来。', 'exits' => ['as_hollow' => '空洞'], 'monsters' => ['ash_titan']];
+    return $m;
+}
+
+function as_maps(): array
+{
+    return ['as_gate', 'as_trail', 'as_vein', 'as_hollow', 'as_core'];
+}
+
+function vx_locations(): array
+{
+    $m = [];
+    $m['vx_gate'] = ['name' => '虚空裂隙·入口', 'desc' => '天裂开一道口子，往里看是更多的眼睛。虚空行者：进去就别回头，回头的那面你已经死了。', 'exits' => ['vx_path' => '裂隙小径'], 'monsters' => ['vx_spawn']];
+    $m['vx_path'] = ['name' => '裂隙小径', 'desc' => '路是碎的，踩上去掉渣。潜伏者在碎片底下游，一游一大片。', 'exits' => ['vx_gate' => '入口', 'vx_hall' => '低语大厅'], 'monsters' => ['vx_spawn', 'vx_stalker']];
+    $m['vx_hall'] = ['name' => '低语大厅', 'desc' => '低语者念着你的名字，念对一次，你就矮一寸。', 'exits' => ['vx_path' => '小径', 'vx_throne' => '骑士王座'], 'monsters' => ['vx_stalker', 'vx_mage']];
+    $m['vx_throne'] = ['name' => '骑士王座', 'desc' => '虚空骑士坐在空王座上，传令官在旁边报菜名——报的是你的菜。', 'exits' => ['vx_hall' => '大厅', 'vx_core' => '暴君之心'], 'monsters' => ['vx_mage', 'vx_knight', 'vx_herald']];
+    $m['vx_core'] = ['name' => '暴君之心', 'desc' => '虚空暴君没有心，它的心就是这条裂隙。你每砍它一刀，裂隙就小一分。', 'exits' => ['vx_throne' => '王座'], 'monsters' => ['vx_tyrant']];
+    return $m;
+}
+
+function vx_maps(): array
+{
+    return ['vx_gate', 'vx_path', 'vx_hall', 'vx_throne', 'vx_core'];
 }
 
 function mx_locations(): array
@@ -6271,8 +6453,21 @@ function quest_state(array $u): array
         }
         return $all[$q] + ['id' => $q, 'ch' => 6, 'step' => ($q - 61) . '/14'];
     }
-    if ($q >= 76) {
-        return ['name' => '南炎守望', 'step' => '完成', 'todo' => '五章全通关！世界BOSS每天刷新，神魂还能升级（找神魂师）', 'loc' => 'volcano_heart', 'locname' => '火山之心', 'id' => 99, 'ch' => 6, 'need' => []];
+    if ($q === 76) {
+        if ((int) ($u['lv'] ?? 1) >= 599) {
+            return ['name' => '二转·群攻之路', 'step' => '序', 'todo' => '599级了！去王都中央大道找总会长瓦尔顿，开启二转（八条路，群攻）', 'loc' => 'avenue', 'locname' => '中央大道', 'id' => 76, 'ch' => 6, 'need' => []];
+        }
+        return ['name' => '南炎守望', 'step' => '完成', 'todo' => '五章全通关！世界BOSS每天刷新，神魂还能升级（找神魂师）。599级找瓦尔顿二转', 'loc' => 'volcano_heart', 'locname' => '火山之心', 'id' => 99, 'ch' => 6, 'need' => []];
+    }
+    if ($q >= 77 && $q <= 80) {
+        $all = rebirth2_quests();
+        if (!isset($all[$q])) {
+            return ['name' => '群攻之路·完', 'step' => '完成', 'todo' => '二转完成！虚空裂隙/灰烬深渊刷群攻书', 'loc' => 'vx_gate', 'locname' => '虚空裂隙', 'id' => 99, 'ch' => 7, 'need' => []];
+        }
+        return $all[$q] + ['id' => $q, 'ch' => 7, 'step' => ($q - 76) . '/4'];
+    }
+    if ($q >= 81) {
+        return ['name' => '虚空守望', 'step' => '完成', 'todo' => '二转完成！群攻在手，虚空裂隙/灰烬深渊/世界BOSS等你', 'loc' => 'vx_gate', 'locname' => '虚空裂隙', 'id' => 99, 'ch' => 7, 'need' => []];
     }
     if ($q >= 38) {
         // 三章通关但没299：自由探索；299了进一转
@@ -6373,6 +6568,55 @@ function rebirth1_quests(): array
     ];
 }
 
+// 二转·群攻之路（quest 77~80）：599级接取，试炼杀怪，抉择双向
+function rebirth2_quests(): array
+{
+    return [
+        77 => ['name' => '二转·抉择之始', 'todo' => '去王都中央大道找总会长瓦尔顿，听他讲八条路', 'loc' => 'avenue', 'locname' => '中央大道', 'need' => [], 'flag' => 'rb2_start'],
+        78 => ['name' => '二转·虚空试炼', 'todo' => '火山之心：南炎守卫×40、击败遗迹守卫', 'loc' => 'volcano_heart', 'locname' => '火山之心', 'need' => ['south_flame_guard' => 40, 'ancient_ruin_golem' => 1], 'flag' => null],
+        79 => ['name' => '二转·两条路', 'todo' => '回中央大道找瓦尔顿，从本职业两个方向选一个', 'loc' => 'avenue', 'locname' => '中央大道', 'need' => [], 'flag' => 'rb2_job'],
+        80 => ['name' => '二转·加冕', 'todo' => '找瓦尔顿加冕，领取群攻之路奖励', 'loc' => 'avenue', 'locname' => '中央大道', 'need' => [], 'flag' => 'rb2_done'],
+    ];
+}
+
+function rebirth2_names(): array
+{
+    return [
+        'warrior' => ['berserker' => '狂战士', 'aegis' => '铁卫'],
+        'mage' => ['elementalist' => '元素使', 'voidcaller' => '虚空术士'],
+        'hunter' => ['ranger' => '游侠', 'assassin' => '影刺客'],
+        'priest' => ['shadowbishop' => '暗影主教', 'holybishop' => '神圣主教'],
+    ];
+}
+
+function rebirth2_skill(string $rb2): string
+{
+    return ['berserker' => 'w5', 'aegis' => 'w6', 'elementalist' => 'm5', 'voidcaller' => 'm6', 'ranger' => 'h5', 'assassin' => 'h6', 'shadowbishop' => 'p5', 'holybishop' => 'p6'][$rb2] ?? '';
+}
+
+function rebirth2_passive_desc(string $rb2): string
+{
+    return [
+        'berserker' => '狂怒：生命低于50%时伤害+15%',
+        'aegis' => '铁壁：受到伤害-8%',
+        'elementalist' => '元素主宰：属性伤害+12%',
+        'voidcaller' => '虚空亲和：技能伤害+10%',
+        'ranger' => '百步穿杨：暴击+5%',
+        'assassin' => '影遁：闪避+5%',
+        'shadowbishop' => '鲜血契约：吸血+3%',
+        'holybishop' => '圣光灌注：治疗+15%',
+    ][$rb2] ?? '';
+}
+
+function rebirth2_name(string $rb2): string
+{
+    foreach (rebirth2_names() as $jobs) {
+        if (isset($jobs[$rb2])) {
+            return $jobs[$rb2];
+        }
+    }
+    return '';
+}
 function rebirth1_names(): array
 {
     return ['warrior' => '狂战士', 'mage' => '元素使', 'hunter' => '追猎者', 'priest' => '圣光牧师'];
@@ -6512,10 +6756,10 @@ function quest_stuck_fix(array &$u): void
 {
     $cur = (int) ($u['quest'] ?? 0);
     $uid = (int) ($u['id'] ?? 0);
-    if ($cur < 20 || ($cur > 37 && $cur < 50) || $cur > 75 || !empty(cflags($uid)['stuck_fixed'])) {
+    if ($cur < 20 || ($cur > 37 && $cur < 50) || $cur > 80 || !empty(cflags($uid)['stuck_fixed'])) {
         return;
     }
-    $all = $cur >= 62 ? ch5_quests() : ($cur >= 50 ? ch4_quests() : ($cur >= 30 ? ch3_quests() : ch2_quests()));
+    $all = $cur >= 77 ? rebirth2_quests() : ($cur >= 62 ? ch5_quests() : ($cur >= 50 ? ch4_quests() : ($cur >= 30 ? ch3_quests() : ch2_quests())));
     $qs = ($all[$cur] ?? null) + ['id' => $cur];
     if (!($all[$cur] ?? null) || empty($qs['need'])) {
         return;

@@ -15,6 +15,8 @@ foreach (['title_iron', 'title_silver', 'title_gold'] as $tid) {
     if (!empty($tm[$tid])) { echo '·' . h(mat_name($tid)) . ' <a href="status.php?a=title&id=' . $tid . '">佩戴</a><br>'; }
 }
 echo '　' . h(job_of($u)['name']) . '(' . h(job_of($u)['skill']) . ')';
+$rb2n = rebirth2_name((string) (cflags((int) $u['id'])['rb2_job'] ?? ''));
+if ($rb2n !== '') { echo '　二转【' . h($rb2n) . '】(' . h(rebirth2_passive_desc((string) (cflags((int) $u['id'])['rb2_job'] ?? ''))) . ')'; }
 echo '<br>';
 echo '<span class="hp">生命 ' . (int) $u['hp'] . '/' . (int) $u['maxhp'] . '</span><br>';
 echo '<span style="color:#6cf">魔力 ' . (int) ($u['mp'] ?? 0) . '/' . (int) ($u['maxmp'] ?? 0) . '</span><br>';

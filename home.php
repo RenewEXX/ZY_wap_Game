@@ -138,6 +138,9 @@ $npcLinks = [
     'fo_gate' => [['qingya', '森语者·青芽']],
     'ember_foothill' => [['oldash', '探火人·老灰']],
     'volcano_heart' => [['watcher', '熔火守望者']],
+    'bounty_hall' => [['bounty_boss', '榜爷']],
+    'elder_tree' => [['bounty_elder', '树皮榜']],
+    'frostburg_sq' => [['bounty_frost', '榜爷学徒']],
 ];
 $npcHere = 0;
 foreach ($npcLinks[$cur] ?? [] as [$npcId, $npcName]) {

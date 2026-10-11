@@ -56,7 +56,7 @@ function locations(): array
             'name' => '雾谷麦田',
             'desc' => '麦子倒了一大片。绿皮小鬼在啃麦穗。玛莎求你驱逐它们。',
             'exits' => ['square' => '村广场'],
-            'monsters' => ['goblin'],
+            'monsters' => ['goblin', 'lucky_goblin'],
         ],
         'well' => [
             'name' => '老井',
@@ -112,7 +112,7 @@ function locations(): array
             'exits' => ['gate' => '罪渊入口'],
             'monsters' => [],
         ],
-    ] + ch1_locations() + dsw_locations() + ch2_locations() + abx_locations() + ch3_locations() + mx_locations() + farm_locations() + ice_locations() + fr_locations() + fo_locations() + em_locations() + wb_locations();
+    ] + ch1_locations() + dsw_locations() + ch2_locations() + abx_locations() + ch3_locations() + mx_locations() + farm_locations() + ice_locations() + fr_locations() + fo_locations() + em_locations() + wb_locations() + pz_locations() + sen_locations() + wild3_locations() + frostburg_locations() + greenheart_locations() + wild45_locations();
 }
 
 function loc(string $id): array
@@ -186,48 +186,74 @@ function monsters(): array
         'brood_maiden' => ['name' => '育巢侍女', 'hp' => 300000, 'atk' => 1650, 'exp' => 400000, 'gold' => 190000],
         'silk_mother' => ['name' => '缠丝之母', 'hp' => 600000, 'atk' => 2200, 'exp' => 1200000, 'gold' => 600000],
         // ---- 第四章·凛冬冰原（350~480级） ----
-        'frost_wolf' => ['name' => '冻原霜狼', 'hp' => 280000, 'atk' => 1600, 'exp' => 380000, 'gold' => 180000],
-        'ice_specter' => ['name' => '冰隙怨灵', 'hp' => 310000, 'atk' => 1700, 'exp' => 420000, 'gold' => 200000],
-        'snow_mammoth' => ['name' => '雪原猛犸', 'hp' => 360000, 'atk' => 1850, 'exp' => 500000, 'gold' => 235000],
-        'blizzard_shaman' => ['name' => '暴风雪萨满', 'hp' => 340000, 'atk' => 1950, 'exp' => 520000, 'gold' => 250000],
-        'glacier_golem' => ['name' => '冰川魔像', 'hp' => 420000, 'atk' => 2050, 'exp' => 600000, 'gold' => 290000],
-        'frost_giant' => ['name' => '霜巨人', 'hp' => 470000, 'atk' => 2180, 'exp' => 680000, 'gold' => 330000],
-        'aurora_serpent' => ['name' => '极光冰蛇', 'hp' => 440000, 'atk' => 2250, 'exp' => 700000, 'gold' => 340000],
-        'icewyrm' => ['name' => '冰渊蠕虫', 'hp' => 500000, 'atk' => 2320, 'exp' => 760000, 'gold' => 370000],
-        'winter_knight' => ['name' => '凛冬骑士', 'hp' => 540000, 'atk' => 2400, 'exp' => 820000, 'gold' => 400000],
-        'frost_matriarch' => ['name' => '霜母', 'hp' => 620000, 'atk' => 2550, 'exp' => 950000, 'gold' => 460000],
-        'glacier_colossus' => ['name' => '冰河巨像', 'hp' => 700000, 'atk' => 2680, 'exp' => 1100000, 'gold' => 530000],
-        'winter_king' => ['name' => '凛冬之王', 'hp' => 1400000, 'atk' => 3400, 'exp' => 3000000, 'gold' => 1500000],
+        'frost_wolf' => ['name' => '冻原霜狼', 'hp' => 196000, 'atk' => 2400, 'exp' => 380000, 'gold' => 180000],
+        'ice_specter' => ['name' => '冰隙怨灵', 'hp' => 217000, 'atk' => 2550, 'exp' => 420000, 'gold' => 200000],
+        'snow_mammoth' => ['name' => '雪原猛犸', 'hp' => 251999, 'atk' => 2775, 'exp' => 500000, 'gold' => 235000],
+        'blizzard_shaman' => ['name' => '暴风雪萨满', 'hp' => 237999, 'atk' => 2925, 'exp' => 520000, 'gold' => 250000],
+        'glacier_golem' => ['name' => '冰川魔像', 'hp' => 294000, 'atk' => 3075, 'exp' => 600000, 'gold' => 290000],
+        'frost_giant' => ['name' => '霜巨人', 'hp' => 329000, 'atk' => 3270, 'exp' => 680000, 'gold' => 330000],
+        'aurora_serpent' => ['name' => '极光冰蛇', 'hp' => 308000, 'atk' => 3375, 'exp' => 700000, 'gold' => 340000],
+        'icewyrm' => ['name' => '冰渊蠕虫', 'hp' => 350000, 'atk' => 3480, 'exp' => 760000, 'gold' => 370000],
+        'winter_knight' => ['name' => '凛冬骑士', 'hp' => 378000, 'atk' => 3600, 'exp' => 820000, 'gold' => 400000],
+        'frost_matriarch' => ['name' => '霜母', 'hp' => 434000, 'atk' => 3825, 'exp' => 950000, 'gold' => 460000],
+        'glacier_colossus' => ['name' => '冰河巨像', 'hp' => 489999, 'atk' => 4020, 'exp' => 1100000, 'gold' => 530000],
+        'winter_king' => ['name' => '凛冬之王', 'hp' => 1120000, 'atk' => 5100, 'exp' => 3000000, 'gold' => 1500000],
         // 冰渊副本
-        'fr_crawler' => ['name' => '冰渊爬行者', 'hp' => 480000, 'atk' => 2350, 'exp' => 800000, 'gold' => 380000],
-        'fr_stalker' => ['name' => '渊底潜伏者', 'hp' => 540000, 'atk' => 2480, 'exp' => 900000, 'gold' => 430000],
-        'fr_warden' => ['name' => '冰渊守望者', 'hp' => 620000, 'atk' => 2620, 'exp' => 1050000, 'gold' => 500000],
-        'fr_horror' => ['name' => '渊底恐惧', 'hp' => 700000, 'atk' => 2750, 'exp' => 1200000, 'gold' => 580000],
-        'fr_leviathan' => ['name' => '冰渊利维坦', 'hp' => 1500000, 'atk' => 3600, 'exp' => 3500000, 'gold' => 1700000],
+        'fr_crawler' => ['name' => '冰渊爬行者', 'hp' => 336000, 'atk' => 3525, 'exp' => 800000, 'gold' => 380000],
+        'fr_stalker' => ['name' => '渊底潜伏者', 'hp' => 378000, 'atk' => 3720, 'exp' => 900000, 'gold' => 430000],
+        'fr_warden' => ['name' => '冰渊守望者', 'hp' => 434000, 'atk' => 3930, 'exp' => 1050000, 'gold' => 500000],
+        'fr_horror' => ['name' => '渊底恐惧', 'hp' => 489999, 'atk' => 4125, 'exp' => 1200000, 'gold' => 580000],
+        'fr_leviathan' => ['name' => '冰渊利维坦', 'hp' => 1200000, 'atk' => 5400, 'exp' => 3500000, 'gold' => 1700000],
         // ---- 第五章·雾森与火山（500~720级） ----
-        'mist_treant' => ['name' => '雾森树人', 'hp' => 620000, 'atk' => 2600, 'exp' => 1050000, 'gold' => 500000],
-        'spore_colony' => ['name' => '孢子群落', 'hp' => 680000, 'atk' => 2720, 'exp' => 1150000, 'gold' => 550000],
-        'thorn_hunter' => ['name' => '荆棘猎手', 'hp' => 740000, 'atk' => 2850, 'exp' => 1280000, 'gold' => 610000],
-        'ancient_boa' => ['name' => '古林巨蚺', 'hp' => 820000, 'atk' => 2980, 'exp' => 1420000, 'gold' => 680000],
-        'mist_apeman' => ['name' => '雾猿', 'hp' => 880000, 'atk' => 3100, 'exp' => 1550000, 'gold' => 740000],
-        'rot_sage' => ['name' => '腐叶贤者', 'hp' => 940000, 'atk' => 3220, 'exp' => 1680000, 'gold' => 800000],
-        'ember_imp' => ['name' => '余烬小鬼', 'hp' => 1000000, 'atk' => 3350, 'exp' => 1820000, 'gold' => 870000],
-        'lava_hound' => ['name' => '熔岩猎犬', 'hp' => 1080000, 'atk' => 3480, 'exp' => 1960000, 'gold' => 940000],
-        'ash_cultist' => ['name' => '灰烬教徒', 'hp' => 1150000, 'atk' => 3600, 'exp' => 2100000, 'gold' => 1000000],
-        'magma_golem' => ['name' => '熔岩魔像', 'hp' => 1250000, 'atk' => 3750, 'exp' => 2280000, 'gold' => 1090000],
-        'flame_djinn' => ['name' => '烈焰神灯灵', 'hp' => 1320000, 'atk' => 3880, 'exp' => 2440000, 'gold' => 1160000],
-        'cinder_dragonspawn' => ['name' => '烬龙裔', 'hp' => 1420000, 'atk' => 4000, 'exp' => 2620000, 'gold' => 1250000],
-        'volcano_priest' => ['name' => '火山祭司', 'hp' => 1500000, 'atk' => 4120, 'exp' => 2800000, 'gold' => 1340000],
-        'ash_wyrm' => ['name' => '灰烬飞龙', 'hp' => 1600000, 'atk' => 4250, 'exp' => 3000000, 'gold' => 1440000],
-        'south_flame_guard' => ['name' => '南炎守卫', 'hp' => 1750000, 'atk' => 4400, 'exp' => 3300000, 'gold' => 1580000],
-        'ancient_ruin_golem' => ['name' => '遗迹守卫', 'hp' => 2200000, 'atk' => 4700, 'exp' => 4200000, 'gold' => 2000000],
+        'mist_treant' => ['name' => '雾森树人', 'hp' => 403000, 'atk' => 4160, 'exp' => 1050000, 'gold' => 500000],
+        'spore_colony' => ['name' => '孢子群落', 'hp' => 442000, 'atk' => 4352, 'exp' => 1150000, 'gold' => 550000],
+        'thorn_hunter' => ['name' => '荆棘猎手', 'hp' => 481000, 'atk' => 4560, 'exp' => 1280000, 'gold' => 610000],
+        'ancient_boa' => ['name' => '古林巨蚺', 'hp' => 533000, 'atk' => 4768, 'exp' => 1420000, 'gold' => 680000],
+        'mist_apeman' => ['name' => '雾猿', 'hp' => 572000, 'atk' => 4960, 'exp' => 1550000, 'gold' => 740000],
+        'rot_sage' => ['name' => '腐叶贤者', 'hp' => 611000, 'atk' => 5152, 'exp' => 1680000, 'gold' => 800000],
+        'ember_imp' => ['name' => '余烬小鬼', 'hp' => 650000, 'atk' => 5360, 'exp' => 1820000, 'gold' => 870000],
+        'lava_hound' => ['name' => '熔岩猎犬', 'hp' => 702000, 'atk' => 5568, 'exp' => 1960000, 'gold' => 940000],
+        'ash_cultist' => ['name' => '灰烬教徒', 'hp' => 747500, 'atk' => 5760, 'exp' => 2100000, 'gold' => 1000000],
+        'magma_golem' => ['name' => '熔岩魔像', 'hp' => 812500, 'atk' => 6000, 'exp' => 2280000, 'gold' => 1090000],
+        'flame_djinn' => ['name' => '烈焰神灯灵', 'hp' => 858000, 'atk' => 6208, 'exp' => 2440000, 'gold' => 1160000],
+        'cinder_dragonspawn' => ['name' => '烬龙裔', 'hp' => 923000, 'atk' => 6400, 'exp' => 2620000, 'gold' => 1250000],
+        'volcano_priest' => ['name' => '火山祭司', 'hp' => 975000, 'atk' => 6592, 'exp' => 2800000, 'gold' => 1340000],
+        'ash_wyrm' => ['name' => '灰烬飞龙', 'hp' => 1040000, 'atk' => 6800, 'exp' => 3000000, 'gold' => 1440000],
+        'south_flame_guard' => ['name' => '南炎守卫', 'hp' => 1137500, 'atk' => 7040, 'exp' => 3300000, 'gold' => 1580000],
+        'ancient_ruin_golem' => ['name' => '遗迹守卫', 'hp' => 1760000, 'atk' => 7050, 'exp' => 4200000, 'gold' => 2000000],
         // 熔心副本
-        'em_slag' => ['name' => '熔渣怪', 'hp' => 1300000, 'atk' => 3900, 'exp' => 2500000, 'gold' => 1200000],
-        'em_fiend' => ['name' => '焚心魔', 'hp' => 1450000, 'atk' => 4080, 'exp' => 2800000, 'gold' => 1340000],
-        'em_magma' => ['name' => '熔核行者', 'hp' => 1600000, 'atk' => 4250, 'exp' => 3100000, 'gold' => 1480000],
-        'em_ashlord' => ['name' => '灰烬领主侍从', 'hp' => 1800000, 'atk' => 4450, 'exp' => 3500000, 'gold' => 1680000],
-        'em_heart' => ['name' => '熔心化身', 'hp' => 3200000, 'atk' => 5400, 'exp' => 8000000, 'gold' => 3800000],
-        // 世界BOSS（999级，世界BOSS系统专用，野外不可遇敌）
+        'em_slag' => ['name' => '熔渣怪', 'hp' => 845000, 'atk' => 6240, 'exp' => 2500000, 'gold' => 1200000],
+        'em_fiend' => ['name' => '焚心魔', 'hp' => 942500, 'atk' => 6528, 'exp' => 2800000, 'gold' => 1340000],
+        'em_magma' => ['name' => '熔核行者', 'hp' => 1040000, 'atk' => 6800, 'exp' => 3100000, 'gold' => 1480000],
+        'em_ashlord' => ['name' => '灰烬领主侍从', 'hp' => 1170000, 'atk' => 7120, 'exp' => 3500000, 'gold' => 1680000],
+        'em_heart' => ['name' => '熔心化身', 'hp' => 2560000, 'atk' => 8100, 'exp' => 8000000, 'gold' => 3800000],
+        // 傀儡回廊副本（380~460级）
+        'pz_puller' => ['name' => '回廊牵线者', 'hp' => 800000, 'atk' => 3000, 'exp' => 1400000, 'gold' => 660000],
+        'pz_dancer' => ['name' => '回廊舞者', 'hp' => 880000, 'atk' => 3150, 'exp' => 1550000, 'gold' => 730000],
+        'pz_mask' => ['name' => '覆面傀儡', 'hp' => 960000, 'atk' => 3280, 'exp' => 1700000, 'gold' => 800000],
+        'pz_golem' => ['name' => '回廊守卫', 'hp' => 1050000, 'atk' => 3400, 'exp' => 1850000, 'gold' => 870000],
+        'pz_master' => ['name' => '傀儡大师', 'hp' => 2000000, 'atk' => 4200, 'exp' => 5000000, 'gold' => 2300000],
+        // 雾森祭坛副本（520~600级）
+        'sen_priest' => ['name' => '祭坛雾祭', 'hp' => 1200000, 'atk' => 4200, 'exp' => 2200000, 'gold' => 1050000],
+        'sen_thorn' => ['name' => '祭坛荆棘', 'hp' => 1300000, 'atk' => 4350, 'exp' => 2400000, 'gold' => 1140000],
+        'sen_serpent' => ['name' => '祭坛雾蛇', 'hp' => 1420000, 'atk' => 4500, 'exp' => 2600000, 'gold' => 1240000],
+        'sen_guard' => ['name' => '祭坛守卫', 'hp' => 1550000, 'atk' => 4650, 'exp' => 2850000, 'gold' => 1360000],
+        'sen_avatar' => ['name' => '雾森化身', 'hp' => 2800000, 'atk' => 5200, 'exp' => 7000000, 'gold' => 3300000],
+        // 野外传奇BOSS与趣味小怪
+        'shadow_claw' => ['name' => '影爪领主', 'hp' => 900000, 'atk' => 3600, 'exp' => 2000000, 'gold' => 950000],
+        'brass_bishop' => ['name' => '黄铜主教', 'hp' => 1800000, 'atk' => 4800, 'exp' => 4200000, 'gold' => 2000000],
+        'tundra_wanderer' => ['name' => '雪原漫游者', 'hp' => 1500000, 'atk' => 4400, 'exp' => 3500000, 'gold' => 1650000],
+        'lucky_goblin' => ['name' => '幸运哥布林', 'hp' => 5000, 'atk' => 5, 'exp' => 500, 'gold' => 5000],
+        'golden_slime' => ['name' => '黄金史莱姆', 'hp' => 80000, 'atk' => 200, 'exp' => 50000, 'gold' => 200000],
+        'mimic_chest' => ['name' => '宝箱怪', 'hp' => 300000, 'atk' => 1500, 'exp' => 400000, 'gold' => 500000],        // 新主城野外（t7）
+        'frostborn_hunter' => ['slot' => 'weapon', 'base' => '霜裔猎弓'],
+        'avalanche_titan' => ['slot' => 'necklace', 'base' => '雪崩之心', 'rate' => 0.2, 'q' => [0, 0, 30, 50, 20], 'legendary' => ['base' => '雪崩之心·永冻', 'extra' => ['k' => 'hp', 'v' => 3000.0]]],
+        'sulfur_sprite' => ['slot' => 'ring', 'base' => '硫磺指环'],
+        'obsidian_colossus' => ['slot' => 'ring', 'base' => '黑曜石之眼', 'rate' => 0.2, 'q' => [0, 0, 30, 50, 20], 'legendary' => ['base' => '黑曜石之眼·灭世', 'extra' => ['k' => 'critdmg', 'v' => 10.0]]],
+        'frostborn_hunter' => ['name' => '霜裔猎手', 'hp' => 400000, 'atk' => 2900, 'exp' => 620000, 'gold' => 300000],
+        'avalanche_titan' => ['name' => '雪崩巨人', 'hp' => 1900000, 'atk' => 5000, 'exp' => 4500000, 'gold' => 2100000],
+        'sulfur_sprite' => ['name' => '硫磺精', 'hp' => 1100000, 'atk' => 4900, 'exp' => 2000000, 'gold' => 960000],
+        'obsidian_colossus' => ['name' => '黑曜石巨像', 'hp' => 2400000, 'atk' => 5600, 'exp' => 5500000, 'gold' => 2600000],        // 世界BOSS（999级，世界BOSS系统专用，野外不可遇敌）
         'doyle' => ['name' => '烬焰领主·火龙多伊尔', 'hp' => 80000000, 'atk' => 9000, 'exp' => 0, 'gold' => 0],
     ];
 }
@@ -296,6 +322,7 @@ function mall_goods(): array
         $g[$tid] = ['name' => $t['name'], 'price' => $t['price'], 'unit' => $t['cap']];
     }
     $g['egg_unknown'] = ['name' => '未知宠物蛋', 'price' => 10, 'unit' => 1];
+    $g['witch_egg'] = ['name' => '魔女之茧（限时）', 'price' => 500, 'unit' => 1];
     $g['exp_card100'] = ['name' => '升级卡100型', 'price' => 100, 'unit' => 1];
     $g['reset_potion'] = ['name' => '属性洗点药', 'price' => 300, 'unit' => 1];
     $g['bag_ext5'] = ['name' => '5格背包扩充', 'price' => 200, 'unit' => 1];
@@ -307,6 +334,10 @@ function mall_goods(): array
     $g['offline_time'] = ['name' => '人偶离线升级模块', 'price' => 50, 'unit' => 3600];
     $g['offline_mod'] = ['name' => '人偶离线升级模块', 'price' => 50, 'unit' => 3600];
     $g['rename_card'] = ['name' => '改名卡', 'price' => 100, 'unit' => 1];
+    $g['title_iron'] = ['name' => '称号·黑铁冒险者', 'price' => 50, 'unit' => 1];
+    $g['title_silver'] = ['name' => '称号·秘银冒险者', 'price' => 150, 'unit' => 1];
+    $g['title_gold'] = ['name' => '称号·精金传说', 'price' => 300, 'unit' => 1];
+    $g['tent'] = ['name' => '随身帐篷', 'price' => 100, 'unit' => 1];
     return $g;
 }
 
@@ -1051,7 +1082,7 @@ function war_enemies(int $uid): array
 
 function boss_of_map(string $loc): string
 {
-    static $m = ['boss' => 'knight', 'echo_room' => 'echo_rayne', 'rift' => 'abyss_eye', 'baltar' => 'dark_lily', 'dsw_throne' => 'swamp_king', 'abx_throne' => 'abaddon', 'theater' => 'string_puller', 'mx_heart' => 'silk_mother', 'frost_throne' => 'winter_king', 'fr_core' => 'fr_leviathan', 'volcano_heart' => 'ancient_ruin_golem', 'em_core' => 'em_heart'];
+    static $m = ['boss' => 'knight', 'echo_room' => 'echo_rayne', 'rift' => 'abyss_eye', 'baltar' => 'dark_lily', 'dsw_throne' => 'swamp_king', 'abx_throne' => 'abaddon', 'theater' => 'string_puller', 'mx_heart' => 'silk_mother', 'frost_throne' => 'winter_king', 'fr_core' => 'fr_leviathan', 'volcano_heart' => 'ancient_ruin_golem', 'em_core' => 'em_heart', 'pz_core' => 'pz_master', 'sen_core' => 'sen_avatar', 'shadow_den' => 'shadow_claw', 'brass_chapel' => 'brass_bishop', 'wanderer_camp' => 'tundra_wanderer', 'ice_fall' => 'avalanche_titan', 'obsidian_field' => 'obsidian_colossus'];
     return $m[$loc] ?? '';
 }
 
@@ -1361,6 +1392,10 @@ function pet_species(): array
         'frost_wolf_pup' => ['name' => '霜狼幼崽', 'quality' => 'epic', 'growth' => 1.7, 'atk' => 20, 'def' => 12, 'hp' => 120, 'spd' => 20, 'crit' => 8, 'cd' => 150, 'active' => '寒霜扑咬', 'mult' => 1.5, 'passive' => '霜甲：承伤-12%', 'source' => '凛冬之王掉落'],
         'fire_dragon' => ['name' => '火龙多伊尔幼体', 'quality' => 'legend', 'growth' => 2.2, 'atk' => 34, 'def' => 16, 'hp' => 200, 'spd' => 18, 'crit' => 12, 'cd' => 170, 'active' => '烬焰吐息', 'mult' => 1.8, 'passive' => '龙威：攻击+20%，承伤-10%', 'source' => '世界BOSS掉落'],
         'puppet_doll' => ['name' => '傀儡人偶', 'quality' => 'epic', 'growth' => 1.6, 'atk' => 12, 'def' => 8, 'hp' => 70, 'spd' => 12, 'crit' => 6, 'cd' => 160, 'active' => '提线绞杀', 'mult' => 1.4, 'passive' => '丝甲：承伤-10%', 'source' => '牵线者掉落'],
+        'ember_pup' => ['name' => '火绒犬', 'quality' => 'good', 'growth' => 1.1, 'atk' => 8, 'def' => 6, 'hp' => 70, 'spd' => 12, 'crit' => 4, 'cd' => 155, 'active' => '火绒扑咬', 'mult' => 1.3, 'passive' => '暖绒：主人火抗+5%', 'source' => '宠物蛋'],
+        'mist_fox' => ['name' => '雾狐', 'quality' => 'rare', 'growth' => 1.35, 'atk' => 11, 'def' => 5, 'hp' => 60, 'spd' => 22, 'crit' => 7, 'cd' => 160, 'active' => '雾隐突袭', 'mult' => 1.5, 'passive' => '雾隐：闪避+3%', 'source' => '宠物蛋'],
+        'thunder_bird' => ['name' => '雷鸟', 'quality' => 'rare', 'growth' => 1.35, 'atk' => 12, 'def' => 4, 'hp' => 55, 'spd' => 24, 'crit' => 8, 'cd' => 165, 'active' => '落雷', 'mult' => 1.6, 'passive' => '雷速：出手更快', 'source' => '宠物蛋'],
+        'abyss_witch' => ['name' => '魔女阿比希尔', 'quality' => 'legend', 'growth' => 2.0, 'atk' => 30, 'def' => 14, 'hp' => 180, 'spd' => 20, 'crit' => 12, 'cd' => 175, 'active' => '魔女低语', 'mult' => 1.7, 'passive' => '月之庇佑：低语偷取敌人5%生命', 'source' => '限时（11月11日前）'],
     ];
 }
 
@@ -1379,15 +1414,28 @@ function pet_eggs(): array
         'egg_dragon' => ['species' => 'dragon', 'name' => '幼龙蛋'],
         'abaddon_egg' => ['species' => 'abaddon_spawn', 'name' => '阿巴顿之蛋'],
         'puppet_egg' => ['species' => 'puppet_doll', 'name' => '傀儡人偶蛋'],
+        'egg_ember' => ['species' => 'ember_pup', 'name' => '火绒犬蛋'],
+        'egg_fox' => ['species' => 'mist_fox', 'name' => '雾狐蛋'],
+        'egg_bird' => ['species' => 'thunder_bird', 'name' => '雷鸟蛋'],
+        'witch_egg' => ['species' => 'abyss_witch', 'name' => '魔女之茧（限时）'],
         'frost_egg' => ['species' => 'frost_wolf_pup', 'name' => '霜狼幼崽蛋'],
         'fire_dragon_egg' => ['species' => 'fire_dragon', 'name' => '传奇火龙宠物蛋'],
         'egg_unknown' => ['species' => '', 'name' => '未知宠物蛋'],
     ];
 }
 
+
+// 限时传奇宠物：魔女阿比希尔（首期限时至2026-11-11，换宠改这里）
+function witch_event_active(): bool
+{
+    return time() >= strtotime('2026-10-11 00:00:00') && time() <= strtotime('2026-11-11 23:59:59');
+}
+
 function shop_egg_pool(): array
 {
-    return ['egg_slime' => 60, 'egg_stone' => 25, 'egg_ghost' => 10, 'egg_dragon' => 5];
+    $pool = ['egg_slime' => 500, 'egg_stone' => 200, 'egg_ember' => 120, 'egg_ghost' => 80, 'egg_fox' => 40, 'egg_bird' => 30, 'egg_dragon' => 20, 'frost_egg' => 8];
+    if (witch_event_active()) { $pool['witch_egg'] = 2; }
+    return $pool;
 }
 
 function pet_stats(array $p): array
@@ -1415,6 +1463,20 @@ function pet_stats(array $p): array
     }
     if ($p['species'] === 'abaddon_spawn') {
         $s['atk'] = (int) ($s['atk'] * 1.1);
+    if ($p['species'] === 'abyss_witch') {
+
+        $s['atk'] = (int) ($s['atk'] * 1.15);
+
+        $s['maxhp'] = (int) ($s['maxhp'] * 1.2);
+
+    }
+
+    if ($p['species'] === 'mist_fox') {
+
+        $s['spd'] = (int) ($s['spd'] * 1.1);
+
+    }
+
     }
     return $s;
 }
@@ -1499,7 +1561,7 @@ function pet_attack(array &$u, array &$b): string
     if ((int) ($p['fatigue'] ?? 0) >= 100) {
         return '';
     }
-    if ((int) ($p['fatigue'] ?? 0) > 90 && !empty($b['live'])) {
+    if ((int) ($p['fatigue'] ?? 0) >= 70 && !empty($b['live'])) {
         $mats = mats_of((int) ($u['id'] ?? 0));
         if (!empty($mats['pet_food'])) {
             add_mat((int) ($u['id'] ?? 0), 'pet_food', -1);
@@ -1508,7 +1570,11 @@ function pet_attack(array &$u, array &$b): string
             $autoMsg = $sp['name'] . '饿得叫，自动吃了一份粮食。';
         }
     }
+    $sat = (int) (mats_of((int) ($u['id'] ?? 0))['pet_sat_' . (int) $p['id']] ?? 0);
+    if ($sat < time()) {
     db()->prepare('UPDATE pets SET fatigue=? WHERE id=?')->execute([min(100, (int) ($p['fatigue'] ?? 0) + 2), (int) $p['id']]);
+    }
+
     $dmg = $stats['atk'] + random_int(0, 3);
     $useSkill = mt_rand(1, 100) <= 30;
     $tag = '';
@@ -1518,7 +1584,13 @@ function pet_attack(array &$u, array &$b): string
             $u['hp'] = min((int) $u['maxhp'], (int) $u['hp'] + $heal);
             return $sp['name'] . '施展大地之盾，你恢复' . $heal . '点生命。';
         }
-        if ($p['species'] === 'ghost') {
+        if ($p['species'] === 'abyss_witch' && mt_rand(1, 100) <= 25 && (int) ($b['hp'] ?? 0) > 0) {
+            $steal = max(1, (int) ((int) $b['hp'] * 0.05));
+            $b['hp'] = (int) $b['hp'] - $steal;
+            $u['hp'] = min((int) $u['maxhp'], (int) $u['hp'] + $steal);
+            $dmg = (int) ($dmg * (float) $sp['mult']);
+            $tag = '（魔女低语，偷取' . $steal . '点生命）';
+        } elseif ($p['species'] === 'ghost') {
             $b['fear'] = 3;
             $dmg = (int) ($dmg * (float) $sp['mult']);
             $tag = '（恐惧尖啸，敌人变弱）';
@@ -1808,14 +1880,14 @@ function is_usable_item(string $mid): bool
 
 function mat_hidden(string $mid): bool
 {
-    if (str_starts_with($mid, 'code_') || str_starts_with($mid, 'dummy_') || str_starts_with($mid, 'hatch_') || str_starts_with($mid, 'soul_lv_')) {
+    if (str_starts_with($mid, 'code_') || str_starts_with($mid, 'dummy_') || str_starts_with($mid, 'hatch_') || str_starts_with($mid, 'soul_lv_') || str_starts_with($mid, 'pet_sat_')) {
         return true;
     }
     // 副本进度标记（计时/阶段）是系统字段，永不进背包显示
     if (str_ends_with($mid, '_enter') || str_ends_with($mid, '_stage')) {
         return true;
     }
-    return in_array($mid, ['offline_on', 'offline_time', 'seen_last', 'exp_card_until', 'bag_ext5_used', 'bag_ext10_used', 'dummy_total', 'tank_cd_hp', 'tank_cd_mp', 'peak_force', 'peak_duel_from', 'arena_day', 'arena_used', 'arena_bought', 'active_wid', 'active_week', 'priest_wid', 'fr_enter', 'fr_stage', 'em_enter', 'em_stage', 'wb_claimed'], true);
+    return in_array($mid, ['offline_on', 'offline_time', 'seen_last', 'exp_card_until', 'bag_ext5_used', 'bag_ext10_used', 'dummy_total', 'tank_cd_hp', 'tank_cd_mp', 'peak_force', 'peak_duel_from', 'arena_day', 'arena_used', 'arena_bought', 'active_wid', 'active_week', 'priest_wid', 'fr_enter', 'fr_stage', 'em_enter', 'em_stage', 'pz_enter', 'pz_stage', 'sen_enter', 'sen_stage', 'wb_claimed'], true);
 }
 
 // 当前版本真正有用的锻造材料：强化石 + 属性石/晶石/珠/神石
@@ -2317,6 +2389,12 @@ function equip_is_set(string $shortName): bool
     if (str_starts_with($shortName, '剧场·')) {
         return true;
     }
+    if (str_starts_with($shortName, '傀儡·')) {
+        return true;
+    }
+    if (str_starts_with($shortName, '荆棘·')) {
+        return true;
+    }
     if (str_starts_with($shortName, '寒霜·')) {
         return true;
     }
@@ -2357,6 +2435,12 @@ function equip_set_id(string $shortName): string
     if (str_starts_with($shortName, '烬焰·')) {
         return 'ember';
     }
+    if (str_starts_with($shortName, '傀儡·')) {
+        return 'puppet';
+    }
+    if (str_starts_with($shortName, '荆棘·')) {
+        return 'thorn';
+    }
     return '';
 }
 
@@ -2374,14 +2458,20 @@ function equip_set_pieces(string $set): array
     if ($set === 'ember') {
         return ['烬焰·龙裔刃', '烬焰·灰烬法杖', '烬焰·熔核锤', '烬焰·焚心弓', '烬焰·熔盾', '烬焰·余烬囊', '烬焰·守卫铠', '烬焰·祭司冠', '烬焰·熔渣腿', '烬焰·灰烬戒', '烬焰·余火链'];
     }
+    if ($set === 'puppet') {
+        return ['傀儡·断线匕', '傀儡·舞步靴', '傀儡·覆面', '傀儡·守卫甲', '傀儡·大师之手'];
+    }
+    if ($set === 'thorn') {
+        return ['荆棘·雾祭铃', '荆棘·刺甲', '荆棘·蛇牙戒', '荆棘·守卫裙'];
+    }
     return [];
 }
 
 function equip_set_owned_count(int $uid, string $set): int
 {
-    if ($set === 'theater' || $set === 'frost' || $set === 'ember') {
-        $mark = ['theater' => '%剧场·%', 'frost' => '%寒霜·%', 'ember' => '%烬焰·%'][$set];
-        $cap = ['theater' => 99, 'frost' => 3, 'ember' => 7][$set];
+    if (in_array($set, ['theater', 'frost', 'ember', 'puppet', 'thorn'], true)) {
+        $mark = ['theater' => '%剧场·%', 'frost' => '%寒霜·%', 'ember' => '%烬焰·%', 'puppet' => '%傀儡·%', 'thorn' => '%荆棘·%'][$set];
+        $cap = ['theater' => 99, 'frost' => 3, 'ember' => 7, 'puppet' => 5, 'thorn' => 4][$set];
         $st = db()->prepare('SELECT COUNT(*) FROM equips WHERE uid=? AND pos="wear" AND name LIKE ?');
         $st->execute([(int) $uid, $mark]);
         return min($cap, (int) $st->fetchColumn());
@@ -2413,6 +2503,12 @@ function equip_set_bonus_text(string $set, int $owned): string
     }
     if ($set === 'ember') {
         return '【烬焰套装】已穿' . $owned . '/7：2件攻击+10%，4件元素伤害+120，7件真伤+500、减伤+10%、技能伤害+15%。';
+    }
+    if ($set === 'puppet') {
+        return '【傀儡套装】已穿' . $owned . '/5：2件技能伤害+10%，5件元素伤害+100、减伤+8%。';
+    }
+    if ($set === 'thorn') {
+        return '【荆棘套装】已穿' . $owned . '/4：3件攻击+6%，4件吸血+3%。';
     }
     return '';
 }
@@ -2509,6 +2605,22 @@ function monster_drops(string $mid): array
         'em_magma' => ['slot' => 'weapon', 'base' => '烬焰·熔核锤'],
         'em_ashlord' => ['slot' => 'ring', 'base' => '烬焰·灰烬戒'],
         'em_heart' => ['slot' => 'offhand', 'off' => 'magic', 'base' => '熔心', 'rate' => 0.3, 'q' => [0, 0, 20, 50, 30], 'legendary' => ['base' => '熔心·世界之血', 'extra' => ['k' => 'skill_damage', 'v' => 8.0]]],
+        'pz_puller' => ['slot' => 'weapon', 'base' => '傀儡·断线匕'],
+        'pz_dancer' => ['slot' => 'shoes', 'base' => '傀儡·舞步靴'],
+        'pz_mask' => ['slot' => 'head', 'base' => '傀儡·覆面'],
+        'pz_golem' => ['slot' => 'body', 'base' => '傀儡·守卫甲'],
+        'pz_master' => ['slot' => 'offhand', 'off' => 'magic', 'base' => '傀儡·大师之手', 'rate' => 0.3, 'q' => [0, 0, 20, 50, 30], 'legendary' => ['base' => '傀儡大师·提线', 'extra' => ['k' => 'skill_damage', 'v' => 6.0]]],
+        'sen_priest' => ['slot' => 'offhand', 'off' => 'magic', 'base' => '荆棘·雾祭铃'],
+        'sen_thorn' => ['slot' => 'body', 'base' => '荆棘·刺甲'],
+        'sen_serpent' => ['slot' => 'ring', 'base' => '荆棘·蛇牙戒'],
+        'sen_guard' => ['slot' => 'legs', 'base' => '荆棘·守卫裙'],
+        'sen_avatar' => ['slot' => 'necklace', 'base' => '雾森之心', 'rate' => 0.3, 'q' => [0, 0, 20, 50, 30], 'legendary' => ['base' => '雾森之心·永绿', 'extra' => ['k' => 'lifesteal', 'v' => 2.0]]],
+        'shadow_claw' => ['slot' => 'weapon', 'base' => '影爪', 'rate' => 0.2, 'q' => [0, 0, 30, 50, 20], 'legendary' => ['base' => '影爪领主·撕夜', 'extra' => ['k' => 'crit', 'v' => 3.0]]],
+        'brass_bishop' => ['slot' => 'head', 'base' => '黄铜冠', 'rate' => 0.2, 'q' => [0, 0, 30, 50, 20], 'legendary' => ['base' => '黄铜主教·赦令', 'extra' => ['k' => 'damage_reduction', 'v' => 3.0]]],
+        'tundra_wanderer' => ['slot' => 'back', 'base' => '漫游者斗篷', 'rate' => 0.2, 'q' => [0, 0, 30, 50, 20], 'legendary' => ['base' => '漫游者·无疆', 'extra' => ['k' => 'move_speed', 'v' => 5.0]]],
+        'lucky_goblin' => ['slot' => 'ring', 'base' => '幸运金币', 'rate' => 0.02, 'q' => [0, 0, 0, 60, 40], 'legendary' => ['base' => '幸运哥布林·大金币', 'extra' => ['k' => 'gold_gain', 'v' => 10.0]]],
+        'golden_slime' => ['slot' => 'necklace', 'base' => '金色黏液', 'rate' => 0.03, 'q' => [0, 0, 20, 60, 20], 'legendary' => ['base' => '黄金史莱姆·王冠', 'extra' => ['k' => 'exp_gain', 'v' => 8.0]]],
+        'mimic_chest' => ['slot' => 'body', 'base' => '宝箱甲', 'rate' => 0.05, 'q' => [0, 0, 30, 50, 20], 'legendary' => ['base' => '宝箱怪·贪婪之胃', 'extra' => ['k' => 'magic_find', 'v' => 10.0]]],
     ][$mid] ?? [];
 }
 
@@ -2677,7 +2789,7 @@ function quest_mats(): array
 {
     return ['blackcoin' => '不断下坠的黑币', 'aiden_badge' => '艾登·灰叶的铭牌', 'investigation_record' => '调查队记录', 'augustus_letter' => '镇长的信', 'dsw_ticket' => '黑暗沼泽副本入场券', 'dsw_item1' => '幽暗黏液', 'dsw_item2' => '沼泽之核', 'dsw_item3' => '腐泥之心', 'dsw_item4' => '王座徽记', 'abx_ticket' => '影蚀深渊入场券', 'abx_item1' => '蚀影尘', 'abx_item2' => '影蚀徽记', 'abx_item3' => '低语残章', 'abx_item4' => '王座蚀印', 'capital_badge' => '王都徽章', 'puppet_eye' => '傀儡之眼', 'ch3_proof' => '第三章通关证明', 'mx_ticket' => '银丝母巢入场券', 'mx_item1' => '黏丝束', 'mx_item2' => '茧壳碎片', 'mx_item3' => '织线梭', 'mx_item4' => '蛾翼磷粉', 'mx_item5' => '守望之瞳', 'mx_item6' => '育巢摇篮曲', 'farm_coin' => '农场币', 'seed_green' => '青菜种子', 'seed_radish' => '萝卜种子', 'seed_melon' => '南瓜种子', 'seed_tomato' => '番茄种子', 'seed_strawberry' => '草莓种子',
  'ice_badge' => '冰原徽章', 'frost_heart' => '霜王之心', 'ch4_proof' => '第四章通关证明', 'fr_ticket' => '冰渊副本入场券', 'fr_item1' => '渊底冰核', 'fr_item2' => '利维坦之牙',
- 'forest_badge' => '森语徽章', 'south_flame_token' => '南炎信物', 'ch5_proof' => '第五章通关证明', 'em_ticket' => '熔心副本入场券', 'em_item1' => '熔核碎片', 'em_item2' => '熔心之血',
+ 'forest_badge' => '森语徽章', 'south_flame_token' => '南炎信物', 'ch5_proof' => '第五章通关证明', 'em_ticket' => '熔心副本入场券', 'pz_ticket' => '傀儡回廊入场券', 'sen_ticket' => '雾森祭坛入场券', 'em_item1' => '熔核碎片', 'em_item2' => '熔心之血',
  'soul_shard' => '神魂碎片', 'wb_ticket' => '龙鳞引（世界BOSS入场券）'];
 }
 
@@ -2966,6 +3078,18 @@ function mat_name(string $id): string
     if ($id === 'rename_card') {
         return '改名卡';
     }
+    if ($id === 'title_iron') {
+        return '称号·黑铁冒险者';
+    }
+    if ($id === 'title_silver') {
+        return '称号·秘银冒险者';
+    }
+    if ($id === 'title_gold') {
+        return '称号·精金传说';
+    }
+    if ($id === 'tent') {
+        return '随身帐篷';
+    }
     if (isset(skill_books()[$id])) {
         return skill_books()[$id]['name'];
     }
@@ -3092,6 +3216,10 @@ function roll_enhance_material(int $uid, string $mid, string $loc = ''): string
         $id = 'enhance_t2';
     } elseif (in_array($loc, em_maps(), true) && $mid === 'em_heart') {
         $id = 'enhance_t3';
+    } elseif (in_array($loc, pz_maps(), true) && $mid === 'pz_master') {
+        $id = 'enhance_t2';
+    } elseif (in_array($loc, sen_maps(), true) && $mid === 'sen_avatar') {
+        $id = 'enhance_t3';
     } elseif ($mid === 'winter_king' || $mid === 'ancient_ruin_golem') {
         $id = 'enhance_t3';
     }
@@ -3150,6 +3278,10 @@ function monster_element(string $mid): string
         'ash_cultist' => 'fire', 'magma_golem' => 'fire', 'flame_djinn' => 'fire', 'cinder_dragonspawn' => 'fire',
         'volcano_priest' => 'fire', 'ash_wyrm' => 'fire', 'south_flame_guard' => 'fire', 'ancient_ruin_golem' => 'fire',
         'em_slag' => 'fire', 'em_fiend' => 'fire', 'em_magma' => 'fire', 'em_ashlord' => 'fire', 'em_heart' => 'fire',
+        'pz_puller' => 'dark', 'pz_dancer' => 'dark', 'pz_mask' => 'dark', 'pz_golem' => 'thunder', 'pz_master' => 'dark',
+        'sen_priest' => 'wind', 'sen_thorn' => 'wind', 'sen_serpent' => 'dark', 'sen_guard' => 'wind', 'sen_avatar' => 'wind',
+        'shadow_claw' => 'dark', 'brass_bishop' => 'light', 'tundra_wanderer' => 'ice', 'lucky_goblin' => 'wind', 'golden_slime' => 'light', 'mimic_chest' => 'dark',
+        'frostborn_hunter' => 'ice', 'avalanche_titan' => 'ice', 'sulfur_sprite' => 'fire', 'obsidian_colossus' => 'fire',
         'doyle' => 'fire',
     ];
     return $m[$mid] ?? '';
@@ -3393,13 +3525,13 @@ function ground_pickup(int $uid, int $gid): string
 
 function is_boss_mid(string $mid): bool
 {
-    static $bosses = ['knight', 'echo_rayne', 'swamp_king', 'abaddon', 'abyss_eye', 'dark_lily', 'valentin', 'guardian', 'string_puller', 'silk_mother', 'winter_king', 'fr_leviathan', 'ancient_ruin_golem', 'em_heart', 'doyle'];
+    static $bosses = ['knight', 'echo_rayne', 'swamp_king', 'abaddon', 'abyss_eye', 'dark_lily', 'valentin', 'guardian', 'string_puller', 'silk_mother', 'winter_king', 'fr_leviathan', 'ancient_ruin_golem', 'em_heart', 'doyle', 'pz_master', 'sen_avatar', 'shadow_claw', 'brass_bishop', 'tundra_wanderer', 'avalanche_titan', 'obsidian_colossus'];
     return in_array($mid, $bosses, true);
 }
 
 function is_ch3_mid(string $mid): bool
 {
-    static $mids = ['puppet_guard', 'masked_noble', 'ink_puppet', 'silver_undead', 'silver_assassin', 'puppet_priest', 'star_puppet', 'silver_puppet', 'string_puller', 'silk_spider', 'cocoon_guard', 'thread_weaver', 'silk_moth', 'nest_watcher', 'brood_maiden', 'silk_mother', 'frost_wolf', 'ice_specter', 'snow_mammoth', 'blizzard_shaman', 'glacier_golem', 'frost_giant', 'aurora_serpent', 'icewyrm', 'winter_knight', 'frost_matriarch', 'glacier_colossus', 'winter_king', 'fr_crawler', 'fr_stalker', 'fr_warden', 'fr_horror', 'fr_leviathan', 'mist_treant', 'spore_colony', 'thorn_hunter', 'ancient_boa', 'mist_apeman', 'rot_sage', 'ember_imp', 'lava_hound', 'ash_cultist', 'magma_golem', 'flame_djinn', 'cinder_dragonspawn', 'volcano_priest', 'ash_wyrm', 'south_flame_guard', 'ancient_ruin_golem', 'em_slag', 'em_fiend', 'em_magma', 'em_ashlord', 'em_heart', 'doyle'];
+    static $mids = ['puppet_guard', 'masked_noble', 'ink_puppet', 'silver_undead', 'silver_assassin', 'puppet_priest', 'star_puppet', 'silver_puppet', 'string_puller', 'silk_spider', 'cocoon_guard', 'thread_weaver', 'silk_moth', 'nest_watcher', 'brood_maiden', 'silk_mother', 'frost_wolf', 'ice_specter', 'snow_mammoth', 'blizzard_shaman', 'glacier_golem', 'frost_giant', 'aurora_serpent', 'icewyrm', 'winter_knight', 'frost_matriarch', 'glacier_colossus', 'winter_king', 'fr_crawler', 'fr_stalker', 'fr_warden', 'fr_horror', 'fr_leviathan', 'mist_treant', 'spore_colony', 'thorn_hunter', 'ancient_boa', 'mist_apeman', 'rot_sage', 'ember_imp', 'lava_hound', 'ash_cultist', 'magma_golem', 'flame_djinn', 'cinder_dragonspawn', 'volcano_priest', 'ash_wyrm', 'south_flame_guard', 'ancient_ruin_golem', 'em_slag', 'em_fiend', 'em_magma', 'em_ashlord', 'em_heart', 'doyle', 'frostborn_hunter', 'avalanche_titan', 'sulfur_sprite', 'obsidian_colossus', 'pz_puller', 'pz_dancer', 'pz_mask', 'pz_golem', 'pz_master', 'sen_priest', 'sen_thorn', 'sen_serpent', 'sen_guard', 'sen_avatar', 'shadow_claw', 'brass_bishop', 'tundra_wanderer', 'lucky_goblin', 'golden_slime', 'mimic_chest'];
     return in_array($mid, $mids, true);
 }
 
@@ -3669,16 +3801,22 @@ function gear_stats(int $uid): array
         $s['damage_reduction'] += 12;
         $s['skill_damage'] += 20;
     }
-    // 寒霜3件 / 烬焰7件
-    $frost = 0; $ember = 0;
+    // 寒霜3件 / 烬焰7件 / 傀儡5件 / 荆棘4件
+    $frost = 0; $ember = 0; $puppet = 0; $thorn = 0;
     foreach ($worn as $wn) {
         if (str_starts_with($wn, '寒霜·')) { $frost++; }
         if (str_starts_with($wn, '烬焰·')) { $ember++; }
+        if (str_starts_with($wn, '傀儡·')) { $puppet++; }
+        if (str_starts_with($wn, '荆棘·')) { $thorn++; }
     }
     if ($frost >= 3) { $s['atk_pct'] += 8; $s['mdef'] += 80; }
     if ($ember >= 2) { $s['atk_pct'] += 10; }
     if ($ember >= 4) { $s['element'] += 120; }
     if ($ember >= 7) { $s['truedmg'] += 500; $s['damage_reduction'] += 10; $s['skill_damage'] += 15; }
+    if ($puppet >= 2) { $s['skill_damage'] += 10; }
+    if ($puppet >= 5) { $s['element'] += 100; $s['damage_reduction'] += 8; }
+    if ($thorn >= 3) { $s['atk_pct'] += 6; }
+    if ($thorn >= 4) { $s['lifesteal'] += 3; }
     $qu = db()->prepare('SELECT quest FROM users WHERE id=?');
     $qu->execute([$uid]);
     if ((int) ($qu->fetchColumn() ?: 0) >= 38) {
@@ -3884,6 +4022,60 @@ function wb_rewards(): void
     }
     db()->prepare("INSERT OR REPLACE INTO sys_kv (k, num) VALUES ('wb_done', 1)")->execute();
 }
+// 悬赏板：每日3单，按日期轮换，杀够数领钱领药
+function bounty_list(): array
+{
+    return [
+        ['mid' => 'frost_wolf', 'need' => 60, 'gold' => 200000, 'pot' => 'hp_pct20'],
+        ['mid' => 'glacier_golem', 'need' => 40, 'gold' => 300000, 'pot' => 'hp_pct20'],
+        ['mid' => 'winter_knight', 'need' => 40, 'gold' => 350000, 'pot' => 'hp_pct35'],
+        ['mid' => 'mist_treant', 'need' => 60, 'gold' => 400000, 'pot' => 'hp_pct20'],
+        ['mid' => 'lava_hound', 'need' => 50, 'gold' => 500000, 'pot' => 'hp_pct35'],
+        ['mid' => 'south_flame_guard', 'need' => 30, 'gold' => 800000, 'pot' => 'hp_pct50'],
+        ['mid' => 'shadow_claw', 'need' => 5, 'gold' => 600000, 'pot' => 'hp_pct35'],
+        ['mid' => 'pz_golem', 'need' => 20, 'gold' => 500000, 'pot' => 'hp_pct35'],
+        ['mid' => 'sen_guard', 'need' => 15, 'gold' => 700000, 'pot' => 'hp_pct50'],
+    ];
+}
+
+function bounty_today(): array
+{
+    $all = bounty_list();
+    $d = (int) date('z');
+    $out = [];
+    for ($i = 0; $i < 3; $i++) {
+        $out[] = $all[($d + $i) % count($all)];
+    }
+    return $out;
+}
+
+function bounty_claim(int $uid, int $i): string
+{
+    $list = bounty_today();
+    if (!isset($list[$i])) { return '没这单。'; }
+    $b = $list[$i];
+    $day = date('Ymd');
+    $key = 'bq' . $day . '_' . $i;
+    $f = cflags($uid);
+    if (!empty($f[$key . '_done'])) { return '这单今天交过了，明天再来。'; }
+    if (empty($f[$key])) {
+        $c = kill_counts($uid);
+        cflag_set($uid, $key, [$b['mid'] => (int) ($c[$b['mid']] ?? 0)]);
+        return '接下悬赏：' . monsters()[$b['mid']]['name'] . '×' . $b['need'] . '，杀完回来交！';
+    }
+    $base = $f[$key];
+    if (!is_array($base)) { $base = []; }
+    $c = kill_counts($uid);
+    $got = (int) ($c[$b['mid']] ?? 0) - (int) ($base[$b['mid']] ?? 0);
+    if ($got < $b['need']) { return '还差' . ($b['need'] - $got) . '只，杀完再来。'; }
+    cflag_set($uid, $key . '_done', 1);
+    $u = user_by_id($uid);
+    $u['gold'] = (int) $u['gold'] + $b['gold'];
+    user_save($u);
+    add_mat($uid, $b['pot'], 2);
+    return '悬赏完成！得' . fmt_money($b['gold']) . '+' . mat_name($b['pot']) . '×2！';
+}
+
 function my_equips(int $uid): array
 {
     $st = db()->prepare('SELECT * FROM equips WHERE uid=? ORDER BY pos DESC, quality DESC, id DESC');
@@ -4174,17 +4366,10 @@ function player_patk(array $u): int
     return $base;
 }
 
-// 魔法攻击（无属性）：灵力+法术强度装备。法师另吃本体攻击四分之一（科班出身，但不再像以前那么恐怖）
+// 魔法攻击（无属性）：灵力+法术强度装备。法师牧师纯靠灵力，无科班加成
 function player_matk(array $u): int
 {
-    $base = (int) ($u['spi'] ?? 0) + (int) gear_stats((int) ($u['id'] ?? 0))['matk'];
-    if (job_id_of($u) === 'mage') {
-        $base += (int) ((int) $u['atk'] / 4);
-    }
-    if (job_id_of($u) === 'priest') {
-        $base += (int) ((int) $u['atk'] / 8);
-    }
-    return $base;
+    return (int) ($u['spi'] ?? 0) + (int) gear_stats((int) ($u['id'] ?? 0))['matk'];
 }
 
 function player_def(array $u): int
@@ -4234,6 +4419,10 @@ function monster_lv(string $mid): int
         'ash_cultist' => 620, 'magma_golem' => 635, 'flame_djinn' => 650, 'cinder_dragonspawn' => 665,
         'volcano_priest' => 680, 'ash_wyrm' => 695, 'south_flame_guard' => 710, 'ancient_ruin_golem' => 720,
         'em_slag' => 640, 'em_fiend' => 660, 'em_magma' => 680, 'em_ashlord' => 700, 'em_heart' => 720,
+        'pz_puller' => 380, 'pz_dancer' => 400, 'pz_mask' => 420, 'pz_golem' => 440, 'pz_master' => 460,
+        'sen_priest' => 520, 'sen_thorn' => 540, 'sen_serpent' => 560, 'sen_guard' => 580, 'sen_avatar' => 600,
+        'shadow_claw' => 320, 'brass_bishop' => 480, 'tundra_wanderer' => 450, 'lucky_goblin' => 5, 'golden_slime' => 100, 'mimic_chest' => 200,
+        'frostborn_hunter' => 430, 'avalanche_titan' => 470, 'sulfur_sprite' => 610, 'obsidian_colossus' => 700,
         'doyle' => 999,
     ];
     return $lv[$mid] ?? 1;
@@ -5560,39 +5749,18 @@ function roll_abx_quest(int $uid, string $mid): string
     return $out;
 }
 
-function dungeon_tick(array &$u): void
-{
-    $loc = (string) ($u['loc'] ?? '');
-    $inFr = in_array($loc, fr_maps(), true);
-    $inEm = in_array($loc, em_maps(), true);
-    if (!in_array($loc, dsw_maps(), true) && !in_array($loc, abx_maps(), true) && !in_array($loc, mx_maps(), true) && !$inFr && !$inEm) {
-        return;
-    }
-    $inAbx = in_array($loc, abx_maps(), true);
-    $inMx = in_array($loc, mx_maps(), true);
-    $mats = mats_of((int) ($u['id'] ?? 0));
-    $enter = (int) ($mats[$inFr ? 'fr_enter' : ($inEm ? 'em_enter' : ($inMx ? 'mx_enter' : ($inAbx ? 'abx_enter' : 'dsw_enter')))] ?? time());
-    $limit = ($inMx || $inFr || $inEm) ? 2700 : 1800;
-    if (time() - $enter > $limit) {
-        unset($_SESSION['battle']);
-        $u['loc'] = $inFr ? 'ice_village' : ($inEm ? 'ember_foothill' : ($inMx ? 'avenue' : ($inAbx ? 'silver_sq' : 'town_sq')));
-        user_save($u);
-        $back = $inFr ? '冰原村' : ($inEm ? '火山麓' : ($inMx ? '中央大道' : ($inAbx ? '白银广场' : '白石镇广场')));
-        flash_set(($limit >= 2700 ? '45' : '30') . '分钟到了，你被传回' . $back . '。');
-    }
-}
-
+function dungeon_tick(array &$u): void{    $loc = (string) ($u['loc'] ?? '');    $inFr = in_array($loc, fr_maps(), true);    $inEm = in_array($loc, em_maps(), true);    $inPz = in_array($loc, pz_maps(), true);    $inSen = in_array($loc, sen_maps(), true);    if (!in_array($loc, dsw_maps(), true) && !in_array($loc, abx_maps(), true) && !in_array($loc, mx_maps(), true) && !$inFr && !$inEm && !$inPz && !$inSen) {        return;    }    $inAbx = in_array($loc, abx_maps(), true);    $inMx = in_array($loc, mx_maps(), true);    $mats = mats_of((int) ($u['id'] ?? 0));    $enter = (int) ($mats[$inFr ? 'fr_enter' : ($inEm ? 'em_enter' : ($inPz ? 'pz_enter' : ($inSen ? 'sen_enter' : ($inMx ? 'mx_enter' : ($inAbx ? 'abx_enter' : 'dsw_enter')))))] ?? time());    $limit = ($inMx || $inFr || $inEm || $inPz || $inSen) ? 2700 : 1800;    if (time() - $enter > $limit) {        unset($_SESSION['battle']);        $u['loc'] = $inFr ? 'ice_village' : ($inEm ? 'ember_foothill' : ($inPz ? 'theater' : ($inSen ? 'fo_gate' : ($inMx ? 'avenue' : ($inAbx ? 'silver_sq' : 'town_sq')))));        user_save($u);        $back = $inFr ? '冰原村' : ($inEm ? '火山麓' : ($inPz ? '傀儡剧场' : ($inSen ? '雾森渡口' : ($inMx ? '中央大道' : ($inAbx ? '白银广场' : '白石镇广场')))));        flash_set(($limit >= 2700 ? '45' : '30') . '分钟到了，你被传回' . $back . '。');    }}
 function ch2_locations(): array
 {
     $m = [];
     $m['silver_gate'] = ['name' => '白银城门', 'desc' => '灰白城墙高耸。守卫面朝内，影子被夕阳拉得很长，像黑色的手指。', 'exits' => ['gate' => '罪渊入口', 'silver_sq' => '白银广场'], 'monsters' => []];
-    $m['silver_sq'] = ['name' => '白银广场', 'desc' => '天黑后街上没人。每一道影子都可能自己动。', 'exits' => ['silver_gate' => '白银城门', 'sguild' => '公会大厅', 'dsewer1' => '下水道一层', 'warfield' => '荒芜战场', 'capital_gate' => '王都城门'], 'monsters' => []];
+    $m['silver_sq'] = ['name' => '白银广场', 'desc' => '天黑后街上没人。每一道影子都可能自己动。', 'exits' => ['silver_gate' => '白银城门', 'sguild' => '公会大厅', 'dsewer1' => '下水道一层', 'warfield' => '荒芜战场', 'capital_gate' => '王都城门', 'shadow_den' => '影爪巢穴'], 'monsters' => []];
     $m['warfield'] = ['name' => '荒芜战场', 'desc' => '公会战专用。周末晚上，这里只讲拳头。杀不同公会的人+1战功。', 'exits' => ['silver_sq' => '白银广场'], 'monsters' => []];
     $m['peak1'] = ['name' => '巅峰战场·初', 'desc' => '100~300级的角斗场。活到最后的人，只需要一个。', 'exits' => ['square' => '灰雾村·广场'], 'monsters' => []];
     $m['peak2'] = ['name' => '巅峰战场·中', 'desc' => '301~600级的角斗场。影子在这里也会出汗。', 'exits' => ['square' => '灰雾村·广场'], 'monsters' => []];
     $m['peak3'] = ['name' => '巅峰战场·终', 'desc' => '601~999级的角斗场。深渊在上面看着，挑下一个名字。', 'exits' => ['square' => '灰雾村·广场'], 'monsters' => []];
     $m['sguild'] = ['name' => '公会大厅', 'desc' => '油灯照不亮的墙上挂着白银城地图，红圈几十个。格温在桌后等你。', 'exits' => ['silver_sq' => '白银广场'], 'monsters' => []];
-    $m['dsewer1'] = ['name' => '下水道一层', 'desc' => '水没脚踝，铁锈混腐肉的气味。白眼睛的影蚀鼠从四面涌来。', 'exits' => ['silver_sq' => '白银广场', 'dsewer2' => '下水道二层'], 'monsters' => ['shadow_rat']];
+    $m['dsewer1'] = ['name' => '下水道一层', 'desc' => '水没脚踝，铁锈混腐肉的气味。白眼睛的影蚀鼠从四面涌来。', 'exits' => ['silver_sq' => '白银广场', 'dsewer2' => '下水道二层'], 'monsters' => ['shadow_rat', 'golden_slime']];
     $m['dsewer2'] = ['name' => '下水道二层', 'desc' => '墙上画满眼睛。角落里三具尸体靠墙坐着，影子不见了。墙上有血字：不要回答。', 'exits' => ['dsewer1' => '下水道一层', 'bmine1' => '白银矿道一层'], 'monsters' => ['shadow_rat', 'shadow_soldier']];
     $m['bmine1'] = ['name' => '白银矿道一层', 'desc' => '比下水道更冷。呼出的气是白的。矿壁后有呼吸声。', 'exits' => ['dsewer2' => '下水道二层', 'bmine2' => '矿道二层'], 'monsters' => ['shadow_soldier', 'corrupt_guard']];
     $m['bmine2'] = ['name' => '矿道二层', 'desc' => '黑袍使徒在这里等你。你的影子比来时长了三寸。', 'exits' => ['bmine1' => '白银矿道一层', 'sforest' => '影蚀森林'], 'monsters' => ['corrupt_guard', 'apostle']];
@@ -5614,10 +5782,10 @@ function ch3_locations(): array
     $m['capital_gate'] = ['name' => '王都城门', 'desc' => '城墙高耸入云。守卫动作僵硬，像被线提着，关节处有细小的银丝连着天空。', 'exits' => ['silver_sq' => '白银广场', 'avenue' => '中央大道', 'ice_gate' => '冰原渡口', 'fo_gate' => '雾森渡口'], 'monsters' => []];
     $m['avenue'] = ['name' => '王都中央大道', 'desc' => '市民走路没有声音，关节咔咔作响。瓦尔顿在街角等你：真正的王都二十年前就没了。', 'exits' => ['capital_gate' => '王都城门', 'noble' => '贵族区', 'library' => '皇家图书馆', 'slum' => '贫民窟'], 'monsters' => ['puppet_guard']];
     $m['noble'] = ['name' => '贵族区', 'desc' => '舞会彻夜不停。贵族们脚不沾地，被银丝吊在天花板上跳舞。', 'exits' => ['avenue' => '中央大道', 'cathedral' => '光明大教堂'], 'monsters' => ['masked_noble']];
-    $m['library'] = ['name' => '皇家图书馆', 'desc' => '满架子全是剧本，记载着王都每一天该发生什么。墨傀儡在吃掉关于真王都的记载。', 'exits' => ['avenue' => '中央大道', 'ctomb' => '皇家陵墓'], 'monsters' => ['ink_puppet']];
+    $m['library'] = ['name' => '皇家图书馆', 'desc' => '满架子全是剧本，记载着王都每一天该发生什么。墨傀儡在吃掉关于真王都的记载。', 'exits' => ['avenue' => '中央大道', 'ctomb' => '皇家陵墓'], 'monsters' => ['ink_puppet', 'mimic_chest']];
     $m['ctomb'] = ['name' => '皇家陵墓', 'desc' => '所有棺材都是空的。国王雷金纳德根本没有葬在这里。', 'exits' => ['library' => '皇家图书馆'], 'monsters' => ['silver_undead']];
     $m['slum'] = ['name' => '贫民窟', 'desc' => '黑市里有人在偷偷剪断银丝。剪线人的刀很快，刺客的刀更快。', 'exits' => ['avenue' => '中央大道', 'observatory' => '皇家天文台'], 'monsters' => ['silver_assassin']];
-    $m['cathedral'] = ['name' => '光明大教堂', 'desc' => '大主教塞缪尔被银丝吊了二十年，还在布道。牵线牧师说：莉莉是钥匙，也是锁。', 'exits' => ['noble' => '贵族区', 'theater' => '傀儡剧场'], 'monsters' => ['puppet_priest']];
+    $m['cathedral'] = ['name' => '光明大教堂', 'desc' => '大主教塞缪尔被银丝吊了二十年，还在布道。牵线牧师说：莉莉是钥匙，也是锁。', 'exits' => ['noble' => '贵族区', 'theater' => '傀儡剧场', 'brass_chapel' => '废弃礼拜堂'], 'monsters' => ['puppet_priest']];
     $m['observatory'] = ['name' => '皇家天文台', 'desc' => '观星者白天看星星，晚上看深渊。牵线者已经不满足于傀儡剧场，它要整个王国都变成舞台。', 'exits' => ['slum' => '贫民窟', 'theater' => '傀儡剧场'], 'monsters' => ['star_puppet']];
     $m['arena_gate'] = ['name' => '王都竞技场·试炼门', 'desc' => '铁拳的学徒在热身。战士试炼：只能普通攻击，撑十回合。', 'exits' => ['avenue' => '中央大道'], 'monsters' => []];
     $m['theater'] = ['name' => '王宫地下·傀儡剧场', 'desc' => '巨大的舞台。中央吊着真正的国王雷金纳德。牵线者从天花板降下来：我不是深渊，我是国王。', 'exits' => ['cathedral' => '大教堂', 'observatory' => '皇家天文台'], 'monsters' => ['silver_puppet', 'string_puller']];
@@ -5634,9 +5802,9 @@ function ice_locations(): array
     $m = [];
     $m['ice_gate'] = ['name' => '冰原渡口', 'desc' => '王都北门外，一步之遥就是风雪。守夜人·北风裹着熊皮：往北走，别回头，冻死比被吃掉体面。', 'exits' => ['capital_gate' => '王都城门', 'ice_trail' => '风雪小径'], 'monsters' => []];
     $m['ice_trail'] = ['name' => '风雪小径', 'desc' => '雪没过膝盖。冻原霜狼在风里若隐若现，跟着落单的人。', 'exits' => ['ice_gate' => '渡口', 'ice_village' => '冰原村', 'frozen_lake' => '冰封湖'], 'monsters' => ['frost_wolf']];
-    $m['ice_village'] = ['name' => '冰原村', 'desc' => '地火烧得很旺。猎户·朵拉在分肉干：湖上有怨灵，场上有猛犸，认路再走。冰渊副本从这进。', 'exits' => ['ice_trail' => '小径', 'snow_field' => '雪原'], 'monsters' => []];
-    $m['frozen_lake'] = ['name' => '冰封湖', 'desc' => '湖面冻得发蓝，底下有东西在游。冰隙怨灵顺着裂缝爬出来，找替身。', 'exits' => ['ice_trail' => '小径', 'snow_field' => '雪原'], 'monsters' => ['ice_specter', 'frost_wolf']];
-    $m['snow_field'] = ['name' => '雪原牧场', 'desc' => '雪原猛犸群在刨雪找草。别挡路，也别流血，血腥味会引来不止猛犸。', 'exits' => ['ice_village' => '冰原村', 'frozen_lake' => '冰封湖', 'glacier_pass' => '冰川隘口'], 'monsters' => ['snow_mammoth', 'blizzard_shaman']];
+    $m['ice_village'] = ['name' => '冰原村', 'desc' => '地火烧得很旺。猎户·朵拉在分肉干：湖上有怨灵，场上有猛犸，认路再走。冰渊副本从这进。', 'exits' => ['ice_trail' => '小径', 'snow_field' => '雪原', 'frostburg_gate' => '霜炉堡', 'frost_graveyard' => '霜语墓园'], 'monsters' => []];
+    $m['frozen_lake'] = ['name' => '冰封湖', 'desc' => '湖面冻得发蓝，底下有东西在游。冰隙怨灵顺着裂缝爬出来，找替身。', 'exits' => ['ice_trail' => '小径', 'snow_field' => '雪原', 'frostburg_gate' => '霜炉堡', 'frost_graveyard' => '霜语墓园'], 'monsters' => ['ice_specter', 'frost_wolf']];
+    $m['snow_field'] = ['name' => '雪原牧场', 'desc' => '雪原猛犸群在刨雪找草。别挡路，也别流血，血腥味会引来不止猛犸。', 'exits' => ['ice_village' => '冰原村', 'frozen_lake' => '冰封湖', 'glacier_pass' => '冰川隘口', 'wanderer_camp' => '漫游者营地'], 'monsters' => ['snow_mammoth', 'blizzard_shaman']];
     $m['glacier_pass'] = ['name' => '冰川隘口', 'desc' => '两壁冰墙高不见顶。冰川魔像卡在隘口中间，收买路钱——拿命买。', 'exits' => ['snow_field' => '雪原', 'ice_cave' => '碎冰洞', 'aurora_vale' => '极光谷'], 'monsters' => ['glacier_golem', 'frost_giant']];
     $m['aurora_vale'] = ['name' => '极光谷', 'desc' => '极光垂到山尖。极光冰蛇盘在光柱里，鳞片一张一合，像在呼吸。', 'exits' => ['glacier_pass' => '隘口'], 'monsters' => ['aurora_serpent', 'frost_giant']];
     $m['ice_cave'] = ['name' => '碎冰洞', 'desc' => '洞里全是倒挂的冰锥。冰渊蠕虫在冰层下拱动，头顶会先掉渣。', 'exits' => ['glacier_pass' => '隘口', 'blizzard_peak' => '暴风雪峰', 'wyrm_tunnel' => '蠕虫隧道'], 'monsters' => ['icewyrm', 'aurora_serpent']];
@@ -5673,13 +5841,13 @@ function fr_maps(): array
 function fo_locations(): array
 {
     $m = [];
-    $m['fo_gate'] = ['name' => '雾森渡口', 'desc' => '王都南门外，雾浓得化不开。森语者·青芽：林子认得路，人不认。跟着萤火虫，别跟着声音。', 'exits' => ['capital_gate' => '王都城门', 'mist_edge' => '雾森边缘'], 'monsters' => []];
+    $m['fo_gate'] = ['name' => '雾森渡口', 'desc' => '王都南门外，雾浓得化不开。森语者·青芽：林子认得路，人不认。跟着萤火虫，别跟着声音。', 'exits' => ['capital_gate' => '王都城门', 'mist_edge' => '雾森边缘', 'greenheart_gate' => '青叶城'], 'monsters' => []];
     $m['mist_edge'] = ['name' => '雾森边缘', 'desc' => '雾刚没脚面。雾森树人站着不动，动的就是你眼花——希望是眼花。', 'exits' => ['fo_gate' => '渡口', 'deep_woods' => '密林深处'], 'monsters' => ['mist_treant']];
     $m['deep_woods'] = ['name' => '密林深处', 'desc' => '孢子像下雪。吸一口，甜的；吸两口，看见你太奶。群落在雾里开花。', 'exits' => ['mist_edge' => '边缘', 'thorn_maze' => '荆棘迷宫'], 'monsters' => ['spore_colony', 'mist_treant']];
     $m['thorn_maze'] = ['name' => '荆棘迷宫', 'desc' => '荆棘会自己换位置。猎手在刺后面学鸟叫，学得最像的那只不是鸟。', 'exits' => ['deep_woods' => '密林', 'boa_swamp' => '蚺沼'], 'monsters' => ['thorn_hunter', 'spore_colony']];
     $m['boa_swamp'] = ['name' => '蚺沼', 'desc' => '水面漂着落叶，落叶下面是古林巨蚺。它吞过一整支商队，连算盘都没吐出来。', 'exits' => ['thorn_maze' => '迷宫', 'ape_hollow' => '雾猿谷'], 'monsters' => ['ancient_boa', 'thorn_hunter']];
     $m['ape_hollow'] = ['name' => '雾猿谷', 'desc' => '雾猿在谷里打架，输的请赢的吃果子，果子有毒，赢的也跑不了。', 'exits' => ['boa_swamp' => '蚺沼', 'sage_grove' => '贤者林'], 'monsters' => ['mist_apeman', 'ancient_boa']];
-    $m['sage_grove'] = ['name' => '贤者林', 'desc' => '腐叶贤者坐在烂叶堆上讲经，听众是蘑菇。它说火山里住着一位老邻居，脾气很差。', 'exits' => ['ape_hollow' => '雾猿谷', 'ash_wastes' => '灰烬荒原'], 'monsters' => ['rot_sage', 'mist_apeman']];
+    $m['sage_grove'] = ['name' => '贤者林', 'desc' => '腐叶贤者坐在烂叶堆上讲经，听众是蘑菇。它说火山里住着一位老邻居，脾气很差。', 'exits' => ['ape_hollow' => '雾猿谷', 'ash_wastes' => '灰烬荒原', 'whisper_marsh' => '低语沼泽'], 'monsters' => ['rot_sage', 'mist_apeman']];
     $m['ash_wastes'] = ['name' => '灰烬荒原', 'desc' => '林子到这里秃了，灰落到脚面。余烬小鬼在灰里打滚，滚一圈大一圈。', 'exits' => ['sage_grove' => '贤者林', 'ember_foothill' => '火山麓'], 'monsters' => ['ember_imp', 'rot_sage']];
     $m['ember_foothill'] = ['name' => '火山麓', 'desc' => '石头是烫的。熔岩猎犬追着热气跑，你身上有热气，你就是热气。', 'exits' => ['ash_wastes' => '荒原', 'lava_river' => '熔岩河'], 'monsters' => ['lava_hound', 'ember_imp']];
     $m['lava_river'] = ['name' => '熔岩河', 'desc' => '河是亮的，桥是灰烬教徒搭的——用人搭的。他们请你也当一块桥板。', 'exits' => ['ember_foothill' => '火山麓', 'cult_altar' => '祭坛'], 'monsters' => ['ash_cultist', 'lava_hound']];
@@ -5716,6 +5884,92 @@ function wb_locations(): array
     $m['wb_arena'] = ['name' => '龙巢·南炎柱', 'desc' => '热浪扑面。多伊尔盘在柱子上，睁一只眼闭一只眼。全服的人都在这磨它。', 'exits' => ['volcano_heart' => '火山之心'], 'monsters' => []];
     return $m;
 }
+function pz_locations(): array
+{
+    $m = [];
+    $m['pz_gate'] = ['name' => '傀儡回廊·入口', 'desc' => '提线从门缝垂下来。学徒说：大师在里面等观众，等了二十年。', 'exits' => ['pz_hall' => '回廊大厅'], 'monsters' => ['pz_puller']];
+    $m['pz_hall'] = ['name' => '回廊大厅', 'desc' => '舞者在没音乐的地方跳舞，跳得越好，线勒得越紧。', 'exits' => ['pz_gate' => '入口', 'pz_gallery' => '画廊'], 'monsters' => ['pz_puller', 'pz_dancer']];
+    $m['pz_gallery'] = ['name' => '覆面画廊', 'desc' => '墙上全是脸，脸全是你的。覆面傀儡一张张试戴。', 'exits' => ['pz_hall' => '大厅', 'pz_stage' => '舞台'], 'monsters' => ['pz_dancer', 'pz_mask']];
+    $m['pz_stage'] = ['name' => '回廊舞台', 'desc' => '守卫站在幕布后面，幕布后面是更多的守卫。', 'exits' => ['pz_gallery' => '画廊', 'pz_core' => '大师之间'], 'monsters' => ['pz_mask', 'pz_golem']];
+    $m['pz_core'] = ['name' => '大师之间', 'desc' => '傀儡大师坐在提线中间：二十年没观众了，你来得正好，演完再走——或者别走。', 'exits' => ['pz_stage' => '舞台'], 'monsters' => ['pz_master']];
+    return $m;
+}
+
+function pz_maps(): array
+{
+    return ['pz_gate', 'pz_hall', 'pz_gallery', 'pz_stage', 'pz_core'];
+}
+
+function sen_locations(): array
+{
+    $m = [];
+    $m['sen_gate'] = ['name' => '雾森祭坛·入口', 'desc' => '雾在这里变绿。祭铃自己响，响一声，雾浓一分。', 'exits' => ['sen_path' => '祭道'], 'monsters' => ['sen_priest']];
+    $m['sen_path'] = ['name' => '祭道', 'desc' => '两边全是荆棘，荆棘上挂着雾铃。别碰，碰了会响。', 'exits' => ['sen_gate' => '入口', 'sen_altar' => '祭坛'], 'monsters' => ['sen_priest', 'sen_thorn']];
+    $m['sen_altar'] = ['name' => '雾祭坛', 'desc' => '雾蛇盘在坛上，坛下是守卫，守卫脚下是更多的蛇。', 'exits' => ['sen_path' => '祭道', 'sen_heart' => '雾心'], 'monsters' => ['sen_thorn', 'sen_serpent']];
+    $m['sen_heart'] = ['name' => '雾心', 'desc' => '雾在这里有心跳。守卫跪了一圈，跪的是雾，不是神。', 'exits' => ['sen_altar' => '祭坛', 'sen_core' => '化身之森'], 'monsters' => ['sen_serpent', 'sen_guard']];
+    $m['sen_core'] = ['name' => '化身之森', 'desc' => '雾森化身从雾里长出来：林子记得每一个砍树的人。你砍过吗？', 'exits' => ['sen_heart' => '雾心'], 'monsters' => ['sen_avatar']];
+    return $m;
+}
+
+function sen_maps(): array
+{
+    return ['sen_gate', 'sen_path', 'sen_altar', 'sen_heart', 'sen_core'];
+}
+
+function wild3_locations(): array
+{
+    $m = [];
+    $m['shadow_den'] = ['name' => '影爪巢穴', 'desc' => '白银城外的裂谷，影子在这里筑巢。影爪领主磨着爪子，等路过的人。', 'exits' => ['silver_sq' => '白银广场'], 'monsters' => ['shadow_claw']];
+    $m['brass_chapel'] = ['name' => '废弃礼拜堂', 'desc' => '黄铜主教在这里布道，听众是空椅子。它说空椅子比活人虔诚。', 'exits' => ['cathedral' => '大教堂'], 'monsters' => ['brass_bishop']];
+    $m['wanderer_camp'] = ['name' => '漫游者营地', 'desc' => '雪原上的空营地，火还没灭。漫游者从不等人，只等人追上来。', 'exits' => ['snow_field' => '雪原'], 'monsters' => ['tundra_wanderer']];
+    return $m;
+}
+
+function wild3_maps(): array
+{
+    return ['shadow_den', 'brass_chapel', 'wanderer_camp'];
+}
+
+function frostburg_locations(): array
+{
+    $m = [];
+    $m['frostburg_gate'] = ['name' => '霜炉堡·城门', 'desc' => '地火把城墙烧得发烫。城门上刻着：冷不死人，穷死人。', 'exits' => ['ice_village' => '冰原村', 'frostburg_sq' => '霜炉广场'], 'monsters' => []];
+    $m['frostburg_sq'] = ['name' => '霜炉广场', 'desc' => '广场中央是口地火井，烧得全城暖烘烘。悬赏板钉满了单子，冒险者围了一圈。', 'exits' => ['frostburg_gate' => '城门', 'bounty_hall' => '悬赏大厅', 'fire_inn' => '地火旅店', 'furnace_st' => '融炉街'], 'monsters' => []];
+    $m['bounty_hall'] = ['name' => '悬赏大厅', 'desc' => '每天三单，杀够数领钱领药。榜爷说：单子天天有，命只有一条。', 'exits' => ['frostburg_sq' => '广场'], 'monsters' => []];
+    $m['fire_inn'] = ['name' => '地火旅店', 'desc' => '床是热的，酒是烫的。老板娘：在我这睡一觉，冻伤全好。', 'exits' => ['frostburg_sq' => '广场'], 'monsters' => []];
+    $m['furnace_st'] = ['name' => '融炉街', 'desc' => '铁匠铺一家挨一家， 霜钢在这里论斤卖。', 'exits' => ['frostburg_sq' => '广场'], 'monsters' => []];
+    return $m;
+}
+
+function greenheart_locations(): array
+{
+    $m = [];
+    $m['greenheart_gate'] = ['name' => '青叶城·树门', 'desc' => '整座城长在一棵树上。树门会眨眼，眨一下放一个人。', 'exits' => ['fo_gate' => '雾森渡口', 'greenheart_sq' => '青叶广场'], 'monsters' => []];
+    $m['greenheart_sq'] = ['name' => '青叶广场', 'desc' => '广场是片大叶子，踩上去软乎乎。孢子商人摆了一地发光的东西。', 'exits' => ['greenheart_gate' => '树门', 'spore_market' => '孢子市场', 'rain_inn' => '雨枝旅店', 'elder_tree' => '古树议会'], 'monsters' => []];
+    $m['spore_market'] = ['name' => '孢子市场', 'desc' => '卖什么的都有，买什么的都得砍价。砍不下来就打一架，打赢了白拿——开玩笑的，别当真。', 'exits' => ['greenheart_sq' => '广场'], 'monsters' => []];
+    $m['rain_inn'] = ['name' => '雨枝旅店', 'desc' => '屋顶漏雨，店小二说那是特色。床是干的，这就够了。', 'exits' => ['greenheart_sq' => '广场'], 'monsters' => []];
+    $m['elder_tree'] = ['name' => '古树议会', 'desc' => '三棵老树在开会，开了三百年。悬赏单贴在树皮上，风一吹哗哗响。', 'exits' => ['greenheart_sq' => '广场'], 'monsters' => []];
+    return $m;
+}
+
+function wild45_locations(): array
+{
+    $m = [];
+    $m['frost_graveyard'] = ['name' => '霜语墓园', 'desc' => '墓碑上全是冰。霜裔猎手在碑林里练箭，箭箭不离碑——碑都快被射穿了。', 'exits' => ['ice_village' => '冰原村', 'howl_valley' => '冰嚎谷'], 'monsters' => ['frostborn_hunter', 'ice_specter']];
+    $m['howl_valley'] = ['name' => '冰嚎谷', 'desc' => '风过谷口像狼嚎。冻原霜狼在这里开会，商量下山路线。', 'exits' => ['frost_graveyard' => '墓园', 'frost_waste' => '冻土荒原'], 'monsters' => ['frost_wolf', 'frostborn_hunter']];
+    $m['frost_waste'] = ['name' => '冻土荒原', 'desc' => '荒原上只有风和雪盲。雪盲洼地在前面，进去容易，出来看命。', 'exits' => ['howl_valley' => '冰嚎谷', 'snowblind_hollow' => '雪盲洼地'], 'monsters' => ['snow_mammoth', 'winter_knight']];
+    $m['snowblind_hollow'] = ['name' => '雪盲洼地', 'desc' => '白茫茫一片，走三步就分不清东南西北。冰瀑在洼地尽头轰隆隆响。', 'exits' => ['frost_waste' => '荒原', 'ice_fall' => '冰瀑'], 'monsters' => ['blizzard_shaman', 'frost_matriarch']];
+    $m['ice_fall'] = ['name' => '冰瀑', 'desc' => '瀑布冻在半空。雪崩巨人坐在瀑布顶上，往下扔雪球——雪球有房子大。', 'exits' => ['snowblind_hollow' => '洼地'], 'monsters' => ['avalanche_titan']];
+    $m['frostborn_camp'] = ['name' => '霜裔营地', 'desc' => '霜裔猎手的营地，火堆整夜不灭。他们说：火灭了，人就散了。', 'exits' => ['frost_graveyard' => '墓园'], 'monsters' => ['frostborn_hunter', 'aurora_serpent']];
+    $m['whisper_marsh'] = ['name' => '低语沼泽', 'desc' => '沼泽里全是硫磺味。硫磺精在气泡里洗澡，洗得越久越黄。', 'exits' => ['sage_grove' => '贤者林', 'mushroom_forest' => '蘑菇林'], 'monsters' => ['sulfur_sprite', 'rot_sage']];
+    $m['mushroom_forest'] = ['name' => '蘑菇林', 'desc' => '蘑菇比人高。孢子群落在这里开演唱会，门票是你的鼻子。', 'exits' => ['whisper_marsh' => '沼泽', 'fallen_city' => '落叶城废墟'], 'monsters' => ['spore_colony', 'sulfur_sprite']];
+    $m['fallen_city'] = ['name' => '落叶城废墟', 'desc' => '曾经的城，现在只剩城门。荆棘猎手在城墙上巡逻，巡的是寂寞。', 'exits' => ['mushroom_forest' => '蘑菇林', 'sulfur_spring' => '硫磺泉'], 'monsters' => ['thorn_hunter', 'ancient_boa']];
+    $m['sulfur_spring'] = ['name' => '硫磺泉', 'desc' => '泉水咕嘟咕嘟冒泡。黑曜石原在前面，黑得发亮。', 'exits' => ['fallen_city' => '废墟', 'obsidian_field' => '黑曜石原'], 'monsters' => ['sulfur_sprite', 'ember_imp']];
+    $m['obsidian_field'] = ['name' => '黑曜石原', 'desc' => '满地黑曜石，亮得晃眼。黑曜石巨像站在原中央，一动不动——动起来就是灾难。', 'exits' => ['sulfur_spring' => '硫磺泉'], 'monsters' => ['obsidian_colossus']];
+    $m['ash_chapel2'] = ['name' => '灰烬小教堂', 'desc' => '和废弃礼拜堂一个师傅盖的。灰烬教徒在这里排练，排的是葬礼——自己的。', 'exits' => ['fallen_city' => '废墟'], 'monsters' => ['ash_cultist', 'magma_golem']];
+    return $m;
+}
+
 function mx_locations(): array
 {
     $m = [];

@@ -7,6 +7,13 @@ $here = loc((string) $u['loc']);
 
 wap_start('状态');
 echo h($u['username']) . '　' . (int) $u['lv'] . '级';
+$tw = (int) (mats_of((int) $u['id'])['title_wear'] ?? 0);
+if ($tw > 0) { echo '【' . h(['', '黑铁冒险者', '秘银冒险者', '精金传说'][$tw] ?? '') . '】'; }
+echo '<br>';
+$tm = mats_of((int) $u['id']);
+foreach (['title_iron', 'title_silver', 'title_gold'] as $tid) {
+    if (!empty($tm[$tid])) { echo '·' . h(mat_name($tid)) . ' <a href="status.php?a=title&id=' . $tid . '">佩戴</a><br>'; }
+}
 echo '　' . h(job_of($u)['name']) . '(' . h(job_of($u)['skill']) . ')';
 echo '<br>';
 echo '<span class="hp">生命 ' . (int) $u['hp'] . '/' . (int) $u['maxhp'] . '</span><br>';
@@ -39,6 +46,19 @@ if ((string) ($_GET['a'] ?? '') === 'alloc') {
 if ((string) ($_GET['a'] ?? '') === 'allocall') {
     flash_set(alloc_all_stat((int) $u['id'], (string) ($_GET['k'] ?? '')));
     header('Location: status.php?a=all');
+    exit;
+}
+if ((string) ($_GET['a'] ?? '') === 'title') {
+    $tid = (string) ($_GET['id'] ?? '');
+    $mats = mats_of((int) $u['id']);
+    $tmap = ['title_iron' => 1, 'title_silver' => 2, 'title_gold' => 3];
+    if (!isset($tmap[$tid]) || empty($mats[$tid])) {
+        flash_set('没有这个称号，去商城装扮栏买。');
+    } else {
+        mat_set((int) $u['id'], 'title_wear', $tmap[$tid]);
+        flash_set('戴上【' . mat_name($tid) . '】！');
+    }
+    header('Location: status.php');
     exit;
 }
 if ((string) ($_GET['a'] ?? '') === 'reset') {

@@ -143,12 +143,13 @@ if ($a === 'feed') {
     } elseif ($p['status'] !== 'normal') {
         flash_set('虚弱中吃不下，先治疗。');
     } elseif (empty(mats_of($uid)['pet_food'])) {
-        flash_set('没有宠物粮食，去商城买（1金/个）。');
+        flash_set('没有宠物粮食，去商城买（2000铜/个）。');
     } else {
         add_mat($uid, 'pet_food', -1);
         $full = pet_stats($p);
         db()->prepare('UPDATE pets SET fatigue=0, hp=? WHERE id=?')->execute([(int) $full['hp'], (int) $p['id']]);
-        flash_set('吃饱了！疲劳清零，生命回满，继续干活。');
+        mat_set($uid, 'pet_sat_' . (int) $p['id'], time() + 86400);
+        flash_set('吃饱了！疲劳清零，生命回满，24小时不饿，继续干活。');
     }
     header('Location: pet.php?a=view&id=' . (int) ($_GET['id'] ?? 0));
     exit;

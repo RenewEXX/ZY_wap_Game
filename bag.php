@@ -45,6 +45,20 @@ if ($a === 'sellall') {
     header('Location: bag.php?tab=equip');
     exit;
 }
+if ($a === 'usetent') {
+    $mats = mats_of((int) $u['id']);
+    if (empty($mats['tent'])) {
+        flash_set('没有帐篷，去商城装扮栏买。');
+    } else {
+        add_mat((int) $u['id'], 'tent', -1);
+        $u['hp'] = (int) $u['maxhp'];
+        $u['mp'] = (int) ($u['maxmp'] ?? 0);
+        user_save($u);
+        flash_set('支起帐篷睡了一觉，伤全好了！');
+    }
+    header('Location: bag.php?tab=func');
+    exit;
+}
 if ($a === 'useext') {
     flash_set(use_bag_ext((int) $u['id'], (string) ($_GET['id'] ?? '')));
     header('Location: bag.php?tab=func');
@@ -285,6 +299,10 @@ if ($tab === 'equip') {
     if (!empty($mats['reset_potion'])) {
         $func = true;
         echo '·属性洗点药x' . $mats['reset_potion'] . ' <a href="bag.php?a=usereset">使用</a><br>';
+    if (!empty($mats['tent'])) {
+        $func = true;
+        echo '·随身帐篷x' . $mats['tent'] . ' <a href="bag.php?a=usetent">使用(野外回满)</a><br>';
+    }
     }
     if (!empty($mats['rename_card'])) {
         $func = true;

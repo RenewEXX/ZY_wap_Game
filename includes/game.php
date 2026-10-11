@@ -2836,8 +2836,8 @@ function skill_catalog(): array
         'p4' => ['name' => '熔心圣歌', 'job' => 'priest', 'mp' => 40, 'kind' => 'heal', 'mult' => 1.5, 'heal' => 90, 'el' => 'light', 't10' => '治疗+30', 'lv20' => '治疗+20%，伤害+15%'],
         'w5' => ['name' => '烈焰旋风', 'job' => 'warrior', 'mp' => 50, 'kind' => 'aoe', 'mult' => 2.4, 'el' => 'fire', 't10' => '溅射+10%', 'lv20' => '伤害+15%'],
         'w6' => ['name' => '撼地重击', 'job' => 'warrior', 'mp' => 50, 'kind' => 'aoe', 'mult' => 2.2, 'el' => 'thunder', 't10' => '10%眩晕', 'lv20' => '伤害+15%'],
-        'm5' => ['name' => '暴风雪', 'job' => 'mage', 'mp' => 55, 'kind' => 'aoe', 'mult' => 0, 'el' => 'ice', 't10' => '伤害+30%', 'lv20' => '伤害+15%'],
-        'm6' => ['name' => '虚空坍缩', 'job' => 'mage', 'mp' => 55, 'kind' => 'aoe', 'mult' => 0, 'el' => 'dark', 't10' => '伤害+30%', 'lv20' => '伤害+15%'],
+        'm5' => ['name' => '暴风雪', 'job' => 'mage', 'mp' => 55, 'kind' => 'aoe', 'mult' => 0, 'el' => 'ice', 't10' => '伤害+30%，10%冻结', 'lv20' => '伤害+15%'],
+        'm6' => ['name' => '燎原烈焰', 'job' => 'mage', 'mp' => 55, 'kind' => 'aoe', 'mult' => 0, 'el' => 'fire', 't10' => '伤害+30%', 'lv20' => '伤害+15%'],
         'h5' => ['name' => '万箭齐发', 'job' => 'hunter', 'mp' => 50, 'kind' => 'aoe', 'mult' => 2.5, 'el' => 'wind', 't10' => '本次暴击率+25%，溅射+10%', 'lv20' => '伤害+15%，暴击伤害+20%'],
         'h6' => ['name' => '影杀阵', 'job' => 'hunter', 'mp' => 50, 'kind' => 'aoe', 'mult' => 2.6, 'el' => 'dark', 't10' => '斩杀：目标血量低于30%时伤害+50%', 'lv20' => '伤害+15%，斩杀线提高到40%'],
         'p5' => ['name' => '暗影新星', 'job' => 'priest', 'mp' => 55, 'kind' => 'aoe', 'mult' => 1.8, 'el' => 'dark', 't10' => '伤害+30%', 'lv20' => '伤害转奶40%'],
@@ -2872,7 +2872,7 @@ function skill_books(): array
         'book_w5' => ['skill' => 'w5', 'name' => '旋风秘籍'],
         'book_w6' => ['skill' => 'w6', 'name' => '撼地秘籍'],
         'book_m5' => ['skill' => 'm5', 'name' => '暴风雪秘籍'],
-        'book_m6' => ['skill' => 'm6', 'name' => '虚空秘籍'],
+        'book_m6' => ['skill' => 'm6', 'name' => '燎原秘籍'],
         'book_h5' => ['skill' => 'h5', 'name' => '箭雨秘籍'],
         'book_h6' => ['skill' => 'h6', 'name' => '影杀秘籍'],
         'book_p5' => ['skill' => 'p5', 'name' => '暗影秘籍'],
@@ -2973,7 +2973,7 @@ function use_skill_book(int $uid, string $book): string
     if (!$u || job_id_of($u) !== $cat['job']) {
         return '职业不符，只有' . job_of(['job' => $cat['job']])['name'] . '能用。';
     }
-    $needRb2 = ['w5' => 'berserker', 'w6' => 'aegis', 'm5' => 'elementalist', 'm6' => 'voidcaller', 'h5' => 'ranger', 'h6' => 'assassin', 'p5' => 'shadowbishop', 'p6' => 'holybishop'][$sid] ?? '';
+    $needRb2 = ['w5' => 'berserker', 'w6' => 'aegis', 'm5' => 'wintermage', 'm6' => 'wildfire', 'h5' => 'ranger', 'h6' => 'assassin', 'p5' => 'shadowbishop', 'p6' => 'holybishop'][$sid] ?? '';
     if ($needRb2 !== '' && (cflags($uid)['rb2_job'] ?? '') !== $needRb2) {
         return '这是二转【' . rebirth2_name($needRb2) . '】的群攻秘籍，先599级二转再学。';
     }
@@ -4751,6 +4751,9 @@ function apply_el_convert(array $u, array $b, int $pd, string $el): array
     $mres = monster_resist((string) ($b['id'] ?? ''), $el);
     $pd = max(1, (int) ($pd * $chart * (1 - $mres / 100)));
     $tag = '(' . element_name($el) . '转化' . ($chart > 1 ? '·克制' : ($chart < 1 ? '·被抵抗' : '')) . ')';
+    $rb2e = cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '';
+    if ($rb2e === 'wintermage' && in_array($el, ['ice', 'thunder'], true)) { $pd = (int) ($pd * 1.3); $tag .= '(凛冬)'; }
+    if ($rb2e === 'wildfire' && in_array($el, ['fire', 'wind'], true)) { $pd = (int) ($pd * 1.4); $tag .= '(燎原)'; }
     return [$pd, $tag];
 }
 
@@ -4921,6 +4924,10 @@ function battle_round(array &$u, array &$b, string $mode): array
                         $pd = (int) ($pd * 1.5);
                         $logHeal .= '(影杀斩杀)';
                     }
+                if ($sid === 'm5' && $sTier >= 10 && mt_rand(1, 100) <= 10) {
+                    $b['frost'] = 3;
+                    $logHeal .= '(暴雪冻结)';
+                }
                 }
                 // 暗影主教：伤害转奶
                 if ($sid === 'p5') {
@@ -4986,8 +4993,8 @@ function battle_round(array &$u, array &$b, string $mode): array
     }
     $rb2 = cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '';
     if ($rb2 === 'berserker' && (int) $u['hp'] < (int) $u['maxhp'] / 2 && $pd > 0) { $pd = (int) ($pd * 1.15); $logHeal .= '(狂怒)'; }
-    if ($rb2 === 'elementalist' && $skEl !== '' && $pd > 0) { $pd = (int) ($pd * 1.12); $logHeal .= '(元素主宰)'; }
-    if ($rb2 === 'voidcaller' && $isSkill && $pd > 0) { $pd = (int) ($pd * 1.1); $logHeal .= '(虚空亲和)'; }
+    
+        if ($rb2 === 'wintermage' && in_array($skEl, ['ice', 'thunder'], true) && $pd > 0 && mt_rand(1, 100) <= 12) { $b['stun'] = 1; $logHeal .= '(麻痹)'; }
     $b['hp'] = (int) $b['hp'] - $pd;
     // 真实伤害（神魂/烬焰7件）：无视防御，闪避也躲不掉
     $trueDmg = (int) soul_truedmg((int) ($u['id'] ?? 0));
@@ -6617,7 +6624,7 @@ function rebirth2_names(): array
 {
     return [
         'warrior' => ['berserker' => '狂战士', 'aegis' => '铁卫'],
-        'mage' => ['elementalist' => '元素使', 'voidcaller' => '虚空术士'],
+        'mage' => ['wintermage' => '凛冬法师', 'wildfire' => '燎原使者'],
         'hunter' => ['ranger' => '游侠', 'assassin' => '影刺客'],
         'priest' => ['shadowbishop' => '暗影主教', 'holybishop' => '神圣主教'],
     ];
@@ -6625,7 +6632,7 @@ function rebirth2_names(): array
 
 function rebirth2_skill(string $rb2): string
 {
-    return ['berserker' => 'w5', 'aegis' => 'w6', 'elementalist' => 'm5', 'voidcaller' => 'm6', 'ranger' => 'h5', 'assassin' => 'h6', 'shadowbishop' => 'p5', 'holybishop' => 'p6'][$rb2] ?? '';
+    return ['berserker' => 'w5', 'aegis' => 'w6', 'wintermage' => 'm5', 'wildfire' => 'm6', 'ranger' => 'h5', 'assassin' => 'h6', 'shadowbishop' => 'p5', 'holybishop' => 'p6'][$rb2] ?? '';
 }
 
 function rebirth2_passive_desc(string $rb2): string
@@ -6633,8 +6640,8 @@ function rebirth2_passive_desc(string $rb2): string
     return [
         'berserker' => '狂怒：生命低于50%时伤害+15%',
         'aegis' => '铁壁：受到伤害-8%',
-        'elementalist' => '元素主宰：属性伤害+12%',
-        'voidcaller' => '虚空亲和：技能伤害+10%',
+        'wintermage' => '凛冬：冰雷属性伤害+30%，攻击12%麻痹目标',
+        'wildfire' => '燎原：火风属性伤害+40%',
         'ranger' => '百步穿杨：暴击+8%',
         'assassin' => '影遁：闪避+8%',
         'shadowbishop' => '鲜血契约：吸血+3%',

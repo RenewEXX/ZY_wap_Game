@@ -27,8 +27,8 @@ if ($who === 'rb_waldon' && $choice === 'crown' && (int) $u['quest'] === 80 && !
     header('Location: npc.php?who=rb_waldon');
     exit;
 }
-if ($who === 'rb_waldon' && (int) $u['quest'] === 79 && in_array($choice, ['berserker', 'aegis', 'elementalist', 'voidcaller', 'ranger', 'assassin', 'shadowbishop', 'holybishop'], true) && empty(cflags((int) $u['id'])['rb2_job'])) {
-    $base = ['berserker' => 'warrior', 'aegis' => 'warrior', 'elementalist' => 'mage', 'voidcaller' => 'mage', 'ranger' => 'hunter', 'assassin' => 'hunter', 'shadowbishop' => 'priest', 'holybishop' => 'priest'][$choice];
+if ($who === 'rb_waldon' && (int) $u['quest'] === 79 && in_array($choice, ['berserker', 'aegis', 'wintermage', 'wildfire', 'ranger', 'assassin', 'shadowbishop', 'holybishop'], true) && empty(cflags((int) $u['id'])['rb2_job'])) {
+    $base = ['berserker' => 'warrior', 'aegis' => 'warrior', 'wintermage' => 'mage', 'wildfire' => 'mage', 'ranger' => 'hunter', 'assassin' => 'hunter', 'shadowbishop' => 'priest', 'holybishop' => 'priest'][$choice];
     if ($base !== job_id_of($u)) {
         flash_set('这不是你的路。');
     } else {

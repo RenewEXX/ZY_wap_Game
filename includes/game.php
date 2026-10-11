@@ -2842,12 +2842,20 @@ function skill_catalog(): array
         'h6' => ['name' => '影杀阵', 'job' => 'hunter', 'mp' => 50, 'kind' => 'aoe', 'mult' => 2.6, 'el' => 'dark', 't10' => '斩杀：目标血量低于30%时伤害+50%', 'lv20' => '伤害+15%，斩杀线提高到40%'],
         'p5' => ['name' => '暗影新星', 'job' => 'priest', 'mp' => 55, 'kind' => 'aoe', 'mult' => 1.8, 'el' => 'dark', 't10' => '伤害+30%', 'lv20' => '伤害转奶40%'],
         'p6' => ['name' => '圣光普照', 'job' => 'priest', 'mp' => 55, 'kind' => 'aoe', 'mult' => 1.2, 'heal' => 120, 'el' => 'light', 't10' => '治疗+40', 'lv20' => '治疗+20%，队友70%'],
+        'w7' => ['name' => '血怒狂斩', 'job' => 'warrior', 'mp' => 55, 'kind' => 'aoe', 'mult' => 2.6, 'el' => 'dark', 't10' => '吸血+15%，溅射+10%', 'lv20' => '伤害+15%'],
+        'w8' => ['name' => '壁垒雷狱', 'job' => 'warrior', 'mp' => 55, 'kind' => 'aoe', 'mult' => 2.0, 'el' => 'thunder', 't10' => '敌攻-20%持续3轮', 'lv20' => '伤害+15%，减攻25%'],
+        'm7' => ['name' => '雷暴术', 'job' => 'mage', 'mp' => 60, 'kind' => 'aoe', 'mult' => 0, 'el' => 'thunder', 't10' => '25%麻痹', 'lv20' => '伤害+15%，麻痹30%'],
+        'm8' => ['name' => '风火燎原', 'job' => 'mage', 'mp' => 60, 'kind' => 'aoe', 'mult' => 0, 'el' => 'wind', 't10' => '伤害+30%', 'lv20' => '伤害+15%，溅射+10%'],
+        'h7' => ['name' => '穿云箭雨', 'job' => 'hunter', 'mp' => 55, 'kind' => 'aoe', 'mult' => 2.6, 'el' => 'wind', 't10' => '本次暴击率+30%，溅射+10%', 'lv20' => '伤害+15%，暴击伤害+20%'],
+        'h8' => ['name' => '夜幕影杀', 'job' => 'hunter', 'mp' => 55, 'kind' => 'aoe', 'mult' => 2.8, 'el' => 'dark', 't10' => '斩杀：目标血量低于50%时伤害+50%', 'lv20' => '伤害+15%，斩杀线60%'],
+        'p7' => ['name' => '噬魂新星', 'job' => 'priest', 'mp' => 60, 'kind' => 'aoe', 'mult' => 2.0, 'el' => 'dark', 't10' => '伤害+30%', 'lv20' => '伤害转奶60%'],
+        'p8' => ['name' => '圣光审判', 'job' => 'priest', 'mp' => 60, 'kind' => 'aoe', 'mult' => 1.0, 'heal' => 150, 'el' => 'light', 't10' => '治疗+50', 'lv20' => '治疗+20%，队友80%'],
     ];
 }
 
 function job_skillset(string $job): array
 {
-    return ['warrior' => ['w1', 'w2', 'w3', 'w4', 'w5', 'w6'], 'mage' => ['m1', 'm2', 'm3', 'm4', 'm5', 'm6'], 'hunter' => ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'], 'priest' => ['p1', 'p2', 'p3', 'p4', 'p5', 'p6']][$job] ?? ['w1', 'w2', 'w3', 'w4', 'w5', 'w6'];
+    return ['warrior' => ['w1', 'w2', 'w3', 'w4', 'w5', 'w6', 'w7', 'w8'], 'mage' => ['m1', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8'], 'hunter' => ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'h7', 'h8'], 'priest' => ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8']][$job] ?? ['w1', 'w2', 'w3', 'w4', 'w5', 'w6', 'w7', 'w8'];
 }
 
 function skill_books(): array
@@ -2877,6 +2885,14 @@ function skill_books(): array
         'book_h6' => ['skill' => 'h6', 'name' => '影杀秘籍'],
         'book_p5' => ['skill' => 'p5', 'name' => '暗影秘籍'],
         'book_p6' => ['skill' => 'p6', 'name' => '圣光秘籍'],
+        'book_w7' => ['skill' => 'w7', 'name' => '血怒秘籍'],
+        'book_w8' => ['skill' => 'w8', 'name' => '壁垒秘籍'],
+        'book_m7' => ['skill' => 'm7', 'name' => '雷暴秘籍'],
+        'book_m8' => ['skill' => 'm8', 'name' => '风火秘籍'],
+        'book_h7' => ['skill' => 'h7', 'name' => '穿云秘籍'],
+        'book_h8' => ['skill' => 'h8', 'name' => '夜幕秘籍'],
+        'book_p7' => ['skill' => 'p7', 'name' => '噬魂秘籍'],
+        'book_p8' => ['skill' => 'p8', 'name' => '审判秘籍'],
     ];
 }
 
@@ -2973,7 +2989,7 @@ function use_skill_book(int $uid, string $book): string
     if (!$u || job_id_of($u) !== $cat['job']) {
         return '职业不符，只有' . job_of(['job' => $cat['job']])['name'] . '能用。';
     }
-    $needRb2 = ['w5' => 'berserker', 'w6' => 'aegis', 'm5' => 'wintermage', 'm6' => 'wildfire', 'h5' => 'ranger', 'h6' => 'assassin', 'p5' => 'shadowbishop', 'p6' => 'holybishop'][$sid] ?? '';
+    $needRb2 = ['w5' => 'berserker', 'w6' => 'aegis', 'm5' => 'wintermage', 'm6' => 'wildfire', 'h5' => 'ranger', 'h6' => 'assassin', 'p5' => 'shadowbishop', 'p6' => 'holybishop', 'w7' => 'berserker', 'w8' => 'aegis', 'm7' => 'wintermage', 'm8' => 'wildfire', 'h7' => 'ranger', 'h8' => 'assassin', 'p7' => 'shadowbishop', 'p8' => 'holybishop'][$sid] ?? '';
     if ($needRb2 !== '' && (cflags($uid)['rb2_job'] ?? '') !== $needRb2) {
         return '这是二转【' . rebirth2_name($needRb2) . '】的群攻秘籍，先599级二转再学。';
     }
@@ -4928,6 +4944,57 @@ function battle_round(array &$u, array &$b, string $mode): array
                     $b['frost'] = 3;
                     $logHeal .= '(暴雪冻结)';
                 }
+                if ($sid === 'w7') {
+                    $leech7 = $sTier >= 10 ? 0.15 : 0.1;
+                    $hl7 = (int) ($pd * $leech7);
+                    $u['hp'] = min((int) $u['maxhp'], (int) $u['hp'] + $hl7);
+                    $logHeal .= '(血怒汲取+' . $hl7 . ')';
+                }
+                if ($sid === 'w8' && $sTier >= 10) {
+                    $b['breach'] = 3;
+                    $b['breachdmg'] = $sLv >= 20 ? 75 : 80;
+                    $logHeal .= '(壁垒破甲)';
+                }
+                if ($sid === 'm7' && $sTier >= 10 && mt_rand(1, 100) <= ($sLv >= 20 ? 30 : 25)) {
+                    $b['stun'] = 1;
+                    $logHeal .= '(雷暴麻痹)';
+                }
+                if ($sid === 'h7' && $sTier >= 10 && mt_rand(1, 100) <= 30) {
+                    $pd = (int) ($pd * ($sLv >= 20 ? 1.8 : 1.6));
+                    $logHeal .= '(穿云暴击)';
+                }
+                $exeLine8 = $sLv >= 20 ? 0.6 : 0.5;
+                if ($sid === 'h8' && (int) ($b['maxhp'] ?? 1) > 0 && (int) ($b['hp'] ?? 1) <= (int) ($b['maxhp'] ?? 1) * $exeLine8) {
+                    $pd = (int) ($pd * 1.5);
+                    $logHeal .= '(夜幕斩杀)';
+                }
+                if ($sid === 'p7') {
+                    $leechRate7 = $sLv >= 20 ? 0.6 : 0.5;
+                    $leech7b = (int) ($pd * $leechRate7);
+                    $u['hp'] = min((int) $u['maxhp'], (int) $u['hp'] + $leech7b);
+                    $logHeal .= '(噬魂汲取+' . $leech7b . ')';
+                }
+                if ($sid === 'p8') {
+                    $heal8 = (int) ($sk['heal'] * $pow) + (int) (player_matk($u) * 0.2);
+                    if ($sTier >= 10) { $heal8 += 50; }
+                    if ($sLv >= 20) { $heal8 = (int) ($heal8 * 1.2); }
+                    if ((cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '') === 'holybishop') { $heal8 = (int) ($heal8 * 1.15); $logHeal .= '(圣光灌注)'; }
+                    $u['hp'] = min((int) $u['maxhp'], (int) $u['hp'] + $heal8);
+                    $logHeal .= '(审判回血+' . $heal8 . ')';
+                    $mateRate8 = $sLv >= 20 ? 0.8 : 0.6;
+                    $mparty8 = my_party((int) ($u['id'] ?? 0));
+                    if ($mparty8) {
+                        foreach (party_mates((int) $mparty8['id'], (int) $u['id']) as $mate) {
+                            $mu = user_by_id((int) $mate['id']);
+                            if ($mu && (int) $mu['hp'] > 0) {
+                                $mh8 = (int) ($heal8 * $mateRate8);
+                                $mu['hp'] = min((int) $mu['maxhp'], (int) $mu['hp'] + $mh8);
+                                user_save($mu);
+                                $logHeal .= '(队友审判回血+' . $mh8 . ')';
+                            }
+                        }
+                    }
+                }
                 }
                 // 暗影主教：伤害转奶
                 if ($sid === 'p5') {
@@ -4960,6 +5027,7 @@ function battle_round(array &$u, array &$b, string $mode): array
                 }
                 // 溅射：50%伤害灌进队列，攒满一条血震死一只（只给经验金币）
                 $splashRate = $sTier >= 10 ? 0.6 : 0.5;
+                if ($sid === 'm8' && $sLv >= 20) { $b['splash'] = (int) ($b['splash'] + $pd * 0.1); $logHeal .= '(风火蔓延)'; }
                 $b['splash'] = (int) (($b['splash'] ?? 0) + $pd * $splashRate);
                 while ((int) ($b['left'] ?? 1) > 1 && (int) ($b['splash'] ?? 0) >= (int) ($b['maxhp'] ?? 1)) {
                     $b['splash'] = (int) $b['splash'] - (int) $b['maxhp'];
@@ -5495,6 +5563,11 @@ function battle_round(array &$u, array &$b, string $mode): array
         $b['frost'] = (int) $b['frost'] - 1;
         $log .= $b['name'] . '被冻结，手脚迟缓。';
     }
+    if (!empty($b['breach'])) {
+        $md = (int) ($md * (int) ($b['breachdmg'] ?? 80) / 100);
+        $b['breach'] = (int) $b['breach'] - 1;
+        $log .= $b['name'] . '被破甲，攻击受挫。';
+    }
     $meld = monster_element((string) ($b['id'] ?? ''));
     if ($meld !== '' && $md > 0) {
         $eres = player_resist($u, $meld);
@@ -5960,6 +6033,32 @@ function ch2_locations(): array
     $m['baltar'] = ['name' => '深渊祭坛', 'desc' => '很大，很黑。核心处站着眼睛发黑、影子如翅的暗影莉莉。', 'exits' => ['manor' => '废弃庄园', 'rift' => '裂隙深处'], 'monsters' => ['dark_lily']];
     $m['rift'] = ['name' => '裂隙深处', 'desc' => '没有底。你走在黑水上。深渊之眼睁着，瞳孔里是你的影子。', 'exits' => ['baltar' => '深渊祭坛'], 'monsters' => ['abyss_eye']];
     return $m;
+}
+
+// 二转群攻书掉落：深渊小怪2%随机w5-p6一本，泰坦40%；裂隙小怪2%随机w7-p8一本，暴君40%
+function roll_aoe_book(int $uid, string $mid): string
+{
+    $pool = [];
+    $rate = 0;
+    if (in_array($mid, ['cinder_crawler', 'cinder_stalker', 'cinder_warden', 'cinder_horror'], true)) {
+        $pool = ['book_w5', 'book_w6', 'book_m5', 'book_m6', 'book_h5', 'book_h6', 'book_p5', 'book_p6'];
+        $rate = 0.02;
+    } elseif ($mid === 'ash_titan') {
+        $pool = ['book_w5', 'book_w6', 'book_m5', 'book_m6', 'book_h5', 'book_h6', 'book_p5', 'book_p6'];
+        $rate = 0.4;
+    } elseif (in_array($mid, ['vx_spawn', 'vx_stalker', 'vx_mage', 'vx_knight', 'vx_herald'], true)) {
+        $pool = ['book_w7', 'book_w8', 'book_m7', 'book_m8', 'book_h7', 'book_h8', 'book_p7', 'book_p8'];
+        $rate = 0.02;
+    } elseif ($mid === 'vx_tyrant') {
+        $pool = ['book_w7', 'book_w8', 'book_m7', 'book_m8', 'book_h7', 'book_h8', 'book_p7', 'book_p8'];
+        $rate = 0.4;
+    }
+    if ($rate <= 0 || mt_rand() / mt_getrandmax() > $rate) {
+        return '';
+    }
+    $b = $pool[array_rand($pool)];
+    add_mat($uid, $b, 1);
+    return skill_books()[$b]['name'];
 }
 
 function ch2_maps(): array
@@ -6634,6 +6733,47 @@ function rebirth2_skill(string $rb2): string
 {
     return ['berserker' => 'w5', 'aegis' => 'w6', 'wintermage' => 'm5', 'wildfire' => 'm6', 'ranger' => 'h5', 'assassin' => 'h6', 'shadowbishop' => 'p5', 'holybishop' => 'p6'][$rb2] ?? '';
 }
+
+
+function rebirth2_skill2(string $rb2): string
+
+{
+
+    return ['berserker' => 'w7', 'aegis' => 'w8', 'wintermage' => 'm7', 'wildfire' => 'm8', 'ranger' => 'h7', 'assassin' => 'h8', 'shadowbishop' => 'p7', 'holybishop' => 'p8'][$rb2] ?? '';
+
+}
+
+
+
+// 二转被动技能目录：抉择即自动领悟，效果常驻
+
+
+function rb2_passive_catalog(): array
+
+{
+
+    return [
+
+        'berserker' => ['name' => '狂怒', 'desc' => '生命低于50%时伤害+15%'],
+
+        'aegis' => ['name' => '铁壁', 'desc' => '受到伤害-8%'],
+
+        'wintermage' => ['name' => '凛冬', 'desc' => '冰雷属性伤害+30%，攻击12%麻痹目标'],
+
+        'wildfire' => ['name' => '燎原', 'desc' => '火风属性伤害+40%'],
+
+        'ranger' => ['name' => '百步穿杨', 'desc' => '暴击+8%'],
+
+        'assassin' => ['name' => '影遁', 'desc' => '闪避+8%'],
+
+        'shadowbishop' => ['name' => '鲜血契约', 'desc' => '吸血+3%'],
+
+        'holybishop' => ['name' => '圣光灌注', 'desc' => '治疗+15%'],
+
+    ];
+
+}
+
 
 function rebirth2_passive_desc(string $rb2): string
 {

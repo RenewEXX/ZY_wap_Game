@@ -74,8 +74,7 @@ if ($q >= 16 && $q < 28) {
             $laterQuests[] = $id;
         }
     }
-}
-elseif ($q >= 77) {
+} elseif ($q >= 77) {
     foreach (array_keys($ch7) as $id) {
         if ($id > $q) {
             $laterQuests[] = $id;

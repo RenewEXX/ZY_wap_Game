@@ -4,13 +4,14 @@ require __DIR__ . '/includes/bootstrap.php';
 
 $u = require_login();
 if ((string) ($_GET['a'] ?? '') === 'title') {
-    $tid = (string) ($_GET['id'] ?? '');
-    $allow = ['title_ch1', 'title_ch2', 'title_ch3', 'title_ch4', 'title_ch5', 'title_rb2', 'title_dragon1', 'title_dragon2', 'title_dragon3'];
-    if (in_array($tid, $allow, true) && !empty(mats_of((int) $u['id'])[$tid])) {
-        mat_set((int) $u['id'], 'title_wear', $tid);
-        _gear_uncache((int) $u['id']);
-        flash_set('佩戴【' . mat_name($tid) . '】！');
-    }
+    flash_set(wear_title((int) $u['id'], (string) ($_GET['id'] ?? '')));
+    header('Location: status.php');
+    exit;
+}
+if ((string) ($_GET['a'] ?? '') === 'titleoff') {
+    db()->prepare('UPDATE equips SET pos="" WHERE uid=? AND slot="title" AND pos="wear"')->execute([(int) $u['id']]);
+    _gear_uncache((int) $u['id']);
+    flash_set('已卸下称号。');
     header('Location: status.php');
     exit;
 }
@@ -19,20 +20,18 @@ $here = loc((string) $u['loc']);
 wap_start('状态');
 echo h($u['username']) . '　' . (int) $u['lv'] . '级';
 echo '　' . h(job_of($u)['name']) . '(' . h(job_of($u)['skill']) . ')';
-$titles = ['title_ch1', 'title_ch2', 'title_ch3', 'title_ch4', 'title_ch5', 'title_rb2', 'title_dragon1', 'title_dragon2', 'title_dragon3'];
-$tm = mats_of((int) $u['id']);
-$tw = (string) ($tm['title_wear'] ?? '');
-if ($tw !== '') { echo '【' . h(mat_name($tw)) . '】'; }
-foreach ($titles as $tid) {
-    if (!empty($tm[$tid])) { echo '<a href="status.php?a=title&id=' . $tid . '">佩戴' . h(mat_name($tid)) . '</a> '; }
+$tw = title_worn((int) $u['id']);
+if ($tw) { echo '【' . h($tw['name']) . '】(<a href="status.php?a=titleoff">卸下</a>)'; }
+foreach (title_list((int) $u['id']) as $tr) {
+    echo (($tr['pos'] === 'wear') ? '●' : '<a href="status.php?a=title&id=' . (int) $tr['id'] . '">佩戴</a>') . h($tr['name']) . ' ';
 }
 $rb2n = rebirth2_name((string) (cflags((int) $u['id'])['rb2_job'] ?? ''));
 if ($rb2n !== '') { echo '　二转【' . h($rb2n) . '】(' . h(rebirth2_passive_desc((string) (cflags((int) $u['id'])['rb2_job'] ?? ''))) . ')'; }
 echo '<br>';
 echo '<span class="hp">生命 ' . (int) $u['hp'] . '/' . (int) $u['maxhp'] . '</span><br>';
 echo '<span style="color:#6cf">魔力 ' . (int) ($u['mp'] ?? 0) . '/' . (int) ($u['maxmp'] ?? 0) . '</span><br>';
-echo '攻击 ' . player_atk($u) . '　防御 ' . player_def($u) . '<br>';
-echo '物攻 ' . player_patk($u) . '　法攻 ' . player_matk($u) . '　物防 ' . player_pdef($u) . '　法防 ' . player_mdef($u) . '<br>';
+echo '物攻 ' . player_patk($u) . '　法攻 ' . player_matk($u) . '<br>';
+echo '物防 ' . player_pdef($u) . '　法防 ' . player_mdef($u) . '<br>';
 echo '<span class="gold">' . h(fmt_money((int) $u['gold'])) . '</span><br>';
 echo '经验 ' . (int) $u['exp'] . '/' . exp_need((int) $u['lv']) . '<br>';
 $st = db()->prepare('SELECT * FROM equips WHERE uid=? AND pos="wear"');
@@ -102,8 +101,6 @@ echo '<a href="status.php?a=all">查看全部属性</a><br>';
 if ((string) ($_GET['a'] ?? '') === 'all') {
     $gs = gear_stats((int) $u['id']);
     echo '<div class="hr">--------</div>【全部属性】<br>';
-    echo '攻击' . player_atk($u) . '<br>';
-    echo '防御' . player_def($u) . '<br>';
     echo '物攻' . player_patk($u) . ' 法攻' . player_matk($u) . ' 物防' . player_pdef($u) . ' 法防' . player_mdef($u) . '<br>';
     echo '生命' . (int) $u['maxhp'] . '<br>';
     echo '魔力' . (int) ($u['maxmp'] ?? 0) . '<br>';

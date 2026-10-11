@@ -357,7 +357,8 @@ function mall_goods(): array
     foreach (mall_tanks() as $tid => $t) {
         $g[$tid] = ['name' => $t['name'], 'price' => $t['price'], 'unit' => $t['cap']];
     }
-    $g['egg_unknown'] = ['name' => '未知宠物蛋', 'price' => 10, 'unit' => 1];
+    $g['egg_unknown'] = ['name' => '未知宠物蛋', 'price' => 100, 'unit' => 1];
+    $g['pet_food'] = ['name' => '宠物粮食', 'price' => 10, 'unit' => 1];
     // 下架：传奇宠物不直购（魔女之茧）
     $g['dragon_box'] = ['name' => '龙鳞宝箱', 'price' => 200, 'unit' => 1];
     $g['tent'] = ['name' => '随身帐篷', 'price' => 100, 'unit' => 1];
@@ -2128,7 +2129,7 @@ function equip_slots(): array
     return [
         'weapon' => '主手', 'offhand' => '副手', 'body' => '上身', 'head' => '头部', 'legs' => '下身',
         'gloves' => '手套', 'shoes' => '鞋子', 'back' => '背部', 'ring' => '戒指', 'necklace' => '项链',
-        'soul' => '神魂',
+        'soul' => '神魂', 'title' => '称号',
     ];
 }
 
@@ -2254,7 +2255,7 @@ function affix_catalog(): array
         'atk_pct' => ['name' => '物攻%', 'slots' => ['weapon'], 'data' => $r([[1, 2], [2, 4], [4, 6], [6, 9], [8, 12]], 80, 'offense_pct', 1)],
         'crit' => ['name' => '暴击率', 'slots' => ['weapon', 'head', 'gloves', 'ring', 'necklace'], 'data' => $r([[0.1, 0.3], [0.3, 0.6], [0.6, 1.0], [1.0, 1.5], [1.5, 2.0]], 100, 'crit', 1)],
         'critdmg' => ['name' => '暴击伤害', 'slots' => ['weapon', 'head', 'gloves', 'ring', 'necklace'], 'data' => $r([[1, 3], [3, 6], [6, 10], [10, 15], [15, 20]], 100, 'critdmg', 1)],
-        'speed' => ['name' => '攻击速度', 'slots' => ['weapon', 'gloves'], 'data' => $r([[1, 2], [2, 4], [4, 6], [6, 8], [7, 10]], 90, 'speed', 1)],
+        'speed' => ['name' => '攻速', 'slots' => ['weapon', 'gloves'], 'data' => $r([[1, 2], [2, 4], [4, 6], [6, 8], [7, 10]], 90, 'speed', 1)],
         'element' => ['name' => '元素伤害', 'slots' => ['weapon', 'offhand', 'ring'], 'data' => $r([[2, 4], [4, 8], [8, 13], [13, 19], [15, 25]], 70)],
         'lifesteal' => ['name' => '生命偷取', 'slots' => ['weapon', 'ring'], 'data' => $r([[0.2, 0.5], [0.5, 0.9], [0.9, 1.4], [1.4, 2.0], [2, 3]], 50, 'lifesteal', 1)],
         'res_light' => ['name' => '光抗性', 'slots' => ['body', 'necklace'], 'data' => $r([[1, 2], [2, 4], [4, 7], [7, 11], [10, 15]], 40, '', 1)],
@@ -2265,7 +2266,7 @@ function affix_catalog(): array
         'res_thunder' => ['name' => '雷抗性', 'slots' => ['body', 'necklace'], 'data' => $r([[1, 2], [2, 4], [4, 7], [7, 11], [10, 15]], 40, '', 1)],
         'allres' => ['name' => '全元素抗性', 'slots' => ['body', 'necklace', 'ring'], 'data' => $r([[1, 2], [2, 4], [4, 6], [6, 9], [8, 12]], 25, '', 1)],
         'penetration' => ['name' => '护甲穿透', 'slots' => ['weapon'], 'data' => $r([[1, 2], [2, 4], [4, 7], [7, 10], [8, 12]], 60, 'penetration', 1)],
-        'skill_damage' => ['name' => '技能伤害', 'slots' => ['weapon'], 'data' => $r([[2, 4], [4, 7], [7, 10], [10, 14], [12, 18]], 70, 'skill_damage', 1)],
+        'skill_damage' => ['name' => '全伤害加成', 'slots' => ['weapon'], 'data' => $r([[2, 4], [4, 7], [7, 10], [10, 14], [12, 18]], 70, 'skill_damage', 1)],
         'execute' => ['name' => '处决伤害', 'slots' => ['weapon'], 'data' => $r([[3, 6], [6, 10], [10, 16], [16, 23], [20, 30]], 40, 'execute', 1)],
         'hp' => ['name' => '生命值', 'slots' => ['body', 'head', 'legs', 'shoes', 'ring', 'necklace', 'offhand', 'back'], 'data' => $r([[8, 15], [15, 30], [30, 55], [55, 100], [90, 150]], 100)],
         'def' => ['name' => '护甲', 'slots' => ['body', 'head', 'legs', 'gloves', 'shoes', 'offhand', 'back'], 'data' => $r([[4, 10], [10, 20], [20, 35], [35, 60], [60, 100]], 100)],
@@ -4498,7 +4499,7 @@ function player_atk(array $u): int
     return player_patk($u);
 }
 
-// 物理攻击：力量+装备。法师练不出肌肉（力量不加物攻），只能靠装备
+// 物理攻击：力量+装备。法师牧师恒为0
 function player_patk(array $u): int
 {
     if (in_array(job_id_of($u), ['mage', 'priest'], true)) {
@@ -6147,27 +6148,88 @@ function ch2_locations(): array
 
 // 二转群攻书掉落：深渊小怪2%随机w5-p6一本，泰坦40%；裂隙小怪2%随机w7-p8一本，暴君40%
 // 主线章完成奖称号（幂等，缺勤补发）
-// 龙鳞宝箱：强化石10~50（ roll 档）+未知蛋3~20+陪练1~3小时+抽称号（龙3最低）
+// 龙鳞宝箱：单抽（石头45%/蛋30%/陪练20%/称号5%，龙威0.3%大奖）
 function open_dragon_box(int $uid): string
 {
     $mats = mats_of($uid);
     if (empty($mats['dragon_box'])) { return '你没有龙鳞宝箱。'; }
     add_mat($uid, 'dragon_box', -1);
-    $tr = mt_rand(1, 100);
-    $stone = $tr <= 70 ? 'enhance_t1' : ($tr <= 95 ? 'enhance_t2' : 'enhance_t3');
-    $sn = mt_rand(10, 50);
-    add_mat($uid, $stone, $sn);
-    $en = mt_rand(3, 20);
-    add_mat($uid, 'egg_unknown', $en);
-    $dh = mt_rand(1, 3);
-    add_mat($uid, 'dummy_time', 3600 * $dh);
-    $lr = mt_rand(1, 100);
-    $tid = $lr <= 60 ? 'title_dragon1' : ($lr <= 90 ? 'title_dragon2' : 'title_dragon3');
-    add_mat($uid, $tid, 1);
-    return '龙鳞宝箱开启：' . enhance_material_name($stone) . '×' . $sn . '、未知宠物蛋×' . $en . '、陪练' . $dh . '小时、称号【' . mat_name($tid) . '】！';
+    $r = mt_rand(1, 1000);
+    if ($r <= 450) {
+        $tr = mt_rand(1, 100);
+        $stone = $tr <= 70 ? 'enhance_t1' : ($tr <= 95 ? 'enhance_t2' : 'enhance_t3');
+        $sn = mt_rand(10, 50);
+        add_mat($uid, $stone, $sn);
+        return '龙鳞宝箱开出：' . enhance_material_name($stone) . '×' . $sn . '！';
+    } elseif ($r <= 750) {
+        $en = mt_rand(3, 20);
+        add_mat($uid, 'egg_unknown', $en);
+        return '龙鳞宝箱开出：未知宠物蛋×' . $en . '！';
+    } elseif ($r <= 950) {
+        $dh = mt_rand(1, 3);
+        add_mat($uid, 'dummy_time', 3600 * $dh);
+        return '龙鳞宝箱开出：陪练' . $dh . '小时！';
+    }
+    $lr = mt_rand(1, 1000);
+    $tid = $lr <= 700 ? 'title_dragon1' : ($lr <= 940 ? 'title_dragon2' : 'title_dragon3');
+    give_title($uid, $tid);
+    return '龙鳞宝箱开出大奖：称号【' . title_ids()[$tid] . '】！';
 }
 
 // 随身帐篷：野外随时扎营回满（不消耗）
+// 称号走装备背包（slot=title）
+function title_ids(): array
+{
+    return ['title_ch1' => '称号·灰雾行者', 'title_ch2' => '称号·白银守望', 'title_ch3' => '称号·王都破局者', 'title_ch4' => '称号·凛冬行者', 'title_ch5' => '称号·南炎见证', 'title_rb2' => '称号·虚空征服者', 'title_dragon1' => '称号·龙鳞初醒', 'title_dragon2' => '称号·龙血沸騰', 'title_dragon3' => '称号·灭世龙威'];
+}
+function title_bonus(string $tid): array
+{
+    return ['title_ch1' => ['atk' => 30.0, 'hp' => 500.0], 'title_ch2' => ['def' => 30.0, 'hp' => 800.0], 'title_ch3' => ['crit' => 1.0, 'atk' => 50.0], 'title_ch4' => ['mdef' => 40.0, 'hp' => 1200.0], 'title_ch5' => ['matk' => 50.0, 'hp' => 1500.0], 'title_rb2' => ['skill_damage' => 3.0, 'hp' => 2000.0], 'title_dragon1' => ['critdmg' => 5.0, 'hp' => 1500.0], 'title_dragon2' => ['atk' => 100.0, 'matk' => 100.0], 'title_dragon3' => ['skill_damage' => 8.0, 'truedmg' => 200.0]][$tid] ?? [];
+}
+function give_title(int $uid, string $tid): void
+{
+    $names = title_ids();
+    if (!isset($names[$tid])) { return; }
+    $st = db()->prepare('SELECT id FROM equips WHERE uid=? AND slot=? AND name=?');
+    $st->execute([$uid, 'title', $names[$tid]]);
+    if ($st->fetch()) { return; }
+    $aff = [];
+    foreach (title_bonus($tid) as $k => $v) { $aff[] = ['id' => $k, 'v' => $v, 'legend' => true]; }
+    db()->prepare('INSERT INTO equips (uid, slot, name, quality, affixes, pos) VALUES (?, "title", ?, 4, ?, "")')->execute([$uid, $names[$tid], json_encode($aff, JSON_UNESCAPED_UNICODE)]);
+}
+function title_list(int $uid): array
+{
+    $st = db()->prepare('SELECT id, name, pos FROM equips WHERE uid=? AND slot=? ORDER BY id');
+    $st->execute([$uid, 'title']);
+    return $st->fetchAll();
+}
+function title_worn(int $uid): ?array
+{
+    $st = db()->prepare('SELECT id, name FROM equips WHERE uid=? AND slot=? AND pos=? LIMIT 1');
+    $st->execute([$uid, 'title', 'wear']);
+    $r = $st->fetch();
+    return $r ?: null;
+}
+function wear_title(int $uid, $tid): string
+{
+    if (ctype_digit((string) $tid)) {
+        $st = db()->prepare('SELECT id, name FROM equips WHERE id=? AND uid=? AND slot=?');
+        $st->execute([(int) $tid, $uid, 'title']);
+        $r = $st->fetch();
+        if (!$r) { return '没有这个称号。'; }
+        db()->prepare('UPDATE equips SET pos="" WHERE uid=? AND slot=?')->execute([$uid, 'title']);
+        db()->prepare('UPDATE equips SET pos="wear" WHERE id=?')->execute([(int) $r['id']]);
+        _gear_uncache($uid);
+        return '佩戴【' . $r['name'] . '】！';
+    }
+    $names = title_ids();
+    if (!isset($names[(string) $tid])) { return '没有这个称号。'; }
+    $st = db()->prepare('SELECT id FROM equips WHERE uid=? AND slot=? AND name=?');
+    $st->execute([$uid, 'title', $names[(string) $tid]]);
+    $r = $st->fetch();
+    if (!$r) { return '你还没有这个称号。'; }
+    return wear_title($uid, (int) $r['id']);
+}
 function use_tent(int $uid): string
 {
     $u = user_by_id($uid);
@@ -6185,12 +6247,14 @@ function grant_chapter_titles(int $uid): void
     if (!$u) { return; }
     $q = (int) ($u['quest'] ?? 0);
     $map = [16 => 'title_ch1', 28 => 'title_ch2', 38 => 'title_ch3', 50 => 'title_ch4', 62 => 'title_ch5', 81 => 'title_rb2'];
-    $mats = mats_of($uid);
     foreach ($map as $need => $tid) {
-        if ($q >= $need && empty($mats[$tid])) {
-            add_mat($uid, $tid, 1);
-            send_mail($uid, '总会长', 'title', '主线', '主线奖励称号【' . mat_name($tid) . '】已发放，去状态页佩戴！', []);
-            $mats = mats_of($uid);
+        if ($q >= $need) {
+            $had = db()->prepare('SELECT id FROM equips WHERE uid=? AND slot=? AND name=?');
+            $had->execute([$uid, 'title', title_ids()[$tid]]);
+            if (!$had->fetch()) {
+                give_title($uid, $tid);
+                send_mail($uid, '总会长', 'title', '主线', '主线奖励称号【' . title_ids()[$tid] . '】已发放，去背包·装备穿戴！', []);
+            }
         }
     }
 }

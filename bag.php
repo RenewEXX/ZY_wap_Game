@@ -144,6 +144,17 @@ if ($a === 'usebox') {
     exit;
 }
 if ($a === 'usetent') {
+    echo '<div class="hr">--------</div>';
+    echo '陪练人偶：';
+    $dmats = mats_of((int) $u['id']);
+    if (!empty($dmats['dummy_time'])) {
+        echo '剩' . h(dummy_fmt((int) $dmats['dummy_time']));
+    } else {
+        echo '没时间';
+    }
+    echo !empty($dmats['dummy_on']) ? '（开着） <a href="bag.php?a=dummy&v=0">停止</a>' : ' <a href="bag.php?a=dummy&v=1">启动</a>';
+    echo '<br>';
+    echo '离线模块：' . (!empty($dmats['offline_on']) ? '已开通，剩' . h(dummy_fmt((int) ($dmats['offline_time'] ?? 0))) . '（独立计时）' : '未开通，去<a href="mall.php">商城</a>') . '<br>';
     flash_set(use_tent((int) $u['id']));
     header('Location: bag.php?tab=func');
     exit;
@@ -305,7 +316,7 @@ if ($tab === 'equip') {
     }
     if (!empty($mats['dragon_box'])) {
         $func = true;
-        echo '·龙鳞宝箱x' . $mats['dragon_box'] . '(强化石+宠物蛋+陪练+抽称号) <a href="bag.php?a=usebox">开启</a><br>';
+        echo '·龙鳞宝箱x' . $mats['dragon_box'] . '(单抽，称号是大奖) <a href="bag.php?a=usebox">开启</a><br>';
     }
     if (!empty($mats['tent'])) {
         $func = true;
@@ -356,17 +367,6 @@ if ($tab === 'equip') {
     if (!$hasTank) {
         echo '<span class="muted">空。去<a href="mall.php">商城</a>买罐。</span><br>';
     }
-    echo '<div class="hr">--------</div>';
-    echo '陪练人偶：';
-    $dmats = mats_of((int) $u['id']);
-    if (!empty($dmats['dummy_time'])) {
-        echo '剩' . h(dummy_fmt((int) $dmats['dummy_time']));
-    } else {
-        echo '没时间';
-    }
-    echo !empty($dmats['dummy_on']) ? '（开着） <a href="bag.php?a=dummy&v=0">停止</a>' : ' <a href="bag.php?a=dummy&v=1">启动</a>';
-    echo '<br>';
-    echo '离线模块：' . (!empty($dmats['offline_on']) ? '已开通，剩' . h(dummy_fmt((int) ($dmats['offline_time'] ?? 0))) . '（独立计时）' : '未开通，去<a href="mall.php">商城</a>') . '<br>';
     echo '<div class="hr">--------</div>';
     echo '<a href="shop.php">去黑市</a>';
 }

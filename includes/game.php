@@ -2838,8 +2838,8 @@ function skill_catalog(): array
         'w6' => ['name' => '撼地重击', 'job' => 'warrior', 'mp' => 50, 'kind' => 'aoe', 'mult' => 2.2, 'el' => 'thunder', 't10' => '10%眩晕', 'lv20' => '伤害+15%'],
         'm5' => ['name' => '暴风雪', 'job' => 'mage', 'mp' => 55, 'kind' => 'aoe', 'mult' => 0, 'el' => 'ice', 't10' => '伤害+30%', 'lv20' => '伤害+15%'],
         'm6' => ['name' => '虚空坍缩', 'job' => 'mage', 'mp' => 55, 'kind' => 'aoe', 'mult' => 0, 'el' => 'dark', 't10' => '伤害+30%', 'lv20' => '伤害+15%'],
-        'h5' => ['name' => '万箭齐发', 'job' => 'hunter', 'mp' => 50, 'kind' => 'aoe', 'mult' => 2.2, 'el' => 'wind', 't10' => '溅射+10%', 'lv20' => '伤害+15%'],
-        'h6' => ['name' => '影杀阵', 'job' => 'hunter', 'mp' => 50, 'kind' => 'aoe', 'mult' => 2.4, 'el' => 'dark', 't10' => '溅射+10%', 'lv20' => '伤害+15%'],
+        'h5' => ['name' => '万箭齐发', 'job' => 'hunter', 'mp' => 50, 'kind' => 'aoe', 'mult' => 2.5, 'el' => 'wind', 't10' => '本次暴击率+25%，溅射+10%', 'lv20' => '伤害+15%，暴击伤害+20%'],
+        'h6' => ['name' => '影杀阵', 'job' => 'hunter', 'mp' => 50, 'kind' => 'aoe', 'mult' => 2.6, 'el' => 'dark', 't10' => '斩杀：目标血量低于30%时伤害+50%', 'lv20' => '伤害+15%，斩杀线提高到40%'],
         'p5' => ['name' => '暗影新星', 'job' => 'priest', 'mp' => 55, 'kind' => 'aoe', 'mult' => 1.8, 'el' => 'dark', 't10' => '伤害+30%', 'lv20' => '伤害转奶40%'],
         'p6' => ['name' => '圣光普照', 'job' => 'priest', 'mp' => 55, 'kind' => 'aoe', 'mult' => 1.2, 'heal' => 120, 'el' => 'light', 't10' => '治疗+40', 'lv20' => '治疗+20%，队友70%'],
     ];
@@ -4718,7 +4718,7 @@ function dmg_to_monster(array $u, array $m = []): int
     $d = max(1, player_patk($u) + random_int(0, 3) - monster_pdef($m));
     $gs = gear_stats((int) ($u['id'] ?? 0));
     $rb2c = cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '';
-    if ($gs['crit'] + ($rb2c === 'ranger' ? 5 : 0) > 0 && mt_rand(1, 10000) / 100 <= $gs['crit'] + ($rb2c === 'ranger' ? 5 : 0)) {
+    if ($gs['crit'] + ($rb2c === 'ranger' ? 8 : 0) > 0 && mt_rand(1, 10000) / 100 <= $gs['crit'] + ($rb2c === 'ranger' ? 8 : 0)) {
         $d = (int) ($d * (1 + $gs['critdmg'] / 100));
     }
     return $d;
@@ -4728,7 +4728,7 @@ function dmg_to_player(array $u, array $m): int
 {
     $gs = gear_stats((int) ($u['id'] ?? 0));
     $rb2d = cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '';
-    if ($gs['dodge'] + ($rb2d === 'assassin' ? 5 : 0) > 0 && mt_rand(1, 10000) / 100 <= $gs['dodge'] + ($rb2d === 'assassin' ? 5 : 0)) {
+    if ($gs['dodge'] + ($rb2d === 'assassin' ? 8 : 0) > 0 && mt_rand(1, 10000) / 100 <= $gs['dodge'] + ($rb2d === 'assassin' ? 8 : 0)) {
         return 0;
     }
     // 怪物伤害拆两段：物理段吃物防，法术段吃法防
@@ -4912,6 +4912,15 @@ function battle_round(array &$u, array &$b, string $mode): array
                 if ($sid === 'w6' && $sTier >= 10 && mt_rand(1, 100) <= 10) {
                     $b['stun'] = 1;
                     $logHeal .= '(眩晕)';
+                    if ($sid === 'h5' && $sTier >= 10 && mt_rand(1, 100) <= 25) {
+                        $pd = (int) ($pd * ($sLv >= 20 ? 1.8 : 1.6));
+                        $logHeal .= '(箭雨暴击)';
+                    }
+                    $exeLine = $sLv >= 20 ? 0.4 : 0.3;
+                    if ($sid === 'h6' && (int) ($b['maxhp'] ?? 1) > 0 && (int) ($b['hp'] ?? 1) <= (int) ($b['maxhp'] ?? 1) * $exeLine) {
+                        $pd = (int) ($pd * 1.5);
+                        $logHeal .= '(影杀斩杀)';
+                    }
                 }
                 // 暗影主教：伤害转奶
                 if ($sid === 'p5') {
@@ -5899,7 +5908,32 @@ function roll_abx_quest(int $uid, string $mid): string
     return $out;
 }
 
-function dungeon_tick(array &$u): void{    $loc = (string) ($u['loc'] ?? '');    $inFr = in_array($loc, fr_maps(), true);    $inEm = in_array($loc, em_maps(), true);    $inPz = in_array($loc, pz_maps(), true);    $inSen = in_array($loc, sen_maps(), true);    $inAs = in_array($loc, as_maps(), true); $inVx = in_array($loc, vx_maps(), true);    if (!in_array($loc, dsw_maps(), true) && !in_array($loc, abx_maps(), true) && !in_array($loc, mx_maps(), true) && !$inFr && !$inEm && !$inPz && !$inSen && !$inAs && !$inVx) {        return;    }    $inAbx = in_array($loc, abx_maps(), true);    $inMx = in_array($loc, mx_maps(), true);    $mats = mats_of((int) ($u['id'] ?? 0));    $enter = (int) ($mats[$inFr ? 'fr_enter' : ($inEm ? 'em_enter' : ($inPz ? 'pz_enter' : ($inSen ? 'sen_enter' : ($inAs ? 'as_enter' : ($inVx ? 'vx_enter' : ($inMx ? 'mx_enter' : ($inAbx ? 'abx_enter' : 'dsw_enter')))))))] ?? time());    $limit = ($inMx || $inFr || $inEm || $inPz || $inSen || $inAs || $inVx) ? 2700 : 1800;    if (time() - $enter > $limit) {        unset($_SESSION['battle']);        $u['loc'] = $inFr ? 'ice_village' : ($inEm ? 'ember_foothill' : ($inPz ? 'theater' : ($inSen ? 'fo_gate' : ($inAs ? 'ember_foothill' : ($inVx ? 'volcano_heart' : ($inMx ? 'avenue' : ($inAbx ? 'silver_sq' : 'town_sq')))))));        user_save($u);        $back = $inFr ? '冰原村' : ($inEm ? '火山麓' : ($inPz ? '傀儡剧场' : ($inSen ? '雾森渡口' : ($inAs ? '火山麓' : ($inVx ? '火山之心' : ($inMx ? '中央大道' : ($inAbx ? '白银广场' : '白石镇广场')))))));        flash_set(($limit >= 2700 ? '45' : '30') . '分钟到了，你被传回' . $back . '。');    }}// 二转群攻书掉落：深渊小怪2%随机一本，泰坦40%随机一本
+function dungeon_tick(array &$u): void
+{
+    $loc = (string) ($u['loc'] ?? '');
+    $inFr = in_array($loc, fr_maps(), true);
+    $inEm = in_array($loc, em_maps(), true);
+    $inPz = in_array($loc, pz_maps(), true);
+    $inSen = in_array($loc, sen_maps(), true);
+    $inAs = in_array($loc, as_maps(), true); $inVx = in_array($loc, vx_maps(), true);
+    if (!in_array($loc, dsw_maps(), true) && !in_array($loc, abx_maps(), true) && !in_array($loc, mx_maps(), true) && !$inFr && !$inEm && !$inPz && !$inSen && !$inAs && !$inVx) {
+        return;
+    }
+    $inAbx = in_array($loc, abx_maps(), true);
+    $inMx = in_array($loc, mx_maps(), true);
+    $mats = mats_of((int) ($u['id'] ?? 0));
+    $enter = (int) ($mats[$inFr ? 'fr_enter' : ($inEm ? 'em_enter' : ($inPz ? 'pz_enter' : ($inSen ? 'sen_enter' : ($inAs ? 'as_enter' : ($inVx ? 'vx_enter' : ($inMx ? 'mx_enter' : ($inAbx ? 'abx_enter' : 'dsw_enter')))))))] ?? time());
+    $limit = ($inMx || $inFr || $inEm || $inPz || $inSen || $inAs || $inVx) ? 2700 : 1800;
+    if (time() - $enter > $limit) {
+        unset($_SESSION['battle']);
+        $u['loc'] = $inFr ? 'ice_village' : ($inEm ? 'ember_foothill' : ($inPz ? 'theater' : ($inSen ? 'fo_gate' : ($inAs ? 'ember_foothill' : ($inVx ? 'volcano_heart' : ($inMx ? 'avenue' : ($inAbx ? 'silver_sq' : 'town_sq')))))));
+        user_save($u);
+        $back = $inFr ? '冰原村' : ($inEm ? '火山麓' : ($inPz ? '傀儡剧场' : ($inSen ? '雾森渡口' : ($inAs ? '火山麓' : ($inVx ? '火山之心' : ($inMx ? '中央大道' : ($inAbx ? '白银广场' : '白石镇广场')))))));
+        flash_set(($limit >= 2700 ? '45' : '30') . '分钟到了，你被传回' . $back . '。');
+    }
+}
+
+// 二转群攻书掉落：深渊小怪2%随机一本，泰坦40%随机一本
 function ch2_locations(): array
 {
     $m = [];
@@ -6601,8 +6635,8 @@ function rebirth2_passive_desc(string $rb2): string
         'aegis' => '铁壁：受到伤害-8%',
         'elementalist' => '元素主宰：属性伤害+12%',
         'voidcaller' => '虚空亲和：技能伤害+10%',
-        'ranger' => '百步穿杨：暴击+5%',
-        'assassin' => '影遁：闪避+5%',
+        'ranger' => '百步穿杨：暴击+8%',
+        'assassin' => '影遁：闪避+8%',
         'shadowbishop' => '鲜血契约：吸血+3%',
         'holybishop' => '圣光灌注：治疗+15%',
     ][$rb2] ?? '';

@@ -23,7 +23,6 @@ foreach ($set as $sid) {
     $c = skill_catalog()[$sid];
     echo '<b>' . h($c['name']) . '</b>（耗蓝' . $c['mp'] . '）<br>';
     if (!isset($mine[$sid])) {
-        $unlearned = ($unlearned ?? 0) + 1;
         continue;
     }
     $s = $mine[$sid];
@@ -32,9 +31,6 @@ foreach ($set as $sid) {
     echo ($isActive ? '◀默认 ' : '<a href="skills.php?a=set&id=' . h($sid) . '">设为默认</a> ');
     echo $s['level'] . '级·' . $s['tier'] . '阶·熟练' . $s['prof'] . '/' . tier_prof_need(min(10, (int) $s['tier'] + 1)) . '<br>';
     echo '<span class="muted">10阶：' . h($c['t10']) . '　20级：' . h($c['lv20']) . '</span><br>';
-}
-if (!empty($unlearned)) {
-    echo '<span class="muted">还有' . (int) $unlearned . '个技能未领悟（刷对应秘籍）。</span><br>';
 }
 echo '<div class="hr">--------</div>';
 $rb2j = (string) (cflags((int) $u['id'])['rb2_job'] ?? '');

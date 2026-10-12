@@ -3,7 +3,6 @@ declare(strict_types=1);
 require __DIR__ . '/includes/bootstrap.php';
 
 $u = require_login();
-grant_chapter_titles((int) $u['id']);
 $who = (string) ($_GET['who'] ?? '');
 $choice = (string) ($_GET['choice'] ?? '');
 $cur = (string) $u['loc'];

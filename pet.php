@@ -101,24 +101,9 @@ if ($a === 'heal') {
     header('Location: pet.php?a=view&id=' . (int) ($_GET['id'] ?? 0));
     exit;
 }
-if ($a === 'revive') {
-    $st = db()->prepare('SELECT * FROM pets WHERE id=? AND uid=?');
-    $st->execute([(int) ($_GET['id'] ?? 0), $uid]);
-    $p = $st->fetch();
-    $mats = mats_of($uid);
-    if (!$p) {
-        flash_set('没有这只宠物。');
-    } elseif ($p['status'] !== 'weak') {
-        flash_set('它没事，不用治。');
-    } elseif (empty($mats['pet_revive_potion'])) {
-        flash_set('没有宠物复活药。');
-    } else {
-        add_mat($uid, 'pet_revive_potion', -1);
-        $stats = pet_stats($p);
-        db()->prepare('UPDATE pets SET status="normal", hp=? WHERE id=?')->execute([$stats['maxhp'], (int) $p['id']]);
-        flash_set('复活药灌下去，满血复活！');
-    }
-    header('Location: pet.php?a=view&id=' . (int) ($_GET['id'] ?? 0));
+if ($a === 'autorev') {
+    if (!empty(mats_of($uid)['pet_autorev'])) { db()->prepare('DELETE FROM mats WHERE uid=? AND mat=?')->execute([$uid, 'pet_autorev']); flash_set('已关闭宠物自动复活。'); } else { mat_set($uid, 'pet_autorev', 1); flash_set('已开启宠物自动复活（死亡扣1银满血复活）。'); }
+    header('Location: pet.php');
     exit;
 }
 if ($a === 'release') {
@@ -199,7 +184,6 @@ if ($a === 'view') {
     echo '<a href="pet.php?a=release&id=' . $p['id'] . '">放生</a> ';
     if ($p['status'] === 'weak') {
         echo '<a href="pet.php?a=heal&id=' . $p['id'] . '">治疗(' . h(fmt_money(pet_heal_cost($p))) . ')</a> ';
-        echo '<a href="pet.php?a=revive&id=' . $p['id'] . '">用复活药</a>';
     }
     echo '<br><a href="pet.php">返回</a>';
     nav_line();
@@ -213,6 +197,7 @@ if ($flash !== '') {
 }
 $ap = active_pet($uid);
 echo '【我的宠物】' . ($ap ? '出战：' . h(pet_species()[$ap['species']]['name']) . (int) $ap['level'] . '级' : '没出战') . '<br>';
+echo '自动复活：' . (!empty(mats_of($uid)['pet_autorev']) ? '<b>开(死扣1银)</b> <a href="pet.php?a=autorev">关</a>' : '<b>关</b> <a href="pet.php?a=autorev">开(死扣1银)</a>') . '<br>';
 echo '<div class="hr">--------</div>';
 $pets = my_pets($uid);
 if ($pets === []) {

@@ -135,6 +135,7 @@ if ($a === 'hit' || $a === 'skill' || $a === 'tick') {
                 'bhp' => (int) $bb['hp'], 'bmax' => (int) $bb['maxhp'],
                 'bname' => (string) $bb['name'],
                 'left' => (int) ($bb['left'] ?? 1), 'num' => (int) ($bb['num'] ?? 1),
+                'hist' => array_slice((array) ($bb['history'] ?? []), -6),
                 'pet' => (function () use ($u) { $ap = active_pet((int) ($u['id'] ?? 0)); if (!$ap) { return ''; } $st = pet_stats($ap); return pet_species()[$ap['species']]['name'] . ' ' . min((int) $ap['hp'], $st['maxhp']) . '/' . $st['maxhp']; })(),
             ]);
             exit;
@@ -405,7 +406,7 @@ if ($fpet) {
 if (($b['id'] ?? '') === 'abyss_eye') {
     echo '<div class="warn">深渊之眼呼唤你的名字：“回答我……” <a href="fight.php?a=answer">回答</a> <a href="fight.php?a=silence">沉默</a></div>';
 }
-echo '<div class="muted">自动战斗中：每1秒默认放[' . h(job_of($u)['skill']) . ']，战报每3秒刷新一块。切到别的画面战斗也会在后台继续。</div>';
+echo '<div class="muted">自动战斗中：每1秒默认放[' . h(job_of($u)['skill']) . ']，战报每2秒刷新。切到别的画面战斗也会在后台继续。</div>';
 echo '<div class="hr">--------</div>';
 echo '<div id="blog">';
 foreach (array_slice($history, -6) as $h) {
@@ -414,40 +415,28 @@ foreach (array_slice($history, -6) as $h) {
 echo '</div>';
 echo '<div class="hr">--------</div>';
 echo '<button id="pauseBtn" type="button">暂停</button> ';
-$pmats = mats_of((int) $u['id']);
-foreach (pct_potions() as $pmid => $pt) {
-    if ((int) ($pmats[$pmid] ?? 0) > 0) {
-        echo '<a href="fight.php?a=drink&m=' . $pmid . '">喝' . h($pt['name']) . '(' . $pt['pct'] . '%×' . (int) $pmats[$pmid] . ')</a> ';
-    }
-}
 echo '<a href="fight.php?a=run">撤</a>';
 nav_line();
 echo '<script>
-let paused=false, buf=[];
+let paused=false;
 document.getElementById("pauseBtn").onclick=()=>{paused=!paused;document.getElementById("pauseBtn").innerText=paused?"继续":"暂停";};
-// 每1秒打一轮（默认技能）
+// 每2秒打一轮并同步刷新血量+战报（同一tick，无延迟）
 setInterval(async ()=>{
   if(paused||document.hidden) return;
   try{
     const r=await fetch("fight.php?a=tick&ajax=1",{headers:{"X-Requested-With":"fetch"},credentials:"same-origin"});
     const d=await r.json();
     if(d.done){ location.href=d.redirect||"home.php"; return; }
-    buf.push(d.log);
-    document.getElementById("uhp").innerText="你 "+d.uhp+"/"+d.umax;
+    document.getElementById("uhp").innerText="我"+d.uhp+"/"+d.umax;
     if(d.ump!==undefined){ const me=document.getElementById("ump"); if(me) me.innerText="魔力 "+d.ump+"/"+d.umaxmp; }
     if(d.pet!==undefined){ const pe=document.getElementById("ppet"); if(pe) pe.innerText=d.pet; }
-    document.getElementById("bhp").innerText="敌生命 "+d.bhp+"/"+d.bmax;
+    document.getElementById("bhp").innerText="敌生命"+d.bhp+"/"+d.bmax;
     if(d.num>1){ const bl=document.getElementById("bleft"); if(bl) bl.innerText="剩余 "+d.left+"/"+d.num+"只，存活怪每回合一起打你！"; }
+    const box=document.getElementById("blog");
+    if(d.hist&&d.hist.length){box.innerHTML=d.hist.map(function(x){return String(x).replace(/</g,"&lt;")}).join("<br>");}else{box.innerHTML=(box.innerHTML+"<br>"+String(d.log).replace(/</g,"&lt;")).split("<br>").slice(-3).join("<br>");}
+    window.scrollTo(0,document.body.scrollHeight);
   }catch(e){}
-},3000);
-// 每3秒把这3秒的战报刷到页面
-setInterval(()=>{
-  if(!buf.length) return;
-  const box=document.getElementById("blog");
-  box.innerHTML=(box.innerHTML+"<br>---3秒---<br>"+buf.map(s=>s.replace(/</g,"&lt;")).join("<br>")).split("<br>").slice(-3).join("<br>");
-  buf=[];
-  window.scrollTo(0,document.body.scrollHeight);
-},3000);
+},2000);
 </script>';
 echo '<noscript><meta http-equiv="refresh" content="6;url=fight.php?a=skill"></noscript>';
 wap_end(false);

@@ -3,7 +3,6 @@ declare(strict_types=1);
 require __DIR__ . '/includes/bootstrap.php';
 
 $u = require_login();
-grant_chapter_titles((int) $u['id']);
 $tab = (string) ($_GET['tab'] ?? 'doing');
 if (!in_array($tab, ['done', 'doing', 'todo'], true)) {
     $tab = 'doing';
@@ -102,19 +101,19 @@ $nameOf = function ($id) use ($newSteps, $ch1, $ch2, $ch3, $ch4, $ch5, $ch6, $ch
     if (isset($newSteps[$id])) {
         return $newSteps[$id]['t'];
     }
-    return $ch1[$id]['name'] ?? $ch2[$id]['name'] ?? $ch3[$id]['name'] ?? $ch4[$id]['name'] ?? $ch5[$id]['name'] ?? $ch6[$id]['name'] ?? $ch7[$id]['name'] ?? ('任务' . $id);
+    return $ch1[$id]['name'] ?? $ch2[$id]['name'] ?? $ch3[$id]['name'] ?? $ch4[$id]['name'] ?? $ch5[$id]['name'] ?? $ch6[$id]['name'] ?? ('任务' . $id);
 };
 $descOf = function ($id) use ($newSteps, $ch1, $ch2, $ch3, $ch4, $ch5, $ch6, $ch7) {
     if (isset($newSteps[$id])) {
         return $newSteps[$id]['d'];
     }
-    return $ch1[$id]['todo'] ?? $ch2[$id]['todo'] ?? $ch3[$id]['todo'] ?? $ch4[$id]['todo'] ?? $ch5[$id]['todo'] ?? $ch6[$id]['todo'] ?? $ch7[$id]['todo'] ?? '';
+    return $ch1[$id]['todo'] ?? $ch2[$id]['todo'] ?? $ch3[$id]['todo'] ?? $ch4[$id]['todo'] ?? $ch5[$id]['todo'] ?? $ch6[$id]['todo'] ?? '';
 };
 
 if ($tab === 'doing') {
     if ($doingId === null && $q < 16) {
         echo '<span class="muted">第一章已通关，自由探索。听说罪字碑动了……</span>';
-    } elseif ($q === 76 || $q >= 81) {
+    } elseif ($q >= 76) {
         echo '<span class="muted">五章全通关！世界BOSS每天刷新，熔心/冰渊副本、神魂升级等你。</span>';
     } elseif ($q >= 38 && $q < 50) {
         echo '<span class="muted">三章全通关！农场、母巢、公会战、巅峰之战等你（影子伙伴：全属性+5%）。</span>';
@@ -123,7 +122,7 @@ if ($tab === 'doing') {
         $dName = $q >= 16 ? (string) ($qs['name'] ?? '') : $nameOf($doingId ?? $q);
         $dDesc = $q >= 16 ? (string) ($qs['todo'] ?? '') : $descOf($doingId ?? $q);
         echo '<div class="warn">【' . h(($qs['step'] ?? '') . '·' . $dName) . '】<br>' . h($dDesc) . '</div>';
-        $prog = (($qs['ch'] ?? 0) === 2) ? quest_progress2_text((int) $u['id'], $qs) : (in_array(($qs['ch'] ?? 0), [3, 5, 6, 7], true) ? quest_progress3_text((int) $u['id'], $qs) : quest_progress_text((int) $u['id'], $qs));
+        $prog = (($qs['ch'] ?? 0) === 2) ? quest_progress2_text((int) $u['id'], $qs) : (in_array(($qs['ch'] ?? 0), [3, 5, 6], true) ? quest_progress3_text((int) $u['id'], $qs) : quest_progress_text((int) $u['id'], $qs));
         if ($prog !== '') {
             echo h($prog) . '<br>';
         }

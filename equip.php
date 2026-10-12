@@ -33,7 +33,6 @@ echo '<span style="color:' . equip_color($e) . '">' . h(equip_shortname($e['name
 echo '部位：' . h(equip_slots()[$e['slot']] ?? '') . '<br>';
 echo '品级：' . h($qname) . '<br>';
 echo '穿戴要求：' . h(equip_req_text($e)) . '<br>';
-echo '可用职业：' . h(equip_job_text($e)) . '<br>';
 echo '物品等级：' . (int) ($e['item_level'] ?? 1) . '<br>';
 echo '状态：' . (($e['pos'] === 'wear' ? '已穿戴' : '背包')) . '<br>';
 $elv = (int) ($e['enhance_level'] ?? 0);

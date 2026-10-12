@@ -3,35 +3,16 @@ declare(strict_types=1);
 require __DIR__ . '/includes/bootstrap.php';
 
 $u = require_login();
-if ((string) ($_GET['a'] ?? '') === 'title') {
-    flash_set(wear_title((int) $u['id'], (string) ($_GET['id'] ?? '')));
-    header('Location: status.php');
-    exit;
-}
-if ((string) ($_GET['a'] ?? '') === 'titleoff') {
-    db()->prepare('UPDATE equips SET pos="" WHERE uid=? AND slot="title" AND pos="wear"')->execute([(int) $u['id']]);
-    _gear_uncache((int) $u['id']);
-    flash_set('已卸下称号。');
-    header('Location: status.php');
-    exit;
-}
 $here = loc((string) $u['loc']);
 
 wap_start('状态');
 echo h($u['username']) . '　' . (int) $u['lv'] . '级';
 echo '　' . h(job_of($u)['name']) . '(' . h(job_of($u)['skill']) . ')';
-$tw = title_worn((int) $u['id']);
-if ($tw) { echo '【' . h($tw['name']) . '】(<a href="status.php?a=titleoff">卸下</a>)'; }
-foreach (title_list((int) $u['id']) as $tr) {
-    echo (($tr['pos'] === 'wear') ? '●' : '<a href="status.php?a=title&id=' . (int) $tr['id'] . '">佩戴</a>') . h($tr['name']) . ' ';
-}
-$rb2n = rebirth2_name((string) (cflags((int) $u['id'])['rb2_job'] ?? ''));
-if ($rb2n !== '') { echo '　二转【' . h($rb2n) . '】(' . h(rebirth2_passive_desc((string) (cflags((int) $u['id'])['rb2_job'] ?? ''))) . ')'; }
 echo '<br>';
 echo '<span class="hp">生命 ' . (int) $u['hp'] . '/' . (int) $u['maxhp'] . '</span><br>';
 echo '<span style="color:#6cf">魔力 ' . (int) ($u['mp'] ?? 0) . '/' . (int) ($u['maxmp'] ?? 0) . '</span><br>';
-echo '物攻 ' . player_patk($u) . '　法攻 ' . player_matk($u) . '<br>';
-echo '物防 ' . player_pdef($u) . '　法防 ' . player_mdef($u) . '<br>';
+echo '攻击 ' . player_atk($u) . '　防御 ' . player_def($u) . '<br>';
+echo '物攻 ' . player_patk($u) . '　法攻 ' . player_matk($u) . '　物防 ' . player_pdef($u) . '　法防 ' . player_mdef($u) . '<br>';
 echo '<span class="gold">' . h(fmt_money((int) $u['gold'])) . '</span><br>';
 echo '经验 ' . (int) $u['exp'] . '/' . exp_need((int) $u['lv']) . '<br>';
 $st = db()->prepare('SELECT * FROM equips WHERE uid=? AND pos="wear"');
@@ -89,18 +70,20 @@ if ((string) ($_GET['a'] ?? '') === 'rename') {
     }
 }
 echo '<div class="hr">--------</div>【属性加点】<br>';
-echo '潜力：存' . (int) ($u['s_pts'] ?? 0) . '点（全部1点1次）<br>';
-echo '力量(物攻，法师牧师无效)：' . (int) ($u['str'] ?? 0) . ' <a href="status.php?a=alloc&k=str">+速加</a><br>';
-echo '智慧(法攻)：' . (int) ($u['int'] ?? 0) . ' <a href="status.php?a=alloc&k=int">+速加</a><br>';
-echo '坚毅(物防法防)：' . (int) ($u['agi'] ?? 0) . ' <a href="status.php?a=alloc&k=agi">+速加</a><br>';
-echo '体质(生命)：' . (int) ($u['vit'] ?? 0) . ' <a href="status.php?a=alloc&k=vit">+速加</a><br>';
-echo '灵力(魔力)：' . (int) ($u['spi'] ?? 0) . ' <a href="status.php?a=alloc&k=spi">+速加</a><br>';
-echo '快速：<a href="status.php?a=allocall&k=str">全加力量</a> <a href="status.php?a=allocall&k=int">全加智慧</a> <a href="status.php?a=allocall&k=agi">全加坚毅</a> <a href="status.php?a=allocall&k=vit">全加体质</a> <a href="status.php?a=allocall&k=spi">全加灵力</a><br>';
+echo '潜力：存' . (int) ($u['s_pts'] ?? 0) . '点（力量/坚毅3点1次，体质/智慧1点1次）<br>';
+echo '力量(影响物攻，法师无效)：' . (int) ($u['str'] ?? 0) . ' <a href="status.php?a=alloc&k=str">+速加</a><br>';
+echo '坚毅(影响物防)：' . (int) ($u['agi'] ?? 0) . ' <a href="status.php?a=alloc&k=agi">+速加</a><br>';
+echo '体质(影响生命)：' . (int) ($u['vit'] ?? 0) . ' <a href="status.php?a=alloc&k=vit">+速加</a><br>';
+echo '智慧(影响法攻/法防/魔力)：' . (int) ($u['int'] ?? 0) . ' <a href="status.php?a=alloc&k=int">+速加</a><br>';
+echo '快速：<a href="status.php?a=allocall&k=str">全加力量</a> <a href="status.php?a=allocall&k=agi">全加坚毅</a> <a href="status.php?a=allocall&k=vit">全加体质</a> <a href="status.php?a=allocall&k=int">全加智慧</a><br>';
+echo '<span class="muted">注意：强力装备有属性点要求，不要只加一种。可用<a href="bag.php?tab=func">洗点药</a>重修。</span><br>';
 echo '<div class="hr">--------</div>';
 echo '<a href="status.php?a=all">查看全部属性</a><br>';
 if ((string) ($_GET['a'] ?? '') === 'all') {
     $gs = gear_stats((int) $u['id']);
     echo '<div class="hr">--------</div>【全部属性】<br>';
+    echo '攻击' . player_atk($u) . '<br>';
+    echo '防御' . player_def($u) . '<br>';
     echo '物攻' . player_patk($u) . ' 法攻' . player_matk($u) . ' 物防' . player_pdef($u) . ' 法防' . player_mdef($u) . '<br>';
     echo '生命' . (int) $u['maxhp'] . '<br>';
     echo '魔力' . (int) ($u['maxmp'] ?? 0) . '<br>';

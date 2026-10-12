@@ -76,9 +76,13 @@ if ($a === 'drop') {
     $st->execute([(int) $u['id'], $did]);
     $dn = (int) ($st->fetchColumn() ?: 0);
     if ($dn > 0) {
-        ground_place_mat((string) ($u['loc'] ?? 'town_sq'), $did, $dn);
         db()->prepare('DELETE FROM mats WHERE uid=? AND mat=?')->execute([(int) $u['id'], $did]);
-        flash_set('扔地上了【' . mat_name($did) . '】x' . $dn . '（1分钟后消失）。');
+        if ((isset(pet_eggs()[$did]) && pet_eggs()[$did]['species'] !== '') || isset(skill_books()[$did]) || $did === 'dsw_ticket') {
+            ground_place_mat((string) ($u['loc'] ?? 'town_sq'), $did, $dn);
+            flash_set('扔地上了。【' . mat_name($did) . '】x' . $dn . '（1分钟后消失）。');
+        } else {
+            flash_set('【' . mat_name($did) . '】不能拍卖，扔掉后直接销毁了。');
+        }
     } else {
         flash_set('没有这个东西。');
     }
@@ -92,12 +96,23 @@ if ($a === 'dropequip') {
     if (!$eq) {
         flash_set('穿着的不能扔，先脱下来。');
     } else {
-        db()->prepare('UPDATE equips SET uid=0, pos="ground" WHERE id=?')->execute([(int) $eq['id']]);
-        ground_place_equip((string) ($u['loc'] ?? 'town_sq'), (int) $eq['id']);
+        if (auction_listable_equip($eq)) {
+            db()->prepare('UPDATE equips SET uid=0, pos="ground" WHERE id=?')->execute([(int) $eq['id']]);
+            ground_place_equip((string) ($u['loc'] ?? 'town_sq'), (int) $eq['id']);
+            flash_set('扔地上了。【' . equip_shortname((string) $eq['name']) . '】（1分钟后消失）。');
+        } else {
+            db()->exec('DELETE FROM equips WHERE id=' . (int) $eq['id']);
+            flash_set('【' . equip_shortname((string) $eq['name']) . '】不能拍卖，扔掉后直接销毁了。');
+        }
         _gear_uncache((int) $u['id']);
-        flash_set('扔地上了【' . equip_shortname((string) $eq['name']) . '】（1分钟后消失）。');
     }
     header('Location: bag.php?tab=equip');
+    exit;
+}
+if ($a === 'dummynum') {
+    $dn = (int) ($_GET['n'] ?? 6);
+    if (in_array($dn, [1, 3, 6], true)) { mat_set((int) $u['id'], 'dummy_num', $dn); }
+    header('Location: bag.php?tab=func');
     exit;
 }
 if ($a === 'dummy') {
@@ -115,6 +130,14 @@ if ($a === 'dummy') {
         db()->prepare('DELETE FROM mats WHERE uid=? AND mat=?')->execute([(int) $u['id'], 'dummy_on']);
         flash_set('陪练人偶停止。');
     }
+    header('Location: bag.php?tab=func');
+    exit;
+}
+if ($a === 'dummynum') {
+    $dn = (int) ($_GET['n'] ?? 6);
+    if (!in_array($dn, [1, 3, 6], true)) { $dn = 6; }
+    mat_set((int) $u['id'], 'dummy_num', $dn);
+    flash_set('挂机改为每次打' . $dn . '只怪（人偶+离线都生效，BOSS仍单只）。');
     header('Location: bag.php?tab=func');
     exit;
 }
@@ -144,17 +167,6 @@ if ($a === 'usebox') {
     exit;
 }
 if ($a === 'usetent') {
-    echo '<div class="hr">--------</div>';
-    echo '陪练人偶：';
-    $dmats = mats_of((int) $u['id']);
-    if (!empty($dmats['dummy_time'])) {
-        echo '剩' . h(dummy_fmt((int) $dmats['dummy_time']));
-    } else {
-        echo '没时间';
-    }
-    echo !empty($dmats['dummy_on']) ? '（开着） <a href="bag.php?a=dummy&v=0">停止</a>' : ' <a href="bag.php?a=dummy&v=1">启动</a>';
-    echo '<br>';
-    echo '离线模块：' . (!empty($dmats['offline_on']) ? '已开通，剩' . h(dummy_fmt((int) ($dmats['offline_time'] ?? 0))) . '（独立计时）' : '未开通，去<a href="mall.php">商城</a>') . '<br>';
     flash_set(use_tent((int) $u['id']));
     header('Location: bag.php?tab=func');
     exit;
@@ -316,7 +328,7 @@ if ($tab === 'equip') {
     }
     if (!empty($mats['dragon_box'])) {
         $func = true;
-        echo '·龙鳞宝箱x' . $mats['dragon_box'] . '(单抽，称号是大奖) <a href="bag.php?a=usebox">开启</a><br>';
+        echo '·龙鳞宝箱x' . $mats['dragon_box'] . '(强化石+宠物蛋+陪练+抽称号) <a href="bag.php?a=usebox">开启</a><br>';
     }
     if (!empty($mats['tent'])) {
         $func = true;
@@ -367,6 +379,21 @@ if ($tab === 'equip') {
     if (!$hasTank) {
         echo '<span class="muted">空。去<a href="mall.php">商城</a>买罐。</span><br>';
     }
+    echo '<div class="hr">--------</div>';
+    echo '陪练人偶：';
+    $dmats = mats_of((int) $u['id']);
+    if (!empty($dmats['dummy_time'])) {
+        echo '剩' . h(dummy_fmt((int) $dmats['dummy_time']));
+    } else {
+        echo '没时间';
+    }
+    echo !empty($dmats['dummy_on']) ? '（开着） <a href="bag.php?a=dummy&v=0">停止</a>' : ' <a href="bag.php?a=dummy&v=1">启动</a>';
+    $dn0 = (int) ($dmats['dummy_num'] ?? 6);
+    echo '每次打怪：' . ($dn0 === 1 ? '<b>1只</b>' : '<a href="bag.php?a=dummynum&n=1">1只</a>') . ' ' . ($dn0 === 3 ? '<b>3只</b>' : '<a href="bag.php?a=dummynum&n=3">3只</a>') . ' ' . ($dn0 === 6 ? '<b>6只</b>' : '<a href="bag.php?a=dummynum&n=6">6只</a>') . '<br>';
+    echo '<br>';
+    echo '离线模块：' . (!empty($dmats['offline_on']) ? '已开通，剩' . h(dummy_fmt((int) ($dmats['offline_time'] ?? 0))) . '（独立计时）' : '未开通，去<a href="mall.php">商城</a>') . '<br>';
+    $dn = (int) ($mats['dummy_num'] ?? 6);
+    echo '挂机数量：' . ($dn === 1 ? '<b>1只(稳)</b>' : '<a href="bag.php?a=dummynum&n=1">1只(稳)</a>') . ' ' . ($dn === 3 ? '<b>3只</b>' : '<a href="bag.php?a=dummynum&n=3">3只</a>') . ' ' . ($dn === 6 ? '<b>6只(快)</b>' : '<a href="bag.php?a=dummynum&n=6">6只(快)</a>') . '<br>';
     echo '<div class="hr">--------</div>';
     echo '<a href="shop.php">去黑市</a>';
 }

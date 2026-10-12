@@ -210,7 +210,7 @@ if ($a === 'view') {
             echo equip_affix_html($aff, (int) $auc['enhance_level']);
         }
     } else {
-        echo (str_contains((string) $auc['item_name'], '蛋') ? '类型：宠物蛋' : '类型：材料') . '<br>';
+        echo '类型：材料<br>';
     }
     echo '<div class="hr">--------</div>';
     $cur = (int) $auc['cur_price'] > 0 ? (int) $auc['cur_price'] : (int) $auc['start_price'];
@@ -417,7 +417,6 @@ if ($a === 'logs') {
 }
 if ($a === 'browse') {
     $cat = (string) ($_GET['cat'] ?? 'all');
-    if (!in_array($cat, ['all', 'equip', 'mat', 'egg', 'use'], true)) { $cat = 'all'; }
     $fq = (int) ($_GET['q'] ?? -1);
     $fset = (string) ($_GET['set'] ?? 'all');
     $fminlv = max(0, (int) ($_GET['minlv'] ?? 0));
@@ -435,11 +434,11 @@ if ($a === 'browse') {
     };
     echo '【浏览拍卖品】<br>';
     echo '分类：';
-    foreach (['all' => '全部', 'equip' => '装备', 'mat' => '材料', 'egg' => '宠物蛋', 'use' => '消耗品'] as $k => $n) {
+    foreach (['all' => '全部', 'equip' => '装备', 'mat' => '材料', 'use' => '消耗品'] as $k => $n) {
         echo ($k === $cat ? '<b>' . $n . '</b>' : '<a href="' . h($bl(['cat' => $k, 'p' => 1])) . '">' . $n . '</a>') . ' ';
     }
     echo '<br>品级：';
-    foreach ([-1 => '全部', 4 => '传说', 3 => '史诗', 2 => '稀有'] as $k => $n) {
+    foreach ([-1 => '全部', 4 => '传说', 3 => '史诗'] as $k => $n) {
         echo ($k === $fq ? '<b>' . $n . '</b>' : '<a href="' . h($bl(['q' => $k, 'p' => 1])) . '">' . $n . '</a>') . ' ';
     }
     echo '<br>套装：';
@@ -470,8 +469,6 @@ if ($a === 'browse') {
         $where .= " AND kind='equip'";
     } elseif ($cat === 'mat') {
         $where .= " AND kind='mat'";
-    } elseif ($cat === 'egg') {
-        $where .= ' AND item_name LIKE ' . db()->quote('%蛋%');
     } elseif ($cat === 'use') {
         $where .= ' AND 1=0';
     }

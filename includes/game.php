@@ -254,6 +254,7 @@ function monsters(): array
         'cinder_stalker' => ['slot' => 'shoes', 'base' => '灰烬潜伏靴'],
         'cinder_warden' => ['slot' => 'body', 'base' => '灰烬守望甲'],
         'cinder_horror' => ['slot' => 'head', 'base' => '灰烬恐惧面'],
+        'sen_thorn' => ['slot' => 'belt', 'base' => '荆棘·束腰', 'rate' => 0.06, 'q' => [0, 30, 50, 20, 0]],
         'ash_titan' => ['slot' => 'weapon', 'base' => '灰烬泰坦之握', 'rate' => 0.3, 'q' => [0, 0, 20, 50, 30], 'legendary' => ['base' => '泰坦之握·灭世', 'extra' => ['k' => 'atk_pct', 'v' => 5.0]]],
         'frostborn_hunter' => ['name' => '霜裔猎手', 'hp' => 400000, 'atk' => 2900, 'exp' => 620000, 'gold' => 300000],
         'avalanche_titan' => ['name' => '雪崩巨人', 'hp' => 1900000, 'atk' => 5000, 'exp' => 4500000, 'gold' => 2100000],
@@ -445,7 +446,8 @@ function offline_tick(array &$u): void
         $isBossOff = ($mid === boss_of_map((string) ($u['loc'] ?? '')));
         // 离线人偶同样打幻影：不消耗地图存货（否则一次离线结算能吃光整张图），只扣人偶时间
         $tried++;
-        $numOff = $isBossOff ? 1 : 6;
+        $numOff = $isBossOff ? 1 : (int) (mats_of((int) ($u['id'] ?? 0))['dummy_num'] ?? 6);
+        if (!in_array($numOff, [1, 3, 6], true)) { $numOff = 6; }
         $b = [
             'id' => $mid, 'name' => $m['name'], 'hp' => $m['hp'], 'maxhp' => $m['hp'],
             'atk' => $m['atk'], 'exp' => $m['exp'], 'gold' => $m['gold'],
@@ -1661,6 +1663,15 @@ function pet_hurt(int $uid, int $md): string
     $take = max(0, $take - (int) ($stats['def'] / 2));
     $hp = (int) $p['hp'] - $take;
     if ($hp <= 0) {
+        $puid = (int) ($p['uid'] ?? 0);
+        $pu = $puid > 0 ? user_by_id($puid) : null;
+        if ($pu && !empty(mats_of($puid)['pet_autorev']) && (int) ($pu['gold'] ?? 0) >= 100) {
+            $pu['gold'] = (int) $pu['gold'] - 100;
+            user_save($pu);
+            $st = pet_stats($p);
+            db()->prepare('UPDATE pets SET hp=?, status="normal" WHERE id=?')->execute([$st['maxhp'], (int) $p['id']]);
+            return pet_species()[$p['species']]['name'] . '被击倒了，自动复活（-1银）满血归来！';
+        }
         db()->prepare('UPDATE pets SET hp=0, status="weak", active=0 WHERE id=?')->execute([(int) $p['id']]);
         return pet_species()[$p['species']]['name'] . '被击倒了，进入虚弱状态！[治疗宠物]';
     }
@@ -1710,6 +1721,10 @@ function auction_listable_equip(array $e): bool
 {
     if (($e['pos'] ?? '') !== '') {
         return false;
+    }
+    // 称号/腰带：允许拍卖（称号100级穿，其余规则同下）
+    if (in_array(($e['slot'] ?? ''), ['title', 'belt'], true)) {
+        return (int) ($e['quality'] ?? 0) >= 3 || equip_is_set(equip_shortname((string) ($e['name'] ?? '')));
     }
     // 史诗/传说/套装可交易
     if ((int) ($e['quality'] ?? 0) >= 3) {
@@ -2016,7 +2031,8 @@ function dummy_tick(array &$u): void
         $isBossDummy = ($mid === boss_of_map((string) ($u['loc'] ?? '')));
         // 人偶打的是幻影：不消耗全服共享的地图存货，只消耗人偶时间。
         // 否则人偶会悄悄吃光你脚下这张图的怪（跨图“被清空”假象的真凶），还会饿死同图的别人。
-        $numDummy = $isBossDummy ? 1 : 6;
+        $numDummy = $isBossDummy ? 1 : (int) (mats_of((int) ($u['id'] ?? 0))['dummy_num'] ?? 6);
+        if (!in_array($numDummy, [1, 3, 6], true)) { $numDummy = 6; }
         $b = [
             'id' => $mid, 'name' => $m['name'], 'hp' => $m['hp'], 'maxhp' => $m['hp'],
             'atk' => $m['atk'], 'exp' => $m['exp'], 'gold' => $m['gold'],
@@ -2057,8 +2073,8 @@ function tank_auto(array &$u, string $kind): string
     $maxk = $kind === 'hp' ? 'maxhp' : 'maxmp';
     $max = (int) ($u[$maxk] ?? 0);
     $cur = (int) ($u[$kind] ?? 0);
-    // 血罐：血量<10%才自动喝，无冷却；PVP（巅峰/公会战/切磋）不生效；致命伤害不救
-    $pct = $kind === 'hp' ? 10 : 30;
+    // 血罐：血量<15%自动喝，无冷却；PVP（巅峰/公会战/切磋）不生效；致命伤害不救
+    $pct = $kind === 'hp' ? 15 : 30;
     if ($max <= 0 || $cur <= 0 || $cur * 100 >= $max * $pct) {
         return '';
     }
@@ -2129,7 +2145,7 @@ function equip_slots(): array
     return [
         'weapon' => '主手', 'offhand' => '副手', 'body' => '上身', 'head' => '头部', 'legs' => '下身',
         'gloves' => '手套', 'shoes' => '鞋子', 'back' => '背部', 'ring' => '戒指', 'necklace' => '项链',
-        'soul' => '神魂', 'title' => '称号',
+        'soul' => '神魂', 'title' => '称号', 'belt' => '腰部',
     ];
 }
 
@@ -2253,6 +2269,7 @@ function affix_catalog(): array
         'atk' => ['name' => '物攻', 'slots' => ['weapon', 'gloves', 'ring', 'necklace'], 'data' => $r([[2, 5], [5, 10], [10, 18], [18, 30], [30, 50]], 100)],
         'matk' => ['name' => '法攻', 'slots' => ['weapon', 'offhand', 'necklace', 'ring'], 'data' => $r([[2, 5], [5, 10], [10, 18], [18, 30], [30, 50]], 90)],
         'atk_pct' => ['name' => '物攻%', 'slots' => ['weapon'], 'data' => $r([[1, 2], [2, 4], [4, 6], [6, 9], [8, 12]], 80, 'offense_pct', 1)],
+        'bagcap' => ['name' => '背包容量', 'slots' => ['belt'], 'data' => $r([[2, 4], [3, 6], [4, 8], [5, 10], [6, 12]], 100)],
         'crit' => ['name' => '暴击率', 'slots' => ['weapon', 'head', 'gloves', 'ring', 'necklace'], 'data' => $r([[0.1, 0.3], [0.3, 0.6], [0.6, 1.0], [1.0, 1.5], [1.5, 2.0]], 100, 'crit', 1)],
         'critdmg' => ['name' => '暴击伤害', 'slots' => ['weapon', 'head', 'gloves', 'ring', 'necklace'], 'data' => $r([[1, 3], [3, 6], [6, 10], [10, 15], [15, 20]], 100, 'critdmg', 1)],
         'speed' => ['name' => '攻速', 'slots' => ['weapon', 'gloves'], 'data' => $r([[1, 2], [2, 4], [4, 6], [6, 8], [7, 10]], 90, 'speed', 1)],
@@ -2464,10 +2481,10 @@ function equip_color_by(string $fullName, int $q): string
 // 套装效果说明：有其中一件就展示整套，勾引玩家刷齐
 function equip_set_id(string $shortName): string
 {
-    if (in_array($shortName, ['沼泽兜帽', '沼泽轻靴', '沼泽之心'], true)) {
+    if (in_array($shortName, ['沼泽兜帽', '沼泽轻靴', '沼泽之心', '沼泽束腰'], true)) {
         return 'swamp';
     }
-    if (in_array($shortName, ['深渊蚀甲', '深渊腿甲', '深渊护手'], true)) {
+    if (in_array($shortName, ['深渊蚀甲', '深渊腿甲', '深渊护手', '深渊缚带'], true)) {
         return 'abyss';
     }
     if (str_starts_with($shortName, '剧场·')) {
@@ -2491,22 +2508,22 @@ function equip_set_id(string $shortName): string
 function equip_set_pieces(string $set): array
 {
     if ($set === 'swamp') {
-        return ['沼泽兜帽', '沼泽轻靴', '沼泽之心'];
+        return ['沼泽兜帽', '沼泽轻靴', '沼泽之心', '沼泽束腰'];
     }
     if ($set === 'abyss') {
-        return ['深渊蚀甲', '深渊腿甲', '深渊护手'];
+        return ['深渊蚀甲', '深渊腿甲', '深渊护手', '深渊缚带'];
     }
     if ($set === 'frost') {
-        return ['寒霜·战斧', '寒霜·法杖', '寒霜·战锤', '寒霜·长弓', '寒霜·冰盾', '寒霜·骑士铠', '寒霜·胫甲'];
+        return ['寒霜·战斧', '寒霜·法杖', '寒霜·战锤', '寒霜·长弓', '寒霜·冰盾', '寒霜·骑士铠', '寒霜·胫甲', '寒霜·束腰'];
     }
     if ($set === 'ember') {
-        return ['烬焰·龙裔刃', '烬焰·灰烬法杖', '烬焰·熔核锤', '烬焰·焚心弓', '烬焰·熔盾', '烬焰·余烬囊', '烬焰·守卫铠', '烬焰·祭司冠', '烬焰·熔渣腿', '烬焰·灰烬戒', '烬焰·余火链'];
+        return ['烬焰·龙裔刃', '烬焰·灰烬法杖', '烬焰·熔核锤', '烬焰·焚心弓', '烬焰·熔盾', '烬焰·余烬囊', '烬焰·守卫铠', '烬焰·祭司冠', '烬焰·熔渣腿', '烬焰·灰烬戒', '烬焰·余火链', '烬焰·束腰'];
     }
     if ($set === 'puppet') {
-        return ['傀儡·断线匕', '傀儡·舞步靴', '傀儡·覆面', '傀儡·守卫甲', '傀儡·大师之手'];
+        return ['傀儡·断线匕', '傀儡·舞步靴', '傀儡·覆面', '傀儡·守卫甲', '傀儡·大师之手', '傀儡·束腰'];
     }
     if ($set === 'thorn') {
-        return ['荆棘·雾祭铃', '荆棘·刺甲', '荆棘·蛇牙戒', '荆棘·守卫裙'];
+        return ['荆棘·雾祭铃', '荆棘·刺甲', '荆棘·蛇牙戒', '荆棘·守卫裙', '荆棘·束腰'];
     }
     return [];
 }
@@ -2568,11 +2585,14 @@ function monster_drops(string $mid): array
         'wolf' => ['slot' => 'necklace', 'base' => '狼牙项链', 'rate' => 0.02, 'q' => [50, 35, 15, 0, 0]],
         'banshee' => ['slot' => 'ring', 'base' => '哭泣戒指', 'rate' => 0.025, 'q' => [0, 60, 30, 10, 0]],
         'wraith' => ['slot' => 'back', 'base' => '怨魂斗篷', 'rate' => 0.03, 'q' => [30, 50, 20, 0, 0]],
+        'swamp_slime' => ['slot' => 'belt', 'base' => '沼泽束腰', 'rate' => 0.04, 'q' => [60, 30, 10, 0, 0]],
+        'mist_treant' => ['slot' => 'belt', 'base' => '雾狐软腰', 'rate' => 0.05, 'q' => [30, 45, 25, 0, 0]],
+        'mist_apeman' => ['slot' => 'belt', 'base' => '雷鸟羽带', 'rate' => 0.08, 'q' => [0, 10, 40, 40, 10], 'legendary' => ['base' => '雷鸟羽带·九霄', 'extra' => ['k' => 'bagcap', 'v' => 10.0]]],
         'thief' => ['slot' => 'gloves', 'base' => '盗贼手套', 'rate' => 0.025, 'q' => [30, 50, 20, 0, 0]],
         'bee' => ['slot' => 'ring', 'base' => '蜂刺戒指', 'rate' => 0.025, 'q' => [30, 50, 20, 0, 0]],
         'frog' => ['slot' => 'legs', 'base' => '毒蛙腿甲', 'rate' => 0.025, 'q' => [30, 50, 20, 0, 0]],
         'leech' => ['slot' => 'ring', 'base' => '吸血指环', 'rate' => 0.035, 'q' => [0, 55, 35, 10, 0]],
-        'ogre' => ['slot' => 'body', 'base' => '兽皮腰带', 'rate' => 0.06, 'q' => [0, 45, 40, 12, 3], 'legendary' => ['base' => '食人魔战裙', 'extra' => ['k' => 'damage_reduction', 'v' => 2.0]]],
+        'ogre' => ['slot' => 'belt', 'base' => '兽皮腰带', 'rate' => 0.06, 'q' => [0, 45, 40, 12, 3], 'legendary' => ['base' => '食人魔战裙', 'extra' => ['k' => 'damage_reduction', 'v' => 2.0]]],
         'skeleton' => ['slot' => 'head', 'base' => '锈盔', 'rate' => 0.035, 'q' => [20, 50, 30, 0, 0]],
         'bat' => ['slot' => 'back', 'base' => '蝠翼披风', 'rate' => 0.035, 'q' => [20, 50, 30, 0, 0]],
         'ghoul' => ['slot' => 'weapon', 'base' => '食尸鬼之爪', 'rate' => 0.05, 'q' => [0, 30, 50, 20, 0]],
@@ -2583,7 +2603,9 @@ function monster_drops(string $mid): array
         'doyle' => ['slot' => 'necklace', 'base' => '烬焰龙牙链', 'rate' => 0.5, 'q' => [0, 0, 0, 50, 50], 'legendary' => ['base' => '烬焰龙心·焚天', 'extra' => ['k' => 'truedmg', 'v' => 300.0]]],
         'string_puller' => ['slot' => 'gloves', 'base' => '牵线丝手套', 'rate' => 0.2, 'q' => [0, 0, 30, 50, 20], 'legendary' => ['base' => '提线主宰·傀儡戏', 'extra' => ['k' => 'skill_damage', 'v' => 6.0]]],
         'swamp_king' => ['slot' => 'body', 'base' => '沼泽王袍', 'rate' => 0.25, 'q' => [0, 0, 20, 50, 30], 'legendary' => ['base' => '沼泽王冠·腐殖', 'extra' => ['k' => 'regen', 'v' => 50.0]]],
+        'ember_imp' => ['slot' => 'belt', 'base' => '烬焰·束腰', 'rate' => 0.07, 'q' => [0, 20, 50, 30, 0]],
         'ink_puppet' => ['slot' => 'weapon', 'base' => '墨傀之笔', 'rate' => 0.1, 'q' => [0, 20, 50, 30, 0], 'legendary' => ['base' => '墨傀之笔·点睛', 'extra' => ['k' => 'critdmg', 'v' => 8.0]]],
+        'string_puller' => ['slot' => 'belt', 'base' => '傀儡·束腰', 'rate' => 0.07, 'q' => [0, 20, 50, 30, 0]],
         'masked_noble' => ['slot' => 'shoes', 'base' => '假面夜行靴', 'rate' => 0.1, 'q' => [0, 20, 50, 30, 0], 'legendary' => ['base' => '假面贵胄·夜宴', 'extra' => ['k' => 'dodge', 'v' => 3.0]]],
         'puppet_guard' => ['slot' => 'body', 'base' => '铁卫傀儡甲', 'rate' => 0.08, 'q' => [0, 30, 50, 20, 0], 'legendary' => ['base' => '铁卫傀儡·忠骸', 'extra' => ['k' => 'damage_reduction', 'v' => 4.0]]],
         'puppet_priest' => ['slot' => 'head', 'base' => '圣骸祭司帽', 'rate' => 0.08, 'q' => [0, 30, 50, 20, 0], 'legendary' => ['base' => '圣骸祭司·赎罪', 'extra' => ['k' => 'mdef', 'v' => 60.0]]],
@@ -2633,6 +2655,7 @@ function monster_drops(string $mid): array
         'colossus' => ['slot' => 'body', 'base' => '巨像重铠'],
         'abaddon' => ['slot' => 'weapon', 'base' => '君王蚀影刃'],
         'silk_spider' => ['slot' => 'body', 'base' => '剧场·幕布甲'],
+        'leech' => ['slot' => 'belt', 'base' => '幽灵束带', 'rate' => 0.04, 'q' => [50, 35, 15, 0, 0]],
         'cocoon_guard' => ['slot' => 'legs', 'base' => '剧场·悬丝裤'],
         'thread_weaver' => ['slot' => 'gloves', 'base' => '剧场·操线手套'],
         'silk_moth' => ['slot' => 'head', 'base' => '剧场·假面'],
@@ -2651,6 +2674,7 @@ function monster_drops(string $mid): array
         'winter_knight' => ['slot' => 'body', 'base' => '寒霜·骑士铠'],
         'frost_matriarch' => ['slot' => 'head', 'base' => '霜母之冠'],
         'glacier_colossus' => ['slot' => 'body', 'base' => '冰河重铠'],
+        'star_puppet' => ['slot' => 'belt', 'base' => '剧场·束腰', 'rate' => 0.06, 'q' => [0, 30, 50, 20, 0]],
         'winter_king' => ['slot' => 'head', 'base' => '凛冬王冠', 'rate' => 0.3, 'q' => [0, 0, 20, 50, 30], 'legendary' => ['base' => '凛冬王冠·永冻', 'extra' => ['k' => 'damage_reduction', 'v' => 3.0]]],
         'fr_crawler' => ['slot' => 'gloves', 'base' => '冰渊手套'],
         'fr_stalker' => ['slot' => 'shoes', 'base' => '渊底无声靴'],
@@ -2683,11 +2707,13 @@ function monster_drops(string $mid): array
         'pz_dancer' => ['slot' => 'shoes', 'base' => '傀儡·舞步靴'],
         'pz_mask' => ['slot' => 'head', 'base' => '傀儡·覆面'],
         'pz_golem' => ['slot' => 'body', 'base' => '傀儡·守卫甲'],
+        'frost_wolf' => ['slot' => 'belt', 'base' => '寒霜·束腰', 'rate' => 0.06, 'q' => [0, 30, 50, 20, 0]],
         'pz_master' => ['slot' => 'offhand', 'off' => 'magic', 'base' => '傀儡·大师之手', 'rate' => 0.3, 'q' => [0, 0, 20, 50, 30], 'legendary' => ['base' => '傀儡大师·提线', 'extra' => ['k' => 'skill_damage', 'v' => 6.0]]],
         'sen_priest' => ['slot' => 'offhand', 'off' => 'magic', 'base' => '荆棘·雾祭铃'],
         'sen_thorn' => ['slot' => 'body', 'base' => '荆棘·刺甲'],
         'sen_serpent' => ['slot' => 'ring', 'base' => '荆棘·蛇牙戒'],
         'sen_guard' => ['slot' => 'legs', 'base' => '荆棘·守卫裙'],
+        'dark_slime' => ['slot' => 'belt', 'base' => '深渊缚带', 'rate' => 0.06, 'q' => [0, 40, 45, 15, 0]],
         'sen_avatar' => ['slot' => 'necklace', 'base' => '雾森之心', 'rate' => 0.3, 'q' => [0, 0, 20, 50, 30], 'legendary' => ['base' => '雾森之心·永绿', 'extra' => ['k' => 'lifesteal', 'v' => 2.0]]],
         'shadow_claw' => ['slot' => 'weapon', 'base' => '影爪', 'rate' => 0.2, 'q' => [0, 0, 30, 50, 20], 'legendary' => ['base' => '影爪领主·撕夜', 'extra' => ['k' => 'crit', 'v' => 3.0]]],
         'brass_bishop' => ['slot' => 'head', 'base' => '黄铜冠', 'rate' => 0.2, 'q' => [0, 0, 30, 50, 20], 'legendary' => ['base' => '黄铜主教·赦令', 'extra' => ['k' => 'damage_reduction', 'v' => 3.0]]],
@@ -2713,7 +2739,7 @@ function equip_primary(string $slot, string $offKind = ''): string
         // 戒指主属性：全元素抗性（6系全吃，战斗里已对每系叠加）
         return 'allres';
     }
-    return ['weapon' => 'atk', 'body' => 'def', 'head' => 'def', 'legs' => 'def', 'gloves' => 'crit', 'shoes' => 'dodge', 'back' => 'dodge', 'necklace' => 'energy'][$slot] ?? '';
+    return ['weapon' => 'atk', 'body' => 'def', 'head' => 'def', 'legs' => 'def', 'gloves' => 'crit', 'shoes' => 'dodge', 'back' => 'dodge', 'necklace' => 'energy', 'belt' => 'bagcap'][$slot] ?? '';
 }
 
 function equip_reqs(int $itemLevel, int $q): array
@@ -3521,6 +3547,9 @@ function enchant_equip(int $uid, int $eid, string $mid): string
     if (!$e) {
         return '没有这件装备。';
     }
+    if (($e['slot'] ?? '') === 'title') {
+        return '称号不可强化（荣耀不打折，也不加固）。';
+    }
     $cur = (string) ($e['enchant_el'] ?? '');
     if ($cur !== '' && $cur !== $el) {
         return '这件装备已经是' . element_name($cur) . '附魔，只能继续附同属性。';
@@ -3568,7 +3597,7 @@ function enchant_el_res(int $uid, string $el): float
 function bag_size(int $uid): int
 {
     $mats = mats_of((int) $uid);
-    return 30 + 5 * (int) ($mats['bag_ext5_used'] ?? 0) + 10 * (int) ($mats['bag_ext10_used'] ?? 0);
+    return 30 + 5 * (int) ($mats['bag_ext5_used'] ?? 0) + 10 * (int) ($mats['bag_ext10_used'] ?? 0) + (int) gear_stats((int) $uid)['bagcap'];
 }
 
 function bag_count(int $uid): int
@@ -3886,7 +3915,7 @@ function gear_stats(int $uid): array
         return $cache[$uid];
     }
     unset($GLOBALS['_gear_bust']);
-    $keys = ['atk', 'matk', 'def', 'mdef', 'hp', 'truedmg', 'crit', 'critdmg', 'dodge', 'lifesteal', 'atk_pct', 'speed', 'element', 'penetration', 'skill_damage', 'execute', 'damage_reduction', 'resist', 'thorns', 'regen', 'energy', 'cooldown', 'hit', 'exp_gain', 'move_speed', 'control_resist', 'slow_resist', 'all_attr', 'gold_gain', 'magic_find', 'res_light', 'res_dark', 'res_fire', 'res_wind', 'res_ice', 'res_thunder', 'allres'];
+    $keys = ['atk', 'matk', 'def', 'mdef', 'hp', 'truedmg', 'crit', 'critdmg', 'dodge', 'lifesteal', 'atk_pct', 'speed', 'element', 'penetration', 'skill_damage', 'execute', 'damage_reduction', 'resist', 'thorns', 'regen', 'energy', 'cooldown', 'hit', 'exp_gain', 'move_speed', 'control_resist', 'slow_resist', 'all_attr', 'gold_gain', 'magic_find', 'res_light', 'res_dark', 'res_fire', 'res_wind', 'res_ice', 'res_thunder', 'allres', 'bagcap'];
     $s = array_fill_keys($keys, 0.0);
     $st = db()->prepare('SELECT * FROM equips WHERE uid=? AND pos="wear"');
     $st->execute([$uid]);
@@ -3899,8 +3928,8 @@ function gear_stats(int $uid): array
         foreach ($aff as $a) {
             $id = (string) ($a['id'] ?? $a['k'] ?? '');
             $value = (float) ($a['v'] ?? 0);
-            // 主属性全吃强化倍率（不限atk/def/hp：戒指抗性、手套暴击等同样生效）
-            if (!empty($a['main']) || in_array($id, ['atk', 'matk', 'def', 'mdef', 'hp', 'all_attr'], true)) {
+            // 主属性全吃强化倍率（背包容量除外：腰带强化只长数值极小，基本不动）
+            if ($id !== 'bagcap' && (!empty($a['main']) || in_array($id, ['atk', 'matk', 'def', 'mdef', 'hp', 'all_attr'], true))) {
                 $value *= $mult;
             }
             if (isset($s[$id])) {
@@ -3926,13 +3955,23 @@ function gear_stats(int $uid): array
     while ($r2 = $st2->fetch()) {
         $worn[] = equip_shortname((string) $r2['name']);
     }
-    if (in_array('沼泽兜帽', $worn, true) && in_array('沼泽轻靴', $worn, true) && in_array('沼泽之心', $worn, true)) {
+    $swampN = 0;
+    foreach (['沼泽兜帽', '沼泽轻靴', '沼泽之心', '沼泽束腰'] as $sp) { if (in_array($sp, $worn, true)) { $swampN++; } }
+    if ($swampN >= 3) {
         $s['energy'] += 300;
         $s['def'] += 20;
     }
-    if (in_array('深渊蚀甲', $worn, true) && in_array('深渊腿甲', $worn, true) && in_array('深渊护手', $worn, true)) {
+    if ($swampN >= 4) {
+        $s['bagcap'] += 4;
+    }
+    $abyssN = 0;
+    foreach (['深渊蚀甲', '深渊腿甲', '深渊护手', '深渊缚带'] as $sp) { if (in_array($sp, $worn, true)) { $abyssN++; } }
+    if ($abyssN >= 3) {
         $s['atk'] += 25;
         $s['def'] += 15;
+    }
+    if ($abyssN >= 4) {
+        $s['bagcap'] += 6;
     }
     $theater = 0;
     foreach ($worn as $wn) {
@@ -4479,16 +4518,23 @@ function take_off_equip(int $uid, int $eid): string
         return '没穿着这件。';
     }
     $before = gear_stats($uid)['hp'];
+    $mBefore = gear_stats($uid)['energy'];
     db()->exec('UPDATE equips SET pos="" WHERE id=' . $eid);
     _gear_uncache($uid);
     $after = gear_stats($uid)['hp'];
+    $mAfter = gear_stats($uid)['energy'];
     $delta = (int) ($after - $before);
+    $mDelta = (int) ($mAfter - $mBefore);
     $u = user_by_id($uid);
     if ($u) {
-        $u['maxhp'] = max(1, (int) $u['maxhp'] + $delta);
-        $u['hp'] = min((int) $u['maxhp'], (int) $u['hp']);
-        $u['maxmp'] = max(0, (int) ($u['maxmp'] ?? 0) + $mDelta);
-        $u['mp'] = min((int) $u['maxmp'], (int) ($u['mp'] ?? 0));
+        if ($delta !== 0) {
+            $u['maxhp'] = max(1, (int) $u['maxhp'] + $delta);
+            $u['hp'] = min((int) $u['maxhp'], (int) $u['hp']);
+        }
+        if ($mDelta !== 0) {
+            $u['maxmp'] = max(0, (int) ($u['maxmp'] ?? 0) + $mDelta);
+            $u['mp'] = min((int) $u['maxmp'], (int) ($u['mp'] ?? 0));
+        }
         user_save($u);
     }
     return '脱下了【' . $eq['name'] . '】。';
@@ -4873,7 +4919,7 @@ function apply_el_convert(array $u, array $b, int $pd, string $el): array
     $chart = element_chart($el, $meld);
     $mres = monster_resist((string) ($b['id'] ?? ''), $el);
     $pd = max(1, (int) ($pd * $chart * (1 - $mres / 100)));
-    $tag = '(' . element_name($el) . '转化' . ($chart > 1 ? '·克制' : ($chart < 1 ? '·被抵抗' : '')) . ')';
+    $tag = '(' . element_name($el) . '属性伤害' . ($chart > 1 ? '·克制' : ($chart < 1 ? '·被抵抗' : '')) . ')';
     $rb2e = cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '';
     if ($rb2e === 'wintermage' && in_array($el, ['ice', 'thunder'], true)) { $pd = (int) ($pd * 1.3); $tag .= '(凛冬)'; }
     if ($rb2e === 'wildfire' && in_array($el, ['fire', 'wind'], true)) { $pd = (int) ($pd * 1.4); $tag .= '(燎原)'; }
@@ -4883,6 +4929,8 @@ function apply_el_convert(array $u, array $b, int $pd, string $el): array
 function battle_round(array &$u, array &$b, string $mode): array
 {
     $pd = dmg_to_monster($u, $b);
+    if ($mode !== 'hit') { unset($GLOBALS['_melee_el_tag']); }
+    $b['elTagged'] = 0;
     $isSkill = false;
     $skillName = '';
     $logHeal = '';
@@ -4946,7 +4994,7 @@ function battle_round(array &$u, array &$b, string $mode): array
                     $logHeal .= '(烬灭暴击)';
                 }
             } elseif ($sk['kind'] === 'magic') {
-                // 纯法术：看法攻，过一半法防；带属性的整体转化（火球术就是全额火伤）
+                // 纯法术：看法攻，过一半法防；带属性的整体转属性伤害（火球术就是全额火伤）
                 $pd = max(1, (int) ((player_matk($u) + random_int(4, 7) + ($sid === 'm2' ? 10 : ($sid === 'm3' ? 8 : 5))) * $pow) - (int) (monster_mdef($b) / 2));
                 if ($skEl !== '') {
                     [$pd, $elTag] = apply_el_convert($u, $b, $pd, $skEl);
@@ -5172,7 +5220,10 @@ function battle_round(array &$u, array &$b, string $mode): array
         if ($rb2 === 'wintermage' && in_array($skEl, ['ice', 'thunder'], true) && $pd > 0 && mt_rand(1, 100) <= 12) { $b['stun'] = 1; $logHeal .= '(麻痹)'; }
     $b['hp'] = (int) $b['hp'] - $pd;
     if (!empty($GLOBALS['_melee_el_tag'])) {
-        $logHeal .= (string) $GLOBALS['_melee_el_tag'];
+        // 技能已自带属性tag时不再重复追加（只保留技能那个）
+        if (strpos($logHeal, '属性伤害') === false) {
+            $logHeal .= (string) $GLOBALS['_melee_el_tag'];
+        }
         unset($GLOBALS['_melee_el_tag']);
     }
     // 真实伤害（神魂/烬焰7件）：无视防御，闪避也躲不掉
@@ -6172,6 +6223,13 @@ function open_dragon_box(int $uid): string
     }
     $lr = mt_rand(1, 1000);
     $tid = $lr <= 700 ? 'title_dragon1' : ($lr <= 940 ? 'title_dragon2' : 'title_dragon3');
+    $hd = db()->prepare('SELECT id FROM equips WHERE uid=? AND slot=? AND name=?');
+    $hd->execute([$uid, 'title', title_ids()[$tid]]);
+    if ($hd->fetch()) {
+        add_mat($uid, 'enhance_t2', 20);
+        add_mat($uid, 'egg_unknown', 5);
+        return '称号【' . title_ids()[$tid] . '】重复了，折成中级强化石×20+未知蛋×5！';
+    }
     give_title($uid, $tid);
     return '龙鳞宝箱开出大奖：称号【' . title_ids()[$tid] . '】！';
 }
@@ -6186,16 +6244,15 @@ function title_bonus(string $tid): array
 {
     return ['title_ch1' => ['atk' => 30.0, 'hp' => 500.0], 'title_ch2' => ['def' => 30.0, 'hp' => 800.0], 'title_ch3' => ['crit' => 1.0, 'atk' => 50.0], 'title_ch4' => ['mdef' => 40.0, 'hp' => 1200.0], 'title_ch5' => ['matk' => 50.0, 'hp' => 1500.0], 'title_rb2' => ['skill_damage' => 3.0, 'hp' => 2000.0], 'title_dragon1' => ['critdmg' => 5.0, 'hp' => 1500.0], 'title_dragon2' => ['atk' => 100.0, 'matk' => 100.0], 'title_dragon3' => ['skill_damage' => 8.0, 'truedmg' => 200.0]][$tid] ?? [];
 }
-function give_title(int $uid, string $tid): void
+function give_title(int $uid, string $tid): bool
 {
     $names = title_ids();
-    if (!isset($names[$tid])) { return; }
-    $st = db()->prepare('SELECT id FROM equips WHERE uid=? AND slot=? AND name=?');
-    $st->execute([$uid, 'title', $names[$tid]]);
-    if ($st->fetch()) { return; }
+    if (!isset($names[$tid])) { return false; }
+    // 允许重复获得（不再吞掉第二个）
     $aff = [];
     foreach (title_bonus($tid) as $k => $v) { $aff[] = ['id' => $k, 'v' => $v, 'legend' => true]; }
-    db()->prepare('INSERT INTO equips (uid, slot, name, quality, affixes, pos) VALUES (?, "title", ?, 4, ?, "")')->execute([$uid, $names[$tid], json_encode($aff, JSON_UNESCAPED_UNICODE)]);
+    db()->prepare('INSERT INTO equips (uid, slot, name, quality, affixes, pos, req_lv) VALUES (?, "title", ?, 4, ?, "", 100)')->execute([$uid, $names[$tid], json_encode($aff, JSON_UNESCAPED_UNICODE)]);
+    return true;
 }
 function title_list(int $uid): array
 {
@@ -6213,14 +6270,11 @@ function title_worn(int $uid): ?array
 function wear_title(int $uid, $tid): string
 {
     if (ctype_digit((string) $tid)) {
-        $st = db()->prepare('SELECT id, name FROM equips WHERE id=? AND uid=? AND slot=?');
+        $st = db()->prepare('SELECT id FROM equips WHERE id=? AND uid=? AND slot=?');
         $st->execute([(int) $tid, $uid, 'title']);
         $r = $st->fetch();
         if (!$r) { return '没有这个称号。'; }
-        db()->prepare('UPDATE equips SET pos="" WHERE uid=? AND slot=?')->execute([$uid, 'title']);
-        db()->prepare('UPDATE equips SET pos="wear" WHERE id=?')->execute([(int) $r['id']]);
-        _gear_uncache($uid);
-        return '佩戴【' . $r['name'] . '】！';
+        return wear_equip($uid, (int) $r['id']);
     }
     $names = title_ids();
     if (!isset($names[(string) $tid])) { return '没有这个称号。'; }

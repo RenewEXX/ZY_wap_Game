@@ -539,15 +539,6 @@ function db_init(): void
         }
     } catch (Throwable $e) {
     }
-    // 一次性迁移：智慧拆分，老玩家int按1:1补成灵力（智慧保留只加魔力）
-    try {
-        $done2 = (int) (db()->query("SELECT num FROM sys_kv WHERE k='mig_spi_split'")->fetchColumn() ?: 0);
-        if ($done2 === 0) {
-            db()->exec("UPDATE users SET spi=`int` WHERE spi=0");
-            db()->prepare("INSERT OR REPLACE INTO sys_kv (k, num) VALUES ('mig_spi_split', 1)")->execute();
-        }
-    } catch (Throwable $e) {
-    }
     db()->exec(
         'CREATE TABLE IF NOT EXISTS mats (
             uid INTEGER NOT NULL,
@@ -630,7 +621,7 @@ function user_create(string $name, string $pass, string $job = '', string $zone 
     $st->execute([$name, $hashed ? $pass : password_hash($pass, PASSWORD_DEFAULT), $j['hp'], $j['hp'], $j['mp'] ?? 30, $j['mp'] ?? 30, $j['atk'], $j['def'], $job, $zone, $account !== '' ? $account : $name, time()]);
     $id = (int) db()->lastInsertId();
     // 出身加点：战士力量5，法师智慧8，猎手力量3坚毅2，牧师智慧5体质2（法师从创建就不长物理）
-    $born = ['warrior' => ['str' => 5], 'mage' => ['spi' => 8], 'hunter' => ['str' => 3, 'agi' => 2], 'priest' => ['spi' => 5, 'vit' => 2]][$job] ?? [];
+    $born = ['warrior' => ['str' => 5], 'mage' => ['int' => 8], 'hunter' => ['str' => 3, 'agi' => 2], 'priest' => ['int' => 5, 'vit' => 2]][$job] ?? [];
     foreach ($born as $k => $v) {
         if ($k === 'vit') {
             db()->prepare('UPDATE users SET maxhp=maxhp+?, hp=hp+?, vit=vit+? WHERE id=?')->execute([$v * 10, $v * 10, $v, $id]);

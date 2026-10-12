@@ -172,18 +172,17 @@ if ($m !== '' && isset($goods[$m])) {
     }
     if ($tab === 'pet') {
         echo '金币区：·<b>【宠物粮食】</b> <b>1金</b>/个(清宠物疲劳，去宠物页喂) ';
-        echo '魔钻区：<b>1魔钻</b>/个 <a href="mall.php?a=buy&m=pet_food&n=1">买1</a> <a href="mall.php?a=buy&m=pet_food&n=10">买10</a><br>';
         echo '<a href="mall.php?a=goldbuy&m=pet_food&n=1">买1</a> ';
         echo '<a href="mall.php?a=goldbuy&m=pet_food&n=10">买10</a><br>';
-        echo '宠物蛋（10魔钻/个，砸出普通~史诗）：<br>';
+        echo '宠物蛋（1魔钻/个，砸出普通~史诗）：<br>';
         echo '·<a href="mall.php?m=egg_unknown"><b><span style="color:#6cf">【未知宠物蛋】</span></b></a> ';
-        echo '<b>' . h(fmt_diamond(100)) . '</b>/个 ';
+        echo '<b>' . h(fmt_diamond(10)) . '</b>/个 ';
         echo '<a href="mall.php?a=buy&m=egg_unknown&n=1">买1</a> ';
         echo '<a href="mall.php?a=buy&m=egg_unknown&n=10">买10</a><br>';
     }
     if ($tab === 'func') {
         echo '功能道具：<br>';
-        echo '·【<span style="color:#fc3">龙鳞宝箱</span>】 <b>' . h(fmt_diamond(200)) . '</b>/个(单抽：石头45%/蛋30%/陪练20%/称号5%(龙威大奖0.3%)) ';
+        echo '·【<span style="color:#fc3">龙鳞宝箱</span>】 <b>' . h(fmt_diamond(200)) . '</b>/个(开强化石10~50+未知蛋3~20+陪练1~3小时+随机称号，龙威最低) ';
         echo '<a href="mall.php?a=buy&m=dragon_box&n=1">买1个</a> ';
         echo '<a href="mall.php?a=buy&m=dragon_box&n=5">买5个</a><br>';
         echo '·【随身帐篷】 <b>' . h(fmt_diamond(100)) . '</b>/个(野外随时扎营回满，不消耗，去背包·功能使用) ';

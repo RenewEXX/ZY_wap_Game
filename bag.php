@@ -109,12 +109,6 @@ if ($a === 'dropequip') {
     header('Location: bag.php?tab=equip');
     exit;
 }
-if ($a === 'dummynum') {
-    $dn = (int) ($_GET['n'] ?? 6);
-    if (in_array($dn, [1, 3, 6], true)) { mat_set((int) $u['id'], 'dummy_num', $dn); }
-    header('Location: bag.php?tab=func');
-    exit;
-}
 if ($a === 'dummy') {
     if ((string) ($_GET['v'] ?? '') === '1') {
         $dmats = mats_of((int) $u['id']);
@@ -124,7 +118,7 @@ if ($a === 'dummy') {
             mat_set((int) $u['id'], 'dummy_on', 1);
             mat_set((int) $u['id'], 'dummy_last', time());
             mat_set((int) $u['id'], 'dummy_acc', 0);
-            flash_set('陪练人偶启动：每30秒自动群殴6只当前地图的怪。');
+            flash_set('陪练人偶启动：每15秒自动打N只(背包功能里选1/3/6)当前地图的怪。');
         }
     } else {
         db()->prepare('DELETE FROM mats WHERE uid=? AND mat=?')->execute([(int) $u['id'], 'dummy_on']);
@@ -248,6 +242,10 @@ if ($tab === 'equip') {
         if (isset($qmats[$mid]) || isset(mall_tanks()[$mid]) || mat_hidden($mid) || is_usable_item($mid)) {
             continue;
         }
+        // 系统标记/功能物：不算杂物（帐篷/人偶/离线/自动复活/称号位等）
+        if (in_array($mid, ['tent', 'dummy_num', 'dummy_on', 'dummy_time', 'dummy_acc', 'dummy_last', 'dummy_total', 'offline_on', 'offline_time', 'pet_autorev', 'title_wear', 'seen_last', 'exp_card_until', 'bag_ext5_used', 'bag_ext10_used'], true) || str_starts_with($mid, 'hatch_')) {
+            continue;
+        }
         if (!is_craft_mat($mid)) {
             $junk[$mid] = $num;
             continue;
@@ -342,6 +340,19 @@ if ($tab === 'equip') {
         $func = true;
         echo '·10格背包扩充x' . $mats['bag_ext10'] . ' <a href="bag.php?a=useext&id=bag_ext10">使用(最多2次)</a><br>';
     }
+    echo '<div class="hr">--------</div>';
+    echo '陪练人偶：';
+    $dm = mats_of((int) $u['id']);
+    if (!empty($dm['dummy_time'])) {
+        echo '剩' . h(dummy_fmt((int) $dm['dummy_time']));
+    } else {
+        echo '没时间';
+    }
+    echo !empty($dm['dummy_on']) ? '（开着） <a href="bag.php?a=dummy&v=0">停止</a>' : ' <a href="bag.php?a=dummy&v=1">启动</a>';
+    echo '<br>';
+    echo '离线模块：' . (!empty($dm['offline_on']) ? '已开通，剩' . h(dummy_fmt((int) ($dm['offline_time'] ?? 0))) . '（独立计时）' : '未开通，去<a href="mall.php">商城</a>') . '<br>';
+    $dn = (int) ($dm['dummy_num'] ?? 6);
+    echo '每次打怪：' . ($dn === 1 ? '<b>1只(稳)</b>' : '<a href="bag.php?a=dummynum&n=1">1只(稳)</a>') . ' ' . ($dn === 3 ? '<b>3只</b>' : '<a href="bag.php?a=dummynum&n=3">3只</a>') . ' ' . ($dn === 6 ? '<b>6只(快)</b>' : '<a href="bag.php?a=dummynum&n=6">6只(快)</a>') . '<br>';
     $cardLeft = (int) ($mats['exp_card_until'] ?? 0) - time();
     if ($cardLeft > 0) {
         $func = true;
@@ -379,22 +390,6 @@ if ($tab === 'equip') {
     if (!$hasTank) {
         echo '<span class="muted">空。去<a href="mall.php">商城</a>买罐。</span><br>';
     }
-    echo '<div class="hr">--------</div>';
-    echo '陪练人偶：';
-    $dmats = mats_of((int) $u['id']);
-    if (!empty($dmats['dummy_time'])) {
-        echo '剩' . h(dummy_fmt((int) $dmats['dummy_time']));
-    } else {
-        echo '没时间';
-    }
-    echo !empty($dmats['dummy_on']) ? '（开着） <a href="bag.php?a=dummy&v=0">停止</a>' : ' <a href="bag.php?a=dummy&v=1">启动</a>';
-    $dn0 = (int) ($dmats['dummy_num'] ?? 6);
-    echo '每次打怪：' . ($dn0 === 1 ? '<b>1只</b>' : '<a href="bag.php?a=dummynum&n=1">1只</a>') . ' ' . ($dn0 === 3 ? '<b>3只</b>' : '<a href="bag.php?a=dummynum&n=3">3只</a>') . ' ' . ($dn0 === 6 ? '<b>6只</b>' : '<a href="bag.php?a=dummynum&n=6">6只</a>') . '<br>';
-    echo '<br>';
-    echo '离线模块：' . (!empty($dmats['offline_on']) ? '已开通，剩' . h(dummy_fmt((int) ($dmats['offline_time'] ?? 0))) . '（独立计时）' : '未开通，去<a href="mall.php">商城</a>') . '<br>';
-    $dn = (int) ($mats['dummy_num'] ?? 6);
-    echo '挂机数量：' . ($dn === 1 ? '<b>1只(稳)</b>' : '<a href="bag.php?a=dummynum&n=1">1只(稳)</a>') . ' ' . ($dn === 3 ? '<b>3只</b>' : '<a href="bag.php?a=dummynum&n=3">3只</a>') . ' ' . ($dn === 6 ? '<b>6只(快)</b>' : '<a href="bag.php?a=dummynum&n=6">6只(快)</a>') . '<br>';
-    echo '<div class="hr">--------</div>';
     echo '<a href="shop.php">去黑市</a>';
 }
 nav_line();

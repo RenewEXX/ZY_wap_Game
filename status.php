@@ -70,13 +70,13 @@ if ((string) ($_GET['a'] ?? '') === 'rename') {
     }
 }
 echo '<div class="hr">--------</div>【属性加点】<br>';
-echo '潜力：存' . (int) ($u['s_pts'] ?? 0) . '点（力量/坚毅3点1次，体质/智慧1点1次）<br>';
-echo '力量(影响物攻，法师无效)：' . (int) ($u['str'] ?? 0) . ' <a href="status.php?a=alloc&k=str">+速加</a><br>';
-echo '坚毅(影响物防)：' . (int) ($u['agi'] ?? 0) . ' <a href="status.php?a=alloc&k=agi">+速加</a><br>';
-echo '体质(影响生命)：' . (int) ($u['vit'] ?? 0) . ' <a href="status.php?a=alloc&k=vit">+速加</a><br>';
-echo '智慧(影响法攻/法防/魔力)：' . (int) ($u['int'] ?? 0) . ' <a href="status.php?a=alloc&k=int">+速加</a><br>';
-echo '快速：<a href="status.php?a=allocall&k=str">全加力量</a> <a href="status.php?a=allocall&k=agi">全加坚毅</a> <a href="status.php?a=allocall&k=vit">全加体质</a> <a href="status.php?a=allocall&k=int">全加智慧</a><br>';
-echo '<span class="muted">注意：强力装备有属性点要求，不要只加一种。可用<a href="bag.php?tab=func">洗点药</a>重修。</span><br>';
+echo '潜力：存' . (int) ($u['s_pts'] ?? 0) . '点（全部1点1次）<br>';
+echo '力量(物攻，法师牧师无效)：' . (int) ($u['str'] ?? 0) . ' <a href="status.php?a=alloc&k=str">+速加</a><br>';
+echo '智慧(法攻)：' . (int) ($u['int'] ?? 0) . ' <a href="status.php?a=alloc&k=int">+速加</a><br>';
+echo '坚毅(物防法防)：' . (int) ($u['agi'] ?? 0) . ' <a href="status.php?a=alloc&k=agi">+速加</a><br>';
+echo '体质(生命)：' . (int) ($u['vit'] ?? 0) . ' <a href="status.php?a=alloc&k=vit">+速加</a><br>';
+echo '灵力(魔力)：' . (int) ($u['spi'] ?? 0) . ' <a href="status.php?a=alloc&k=spi">+速加</a><br>';
+echo '快速：<a href="status.php?a=allocall&k=str">全加力量</a> <a href="status.php?a=allocall&k=int">全加智慧</a> <a href="status.php?a=allocall&k=agi">全加坚毅</a> <a href="status.php?a=allocall&k=vit">全加体质</a> <a href="status.php?a=allocall&k=spi">全加灵力</a><br>';
 echo '<div class="hr">--------</div>';
 echo '<a href="status.php?a=all">查看全部属性</a><br>';
 if ((string) ($_GET['a'] ?? '') === 'all') {

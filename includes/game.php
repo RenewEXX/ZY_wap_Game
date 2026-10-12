@@ -5,7 +5,7 @@ function jobs(): array
 {
     return [
         'warrior' => ['name' => '战士', 'hp' => 62, 'mp' => 20, 'atk' => 7, 'def' => 5, 'skill' => '重斩', 'weapon' => 'axe', 'armor' => 'cloth', 'desc' => '物理近战，血多甲厚。技能重斩：150%+物理伤害，断岳斩附魔火伤。只能用斧剑锤，盾牌专精'],
-        'mage' => ['name' => '法师', 'hp' => 42, 'mp' => 55, 'atk' => 11, 'def' => 1, 'skill' => '火球术', 'weapon' => 'staff', 'armor' => 'cloth', 'desc' => '纯法术炮台，伤害看智慧+法攻。火球/爆裂火球/寒霜全是法伤。只能用法杖法器，力量对法师无效'],
+        'mage' => ['name' => '法师', 'hp' => 42, 'mp' => 55, 'atk' => 11, 'def' => 1, 'skill' => '火球术', 'weapon' => 'staff', 'armor' => 'cloth', 'desc' => '纯法术炮台，伤害看智慧+法攻。火球/狂雷/寒霜全是法伤。只能用法杖法器，力量对法师无效'],
         'hunter' => ['name' => '猎手', 'hp' => 50, 'mp' => 30, 'atk' => 8, 'def' => 3, 'skill' => '双连射', 'weapon' => 'bow', 'armor' => 'cloth', 'desc' => '物理连射+爆炸箭（火伤）。只能用弓弩匕首'],
         'priest' => ['name' => '牧师', 'hp' => 54, 'mp' => 45, 'atk' => 6, 'def' => 3, 'skill' => '治疗术', 'weapon' => 'mace', 'armor' => 'cloth', 'desc' => '治疗看法攻，神圣伤害也是法伤。能用锤杖盾'],
     ];
@@ -418,7 +418,7 @@ function offline_tick(array &$u): void
         return;
     }
     $allm = monsters();
-    $maxFights = min(120, intdiv($gap, 30), intdiv($pool, 30));
+    $maxFights = min(120, intdiv($gap, 15), intdiv($pool, 15));
     if ($maxFights <= 0) {
         flash_set('离线' . dummy_fmt($gap) . '，人偶剩' . dummy_fmt($pool) . '不够打一场，去续费。');
         return;
@@ -431,7 +431,7 @@ function offline_tick(array &$u): void
     $dead = false;
     $emptyRounds = 0;
     $onlyBoss = count($mlist) === 1 && $mlist[0] === boss_of_map((string) ($u['loc'] ?? ''));
-    $maxFights = min($onlyBoss ? 2000 : 500, intdiv($gap, 30), intdiv($pool, 30));
+    $maxFights = min($onlyBoss ? 2000 : 500, intdiv($gap, 15), intdiv($pool, 15));
     if ($maxFights <= 0) {
         flash_set('离线' . dummy_fmt($gap) . '，人偶剩' . dummy_fmt($pool) . '不够打一场，去续费。');
         return;
@@ -2007,8 +2007,8 @@ function dummy_tick(array &$u): void
     }
     add_mat($uid, 'dummy_time', -$elapsed);
     $acc = (int) ($mats['dummy_acc'] ?? 0) + $elapsed;
-    $fights = min(10, intdiv($acc, 30));
-    mat_set($uid, 'dummy_acc', $acc - $fights * 30);
+    $fights = min(10, intdiv($acc, 15));
+    mat_set($uid, 'dummy_acc', $acc - $fights * 15);
     if ($fights <= 0) {
         user_save($u);
         return;
@@ -2911,7 +2911,7 @@ function skill_catalog(): array
         'w1' => ['name' => '重斩', 'job' => 'warrior', 'mp' => 8, 'kind' => 'phys', 'mult' => 1.6, 'el' => '', 't10' => '伤害+25%', 'lv20' => '狂怒：伤害+15%'],
         'w2' => ['name' => '断岳斩', 'job' => 'warrior', 'mp' => 18, 'kind' => 'phys', 'mult' => 2.2, 'el' => 'fire', 't10' => '本次暴击率+20%', 'lv20' => '伤害+15%，附魔火伤'],
         'm1' => ['name' => '火球术', 'job' => 'mage', 'mp' => 12, 'kind' => 'magic', 'mult' => 0, 'el' => 'fire', 't10' => '伤害+30%', 'lv20' => '伤害+15%'],
-        'm2' => ['name' => '爆裂火球', 'job' => 'mage', 'mp' => 22, 'kind' => 'magic', 'mult' => 0, 'el' => 'thunder', 't10' => '伤害+30%', 'lv20' => '伤害+15%'],
+        'm2' => ['name' => '狂雷术', 'job' => 'mage', 'mp' => 22, 'kind' => 'magic', 'mult' => 0, 'el' => 'thunder', 't10' => '12%麻痹：敌停一轮', 'lv20' => '伤害+15%'],
         'h1' => ['name' => '双连射', 'job' => 'hunter', 'mp' => 10, 'kind' => 'multi2', 'mult' => 1.6, 'el' => '', 't10' => '追加第三箭', 'lv20' => '伤害+15%'],
         'h2' => ['name' => '爆裂箭', 'job' => 'hunter', 'mp' => 20, 'kind' => 'multi2', 'mult' => 2.0, 'el' => 'fire', 't10' => '追加第三箭', 'lv20' => '伤害+15%，爆炸火伤'],
         'p1' => ['name' => '圣光弹', 'job' => 'priest', 'mp' => 10, 'kind' => 'heal', 'mult' => 0.7, 'heal' => 25, 'el' => 'light', 't10' => '治疗+15', 'lv20' => '治疗+20%，伤害+15%'],
@@ -2954,7 +2954,7 @@ function skill_books(): array
         'book_w1' => ['skill' => 'w1', 'name' => '重斩秘籍'],
         'book_w2' => ['skill' => 'w2', 'name' => '断岳斩秘籍'],
         'book_m1' => ['skill' => 'm1', 'name' => '火球术秘籍'],
-        'book_m2' => ['skill' => 'm2', 'name' => '爆裂火球秘籍'],
+        'book_m2' => ['skill' => 'm2', 'name' => '狂雷术秘籍'],
         'book_h1' => ['skill' => 'h1', 'name' => '双连射秘籍'],
         'book_h2' => ['skill' => 'h2', 'name' => '爆裂箭秘籍'],
         'book_p1' => ['skill' => 'p1', 'name' => '治疗术秘籍'],
@@ -4450,7 +4450,7 @@ function wear_equip(int $uid, int $eid): string
     if ($u) {
         $reqErr = equip_can_wear($u, $eq);
         if ($reqErr !== '') {
-            return $reqErr . '（' . equip_req_text($eq) . '）';
+            return $reqErr;
         }
     }
     $isTwo = weapon_is_twohand((string) $eq['name']);
@@ -4959,6 +4959,7 @@ function battle_round(array &$u, array &$b, string $mode): array
             $u['mp'] = (int) $u['mp'] - (int) $sk['mp'];
             $skillName = (string) $sk['name'];
             $sid = (string) $sk['skill'];
+            $profMsg = add_skill_prof((int) ($u['id'] ?? 0), $sid);
             $skEl = (string) ($sk['el'] ?? '');
             $pow = skill_power($sk);
             $sTier = (int) $sk['tier'];
@@ -5006,6 +5007,10 @@ function battle_round(array &$u, array &$b, string $mode): array
                 }
                 if ($sLv >= 20) {
                     $pd = (int) ($pd * 1.15);
+                }
+                if ($sid === 'm2' && $sTier >= 10 && mt_rand(1, 100) <= 12) {
+                    $b['stun'] = 1;
+                    $logHeal .= '(麻痹)';
                 }
                 if ($sid === 'm3' && $sTier >= 10 && mt_rand(1, 100) <= 5) {
                     $b['frost'] = 3;

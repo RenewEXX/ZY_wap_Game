@@ -81,16 +81,16 @@ function arena_ensure(string $zone): void
 {
     $season = arena_season();
     $n = (int) db()->query('SELECT COUNT(*) FROM arena_rank WHERE zone=' . db()->quote($zone) . ' AND is_dummy=1 AND season=' . db()->quote($season))->fetchColumn();
-    if ($n >= 2000) {
+    if ($n >= 200) {
         return;
     }
-    db()->prepare('DELETE FROM arena_rank WHERE zone=? AND is_dummy=1 AND season=?')->execute([$zone, $season]);
+    if ($n > 0) { return; }
     $pool = arena_name_pool();
     $jobs = ['战士', '法师', '猎手', '牧师'];
     $pets = ['影猫', '石灵', '幽灵', '幼龙', '深渊魔龙'];
     $used = [];
-    $st = db()->prepare('INSERT INTO arena_rank (uid, zone, rank, name, job, lv, power, is_dummy, season) VALUES (0, ?, ?, ?, ?, ?, ?, 1, ?)');
-    for ($r = 1; $r <= 2000; $r++) {
+    $st = db()->prepare('INSERT OR IGNORE INTO arena_rank (uid, zone, rank, name, job, lv, power, is_dummy, season) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)');
+    for ($r = 1; $r <= 200; $r++) {
         do {
             $nm = $pool[array_rand($pool)];
             if (count($used) > 3000) {
@@ -98,7 +98,8 @@ function arena_ensure(string $zone): void
             }
         } while (isset($used[$nm]));
         $used[$nm] = true;
-        $st->execute([$zone, $r, $nm, $jobs[array_rand($jobs)], arena_dummy_lv($r), arena_dummy_power($r), $season]);
+        // 假人uid用负数（表主键是uid+zone，全0会撞键）
+        try { $st->execute([-$r, $zone, $r, $nm, $jobs[array_rand($jobs)], arena_dummy_lv($r), arena_dummy_power($r), $season]); } catch (Throwable $e) { break; }
     }
 }
 

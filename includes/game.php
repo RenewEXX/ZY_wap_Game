@@ -2450,8 +2450,6 @@ function equip_shortname(string $name): string
             return mb_substr($name, mb_strlen($prefix));
         }
     }
-    $as = auto_sell_check((int) $uid, (int) $q);
-    if ($as !== '') { return equip_shortname($name) . $as; }
     return $name;
 }
 
@@ -2916,6 +2914,8 @@ function make_equip(int $uid, string $slot, string $base, int $q, int $itemLevel
         ground_place_equip((string) ($uo['loc'] ?? 'town_sq'), $eid);
         return '';
     }
+    $as = auto_sell_check((int) $uid, (int) $q);
+    if ($as !== '') { return equip_shortname($name) . $as; }
     return $name;
 }
 

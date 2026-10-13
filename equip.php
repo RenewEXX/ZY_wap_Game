@@ -31,13 +31,16 @@ if ($equipFlash !== '') {
 $qname = equip_qualities()[(int) $e['quality']] ?? '';
 echo '<span style="color:' . equip_color($e) . '">' . h(equip_shortname($e['name'])) . '</span>' . (equip_is_set(equip_shortname((string) $e['name'])) ? '<span style="color:#3f6">【套装】</span>' : '') . '<br>';
 echo '部位：' . h(equip_slots()[$e['slot']] ?? '') . '<br>';
+echo '可装备：' . h(equip_jobs_text($e)) . '<br>';
 echo '品级：' . h($qname) . '<br>';
 echo '穿戴要求：' . h(equip_req_text($e)) . '<br>';
 echo '物品等级：' . (int) ($e['item_level'] ?? 1) . '<br>';
 echo '状态：' . (($e['pos'] === 'wear' ? '已穿戴' : '背包')) . '<br>';
 $elv = (int) ($e['enhance_level'] ?? 0);
+if (($e['slot'] ?? '') === 'title') { echo '称号不可强化。<br>'; } else {
 echo '强化：' . enhance_tag_html($elv) . '（主属性×' . rtrim(rtrim(number_format(enhance_rate($e), 2, '.', ''), '0'), '.') . '）<br>';
 echo '<div class="hr">--------</div>';
+}
 $aff = json_decode((string) $e['affixes'], true);
 if (is_array($aff)) {
     echo equip_affix_html($aff, $elv);

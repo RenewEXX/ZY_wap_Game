@@ -132,7 +132,7 @@ function monsters(): array
         'wolf' => ['name' => '荒野灰狼', 'hp' => 40, 'atk' => 11, 'exp' => 22, 'gold' => 10],
         'thief' => ['name' => '拦路盗贼', 'hp' => 48, 'atk' => 13, 'exp' => 28, 'gold' => 18],
         'bee' => ['name' => '针刺巨蜂', 'hp' => 44, 'atk' => 14, 'exp' => 30, 'gold' => 14],
-        'frog' => ['name' => '黑水毒蛙', 'hp' => 55, 'atk' => 15, 'exp' => 32, 'gold' => 15],
+        'frog' => ['name' => '黑水毒蛙', 'hp' => 55, 'atk' => 15, 'exp' => 41, 'gold' => 19],
         'skeleton' => ['name' => '锈甲骷髅', 'hp' => 65, 'atk' => 17, 'exp' => 40, 'gold' => 20],
         'ghoul' => ['name' => '食尸鬼', 'hp' => 80, 'atk' => 20, 'exp' => 52, 'gold' => 26],
         'cultist' => ['name' => '低语教徒', 'hp' => 70, 'atk' => 19, 'exp' => 48, 'gold' => 30],
@@ -158,52 +158,58 @@ function monsters(): array
         'shadow_hound' => ['name' => '影蚀猎犬', 'hp' => 850, 'atk' => 72, 'exp' => 750, 'gold' => 320],
         'corrupt_treant' => ['name' => '腐化树精', 'hp' => 1000, 'atk' => 80, 'exp' => 950, 'gold' => 400],
         'gargoyle' => ['name' => '石像鬼', 'hp' => 1200, 'atk' => 90, 'exp' => 1200, 'gold' => 500],
-        'puppet' => ['name' => '符文傀儡', 'hp' => 1500, 'atk' => 105, 'exp' => 1600, 'gold' => 650],
+        'puppet' => ['name' => '符文傀儡', 'hp' => 1500, 'atk' => 105, 'exp' => 2080, 'gold' => 845],
         'apostle' => ['name' => '深渊使徒', 'hp' => 2500, 'atk' => 110, 'exp' => 3000, 'gold' => 1500],
         'guardian' => ['name' => '巨型傀儡·守护者', 'hp' => 4000, 'atk' => 140, 'exp' => 5000, 'gold' => 2500],
+        // ---- 70~100级·影蚀荒原 ----
+        'waste_stalker' => ['name' => '荒原影行者', 'hp' => 1600, 'atk' => 100, 'exp' => 2800, 'gold' => 1100],
+        'waste_hound' => ['name' => '蚀影荒犬', 'hp' => 1900, 'atk' => 108, 'exp' => 3400, 'gold' => 1300],
+        'waste_colossus' => ['name' => '荒原蚀像', 'hp' => 2600, 'atk' => 125, 'exp' => 4600, 'gold' => 1800],
         'valentin' => ['name' => '城主瓦伦丁', 'hp' => 5500, 'atk' => 170, 'exp' => 7000, 'gold' => 4000],
         'dark_lily' => ['name' => '暗影莉莉', 'hp' => 7000, 'atk' => 200, 'exp' => 10000, 'gold' => 6000],
         'abyss_eye' => ['name' => '深渊之眼', 'hp' => 10000, 'atk' => 240, 'exp' => 12000, 'gold' => 10000],
         'shadow_walker' => ['name' => '影蚀行者', 'hp' => 1800, 'atk' => 115, 'exp' => 2000, 'gold' => 800],
         'corrupt_warder' => ['name' => '腐影守卫', 'hp' => 2600, 'atk' => 140, 'exp' => 3000, 'gold' => 1200],
         'whisperer' => ['name' => '深渊低语者', 'hp' => 4200, 'atk' => 180, 'exp' => 5500, 'gold' => 2000],
+        'rift_hound' => ['name' => '裂隙猎犬', 'hp' => 5200, 'atk' => 200, 'exp' => 7200, 'gold' => 2800],
+        'rift_weaver' => ['name' => '裂隙织影者', 'hp' => 7800, 'atk' => 260, 'exp' => 11000, 'gold' => 4200],
         'colossus' => ['name' => '影蚀巨像', 'hp' => 6500, 'atk' => 230, 'exp' => 9000, 'gold' => 3500],
         'abaddon' => ['name' => '影蚀君王阿巴顿', 'hp' => 20000, 'atk' => 340, 'exp' => 30000, 'gold' => 20000],
-        'puppet_guard' => ['name' => '傀儡守卫', 'hp' => 30000, 'atk' => 420, 'exp' => 35000, 'gold' => 18000],
+        'puppet_guard' => ['name' => '傀儡守卫', 'hp' => 30000, 'atk' => 420, 'exp' => 45500, 'gold' => 23400],
         'masked_noble' => ['name' => '假面贵族', 'hp' => 44000, 'atk' => 520, 'exp' => 52000, 'gold' => 26000],
         'ink_puppet' => ['name' => '墨傀儡', 'hp' => 65000, 'atk' => 680, 'exp' => 80000, 'gold' => 38000],
         'silver_undead' => ['name' => '银丝亡灵', 'hp' => 92000, 'atk' => 840, 'exp' => 115000, 'gold' => 55000],
         'silver_assassin' => ['name' => '银丝刺客', 'hp' => 125000, 'atk' => 1000, 'exp' => 160000, 'gold' => 75000],
-        'puppet_priest' => ['name' => '牵线牧师', 'hp' => 165000, 'atk' => 1180, 'exp' => 215000, 'gold' => 100000],
+        'puppet_priest' => ['name' => '牵线牧师', 'hp' => 165000, 'atk' => 1180, 'exp' => 279500, 'gold' => 130000],
         'star_puppet' => ['name' => '观星傀儡', 'hp' => 210000, 'atk' => 1350, 'exp' => 280000, 'gold' => 130000],
         'silver_puppet' => ['name' => '银丝傀儡', 'hp' => 235000, 'atk' => 1420, 'exp' => 310000, 'gold' => 150000],
         'string_puller' => ['name' => '牵线者', 'hp' => 450000, 'atk' => 1900, 'exp' => 900000, 'gold' => 450000],
-        'silk_spider' => ['name' => '银丝蛛', 'hp' => 150000, 'atk' => 1100, 'exp' => 180000, 'gold' => 85000],
+        'silk_spider' => ['name' => '银丝蛛', 'hp' => 150000, 'atk' => 1100, 'exp' => 234000, 'gold' => 110500],
         'cocoon_guard' => ['name' => '茧守', 'hp' => 180000, 'atk' => 1220, 'exp' => 220000, 'gold' => 105000],
         'thread_weaver' => ['name' => '织线者', 'hp' => 205000, 'atk' => 1320, 'exp' => 260000, 'gold' => 120000],
-        'silk_moth' => ['name' => '银丝蛾', 'hp' => 230000, 'atk' => 1420, 'exp' => 300000, 'gold' => 140000],
+        'silk_moth' => ['name' => '银丝蛾', 'hp' => 230000, 'atk' => 1420, 'exp' => 390000, 'gold' => 182000],
         'nest_watcher' => ['name' => '巢穴守望', 'hp' => 260000, 'atk' => 1520, 'exp' => 340000, 'gold' => 160000],
         'brood_maiden' => ['name' => '育巢侍女', 'hp' => 300000, 'atk' => 1650, 'exp' => 400000, 'gold' => 190000],
-        'silk_mother' => ['name' => '缠丝之母', 'hp' => 600000, 'atk' => 2200, 'exp' => 1200000, 'gold' => 600000],
+        'silk_mother' => ['name' => '缠丝之母', 'hp' => 600000, 'atk' => 2200, 'exp' => 1560000, 'gold' => 780000],
         // ---- 第四章·凛冬冰原（350~480级） ----
-        'frost_wolf' => ['name' => '冻原霜狼', 'hp' => 196000, 'atk' => 2400, 'exp' => 380000, 'gold' => 180000],
+        'frost_wolf' => ['name' => '冻原霜狼', 'hp' => 196000, 'atk' => 2400, 'exp' => 494000, 'gold' => 234000],
         'ice_specter' => ['name' => '冰隙怨灵', 'hp' => 217000, 'atk' => 2550, 'exp' => 420000, 'gold' => 200000],
         'snow_mammoth' => ['name' => '雪原猛犸', 'hp' => 251999, 'atk' => 2775, 'exp' => 500000, 'gold' => 235000],
         'blizzard_shaman' => ['name' => '暴风雪萨满', 'hp' => 237999, 'atk' => 2925, 'exp' => 520000, 'gold' => 250000],
         'glacier_golem' => ['name' => '冰川魔像', 'hp' => 294000, 'atk' => 3075, 'exp' => 600000, 'gold' => 290000],
-        'frost_giant' => ['name' => '霜巨人', 'hp' => 329000, 'atk' => 3270, 'exp' => 680000, 'gold' => 330000],
+        'frost_giant' => ['name' => '霜巨人', 'hp' => 329000, 'atk' => 3270, 'exp' => 884000, 'gold' => 429000],
         'aurora_serpent' => ['name' => '极光冰蛇', 'hp' => 308000, 'atk' => 3375, 'exp' => 700000, 'gold' => 340000],
         'icewyrm' => ['name' => '冰渊蠕虫', 'hp' => 350000, 'atk' => 3480, 'exp' => 760000, 'gold' => 370000],
         'winter_knight' => ['name' => '凛冬骑士', 'hp' => 378000, 'atk' => 3600, 'exp' => 820000, 'gold' => 400000],
-        'frost_matriarch' => ['name' => '霜母', 'hp' => 434000, 'atk' => 3825, 'exp' => 950000, 'gold' => 460000],
+        'frost_matriarch' => ['name' => '霜母', 'hp' => 434000, 'atk' => 3825, 'exp' => 1235000, 'gold' => 598000],
         'glacier_colossus' => ['name' => '冰河巨像', 'hp' => 489999, 'atk' => 4020, 'exp' => 1100000, 'gold' => 530000],
         'winter_king' => ['name' => '凛冬之王', 'hp' => 1120000, 'atk' => 5100, 'exp' => 3000000, 'gold' => 1500000],
         // 冰渊副本
-        'fr_crawler' => ['name' => '冰渊爬行者', 'hp' => 336000, 'atk' => 3525, 'exp' => 800000, 'gold' => 380000],
-        'fr_stalker' => ['name' => '渊底潜伏者', 'hp' => 378000, 'atk' => 3720, 'exp' => 900000, 'gold' => 430000],
-        'fr_warden' => ['name' => '冰渊守望者', 'hp' => 434000, 'atk' => 3930, 'exp' => 1050000, 'gold' => 500000],
-        'fr_horror' => ['name' => '渊底恐惧', 'hp' => 489999, 'atk' => 4125, 'exp' => 1200000, 'gold' => 580000],
-        'fr_leviathan' => ['name' => '冰渊利维坦', 'hp' => 1200000, 'atk' => 5400, 'exp' => 3500000, 'gold' => 1700000],
+        'fr_crawler' => ['name' => '冰渊爬行者', 'hp' => 336000, 'atk' => 3525, 'exp' => 1352000, 'gold' => 642200],
+        'fr_stalker' => ['name' => '渊底潜伏者', 'hp' => 378000, 'atk' => 3720, 'exp' => 1521000, 'gold' => 726700],
+        'fr_warden' => ['name' => '冰渊守望者', 'hp' => 434000, 'atk' => 3930, 'exp' => 1774500, 'gold' => 845000],
+        'fr_horror' => ['name' => '渊底恐惧', 'hp' => 489999, 'atk' => 4125, 'exp' => 2028000, 'gold' => 980200],
+        'fr_leviathan' => ['name' => '冰渊利维坦', 'hp' => 1200000, 'atk' => 5400, 'exp' => 5915000, 'gold' => 2873000],
         // ---- 第五章·雾森与火山（500~720级） ----
         'mist_treant' => ['name' => '雾森树人', 'hp' => 403000, 'atk' => 4160, 'exp' => 1050000, 'gold' => 500000],
         'spore_colony' => ['name' => '孢子群落', 'hp' => 442000, 'atk' => 4352, 'exp' => 1150000, 'gold' => 550000],
@@ -211,34 +217,34 @@ function monsters(): array
         'ancient_boa' => ['name' => '古林巨蚺', 'hp' => 533000, 'atk' => 4768, 'exp' => 1420000, 'gold' => 680000],
         'mist_apeman' => ['name' => '雾猿', 'hp' => 572000, 'atk' => 4960, 'exp' => 1550000, 'gold' => 740000],
         'rot_sage' => ['name' => '腐叶贤者', 'hp' => 611000, 'atk' => 5152, 'exp' => 1680000, 'gold' => 800000],
-        'ember_imp' => ['name' => '余烬小鬼', 'hp' => 650000, 'atk' => 5360, 'exp' => 1820000, 'gold' => 870000],
+        'ember_imp' => ['name' => '余烬小鬼', 'hp' => 650000, 'atk' => 5360, 'exp' => 2366000, 'gold' => 1131000],
         'lava_hound' => ['name' => '熔岩猎犬', 'hp' => 702000, 'atk' => 5568, 'exp' => 1960000, 'gold' => 940000],
-        'ash_cultist' => ['name' => '灰烬教徒', 'hp' => 747500, 'atk' => 5760, 'exp' => 2100000, 'gold' => 1000000],
+        'ash_cultist' => ['name' => '灰烬教徒', 'hp' => 747500, 'atk' => 5760, 'exp' => 2730000, 'gold' => 1300000],
         'magma_golem' => ['name' => '熔岩魔像', 'hp' => 812500, 'atk' => 6000, 'exp' => 2280000, 'gold' => 1090000],
         'flame_djinn' => ['name' => '烈焰神灯灵', 'hp' => 858000, 'atk' => 6208, 'exp' => 2440000, 'gold' => 1160000],
         'cinder_dragonspawn' => ['name' => '烬龙裔', 'hp' => 923000, 'atk' => 6400, 'exp' => 2620000, 'gold' => 1250000],
-        'volcano_priest' => ['name' => '火山祭司', 'hp' => 975000, 'atk' => 6592, 'exp' => 2800000, 'gold' => 1340000],
-        'ash_wyrm' => ['name' => '灰烬飞龙', 'hp' => 1040000, 'atk' => 6800, 'exp' => 3000000, 'gold' => 1440000],
+        'volcano_priest' => ['name' => '火山祭司', 'hp' => 975000, 'atk' => 6592, 'exp' => 3640000, 'gold' => 1742000],
+        'ash_wyrm' => ['name' => '灰烬飞龙', 'hp' => 1040000, 'atk' => 6800, 'exp' => 3900000, 'gold' => 1872000],
         'south_flame_guard' => ['name' => '南炎守卫', 'hp' => 1137500, 'atk' => 7040, 'exp' => 3300000, 'gold' => 1580000],
         'ancient_ruin_golem' => ['name' => '遗迹守卫', 'hp' => 1760000, 'atk' => 7050, 'exp' => 4200000, 'gold' => 2000000],
         // 熔心副本
-        'em_slag' => ['name' => '熔渣怪', 'hp' => 845000, 'atk' => 6240, 'exp' => 2500000, 'gold' => 1200000],
-        'em_fiend' => ['name' => '焚心魔', 'hp' => 942500, 'atk' => 6528, 'exp' => 2800000, 'gold' => 1340000],
-        'em_magma' => ['name' => '熔核行者', 'hp' => 1040000, 'atk' => 6800, 'exp' => 3100000, 'gold' => 1480000],
-        'em_ashlord' => ['name' => '灰烬领主侍从', 'hp' => 1170000, 'atk' => 7120, 'exp' => 3500000, 'gold' => 1680000],
-        'em_heart' => ['name' => '熔心化身', 'hp' => 2560000, 'atk' => 8100, 'exp' => 8000000, 'gold' => 3800000],
+        'em_slag' => ['name' => '熔渣怪', 'hp' => 845000, 'atk' => 6240, 'exp' => 4225000, 'gold' => 2028000],
+        'em_fiend' => ['name' => '焚心魔', 'hp' => 942500, 'atk' => 6528, 'exp' => 4732000, 'gold' => 2264600],
+        'em_magma' => ['name' => '熔核行者', 'hp' => 1040000, 'atk' => 6800, 'exp' => 5239000, 'gold' => 2501200],
+        'em_ashlord' => ['name' => '灰烬领主侍从', 'hp' => 1170000, 'atk' => 7120, 'exp' => 5915000, 'gold' => 2839200],
+        'em_heart' => ['name' => '熔心化身', 'hp' => 2560000, 'atk' => 8100, 'exp' => 13520000, 'gold' => 6422000],
         // 傀儡回廊副本（380~460级）
-        'pz_puller' => ['name' => '回廊牵线者', 'hp' => 800000, 'atk' => 3000, 'exp' => 1400000, 'gold' => 660000],
-        'pz_dancer' => ['name' => '回廊舞者', 'hp' => 880000, 'atk' => 3150, 'exp' => 1550000, 'gold' => 730000],
-        'pz_mask' => ['name' => '覆面傀儡', 'hp' => 960000, 'atk' => 3280, 'exp' => 1700000, 'gold' => 800000],
-        'pz_golem' => ['name' => '回廊守卫', 'hp' => 1050000, 'atk' => 3400, 'exp' => 1850000, 'gold' => 870000],
-        'pz_master' => ['name' => '傀儡大师', 'hp' => 2000000, 'atk' => 4200, 'exp' => 5000000, 'gold' => 2300000],
+        'pz_puller' => ['name' => '回廊牵线者', 'hp' => 800000, 'atk' => 3000, 'exp' => 1820000, 'gold' => 858000],
+        'pz_dancer' => ['name' => '回廊舞者', 'hp' => 880000, 'atk' => 3150, 'exp' => 2015000, 'gold' => 949000],
+        'pz_mask' => ['name' => '覆面傀儡', 'hp' => 960000, 'atk' => 3280, 'exp' => 2210000, 'gold' => 1040000],
+        'pz_golem' => ['name' => '回廊守卫', 'hp' => 1050000, 'atk' => 3400, 'exp' => 2405000, 'gold' => 1131000],
+        'pz_master' => ['name' => '傀儡大师', 'hp' => 2000000, 'atk' => 4200, 'exp' => 6500000, 'gold' => 2990000],
         // 雾森祭坛副本（520~600级）
-        'sen_priest' => ['name' => '祭坛雾祭', 'hp' => 1200000, 'atk' => 4200, 'exp' => 2200000, 'gold' => 1050000],
-        'sen_thorn' => ['name' => '祭坛荆棘', 'hp' => 1300000, 'atk' => 4350, 'exp' => 2400000, 'gold' => 1140000],
-        'sen_serpent' => ['name' => '祭坛雾蛇', 'hp' => 1420000, 'atk' => 4500, 'exp' => 2600000, 'gold' => 1240000],
-        'sen_guard' => ['name' => '祭坛守卫', 'hp' => 1550000, 'atk' => 4650, 'exp' => 2850000, 'gold' => 1360000],
-        'sen_avatar' => ['name' => '雾森化身', 'hp' => 2800000, 'atk' => 5200, 'exp' => 7000000, 'gold' => 3300000],
+        'sen_priest' => ['name' => '祭坛雾祭', 'hp' => 1200000, 'atk' => 4200, 'exp' => 2860000, 'gold' => 1365000],
+        'sen_thorn' => ['name' => '祭坛荆棘', 'hp' => 1300000, 'atk' => 4350, 'exp' => 3120000, 'gold' => 1482000],
+        'sen_serpent' => ['name' => '祭坛雾蛇', 'hp' => 1420000, 'atk' => 4500, 'exp' => 3380000, 'gold' => 1612000],
+        'sen_guard' => ['name' => '祭坛守卫', 'hp' => 1550000, 'atk' => 4650, 'exp' => 3705000, 'gold' => 1768000],
+        'sen_avatar' => ['name' => '雾森化身', 'hp' => 2800000, 'atk' => 5200, 'exp' => 9100000, 'gold' => 4290000],
         // 野外传奇BOSS与趣味小怪
         'shadow_claw' => ['name' => '影爪领主', 'hp' => 900000, 'atk' => 3600, 'exp' => 2000000, 'gold' => 950000],
         'brass_bishop' => ['name' => '黄铜主教', 'hp' => 1800000, 'atk' => 4800, 'exp' => 4200000, 'gold' => 2000000],
@@ -256,7 +262,7 @@ function monsters(): array
         'cinder_horror' => ['slot' => 'head', 'base' => '灰烬恐惧面'],
         'sen_thorn' => ['slot' => 'belt', 'base' => '荆棘·束腰', 'rate' => 0.06, 'q' => [0, 30, 50, 20, 0]],
         'ash_titan' => ['slot' => 'weapon', 'base' => '灰烬泰坦之握', 'rate' => 0.3, 'q' => [0, 0, 20, 50, 30], 'legendary' => ['base' => '泰坦之握·灭世', 'extra' => ['k' => 'atk_pct', 'v' => 5.0]]],
-        'frostborn_hunter' => ['name' => '霜裔猎手', 'hp' => 400000, 'atk' => 2900, 'exp' => 620000, 'gold' => 300000],
+        'frostborn_hunter' => ['name' => '霜裔猎手', 'hp' => 400000, 'atk' => 2900, 'exp' => 806000, 'gold' => 390000],
         'avalanche_titan' => ['name' => '雪崩巨人', 'hp' => 1900000, 'atk' => 5000, 'exp' => 4500000, 'gold' => 2100000],
         'sulfur_sprite' => ['name' => '硫磺精', 'hp' => 1100000, 'atk' => 4900, 'exp' => 2000000, 'gold' => 960000],
         'obsidian_colossus' => ['name' => '黑曜石巨像', 'hp' => 2400000, 'atk' => 5600, 'exp' => 5500000, 'gold' => 2600000],        // 灰烬深渊副本（600~680级，二转群攻书掉落）
@@ -264,7 +270,7 @@ function monsters(): array
         'cinder_stalker' => ['name' => '灰烬潜伏者', 'hp' => 2100000, 'atk' => 6450, 'exp' => 4000000, 'gold' => 1900000],
         'cinder_warden' => ['name' => '灰烬守望者', 'hp' => 2300000, 'atk' => 6700, 'exp' => 4400000, 'gold' => 2100000],
         'cinder_horror' => ['name' => '灰烬恐惧', 'hp' => 2500000, 'atk' => 6950, 'exp' => 4800000, 'gold' => 2300000],
-        'ash_titan' => ['name' => '深渊灰烬泰坦', 'hp' => 4200000, 'atk' => 8200, 'exp' => 11000000, 'gold' => 5200000],        // 虚空裂隙副本（二转，600~680级）
+        'ash_titan' => ['name' => '深渊灰烬泰坦', 'hp' => 4200000, 'atk' => 8200, 'exp' => 14300000, 'gold' => 6760000],        // 虚空裂隙副本（二转，600~680级）
         'vx_spawn' => ['name' => '裂隙孳生体', 'hp' => 1600000, 'atk' => 4600, 'exp' => 3000000, 'gold' => 1440000],
         'vx_stalker' => ['name' => '虚空潜伏者', 'hp' => 1750000, 'atk' => 4800, 'exp' => 3300000, 'gold' => 1580000],
         'vx_mage' => ['name' => '裂隙低语者', 'hp' => 1900000, 'atk' => 5000, 'exp' => 3600000, 'gold' => 1720000],
@@ -2147,8 +2153,8 @@ function equip_slots(): array
 {
     return [
         'weapon' => '主手', 'offhand' => '副手', 'body' => '上身', 'head' => '头部', 'legs' => '下身',
-        'gloves' => '手套', 'shoes' => '鞋子', 'back' => '背部', 'ring' => '戒指', 'necklace' => '项链',
-        'soul' => '神魂', 'title' => '称号', 'belt' => '腰部',
+        'belt' => '腰部', 'gloves' => '手套', 'shoes' => '鞋子', 'back' => '背部', 'ring' => '戒指', 'necklace' => '项链',
+        'soul' => '神魂', 'title' => '称号',
     ];
 }
 
@@ -2288,9 +2294,9 @@ function affix_catalog(): array
         'penetration' => ['name' => '护甲穿透', 'slots' => ['weapon'], 'data' => $r([[1, 2], [2, 4], [4, 7], [7, 10], [8, 12]], 60, 'penetration', 1)],
         'skill_damage' => ['name' => '全伤害加成', 'slots' => ['weapon'], 'data' => $r([[2, 4], [4, 7], [7, 10], [10, 14], [12, 18]], 70, 'skill_damage', 1)],
         'execute' => ['name' => '处决伤害', 'slots' => ['weapon'], 'data' => $r([[3, 6], [6, 10], [10, 16], [16, 23], [20, 30]], 40, 'execute', 1)],
-        'hp' => ['name' => '生命值', 'slots' => ['body', 'head', 'legs', 'shoes', 'ring', 'necklace', 'offhand', 'back'], 'data' => $r([[8, 15], [15, 30], [30, 55], [55, 100], [90, 150]], 100)],
-        'def' => ['name' => '护甲', 'slots' => ['body', 'head', 'legs', 'gloves', 'shoes', 'offhand', 'back'], 'data' => $r([[4, 10], [10, 20], [20, 35], [35, 60], [60, 100]], 100)],
-        'mdef' => ['name' => '法术抗性', 'slots' => ['body', 'head', 'offhand', 'back', 'necklace'], 'data' => $r([[3, 8], [8, 16], [16, 28], [28, 48], [48, 80]], 90)],
+        'hp' => ['name' => '生命', 'slots' => ['body', 'head', 'legs', 'shoes', 'ring', 'necklace', 'offhand', 'back'], 'data' => $r([[20, 30], [30, 48], [42, 65], [58, 100], [90, 150]], 100)],
+        'def' => ['name' => '物防', 'slots' => ['body', 'head', 'legs', 'gloves', 'shoes', 'offhand', 'back'], 'data' => $r([[10, 18], [18, 30], [26, 42], [38, 60], [60, 100]], 100)],
+        'mdef' => ['name' => '法防', 'slots' => ['body', 'head', 'offhand', 'back', 'necklace'], 'data' => $r([[8, 14], [15, 24], [22, 34], [30, 48], [48, 80]], 90)],
         'damage_reduction' => ['name' => '伤害减免', 'slots' => ['body'], 'data' => $r([[0.5, 1], [1, 2], [2, 3.5], [3.5, 5.5], [5, 8]], 70, 'damage_reduction', 1)],
         'resist' => ['name' => '元素抗性', 'slots' => ['body', 'necklace'], 'data' => $r([[1, 2], [2, 4], [4, 7], [7, 11], [10, 15]], 80, 'element_res', 1)],
         'thorns' => ['name' => '荆棘反伤', 'slots' => ['body'], 'data' => $r([[2, 4], [4, 8], [8, 14], [14, 23], [20, 35]], 50)],
@@ -2590,6 +2596,8 @@ function monster_drops(string $mid): array
         'wolf' => ['slot' => 'necklace', 'base' => '狼牙项链', 'rate' => 0.02, 'q' => [50, 35, 15, 0, 0]],
         'banshee' => ['slot' => 'ring', 'base' => '哭泣戒指', 'rate' => 0.025, 'q' => [0, 60, 30, 10, 0]],
         'wraith' => ['slot' => 'back', 'base' => '怨魂斗篷', 'rate' => 0.03, 'q' => [30, 50, 20, 0, 0]],
+        'rift_hound' => ['slot' => 'weapon', 'base' => '裂隙猎牙', 'rate' => 0.12, 'q' => [0, 30, 50, 20, 0]],
+        'rift_weaver' => ['slot' => 'offhand', 'base' => '织影法器', 'rate' => 0.12, 'q' => [0, 30, 50, 20, 0]],
         'swamp_slime' => ['slot' => 'belt', 'base' => '沼泽束腰', 'rate' => 0.04, 'q' => [60, 30, 10, 0, 0]],
         'mist_treant' => ['slot' => 'belt', 'base' => '雾狐软腰', 'rate' => 0.05, 'q' => [30, 45, 25, 0, 0]],
         'mist_apeman' => ['slot' => 'belt', 'base' => '雷鸟羽带', 'rate' => 0.08, 'q' => [0, 10, 40, 40, 10], 'legendary' => ['base' => '雷鸟羽带·九霄', 'extra' => ['k' => 'bagcap', 'v' => 10.0]]],
@@ -2798,6 +2806,23 @@ function equip_job_text(array $e): string
         $jobs = ['warrior', 'mage', 'hunter', 'priest'];
     }
     return implode('/', array_map(fn($j) => $names[$j] ?? $j, $jobs));
+}
+
+function equip_jobs_text(array $e): string
+{
+    $slot = (string) ($e['slot'] ?? '');
+    $nm = (string) ($e['name'] ?? '');
+    if ($slot === 'title') { return '全职业（100级可戴）'; }
+    if ($slot === 'weapon') {
+        $m = ['staff' => '法师/牧师', 'axe' => '战士', 'bow' => '猎手', 'mace' => '战士/牧师', 'shield' => '战士/牧师', 'blade' => '战士/猎手'];
+        return $m[weapon_sub($nm)] ?? '战士';
+    }
+    if ($slot === 'offhand') {
+        if (str_contains($nm, '盾')) { return '战士/牧师'; }
+        if (str_contains($nm, '法器') || str_contains($nm, '法杖') || str_contains($nm, '提灯')) { return '法师/牧师'; }
+        return '全职业';
+    }
+    return '全职业（战法猎牧）';
 }
 
 function equip_can_wear(array $u, array $e): string
@@ -4628,7 +4653,7 @@ function monster_lv(string $mid): int
         'corrupt_rat' => 6, 'deep_bat' => 8, 'runaway_miner' => 9, 'abyss_spore' => 10, 'echo_rayne' => 14,
         'shadow_rat' => 30, 'shadow_soldier' => 35, 'corrupt_guard' => 38, 'shadow_hound' => 42, 'corrupt_treant' => 46,
         'gargoyle' => 50, 'puppet' => 55, 'apostle' => 45, 'guardian' => 55, 'valentin' => 62, 'dark_lily' => 66, 'abyss_eye' => 70,
-        'shadow_walker' => 55, 'corrupt_warder' => 65, 'whisperer' => 80, 'colossus' => 95, 'abaddon' => 120,
+        'shadow_walker' => 55, 'corrupt_warder' => 65, 'whisperer' => 80, 'rift_hound' => 88, 'rift_weaver' => 97, 'colossus' => 95, 'abaddon' => 120,
         'dark_slime' => 20, 'swamp_slime' => 21, 'swamp_king' => 25,
         'puppet_guard' => 130, 'masked_noble' => 150, 'ink_puppet' => 180, 'silver_undead' => 210,
         'silver_assassin' => 240, 'puppet_priest' => 270, 'star_puppet' => 300, 'silver_puppet' => 310, 'string_puller' => 320,
@@ -5782,9 +5807,12 @@ function battle_round(array &$u, array &$b, string $mode): array
     }
     $tankHp = tank_auto($u, 'hp');
     $log .= $tankHp;
-    $petHurt = pet_hurt((int) ($u['id'] ?? 0), $md);
-    if ($petHurt !== '') {
-        $log .= $petHurt;
+    // 怪物随机打其一：有宠时50%宠全吃（人不掉血），50%人全吃（宠无伤）
+    if (active_pet((int) ($u['id'] ?? 0)) && mt_rand(1, 100) <= 50) {
+        $petHurt = pet_hurt((int) ($u['id'] ?? 0), $md * 2);
+        if ($petHurt !== '') { $log .= $petHurt; }
+        $u['hp'] = (int) $u['hp'] + $md;
+        $log .= '(怪物转头打了宠物)';
     }
     user_save($u);
     if ((int) $u['hp'] <= 0) {
@@ -6218,6 +6246,7 @@ function ch2_locations(): array
     $m['bmine2'] = ['name' => '矿道二层', 'desc' => '黑袍使徒在这里等你。你的影子比来时长了三寸。', 'exits' => ['bmine1' => '白银矿道一层', 'sforest' => '影蚀森林'], 'monsters' => ['corrupt_guard', 'apostle']];
     $m['sforest'] = ['name' => '影蚀森林', 'desc' => '树是黑的，叶是灰的，落下来像纸片。林心有尊三倍大的傀儡。', 'exits' => ['bmine2' => '矿道二层', 'manor' => '废弃庄园'], 'monsters' => ['shadow_hound', 'corrupt_treant', 'gargoyle', 'guardian']];
     $m['manor'] = ['name' => '废弃庄园', 'desc' => '门开着，安静得不正常。大厅主位上，城主瓦伦丁端着红酒等你。', 'exits' => ['sforest' => '影蚀森林', 'baltar' => '深渊祭坛'], 'monsters' => ['puppet', 'valentin']];
+    $m['rift_road'] = ['name' => '裂隙长路', 'desc' => '从血色祭坛往裂隙口的长路，70~100级练级地（猎犬88/织影者97）。', 'exits' => ['baltar' => '血色祭坛', 'rift' => '深渊裂隙口'], 'monsters' => ['rift_hound', 'rift_weaver', 'colossus']];
     $m['baltar'] = ['name' => '深渊祭坛', 'desc' => '很大，很黑。核心处站着眼睛发黑、影子如翅的暗影莉莉。', 'exits' => ['manor' => '废弃庄园', 'rift' => '裂隙深处'], 'monsters' => ['dark_lily']];
     $m['rift'] = ['name' => '裂隙深处', 'desc' => '没有底。你走在黑水上。深渊之眼睁着，瞳孔里是你的影子。', 'exits' => ['baltar' => '深渊祭坛'], 'monsters' => ['abyss_eye']];
     return $m;
@@ -6248,7 +6277,7 @@ function open_dragon_box(int $uid): string
         return '龙鳞宝箱开出：陪练' . $dh . '小时！';
     }
     $lr = mt_rand(1, 1000);
-    $tid = $lr <= 700 ? 'title_dragon1' : ($lr <= 940 ? 'title_dragon2' : 'title_dragon3');
+    $tid = $lr <= 660 ? 'title_dragon1' : ($lr <= 900 ? 'title_dragon2' : 'title_dragon3');
     give_title($uid, $tid);
     return '龙鳞宝箱开出大奖：称号【' . title_ids()[$tid] . '】！';
 }

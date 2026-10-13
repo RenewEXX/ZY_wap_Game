@@ -537,7 +537,7 @@ if ($who === 'stringer' && in_array($choice, ['ask', 'kill', 'purify'], true) &&
     header('Location: npc.php?who=stringer');
     exit;
 }
-if ($who === 'spider' && $choice === 'open') {
+if ($who === 'spider' && $choice === 'open') { // 银丝母巢 open 已下线（券走牵线者掉落兑换），阿蛛只留傀儡回廊 open2
 if ($who === 'priest_c' && $choice === 'diamond') {
     $mats = mats_of((int) $u['id']);
     $wid = date('oW');
@@ -732,7 +732,8 @@ if ($who === 'stringer' && (int) $u['quest'] === 37 && empty(cflags((int) $u['id
     echo '抉择：<a href="npc.php?who=stringer&choice=kill">杀死牵线者</a> <a href="npc.php?who=stringer&choice=purify">试图净化</a> <a href="npc.php?who=stringer&choice=ask">问：你是谁？(+50魔力上限)</a><br>';
 }
 if ($who === 'spider') {
-    echo '<a href="npc.php?who=spider&choice=open">开启副本【银丝母巢】（150~340级，消耗入场券×1）</a><br>';
+    // 银丝母巢入口已迁走，阿蛛只开傀儡回廊（见下）。
+
 }
 if ($who === 'priest_c') {
     $pm = mats_of((int) $u['id']);

@@ -618,7 +618,8 @@ function user_create(string $name, string $pass, string $job = '', string $zone 
     $st = db()->prepare(
         'INSERT INTO users (username, pass, lv, exp, hp, maxhp, mp, maxmp, atk, def, gold, loc, weapon, armor, potion, job, quest, zone, account, created_at) VALUES (?, ?, 1, 0, ?, ?, ?, ?, ?, ?, 20, "smithy", "", "", 0, ?, 0, ?, ?, ?)'
     );
-    $st->execute([$name, $hashed ? $pass : password_hash($pass, PASSWORD_DEFAULT), $j['hp'], $j['hp'], $j['mp'] ?? 30, $j['mp'] ?? 30, $j['atk'], $j['def'], $job, $zone, $account !== '' ? $account : $name, time()]);
+    // 新建1级：物攻法攻基础全0（武器给起步伤害，防具给起步防御）
+    $st->execute([$name, $hashed ? $pass : password_hash($pass, PASSWORD_DEFAULT), $j['hp'], $j['hp'], $j['mp'] ?? 30, $j['mp'] ?? 30, 0, 0, $job, $zone, $account !== '' ? $account : $name, time()]);
     $id = (int) db()->lastInsertId();
     // 出身加点：战士力量5，法师智慧8，猎手力量3坚毅2，牧师智慧5体质2（法师从创建就不长物理）
     $born = ['warrior' => ['str' => 5], 'mage' => ['int' => 8], 'hunter' => ['str' => 3, 'agi' => 2], 'priest' => ['int' => 5, 'vit' => 2]][$job] ?? [];

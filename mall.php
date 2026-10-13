@@ -29,6 +29,9 @@ if ($a === 'buy') {
         user_save($u);
         spend_diamonds((int) $u['id'], $goods[$m]['price'] * $n);
         if ($m === 'offline_mod' || $m === 'offline_time') {
+    if ($m === 'autosell_time') {
+        echo '效果：在线每得装备即按品质自动卖（离线结算同样适用），去背包功能栏选品质开关<br>';
+    }
             add_mat((int) $u['id'], 'offline_time', 3600 * $n);
             mat_set((int) $u['id'], 'offline_on', 1);
             mat_set((int) $u['id'], 'dummy_on', 1);
@@ -179,6 +182,7 @@ if ($m !== '' && isset($goods[$m])) {
         echo '<b>' . h(fmt_diamond(10)) . '</b>/个 ';
         echo '<a href="mall.php?a=buy&m=egg_unknown&n=1">买1</a> ';
         echo '<a href="mall.php?a=buy&m=egg_unknown&n=10">买10</a><br>';
+        echo '·<b>【宠物经验药】</b>(只喂到20级) <a href="mall.php?a=buy&m=pet_exp_potion&n=1">买1</a> <a href="mall.php?a=buy&m=pet_exp_potion&n=10">买10</a><br>';
     }
     if ($tab === 'func') {
         echo '功能道具：<br>';

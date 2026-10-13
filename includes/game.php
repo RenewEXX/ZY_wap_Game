@@ -360,8 +360,11 @@ function mall_goods(): array
     }
     $g['egg_unknown'] = ['name' => '未知宠物蛋', 'price' => 100, 'unit' => 1];
     $g['pet_food'] = ['name' => '宠物粮食', 'price' => 10, 'unit' => 1];
+    $g['pet_exp_potion'] = ['name' => '宠物经验药', 'price' => 30, 'unit' => 1];
+
     // 下架：传奇宠物不直购（魔女之茧）
     $g['dragon_box'] = ['name' => '龙鳞宝箱', 'price' => 200, 'unit' => 1];
+    $g['autosell_time'] = ['name' => '自动售卖', 'price' => 20, 'unit' => 3600];
     $g['tent'] = ['name' => '随身帐篷', 'price' => 100, 'unit' => 1];
     $g['exp_card100'] = ['name' => '升级卡100型', 'price' => 100, 'unit' => 1];
     $g['reset_potion'] = ['name' => '属性洗点药', 'price' => 300, 'unit' => 1];
@@ -2441,6 +2444,8 @@ function equip_shortname(string $name): string
             return mb_substr($name, mb_strlen($prefix));
         }
     }
+    $as = auto_sell_check((int) $uid, (int) $q);
+    if ($as !== '') { return equip_shortname($name) . $as; }
     return $name;
 }
 
@@ -3494,6 +3499,14 @@ function enchant_mat_el(string $mid): string
     return in_array($el, ['light', 'dark', 'fire', 'wind', 'ice', 'thunder'], true) ? $el : '';
 }
 
+function enchant_mat_tier_pct(string $mid): float
+{
+    $t = enchant_mat_tier($mid);
+    $tiers = enchant_tiers();
+    $mn = (int) ($tiers[$t]['min'] ?? 1);
+    return max(5.0, min(95.0, $mn * 4.0));
+}
+
 function enchant_mat_tier(string $mid): string
 {
     $parts = explode('_', $mid);
@@ -3526,6 +3539,14 @@ function synth_enchant(int $uid, string $mid): string
     }
     add_mat((int) $uid, $mid, -$need);
     $nm = 'el_' . $el . '_' . $tiers[$t]['next'];
+    // 石头→晶石：按魔晶百分比成功；晶石→珠→神石：90%失败（概率不展示）
+    $succ = $t === 'stone' ? (enchant_mat_tier_pct($mid) / 100) : 0.1;
+    if (mt_rand() / mt_getrandmax() > $succ && $t !== 'stone') {
+        return '合成失败，材料碎了……再攒点石头试试手气。';
+    }
+    if ($t === 'stone' && mt_rand() / mt_getrandmax() > $succ) {
+        return '合成失败，材料碎了……再攒点石头试试手气。';
+    }
     add_mat((int) $uid, $nm, 1);
     return '合成成功：' . enchant_mat_name($nm) . '×1！';
 }
@@ -6228,13 +6249,6 @@ function open_dragon_box(int $uid): string
     }
     $lr = mt_rand(1, 1000);
     $tid = $lr <= 700 ? 'title_dragon1' : ($lr <= 940 ? 'title_dragon2' : 'title_dragon3');
-    $hd = db()->prepare('SELECT id FROM equips WHERE uid=? AND slot=? AND name=?');
-    $hd->execute([$uid, 'title', title_ids()[$tid]]);
-    if ($hd->fetch()) {
-        add_mat($uid, 'enhance_t2', 20);
-        add_mat($uid, 'egg_unknown', 5);
-        return '称号【' . title_ids()[$tid] . '】重复了，折成中级强化石×20+未知蛋×5！';
-    }
     give_title($uid, $tid);
     return '龙鳞宝箱开出大奖：称号【' . title_ids()[$tid] . '】！';
 }
@@ -6294,11 +6308,30 @@ function use_tent(int $uid): string
     $u = user_by_id($uid);
     if (!$u) { return '角色不存在。'; }
     if (empty(mats_of($uid)['tent'])) { return '你没有随身帐篷。'; }
+    if (isset($_SESSION['battle']) && is_array($_SESSION['battle'])) { return '战斗中不能扎营，先打完！'; }
+    if (!empty(mats_of($uid)['dummy_on'])) { return '人偶挂机中不能扎营，先停下人偶！'; }
     $u['hp'] = (int) $u['maxhp'];
     $u['mp'] = (int) ($u['maxmp'] ?? 0);
     user_save($u);
     return '支起帐篷睡了一觉，生命魔力全满！';
 }
+// 自动售卖：开着且有时间，每得装备即判品质卖掉（离线/在线通用）
+function auto_sell_check(int $uid, int $q): string
+{
+    $mats = mats_of($uid);
+    if (empty($mats['autosell_on']) || empty($mats['autosell_time'])) { return ''; }
+    $lv = (int) ($mats['autosell_q'] ?? 2);
+    if ($q > $lv) { return ''; }
+    $del = db()->query('SELECT id FROM equips WHERE uid=' . $uid . ' AND quality=' . $q . ' ORDER BY id DESC LIMIT 1')->fetchColumn();
+    if ($del) { db()->prepare('DELETE FROM equips WHERE id=?')->execute([(int) $del]); }
+    add_mat($uid, 'autosell_time', -60);
+    if ((mats_of($uid)['autosell_time'] ?? 0) <= 0) { db()->prepare('DELETE FROM mats WHERE uid=? AND mat=?')->execute([$uid, 'autosell_on']); }
+    $price = [0 => 5, 1 => 12, 2 => 30][$q] ?? 5;
+    $u = user_by_id($uid);
+    if ($u) { $u['gold'] = (int) $u['gold'] + $price; user_save($u); }
+    return '（自动售卖+' . $price . '铜）';
+}
+
 
 function grant_chapter_titles(int $uid): void
 {

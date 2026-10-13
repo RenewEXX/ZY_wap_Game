@@ -135,6 +135,14 @@ if ($a === 'dummynum') {
     header('Location: bag.php?tab=func');
     exit;
 }
+if ($a === 'autosell') {
+    $v = (string) ($_GET['v'] ?? '');
+    if ($v === '1') { mat_set((int) $u['id'], 'autosell_on', 1); flash_set('自动售卖开了。'); }
+    elseif ($v === '0') { db()->prepare('DELETE FROM mats WHERE uid=? AND mat=?')->execute([(int) $u['id'], 'autosell_on']); flash_set('自动售卖关了。'); }
+    else { $qq = (int) ($_GET['q'] ?? 2); if (!in_array($qq, [0, 1, 2], true)) { $qq = 2; } mat_set((int) $u['id'], 'autosell_q', $qq); flash_set('自动售卖只卖' . ['低劣', '普通', '优秀'][$qq] . '及以下。'); }
+    header('Location: bag.php?tab=func');
+    exit;
+}
 if ($a === 'usebook') {
     flash_set(use_skill_book((int) $u['id'], (string) ($_GET['id'] ?? '')));
     header('Location: skills.php');
@@ -353,6 +361,10 @@ if ($tab === 'equip') {
     echo '离线模块：' . (!empty($dm['offline_on']) ? '已开通，剩' . h(dummy_fmt((int) ($dm['offline_time'] ?? 0))) . '（独立计时）' : '未开通，去<a href="mall.php">商城</a>') . '<br>';
     $dn = (int) ($dm['dummy_num'] ?? 6);
     echo '每次打怪：' . ($dn === 1 ? '<b>1只(稳)</b>' : '<a href="bag.php?a=dummynum&n=1">1只(稳)</a>') . ' ' . ($dn === 3 ? '<b>3只</b>' : '<a href="bag.php?a=dummynum&n=3">3只</a>') . ' ' . ($dn === 6 ? '<b>6只(快)</b>' : '<a href="bag.php?a=dummynum&n=6">6只(快)</a>') . '<br>';
+    $am = mats_of((int) $u['id']);
+    echo '自动售卖：' . (!empty($am['autosell_on']) ? '开(剩' . h(dummy_fmt((int) ($am['autosell_time'] ?? 0))) . ') <a href="bag.php?a=autosell&v=0">关</a>' : (empty($am['autosell_time']) ? '没时间，去<a href="mall.php">商城人偶栏</a>买' : '<a href="bag.php?a=autosell&v=1">开</a>'));
+    $aq = (int) ($am['autosell_q'] ?? 2);
+    echo ' 卖：' . ($aq === 0 ? '<b>低劣</b>' : '<a href="bag.php?a=autosell&q=0">低劣</a>') . ' ' . ($aq === 1 ? '<b>普通及以下</b>' : '<a href="bag.php?a=autosell&q=1">普通及以下</a>') . ' ' . ($aq === 2 ? '<b>优秀及以下</b>' : '<a href="bag.php?a=autosell&q=2">优秀及以下</a>') . '<br>';
     $cardLeft = (int) ($mats['exp_card_until'] ?? 0) - time();
     if ($cardLeft > 0) {
         $func = true;

@@ -139,6 +139,27 @@ if ($a === 'feed') {
     header('Location: pet.php?a=view&id=' . (int) ($_GET['id'] ?? 0));
     exit;
 }
+if ($a === 'feedexp') {
+    $st = db()->prepare('SELECT * FROM pets WHERE id=? AND uid=?');
+    $st->execute([(int) ($_GET['id'] ?? 0), $uid]);
+    $p = $st->fetch();
+    if (!$p) { flash_set('没有这只宠物。'); }
+    elseif ((int) $p['level'] >= 20) { flash_set('经验药只喂到20级，它已经毕业了，自己去打怪升级。'); }
+    elseif (empty(mats_of($uid)['pet_exp_potion'])) { flash_set('没有宠物经验药，去商城宠物栏买。'); }
+    else {
+        add_mat($uid, 'pet_exp_potion', -1);
+        $lv = (int) $p['level'];
+        $pe = (int) $p['exp'] + 500;
+        $msg = '';
+        while ($lv < 20 && $pe >= $lv * 100) { $pe -= $lv * 100; $lv++; $msg .= '升到了' . $lv . '级！'; }
+        if ($lv >= 20) { $lv = 20; $pe = 0; }
+        $stats = pet_stats(['species' => $p['species'], 'level' => $lv]);
+        db()->prepare('UPDATE pets SET level=?, exp=?, hp=? WHERE id=?')->execute([$lv, $pe, $stats['maxhp'], (int) $p['id']]);
+        flash_set('经验药灌下去，' . $msg . '（最高20级）');
+    }
+    header('Location: pet.php?a=view&id=' . (int) ($_GET['id'] ?? 0));
+    exit;
+}
 
 wap_start('宠物');
 if ($a === 'dex') {
@@ -181,6 +202,7 @@ if ($a === 'view') {
         echo '<a href="pet.php?a=deploy&id=' . $p['id'] . '">出战</a> ';
     }
     echo '<a href="pet.php?a=feed&id=' . $p['id'] . '">喂粮食(清疲劳)</a> ';
+    echo '<a href="pet.php?a=feedexp&id=' . $p['id'] . '">喂经验药(到20级)</a> ';
     echo '<a href="pet.php?a=release&id=' . $p['id'] . '">放生</a> ';
     if ($p['status'] === 'weak') {
         echo '<a href="pet.php?a=heal&id=' . $p['id'] . '">治疗(' . h(fmt_money(pet_heal_cost($p))) . ')</a> ';

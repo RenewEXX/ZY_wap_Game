@@ -213,12 +213,12 @@ if ($tab === 'equip') {
         if ($sid === 'ring') {
             for ($i = 0; $i < 2; $i++) {
                 $r = $rings[$i] ?? null;
-                echo $sname . ($i + 1) . '：' . ($r ? enhance_tag_html((int) ($r['enhance_level'] ?? 0)) . '<a href="equip.php?id=' . $r['id'] . '"><span style="color:' . equip_color($r) . '">' . h(equip_shortname($r['name'])) . '</span></a>' : '空') . '<br>';
+                echo $sname . ($i + 1) . '：' . ($r ? (($r['slot'] ?? '') === 'title' ? '' : enhance_tag_html((int) ($r['enhance_level'] ?? 0))) . '<a href="equip.php?id=' . $r['id'] . '"><span style="color:' . equip_color($r) . '">' . h(equip_shortname($r['name'])) . '</span></a>' : '空') . '<br>';
             }
             continue;
         }
         $e = $wornBy[$sid] ?? null;
-        echo $sname . '：' . ($e ? enhance_tag_html((int) ($e['enhance_level'] ?? 0)) . '<a href="equip.php?id=' . $e['id'] . '"><span style="color:' . equip_color($e) . '">' . h(equip_shortname($e['name'])) . '</span></a>' : '空') . '<br>';
+        echo $sname . '：' . ($e ? (($e['slot'] ?? '') === 'title' ? '' : enhance_tag_html((int) ($e['enhance_level'] ?? 0))) . '<a href="equip.php?id=' . $e['id'] . '"><span style="color:' . equip_color($e) . '">' . h(equip_shortname($e['name'])) . '</span></a>' : '空') . '<br>';
     }
     echo '<div class="hr">--------</div>';
     echo '库存：<br>';
@@ -228,7 +228,7 @@ if ($tab === 'equip') {
             continue;
         }
         $has = true;
-        echo enhance_tag_html((int) ($e['enhance_level'] ?? 0)) . '<a href="equip.php?id=' . $e['id'] . '"><span style="color:' . equip_color($e) . '">' . h(equip_shortname($e['name'])) . '</span></a>[' . h($slots[$e['slot']] ?? '') . ']';
+        echo ((($e['slot'] ?? '') === 'title') ? '' : enhance_tag_html((int) ($e['enhance_level'] ?? 0))) . '<a href="equip.php?id=' . $e['id'] . '"><span style="color:' . equip_color($e) . '">' . h(equip_shortname($e['name'])) . '</span></a>[' . h($slots[$e['slot']] ?? '') . ']';
         if ((int) ($e['req_lv'] ?? 1) > 1 || (int) ($e['req_str'] ?? 0) > 0 || (int) ($e['req_agi'] ?? 0) > 0) {
             echo '（' . h(equip_req_text($e)) . '）';
         }
@@ -279,6 +279,21 @@ if ($tab === 'equip') {
             echo '<span class="muted">·' . h(mat_name($mid)) . 'x' . $num . '</span> <a href="bag.php?a=drop&id=' . h($mid) . '&tab=mat">扔</a><br>';
         }
     }
+} elseif ($tab === 'book') {
+    $mats = mats_of((int) $u['id']);
+    echo '技能书：<br>';
+    $hasBook = false;
+    foreach (skill_books() as $bid => $b) {
+        if (empty($mats[$bid])) {
+            continue;
+        }
+        $hasBook = true;
+        echo '·' . h($b['name']) . 'x' . $mats[$bid] . ' <a href="bag.php?a=usebook&id=' . h($bid) . '">使用</a> <a href="bag.php?a=drop&id=' . h($bid) . '&tab=book">扔</a><br>';
+    }
+    if (!$hasBook) {
+        echo '<span class="muted">空。</span>';
+    }
+
 } elseif ($tab === 'quest') {
     $qs = quest_state($u);
     echo '当前：' . h($qs['name']) . '<br><span class="muted">' . h($qs['todo']) . '</span><br>';
@@ -300,18 +315,6 @@ if ($tab === 'equip') {
         echo '<span class="muted">暂无任务物品。</span>';
     }
     echo '<div class="hr">--------</div>';
-    echo '技能书：<br>';
-    $hasBook = false;
-    foreach (skill_books() as $bid => $b) {
-        if (empty($mats[$bid])) {
-            continue;
-        }
-        $hasBook = true;
-        echo '·' . h($b['name']) . 'x' . $mats[$bid] . ' <a href="bag.php?a=usebook&id=' . h($bid) . '">使用</a> <a href="bag.php?a=drop&id=' . h($bid) . '&tab=book">扔</a><br>';
-    }
-    if (!$hasBook) {
-        echo '<span class="muted">空。</span>';
-    }
 } elseif ($tab === 'func') {
     $mats = mats_of((int) $u['id']);
     echo '功能道具：<br>';

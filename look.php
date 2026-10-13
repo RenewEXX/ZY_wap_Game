@@ -39,7 +39,7 @@ $wst->execute([(int) $t['id']]);
 $hasGear = false;
 foreach (equip_sort_by_slot($wst->fetchAll()) as $we) {
     $hasGear = true;
-    echo enhance_tag_html((int) ($we['enhance_level'] ?? 0)) . '<span style="color:' . equip_color($we) . '">' . h(equip_shortname((string) $we['name'])) . '</span><br>';
+    echo ((($we['slot'] ?? '') === 'title') ? '' : enhance_tag_html((int) ($we['enhance_level'] ?? 0))) . '<span style="color:' . equip_color($we) . '">' . h(equip_shortname((string) $we['name'])) . '</span><br>';
 }
 if (!$hasGear) {
     echo '<span class="muted">空身。</span><br>';

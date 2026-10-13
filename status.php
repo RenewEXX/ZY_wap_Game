@@ -21,7 +21,7 @@ $worn = equip_sort_by_slot($st->fetchAll());
 if ($worn !== []) {
     echo '穿戴：<br>';
     foreach ($worn as $e) {
-        echo '·[' . h(equip_slots()[$e['slot']] ?? '') . ']' . enhance_tag_html((int) ($e['enhance_level'] ?? 0)) . '<a href="equip.php?id=' . $e['id'] . '"><span style="color:' . equip_color($e) . '">' . h(equip_shortname($e['name'])) . '</span></a><br>';
+        echo '·[' . h(equip_slots()[$e['slot']] ?? '') . ']' . ((($e['slot'] ?? '') === 'title') ? '' : enhance_tag_html((int) ($e['enhance_level'] ?? 0))) . '<a href="equip.php?id=' . $e['id'] . '"><span style="color:' . equip_color($e) . '">' . h(equip_shortname($e['name'])) . '</span></a><br>';
     }
     $gs = gear_stats((int) $u['id']);
     echo '<span class="muted">共加成：攻+' . (int) $gs['atk'] . ' 防+' . (int) $gs['def'] . ' 命+' . (int) $gs['hp'];

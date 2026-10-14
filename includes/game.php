@@ -2311,6 +2311,7 @@ function affix_catalog(): array
         'slow_resist' => ['name' => '减速抗性', 'slots' => ['shoes'], 'data' => $r([[2, 4], [4, 7], [7, 12], [12, 18], [15, 25]], 50, 'slow_resist', 1)],
         'all_attr' => ['name' => '全属性', 'slots' => ['ring', 'necklace'], 'data' => $r([[1, 2], [2, 4], [4, 7], [7, 10], [8, 12]], 70)],
         'gold_gain' => ['name' => '金币获取', 'slots' => ['ring'], 'data' => $r([[2, 5], [5, 8], [8, 13], [13, 19], [15, 25]], 40, 'gold_gain', 1)],
+        'truedmg' => ['name' => '真伤', 'slots' => ['weapon','necklace','title'], 'data' => ['tiers' => [[1,2],[2,4],[4,7],[7,10],[8,12]], 'precision' => 0]],
         'magic_find' => ['name' => '魔法物品掉落', 'slots' => ['ring'], 'data' => $r([[1, 2], [2, 4], [4, 7], [7, 10], [8, 12]], 30, 'magic_find', 1)],
     ];
 }

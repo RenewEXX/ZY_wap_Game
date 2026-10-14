@@ -199,6 +199,14 @@ if ($m !== '' && isset($goods[$m])) {
         echo '<b>' . h(fmt_diamond(100)) . '</b>/张(1~100级用，1小时双倍经验) ';
         echo '<a href="mall.php?a=buy&m=exp_card100&n=1">买1</a> ';
         echo '<a href="mall.php?a=buy&m=exp_card100&n=5">买5</a><br>';
+        echo '·<b><span style="color:#fc3">【10倍经验卡·天】</span></b> ';
+        echo '<b>' . h(fmt_diamond(10)) . '</b>/张(1天10倍) ';
+        echo '<a href="mall.php?a=buy&m=exp_card10x&n=1">买1</a> ';
+        echo '<a href="mall.php?a=buy&m=exp_card10x&n=5">买5</a><br>';
+        echo '·<b><span style="color:#fc3">【1000倍经验卡·天】</span></b> ';
+        echo '<b>' . h(fmt_diamond(10)) . '</b>/张(1天1000倍，测试冲级用) ';
+        echo '<a href="mall.php?a=buy&m=exp_card1000x&n=1">买1</a> ';
+        echo '<a href="mall.php?a=buy&m=exp_card1000x&n=5">买5</a><br>';
         echo '·<b><span style="color:#c6f">【属性洗点药】</span></b> ';
         echo '<b>' . h(fmt_diamond(300)) . '</b>/瓶(重新分配属性点，第三章结局也送) ';
         echo '<a href="mall.php?a=buy&m=reset_potion&n=1">买1</a><br>'; echo '·<a href="mall.php?m=rename_card"><b><span style="color:#6cf">【改名卡】</span></b></a> <b>' . h(fmt_diamond(100)) . '</b>/张（本大区唯一，去状态页改名） <a href="mall.php?a=buy&m=rename_card&n=1">买1</a><br>';

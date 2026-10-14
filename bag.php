@@ -148,6 +148,20 @@ if ($a === 'usebook') {
     header('Location: skills.php');
     exit;
 }
+if ($a === 'usecardx') {
+
+    $mult = (int) ($_GET['m'] ?? 10);
+
+    if (!in_array($mult, [10, 1000], true)) { $mult = 10; }
+
+    flash_set(use_exp_cardx((int) $u['id'], $mult));
+
+    header('Location: bag.php?tab=func');
+
+    exit;
+
+}
+
 if ($a === 'usecard') {
     flash_set(use_exp_card((int) $u['id']));
     header('Location: bag.php?tab=func');
@@ -322,6 +336,14 @@ if ($tab === 'equip') {
     if (!empty($mats['exp_card100'])) {
         $func = true;
         echo '·升级卡100型x' . $mats['exp_card100'] . ' <a href="bag.php?a=usecard">使用(1小时双倍)</a><br>';
+    }
+    if (!empty($mats['exp_card10x'])) {
+        $func = true;
+        echo '·10倍经验卡·天x' . $mats['exp_card10x'] . ' <a href="bag.php?a=usecardx&m=10">使用(1天10倍)</a><br>';
+    }
+    if (!empty($mats['exp_card1000x'])) {
+        $func = true;
+        echo '·1000倍经验卡·天x' . $mats['exp_card1000x'] . ' <a href="bag.php?a=usecardx&m=1000">使用(1天1000倍)</a><br>';
     }
     if (!empty($mats['reset_potion'])) {
         $func = true;

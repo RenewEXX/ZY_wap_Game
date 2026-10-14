@@ -1440,12 +1440,13 @@ function pet_species(): array
         'shadow_cat' => ['name' => '影猫', 'quality' => 'rare', 'growth' => 1.3, 'atk' => 10, 'def' => 5, 'hp' => 50, 'spd' => 18, 'crit' => 5, 'cd' => 150, 'active' => '暗影突袭', 'mult' => 1.5, 'passive' => '敏捷：速度+10%', 'source' => '雷恩掉落'],
         'abaddon_spawn' => ['name' => '蚀影幼体', 'quality' => 'epic', 'growth' => 1.6, 'atk' => 14, 'def' => 7, 'hp' => 80, 'spd' => 16, 'crit' => 6, 'cd' => 170, 'active' => '蚀影冲击', 'mult' => 1.4, 'passive' => '君王血脉：攻击+10%', 'source' => '阿巴顿掉落'],
         'frost_wolf_pup' => ['name' => '霜狼幼崽', 'quality' => 'epic', 'growth' => 1.7, 'atk' => 20, 'def' => 12, 'hp' => 120, 'spd' => 20, 'crit' => 8, 'cd' => 150, 'active' => '寒霜扑咬', 'mult' => 1.5, 'passive' => '霜甲：承伤-12%', 'source' => '凛冬之王掉落'],
-        'fire_dragon' => ['name' => '火龙多伊尔幼体', 'quality' => 'legend', 'growth' => 2.2, 'atk' => 34, 'def' => 16, 'hp' => 200, 'spd' => 18, 'crit' => 12, 'cd' => 170, 'active' => '烬焰吐息', 'mult' => 1.8, 'passive' => '龙威：攻击+20%，承伤-10%', 'source' => '世界BOSS掉落'],
+        'fire_dragon' => ['name' => '火龙多伊尔幼体', 'quality' => 'legend', 'growth' => 2.3, 'atk' => 36, 'def' => 18, 'hp' => 220, 'spd' => 18, 'crit' => 12, 'cd' => 170, 'active' => '烬焰吐息', 'mult' => 1.8, 'passive' => '龙威：攻击+20%，承伤-10%', 'source' => '世界BOSS掉落'],
         'puppet_doll' => ['name' => '傀儡人偶', 'quality' => 'epic', 'growth' => 1.6, 'atk' => 12, 'def' => 8, 'hp' => 70, 'spd' => 12, 'crit' => 6, 'cd' => 160, 'active' => '提线绞杀', 'mult' => 1.4, 'passive' => '丝甲：承伤-10%', 'source' => '牵线者掉落'],
         'ember_pup' => ['name' => '火绒犬', 'quality' => 'good', 'growth' => 1.1, 'atk' => 8, 'def' => 6, 'hp' => 70, 'spd' => 12, 'crit' => 4, 'cd' => 155, 'active' => '火绒扑咬', 'mult' => 1.3, 'passive' => '暖绒：主人火抗+5%', 'source' => '宠物蛋'],
         'mist_fox' => ['name' => '雾狐', 'quality' => 'rare', 'growth' => 1.35, 'atk' => 11, 'def' => 5, 'hp' => 60, 'spd' => 22, 'crit' => 7, 'cd' => 160, 'active' => '雾隐突袭', 'mult' => 1.5, 'passive' => '雾隐：闪避+3%', 'source' => '宠物蛋'],
         'thunder_bird' => ['name' => '雷鸟', 'quality' => 'rare', 'growth' => 1.35, 'atk' => 12, 'def' => 4, 'hp' => 55, 'spd' => 24, 'crit' => 8, 'cd' => 165, 'active' => '落雷', 'mult' => 1.6, 'passive' => '雷速：出手更快', 'source' => '宠物蛋'],
-        'abyss_witch' => ['name' => '魔女阿比希尔', 'quality' => 'legend', 'growth' => 2.0, 'atk' => 30, 'def' => 14, 'hp' => 180, 'spd' => 20, 'crit' => 12, 'cd' => 175, 'active' => '魔女低语', 'mult' => 1.7, 'passive' => '月之庇佑：低语偷取敌人5%生命', 'source' => '限时（11月11日前）'],
+        'abyss_witch' => ['name' => '魔女阿比希尔', 'quality' => 'legend', 'growth' => 2.4, 'atk' => 38, 'def' => 12, 'hp' => 120, 'spd' => 20, 'crit' => 12, 'cd' => 175, 'active' => '魔女低语', 'mult' => 1.7, 'passive' => '月之庇佑：低语偷取敌人5%生命', 'source' => '限时（11月11日前）'],
+        'earth_dragon' => ['name' => '土龙岳柱幼体', 'quality' => 'legend', 'growth' => 2.1, 'atk' => 16, 'def' => 24, 'hp' => 380, 'spd' => 10, 'crit' => 5, 'cd' => 190, 'active' => '岳柱镇压', 'mult' => 1.2, 'passive' => '磐岩：承伤-25%', 'source' => '土龙岳柱掉落'],
     ];
 }
 
@@ -1494,10 +1495,13 @@ function pet_stats(array $p): array
     $lv = max(1, (int) $p['level']);
     $qmult = ['common' => 1.0, 'good' => 1.1, 'rare' => 1.2, 'epic' => 1.35, 'legend' => 1.5][$sp['quality']] ?? 1.0;
     $gf = 0.8 + (float) $sp['growth'] * 0.4;
+    $baseA = (float) ($sp['atk'] ?? 10);
+    $baseH = (float) ($sp['hp'] ?? 60);
+    $baseD = (float) ($sp['def'] ?? 5);
     $s = [
-        'atk' => max(1, (int) ((1 + ($lv - 1) * 0.5) * $gf * $qmult)),
-        'def' => max(0, (int) ((0.5 + ($lv - 1) * 0.25) * $gf * $qmult)),
-        'maxhp' => max(1, (int) ((20 + ($lv - 1) * 8) * (0.8 + (float) $sp['growth'] * 0.3) * $qmult)),
+        'atk' => max(1, (int) (($baseA * 0.4 + ($lv - 1) * $baseA * 0.06) * $gf * $qmult)),
+        'def' => max(0, (int) (($baseD * 0.4 + ($lv - 1) * $baseD * 0.05) * $gf * $qmult)),
+        'maxhp' => max(1, (int) (($baseH + ($lv - 1) * $baseH * 0.12) * (0.8 + (float) $sp['growth'] * 0.3) * $qmult)),
         'spd' => (int) $sp['spd'],
         'crit' => (float) $sp['crit'],
         'cd' => (float) $sp['cd'],
@@ -1508,29 +1512,27 @@ function pet_stats(array $p): array
     if ($p['species'] === 'dragon') {
         $s['def'] = (int) ($s['def'] * 1.15);
     }
-    if ($p['species'] === 'shadow_cat') {
+    if ($p['species'] === 'shadow_cat' || $p['species'] === 'mist_fox') {
         $s['spd'] = (int) ($s['spd'] * 1.1);
     }
     if ($p['species'] === 'abaddon_spawn') {
         $s['atk'] = (int) ($s['atk'] * 1.1);
+    }
     if ($p['species'] === 'abyss_witch') {
-
-        $s['atk'] = (int) ($s['atk'] * 1.15);
-
+        $s['atk'] = (int) ($s['atk'] * 1.3);
+        $s['maxhp'] = (int) ($s['maxhp'] * 0.7);
+    }
+    if ($p['species'] === 'fire_dragon') {
+        $s['atk'] = (int) ($s['atk'] * 1.2);
         $s['maxhp'] = (int) ($s['maxhp'] * 1.2);
-
     }
-
-    if ($p['species'] === 'mist_fox') {
-
-        $s['spd'] = (int) ($s['spd'] * 1.1);
-
-    }
-
+    if ($p['species'] === 'earth_dragon') {
+        $s['atk'] = (int) ($s['atk'] * 0.5);
+        $s['maxhp'] = (int) ($s['maxhp'] * 1.8);
+        $s['def'] = (int) ($s['def'] * 1.3);
     }
     return $s;
 }
-
 function my_pets(int $uid): array
 {
     $st = db()->prepare('SELECT * FROM pets WHERE uid=? ORDER BY active DESC, level DESC, id');
@@ -1665,6 +1667,9 @@ function pet_hurt(int $uid, int $md): string
         return '';
     }
     $take = max(1, (int) ($md / 2));
+    if ($p['species'] === 'earth_dragon') {
+        $take = max(1, (int) ($take * 0.75));
+    }
     if ($p['species'] === 'ghost' || $p['species'] === 'puppet_doll') {
         $take = max(1, (int) ($take * 0.9));
     }

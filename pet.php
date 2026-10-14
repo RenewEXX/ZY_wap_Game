@@ -164,7 +164,10 @@ if ($a === 'feedexp') {
 wap_start('宠物');
 if ($a === 'dex') {
     echo '【宠物图鉴】<br>';
-    foreach (pet_species() as $sp) {
+    $order = ['common' => 0, 'good' => 1, 'rare' => 2, 'epic' => 3, 'legend' => 4];
+    $dex = pet_species();
+    uasort($dex, fn($a, $b) => (($order[$a['quality']] ?? 9) <=> ($order[$b['quality']] ?? 9)) ?: strcmp($a['name'], $b['name']));
+    foreach ($dex as $sp) {
         echo '·' . h($sp['name']) . '（' . h(pet_quality_name($sp['quality'])) . '）：' . h($sp['source']) . '<br>';
         echo '<span class="muted">主动' . h($sp['active']) . '　被动' . h($sp['passive']) . '</span><br>';
     }

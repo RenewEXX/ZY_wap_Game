@@ -251,7 +251,7 @@ if ($tab === 'equip') {
             continue;
         }
         // 系统标记/功能物：不算杂物（帐篷/人偶/离线/自动复活/称号位等）
-        if (in_array($mid, ['tent', 'dummy_num', 'dummy_on', 'dummy_time', 'dummy_acc', 'dummy_last', 'dummy_total', 'offline_on', 'offline_time', 'pet_autorev', 'title_wear', 'seen_last', 'exp_card_until', 'bag_ext5_used', 'bag_ext10_used'], true) || str_starts_with($mid, 'hatch_')) {
+        if (in_array($mid, ['tent', 'dummy_num', 'dummy_on', 'dummy_time', 'dummy_acc', 'dummy_last', 'dummy_total', 'offline_on', 'offline_time', 'pet_autorev', 'title_wear', 'seen_last', 'exp_card_until', 'bag_ext5_used', 'bag_ext10_used', 'autosell_on', 'autosell_time', 'autosell_q', 'autosell_earned'], true) || str_starts_with($mid, 'autosell_') || str_starts_with($mid, 'hatch_')) {
             continue;
         }
         if (!is_craft_mat($mid)) {

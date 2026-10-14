@@ -112,7 +112,7 @@ function locations(): array
             'exits' => ['gate' => '罪渊入口'],
             'monsters' => [],
         ],
-    ] + ch1_locations() + dsw_locations() + ch2_locations() + abx_locations() + ch3_locations() + mx_locations() + farm_locations() + ice_locations() + fr_locations() + fo_locations() + em_locations() + wb_locations() + pz_locations() + sen_locations() + wild3_locations() + frostburg_locations() + greenheart_locations() + wild45_locations() + as_locations() + vx_locations() + gr_locations();
+    ] + ch1_locations() + dsw_locations() + ch2_locations() + abx_locations() + ch3_locations() + mx_locations() + farm_locations() + ice_locations() + fr_locations() + fo_locations() + em_locations() + wb_locations() + pz_locations() + sen_locations() + wild3_locations() + frostburg_locations() + greenheart_locations() + wild45_locations() + as_locations() + vx_locations() + gr_locations() + ry_locations();
 }
 
 function loc(string $id): array
@@ -233,6 +233,12 @@ function monsters(): array
         'em_magma' => ['name' => '熔核行者', 'hp' => 1040000, 'atk' => 6800, 'exp' => 5239000, 'gold' => 2501200],
         'em_ashlord' => ['name' => '灰烬领主侍从', 'hp' => 1170000, 'atk' => 7120, 'exp' => 5915000, 'gold' => 2839200],
         'em_heart' => ['name' => '熔心化身', 'hp' => 2560000, 'atk' => 8100, 'exp' => 13520000, 'gold' => 6422000],
+        // 岩狱深渊副本（700~900级）
+        'tt_rock' => ['name' => '岩狱岩奴', 'hp' => 4200000, 'atk' => 12000, 'exp' => 22000000, 'gold' => 10500000],
+        'tt_crag' => ['name' => '岩狱峭兽', 'hp' => 4800000, 'atk' => 13200, 'exp' => 25000000, 'gold' => 12000000],
+        'tt_magma' => ['name' => '岩狱熔裔', 'hp' => 5500000, 'atk' => 14500, 'exp' => 29000000, 'gold' => 13800000],
+        'tt_warden' => ['name' => '岩狱狱守', 'hp' => 6400000, 'atk' => 15800, 'exp' => 34000000, 'gold' => 16200000],
+        'tt_titan' => ['name' => '岩狱泰坦·土龙岳柱', 'hp' => 15000000, 'atk' => 20000, 'exp' => 90000000, 'gold' => 42000000],
         // 傀儡回廊副本（380~460级）
         'pz_puller' => ['name' => '回廊牵线者', 'hp' => 800000, 'atk' => 3000, 'exp' => 1820000, 'gold' => 858000],
         'pz_dancer' => ['name' => '回廊舞者', 'hp' => 880000, 'atk' => 3150, 'exp' => 2015000, 'gold' => 949000],
@@ -298,6 +304,12 @@ function monsters(): array
         'gr_shadow' => ['name' => '咕噜之影', 'hp' => 3200000, 'atk' => 7200, 'exp' => 6200000, 'gold' => 3000000],
         'gr_nightmare' => ['name' => '荒原梦魇', 'hp' => 3250000, 'atk' => 7300, 'exp' => 6300000, 'gold' => 3050000],
         'gr_ancient' => ['name' => '远古暴食者', 'hp' => 3400000, 'atk' => 7500, 'exp' => 6600000, 'gold' => 3200000],
+        // 岩狱副本（700~900级）
+        'ry_crawler' => ['name' => '岩狱爬行者', 'hp' => 3800000, 'atk' => 8000, 'exp' => 7800000, 'gold' => 3700000],
+        'ry_guard' => ['name' => '岩狱守卫', 'hp' => 4200000, 'atk' => 8500, 'exp' => 8600000, 'gold' => 4100000],
+        'ry_shaper' => ['name' => '岩狱塑岩者', 'hp' => 4600000, 'atk' => 9000, 'exp' => 9500000, 'gold' => 4500000],
+        'ry_warder' => ['name' => '岩狱狱卒', 'hp' => 5000000, 'atk' => 9500, 'exp' => 10400000, 'gold' => 4900000],
+        'ry_titan' => ['name' => '岩狱泰坦·土龙岳柱', 'hp' => 9000000, 'atk' => 11000, 'exp' => 20000000, 'gold' => 9500000],
     ];
 }
 
@@ -371,6 +383,8 @@ function mall_goods(): array
     // 下架：传奇宠物不直购（魔女之茧）
     $g['dragon_box'] = ['name' => '龙鳞宝箱', 'price' => 200, 'unit' => 1];
     $g['autosell_time'] = ['name' => '自动售卖', 'price' => 20, 'unit' => 3600];
+    $g['exp_card10x'] = ['name' => '10倍经验卡·天', 'price' => 10, 'unit' => 1];
+    $g['exp_card1000x'] = ['name' => '1000倍经验卡·天', 'price' => 10, 'unit' => 1];
     $g['tent'] = ['name' => '随身帐篷', 'price' => 100, 'unit' => 1];
     $g['exp_card100'] = ['name' => '升级卡100型', 'price' => 100, 'unit' => 1];
     $g['reset_potion'] = ['name' => '属性洗点药', 'price' => 300, 'unit' => 1];
@@ -1132,7 +1146,7 @@ function war_enemies(int $uid): array
 
 function boss_of_map(string $loc): string
 {
-    static $m = ['boss' => 'knight', 'echo_room' => 'echo_rayne', 'rift' => 'abyss_eye', 'baltar' => 'dark_lily', 'dsw_throne' => 'swamp_king', 'abx_throne' => 'abaddon', 'theater' => 'string_puller', 'mx_heart' => 'silk_mother', 'frost_throne' => 'winter_king', 'fr_core' => 'fr_leviathan', 'volcano_heart' => 'ancient_ruin_golem', 'em_core' => 'em_heart', 'pz_core' => 'pz_master', 'sen_core' => 'sen_avatar', 'shadow_den' => 'shadow_claw', 'brass_chapel' => 'brass_bishop', 'wanderer_camp' => 'tundra_wanderer', 'ice_fall' => 'avalanche_titan', 'obsidian_field' => 'obsidian_colossus', 'as_core' => 'ash_titan', 'vx_core' => 'vx_tyrant'];
+    static $m = ['boss' => 'knight', 'echo_room' => 'echo_rayne', 'rift' => 'abyss_eye', 'baltar' => 'dark_lily', 'dsw_throne' => 'swamp_king', 'abx_throne' => 'abaddon', 'theater' => 'string_puller', 'mx_heart' => 'silk_mother', 'frost_throne' => 'winter_king', 'fr_core' => 'fr_leviathan', 'volcano_heart' => 'ancient_ruin_golem', 'em_core' => 'em_heart', 'pz_core' => 'pz_master', 'sen_core' => 'sen_avatar', 'shadow_den' => 'shadow_claw', 'brass_chapel' => 'brass_bishop', 'wanderer_camp' => 'tundra_wanderer', 'ice_fall' => 'avalanche_titan', 'obsidian_field' => 'obsidian_colossus', 'as_core' => 'ash_titan', 'vx_core' => 'vx_tyrant', 'ry_core' => 'ry_titan'];
     return $m[$loc] ?? '';
 }
 
@@ -1470,6 +1484,7 @@ function pet_eggs(): array
         'egg_bird' => ['species' => 'thunder_bird', 'name' => '雷鸟蛋'],
         'witch_egg' => ['species' => 'abyss_witch', 'name' => '魔女之茧（限时）'],
         'frost_egg' => ['species' => 'frost_wolf_pup', 'name' => '霜狼幼崽蛋'],
+        'earth_dragon_egg' => ['species' => 'earth_dragon', 'name' => '土龙岳柱之蛋'],
         'fire_dragon_egg' => ['species' => 'fire_dragon', 'name' => '传奇火龙宠物蛋'],
         'egg_unknown' => ['species' => '', 'name' => '未知宠物蛋'],
     ];
@@ -1709,6 +1724,10 @@ function roll_pet_egg(int $uid, string $mid): string
     if ($mid === 'string_puller') {
         add_mat($uid, 'puppet_egg', 1);
         return '傀儡人偶蛋';
+    }
+    if ($mid === 'ry_titan' && mt_rand(1, 100) <= 5) {
+        add_mat($uid, 'earth_dragon_egg', 1);
+        return '土龙岳柱幼体蛋（3%）';
     }
     return '';
 }
@@ -2471,6 +2490,9 @@ function equip_is_set(string $shortName): bool
     if (str_starts_with($shortName, '荆棘·')) {
         return true;
     }
+    if (str_starts_with($shortName, '岩狱·')) {
+        return true;
+    }
     if (str_starts_with($shortName, '寒霜·')) {
         return true;
     }
@@ -2517,6 +2539,9 @@ function equip_set_id(string $shortName): string
     if (str_starts_with($shortName, '荆棘·')) {
         return 'thorn';
     }
+    if (str_starts_with($shortName, '岩狱·')) {
+        return 'rockjail';
+    }
     return '';
 }
 
@@ -2545,9 +2570,9 @@ function equip_set_pieces(string $set): array
 
 function equip_set_owned_count(int $uid, string $set): int
 {
-    if (in_array($set, ['theater', 'frost', 'ember', 'puppet', 'thorn'], true)) {
-        $mark = ['theater' => '%剧场·%', 'frost' => '%寒霜·%', 'ember' => '%烬焰·%', 'puppet' => '%傀儡·%', 'thorn' => '%荆棘·%'][$set];
-        $cap = ['theater' => 99, 'frost' => 3, 'ember' => 7, 'puppet' => 5, 'thorn' => 4][$set];
+    if (in_array($set, ['theater', 'frost', 'ember', 'puppet', 'thorn', 'rockjail'], true)) {
+        $mark = ['theater' => '%剧场·%', 'frost' => '%寒霜·%', 'ember' => '%烬焰·%', 'puppet' => '%傀儡·%', 'thorn' => '%荆棘·%', 'rockjail' => '%岩狱·%'][$set];
+        $cap = ['theater' => 99, 'frost' => 3, 'ember' => 7, 'puppet' => 5, 'thorn' => 4, 'rockjail' => 10][$set];
         $st = db()->prepare('SELECT COUNT(*) FROM equips WHERE uid=? AND pos="wear" AND name LIKE ?');
         $st->execute([(int) $uid, $mark]);
         return min($cap, (int) $st->fetchColumn());
@@ -2585,6 +2610,9 @@ function equip_set_bonus_text(string $set, int $owned): string
     }
     if ($set === 'thorn') {
         return '【荆棘套装】已穿' . $owned . '/4：3件物攻+6%，4件吸血+3%。';
+    }
+    if ($set === 'rockjail') {
+        return '【岩狱套装】已穿' . $owned . '/10：3件血+3000，5件减伤+8%，7件血+8000减伤+12%，10件血+20000减伤+20%、磐岩（承伤再-5%）。';
     }
     return '';
 }
@@ -2649,6 +2677,11 @@ function monster_drops(string $mid): array
         'gr_shadow' => ['slot' => 'shoes', 'base' => '咕噜之影靴', 'rate' => 0.08, 'q' => [0, 0, 50, 50, 0], 'legendary' => ['base' => '咕噜之影·真容', 'extra' => ['k' => 'dodge', 'v' => 5.0]]],
         'gr_nightmare' => ['slot' => 'weapon', 'base' => '梦魇之角', 'rate' => 0.09, 'q' => [0, 0, 45, 55, 0], 'legendary' => ['base' => '梦魇之角·惊醒', 'extra' => ['k' => 'execute', 'v' => 8.0]]],
         'gr_ancient' => ['slot' => 'necklace', 'base' => '远古暴食者之胃', 'rate' => 0.15, 'q' => [0, 0, 30, 50, 20], 'legendary' => ['base' => '远古暴食者·吞天', 'extra' => ['k' => 'truedmg', 'v' => 400.0]]],
+        'ry_crawler' => ['slot' => 'gloves', 'base' => '岩狱·爬行护手', 'rate' => 0.12, 'q' => [0, 20, 50, 30, 0]],
+        'ry_guard' => ['slot' => 'body', 'base' => '岩狱·守卫岩甲', 'rate' => 0.12, 'q' => [0, 20, 50, 30, 0]],
+        'ry_shaper' => ['slot' => 'head', 'base' => '岩狱·塑岩盔', 'rate' => 0.12, 'q' => [0, 20, 50, 30, 0]],
+        'ry_warder' => ['slot' => 'legs', 'base' => '岩狱·狱卒腿甲', 'rate' => 0.12, 'q' => [0, 20, 50, 30, 0]],
+        'ry_titan' => ['slot' => 'weapon', 'base' => '岩狱·泰坦之握', 'rate' => 0.3, 'q' => [0, 0, 30, 50, 20], 'legendary' => ['base' => '岩狱泰坦·岳柱', 'extra' => ['k' => 'damage_reduction', 'v' => 15.0]]],
         'corrupt_rat' => ['slot' => 'gloves', 'base' => '腐化鼠皮手套', 'rate' => 0.03, 'q' => [60, 35, 5, 0, 0]],
         'deep_bat' => ['slot' => 'shoes', 'base' => '深渊蝠翼靴', 'rate' => 0.04, 'q' => [20, 50, 30, 0, 0]],
         'runaway_miner' => ['slot' => 'weapon', 'base' => '矿工重锤', 'rate' => 0.05, 'q' => [0, 35, 45, 20, 0]],
@@ -2716,6 +2749,17 @@ function monster_drops(string $mid): array
         'south_flame_guard' => ['slot' => 'body', 'base' => '烬焰·守卫铠'],
         'ancient_ruin_golem' => ['slot' => 'offhand', 'off' => 'shield', 'base' => '遗迹壁垒', 'rate' => 0.3, 'q' => [0, 0, 20, 50, 30], 'legendary' => ['base' => '遗迹壁垒·不陨', 'extra' => ['k' => 'damage_reduction', 'v' => 4.0]]],
         'em_slag' => ['slot' => 'legs', 'base' => '烬焰·熔渣腿'],
+        'tt_rock' => ['slot' => 'body', 'base' => '岩狱·岩铠', 'rate' => 0.12, 'q' => [0, 20, 50, 30, 0]],
+        'tt_crag' => ['slot' => 'weapon', 'base' => '岩狱·峭刃', 'rate' => 0.12, 'q' => [0, 20, 50, 30, 0]],
+        'tt_magma' => ['slot' => 'head', 'base' => '岩狱·熔盔', 'rate' => 0.12, 'q' => [0, 20, 50, 30, 0]],
+        'tt_warden' => ['slot' => 'offhand', 'base' => '岩狱·狱盾', 'rate' => 0.12, 'q' => [0, 20, 50, 30, 0]],
+        'tt_rock2' => ['slot' => 'legs', 'base' => '岩狱·岩裙', 'rate' => 0.1, 'q' => [0, 20, 50, 30, 0]],
+        'tt_crag2' => ['slot' => 'gloves', 'base' => '岩狱·峭手', 'rate' => 0.1, 'q' => [0, 20, 50, 30, 0]],
+        'tt_magma2' => ['slot' => 'shoes', 'base' => '岩狱·熔靴', 'rate' => 0.1, 'q' => [0, 20, 50, 30, 0]],
+        'tt_warden2' => ['slot' => 'belt', 'base' => '岩狱·狱带', 'rate' => 0.1, 'q' => [0, 20, 50, 30, 0]],
+        'tt_rock3' => ['slot' => 'ring', 'base' => '岩狱·岩戒', 'rate' => 0.08, 'q' => [0, 20, 50, 30, 0]],
+        'tt_crag3' => ['slot' => 'necklace', 'base' => '岩狱·峭链', 'rate' => 0.08, 'q' => [0, 20, 50, 30, 0]],
+        'tt_titan' => ['slot' => 'body', 'base' => '岩狱·泰坦岩铠', 'rate' => 0.3, 'q' => [0, 0, 20, 50, 30], 'legendary' => ['base' => '岩狱泰坦·岳柱', 'extra' => ['k' => 'damage_reduction', 'v' => 8.0]]],
         'em_fiend' => ['slot' => 'weapon', 'base' => '烬焰·焚心弓'],
         'em_magma' => ['slot' => 'weapon', 'base' => '烬焰·熔核锤'],
         'em_ashlord' => ['slot' => 'ring', 'base' => '烬焰·灰烬戒'],
@@ -2937,7 +2981,7 @@ function quest_mats(): array
 {
     return ['blackcoin' => '不断下坠的黑币', 'aiden_badge' => '艾登·灰叶的铭牌', 'investigation_record' => '调查队记录', 'augustus_letter' => '镇长的信', 'dsw_ticket' => '黑暗沼泽副本入场券', 'dsw_item1' => '幽暗黏液', 'dsw_item2' => '沼泽之核', 'dsw_item3' => '腐泥之心', 'dsw_item4' => '王座徽记', 'abx_ticket' => '影蚀深渊入场券', 'abx_item1' => '蚀影尘', 'abx_item2' => '影蚀徽记', 'abx_item3' => '低语残章', 'abx_item4' => '王座蚀印', 'capital_badge' => '王都徽章', 'puppet_eye' => '傀儡之眼', 'ch3_proof' => '第三章通关证明', 'mx_ticket' => '银丝母巢入场券', 'mx_item1' => '黏丝束', 'mx_item2' => '茧壳碎片', 'mx_item3' => '织线梭', 'mx_item4' => '蛾翼磷粉', 'mx_item5' => '守望之瞳', 'mx_item6' => '育巢摇篮曲', 'farm_coin' => '农场币', 'seed_green' => '青菜种子', 'seed_radish' => '萝卜种子', 'seed_melon' => '南瓜种子', 'seed_tomato' => '番茄种子', 'seed_strawberry' => '草莓种子',
  'ice_badge' => '冰原徽章', 'frost_heart' => '霜王之心', 'ch4_proof' => '第四章通关证明', 'fr_ticket' => '冰渊副本入场券', 'fr_item1' => '渊底冰核', 'fr_item2' => '利维坦之牙',
- 'forest_badge' => '森语徽章', 'south_flame_token' => '南炎信物', 'ch5_proof' => '第五章通关证明', 'rb2_proof' => '二转证明', 'em_ticket' => '熔心副本入场券', 'pz_ticket' => '傀儡回廊入场券', 'sen_ticket' => '雾森祭坛入场券', 'em_item1' => '熔核碎片', 'em_item2' => '熔心之血',
+ 'forest_badge' => '森语徽章', 'south_flame_token' => '南炎信物', 'ch5_proof' => '第五章通关证明', 'rb2_proof' => '二转证明', 'em_ticket' => '熔心副本入场券', 'pz_ticket' => '傀儡回廊入场券', 'tt_ticket' => '岩狱副本入场券', 'sen_ticket' => '雾森祭坛入场券', 'em_item1' => '熔核碎片', 'em_item2' => '熔心之血',
  'soul_shard' => '神魂碎片', 'wb_ticket' => '龙鳞引（世界BOSS入场券）'];
 }
 
@@ -4057,6 +4101,14 @@ function gear_stats(int $uid): array
     if ($puppet >= 5) { $s['element'] += 100; $s['damage_reduction'] += 8; }
     if ($thorn >= 3) { $s['atk_pct'] += 6; }
     if ($thorn >= 4) { $s['lifesteal'] += 3; }
+    $rock = 0;
+    foreach ($worn as $wn) {
+        if (str_starts_with($wn, '岩狱·')) { $rock++; }
+    }
+    if ($rock >= 3) { $s['hp'] += 3000; }
+    if ($rock >= 5) { $s['damage_reduction'] += 8; }
+    if ($rock >= 7) { $s['hp'] += 8000; $s['damage_reduction'] += 12; }
+    if ($rock >= 10) { $s['hp'] += 20000; $s['damage_reduction'] += 20; }
     $qu = db()->prepare('SELECT quest FROM users WHERE id=?');
     $qu->execute([$uid]);
     if ((int) ($qu->fetchColumn() ?: 0) >= 38) {
@@ -4673,7 +4725,7 @@ function monster_lv(string $mid): int
         'mist_apeman' => 560, 'rot_sage' => 575, 'ember_imp' => 590, 'lava_hound' => 605,
         'ash_cultist' => 620, 'magma_golem' => 635, 'flame_djinn' => 650, 'cinder_dragonspawn' => 665,
         'volcano_priest' => 680, 'ash_wyrm' => 695, 'south_flame_guard' => 710, 'ancient_ruin_golem' => 720,
-        'em_slag' => 640, 'em_fiend' => 660, 'em_magma' => 680, 'em_ashlord' => 700, 'em_heart' => 720,
+        'em_slag' => 640, 'em_fiend' => 660, 'em_magma' => 680, 'em_ashlord' => 700, 'em_heart' => 720, 'tt_rock' => 720, 'tt_crag' => 760, 'tt_magma' => 800, 'tt_warden' => 850, 'tt_titan' => 900,
         'pz_puller' => 380, 'pz_dancer' => 400, 'pz_mask' => 420, 'pz_golem' => 440, 'pz_master' => 460,
         'sen_priest' => 520, 'sen_thorn' => 540, 'sen_serpent' => 560, 'sen_guard' => 580, 'sen_avatar' => 600,
         'shadow_claw' => 320, 'brass_bishop' => 480, 'tundra_wanderer' => 450, 'lucky_goblin' => 5, 'golden_slime' => 100, 'mimic_chest' => 200,
@@ -4681,6 +4733,7 @@ function monster_lv(string $mid): int
         'vx_spawn' => 600, 'vx_stalker' => 620, 'vx_mage' => 640, 'vx_knight' => 660, 'vx_herald' => 670, 'vx_tyrant' => 680, 'avalanche_titan' => 470, 'sulfur_sprite' => 610, 'obsidian_colossus' => 700,
         'cinder_crawler' => 600, 'cinder_stalker' => 620, 'cinder_warden' => 640, 'cinder_horror' => 660, 'ash_titan' => 680,
         'gr_hyena' => 700, 'gr_vulture' => 705, 'gr_worm' => 710, 'gr_raider' => 715, 'gr_storm' => 720, 'gr_bat' => 725, 'gr_guard' => 730, 'gr_whelp' => 735, 'gr_wraith' => 740, 'gr_spider' => 745, 'gr_retainer' => 750, 'gr_shaman' => 755, 'gr_fang' => 760, 'gr_idol' => 765, 'gr_guru' => 780, 'gr_brood' => 785, 'gr_shard' => 790, 'gr_shadow' => 795, 'gr_nightmare' => 800, 'gr_ancient' => 810,
+        'ry_crawler' => 720, 'ry_guard' => 760, 'ry_shaper' => 800, 'ry_warder' => 850, 'ry_titan' => 900,
         'doyle' => 999,
     ];
     return $lv[$mid] ?? 1;
@@ -4723,9 +4776,10 @@ function death_penalty(array &$u, float $mult = 1.0): string
 
 function gain_exp(array &$u, int $exp): string
 {
-    $card = mats_of((int) ($u['id'] ?? 0))['exp_card_until'] ?? 0;
+    $mm = mats_of((int) ($u['id'] ?? 0));
+    $card = $mm['exp_card_until'] ?? 0;
     if ($card > time()) {
-        $exp = $exp * 2;
+        $exp = $exp * max(2, (int) ($mm['exp_card_mult'] ?? 2));
     }
     // 一转卡级：三章通关（quest>=38）未一转（rb1_job为空），299级经验冻结
     $rbDone = !empty(cflags((int) ($u['id'] ?? 0))['rb1_job']);
@@ -4900,6 +4954,20 @@ function use_exp_card(int $uid): string
     $left = max(0, (int) ($mats['exp_card_until'] ?? 0) - time());
     mat_set((int) $uid, 'exp_card_until', time() + 3600 + $left);
     return '升级卡生效！1小时内双倍经验（可叠加延长）。';
+}
+
+function use_exp_cardx(int $uid, int $mult): string
+{
+    $u = user_by_id((int) $uid);
+    if (!$u) { return '角色不存在。'; }
+    $mid = $mult >= 1000 ? 'exp_card1000x' : 'exp_card10x';
+    $mats = mats_of((int) $uid);
+    if (empty($mats[$mid])) { return '你没有' . mat_name($mid) . '。'; }
+    add_mat((int) $uid, $mid, -1);
+    $left = max(0, (int) ($mats['exp_card_until'] ?? 0) - time());
+    mat_set((int) $uid, 'exp_card_until', time() + 86400 + $left);
+    mat_set((int) $uid, 'exp_card_mult', $mult);
+    return mat_name($mid) . '生效！1天内' . $mult . '倍经验（可叠加延长）。';
 }
 
 // 怪物攻防拆分：物攻占7成，法攻占3成（有元素亲和的怪法攻占5成）；物防/法防按攻击折算
@@ -5914,15 +5982,22 @@ function map_regions(): array
     return [
         '灰雾村' => ['smithy', 'square', 'field', 'well', 'bridge'],
         '白石镇' => ['town_sq', 'street_e', 'smith', 'tavern', 'street_w', 'church', 'market', 'supply', 'mansion', 'sewer', 'guild', 'wall', 'gate', 'mine_gate', 'mine1', 'mine2', 'mine3', 'echo_room'],
-        '野外' => ['wild1', 'wild2', 'wild3', 'wild4', 'wild5', 'wild6', 'forest1', 'forest2', 'forest3', 'forest4', 'swamp1', 'swamp2', 'swamp3', 'swamp4', 'hill1', 'hill2', 'hill3', 'hill4'],
-        '废弃村·墓穴' => ['ruin1', 'ruin2', 'ruin3', 'tomb1', 'tomb2', 'tomb3', 'tomb4', 'boss'],
         '矿坑·灰烬中的低语' => ['mine_gate', 'mine1', 'mine2', 'mine3', 'echo_room'],
         '深渊旧道' => ['tunnel', 'shoal', 'altar', 'prison', 'shop', 'camp'],
         '白银城·影蚀之潮' => ['silver_gate', 'silver_sq', 'sguild', 'dsewer1', 'dsewer2', 'bmine1', 'bmine2', 'sforest', 'manor', 'baltar', 'rift'],
         '王都·傀儡之夜' => ['capital_gate', 'avenue', 'noble', 'library', 'ctomb', 'slum', 'cathedral', 'observatory', 'theater'],
         '银丝母巢' => ['mx_gate', 'mx_path', 'mx_hall', 'mx_depth', 'mx_nest', 'mx_heart'],
         '公会战场' => ['warfield'],
+        '公会战场' => ['warfield'],
         '巅峰战场' => ['peak1', 'peak2', 'peak3'],
+        '冰原·凛冬' => ['ice_gate', 'ice_trail', 'ice_village', 'frozen_lake', 'snow_field', 'glacier_pass', 'aurora_vale', 'ice_cave', 'wyrm_tunnel', 'blizzard_peak', 'glacier_heart', 'frost_throne'],
+        '冰渊副本' => ['fr_gate', 'fr_descent', 'fr_abyss', 'fr_trench', 'fr_core'],
+        '雾森·火山' => ['fo_gate', 'mist_edge', 'deep_woods', 'thorn_maze', 'boa_swamp', 'ape_hollow', 'sage_grove', 'ash_wastes', 'ember_foothill', 'lava_river', 'cult_altar', 'magma_core', 'flame_temple', 'ruin_gate', 'volcano_heart'],
+        '熔心副本' => ['em_gate', 'em_vein', 'em_core'],
+        '傀儡回廊' => ['pz_gate', 'pz_hall', 'pz_gallery', 'pz_stage', 'pz_core'],
+        '雾森祭坛' => ['sen_gate', 'sen_path', 'sen_altar', 'sen_heart', 'sen_core'],
+        '虚空裂隙' => ['vx_gate', 'vx_path', 'vx_hall', 'vx_throne', 'vx_core'],
+        '岩狱·泰坦' => ['ry_gate', 'ry_path', 'ry_hall', 'ry_prison', 'ry_core'],
     ];
 }
 
@@ -6518,6 +6593,21 @@ function em_maps(): array
     return ['em_gate', 'em_flow', 'em_chamber', 'em_vein', 'em_core'];
 }
 
+function tt_locations(): array
+{
+    $m = [];
+    $m['tt_gate'] = ['name' => '岩狱入口', 'desc' => '黑曜石原裂开的竖井。镇狱人·岩婆：700~900级，45分钟，绳子是精钢的。', 'exits' => ['tt_trail' => '岩狱小径'], 'monsters' => ['tt_rock']];
+    $m['tt_trail'] = ['name' => '岩狱小径', 'desc' => '峭兽在岩壁上爬，掉下来的碎石比拳头大。', 'exits' => ['tt_gate' => '岩狱入口', 'tt_vein' => '岩狱岩脉'], 'monsters' => ['tt_rock', 'tt_crag']];
+    $m['tt_vein'] = ['name' => '岩狱岩脉', 'desc' => '熔裔顺着岩浆管走，狱守 lans着?守着脉口。', 'exits' => ['tt_trail' => '岩狱小径', 'tt_core' => '泰坦之座'], 'monsters' => ['tt_magma', 'tt_warden']];
+    $m['tt_core'] = ['name' => '泰坦之座', 'desc' => '岩狱泰坦·土龙岳柱盘踞于此。它打个盹，整座山都跟着晃。', 'exits' => ['tt_vein' => '岩狱岩脉'], 'monsters' => ['tt_titan']];
+    return $m;
+}
+
+function tt_maps(): array
+{
+    return ['tt_gate', 'tt_trail', 'tt_vein', 'tt_core'];
+}
+
 function wb_locations(): array
 {
     $m = [];
@@ -6636,6 +6726,22 @@ function gr_locations(): array
     return $m;
 }
 
+
+function ry_locations(): array
+{
+    $m = [];
+    $m['ry_gate'] = ['name' => '岩狱·入口', 'desc' => '石头在这里会呼吸。岳柱的影子压在门口。', 'exits' => ['ry_path' => '狱道'], 'monsters' => ['ry_crawler']];
+    $m['ry_path'] = ['name' => '岩狱道', 'desc' => '两壁全是挤压的岩层，守卫从墙里走出来。', 'exits' => ['ry_gate' => '入口', 'ry_hall' => '塑岩厅'], 'monsters' => ['ry_crawler', 'ry_guard']];
+    $m['ry_hall'] = ['name' => '塑岩大厅', 'desc' => '塑岩者把你捏成小泥人，又拆掉，说还不够硬。', 'exits' => ['ry_path' => '狱道', 'ry_prison' => '狱牢'], 'monsters' => ['ry_guard', 'ry_shaper']];
+    $m['ry_prison'] = ['name' => '岩狱牢', 'desc' => '狱卒数着你的骨头。牢门后地在震。', 'exits' => ['ry_hall' => '大厅', 'ry_core' => '泰坦之间'], 'monsters' => ['ry_shaper', 'ry_warder']];
+    $m['ry_core'] = ['name' => '泰坦之间', 'desc' => '岩狱泰坦·土龙岳柱盘在中央：山就是它，它就是山。', 'exits' => ['ry_prison' => '狱牢'], 'monsters' => ['ry_titan']];
+    return $m;
+}
+
+function ry_maps(): array
+{
+    return ['ry_gate', 'ry_path', 'ry_hall', 'ry_prison', 'ry_core'];
+}
 function vx_locations(): array
 {
     $m = [];

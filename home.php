@@ -137,6 +137,7 @@ $npcLinks = [
     'ice_village' => [['dora', '猎户·朵拉'], ['oldfish', '潜水人·老咸鱼']],
     'fo_gate' => [['qingya', '森语者·青芽']],
     'ember_foothill' => [['oldash', '探火人·老灰']],
+    'frostburg_sq' => [['rockwarden', '岩狱守门人·磐石']],
     'volcano_heart' => [['watcher', '熔火守望者'], ['voidwalker', '虚空行者']],
 ];
 $npcHere = 0;

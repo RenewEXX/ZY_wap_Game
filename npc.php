@@ -49,6 +49,7 @@ $people = [
     'rb_mori' => ['name' => '莫里亚蒂院长', 'loc' => 'library', 'text' => '法师的路，是理解。力量来自知识，不是蛮力。答对我三道题。答错一次1银，交了再答。'],
     'rb_hawk' => ['name' => '老猎人·霍克', 'loc' => 'capital_gate', 'text' => '猎手的路，是耐心。追那头白鹿，别惊动它。树冠快但险，溪谷稳但慢，草丛要等。你选。'],
     'rb_samuel' => ['name' => '大主教·塞缪尔', 'loc' => 'cathedral', 'text' => '牧师的路，是取舍。你救不了所有人。十份药，十个病人，怎么分，你定。救满六人，算过。'],
+    'rockwarden' => ['name' => '岩狱守门人·磐石', 'loc' => 'frostburg_sq', 'text' => '霜堡广场风大。磐石抱着块石头：岩狱开了，700~900级，泰坦在里面等。30万门票，45分钟。'],
     'voidwalker' => ['name' => '虚空行者', 'loc' => 'volcano_heart', 'text' => '进去就别回头，回头的那面你已经死了。裂隙底下有群攻秘籍，暴君那有大的。'],
     'med_c' => ['name' => '王都药剂师·藏红', 'loc' => 'avenue', 'text' => '傀儡不流血，你流。银丝勒颈之前，先把血回满。'],
     'priest_c' => ['name' => '传教神父·奥古', 'loc' => 'silver_sq', 'text' => '孩子，每周在这世上好好活够2小时（有效游玩），圣光就记你一功，赏你10魔钻。每周一刷新，可领一次。'],
@@ -313,6 +314,24 @@ if ($who === 'spider' && $choice === 'open2') {    $lv = (int) ($u['lv'] ?? 1); 
     header('Location: npc.php?who=northwind');
     exit;
 }
+if ($who === 'rockwarden' && $choice === 'open') {
+    $lv = (int) ($u['lv'] ?? 1);
+    if ($lv < 700 || $lv > 900) {
+        flash_set('磐石摇头：岩狱只要700~900级的冒险者，你现在' . $lv . '级。');
+    } elseif ((int) ($u['gold'] ?? 0) < 300000) {
+        flash_set('磐石：进岩狱要30万门票（修门）。');
+    } else {
+        $u['gold'] = (int) $u['gold'] - 300000;
+        mat_set((int) $u['id'], 'ry_stage', 1);
+        mat_set((int) $u['id'], 'ry_enter', time());
+        $u['loc'] = 'ry_gate';
+        user_save($u);
+        flash_set('磐石挪开巨石：岩狱·泰坦，45分钟！土龙岳柱在最深处。');
+    }
+    header('Location: home.php');
+    exit;
+}
+
 if ($who === 'oldfish' && $choice === 'open') {
     $lv = (int) ($u['lv'] ?? 1);
     $mats = mats_of((int) $u['id']);
@@ -666,6 +685,9 @@ if ($who === 'rb_waldon' && (int) $u['quest'] === 80 && !empty(cflags((int) $u['
 }
 if ($who === 'voidwalker') {
     echo '<a href="npc.php?who=voidwalker&choice=open">进虚空裂隙（600级+，30万买命钱，45分钟）</a><br>';
+if ($who === 'rockwarden') {
+    echo '<a href="npc.php?who=rockwarden&choice=open">开启副本【岩狱·泰坦】（700~900级，门票30万，45分钟，掉土龙蛋+岩狱套）</a><br>';
+}
 }
 if ($who === 'northwind' && in_array((int) $u['quest'], [38, 46], true)) {
     echo '<a href="npc.php?who=northwind&choice=start">接下投名状，开启第四章·凛冬冰原</a><br>';

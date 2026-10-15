@@ -139,6 +139,7 @@ $npcLinks = [
     'arena_gate' => [['rb_iron', '铁拳']],
     'library' => [['rb_mori', '莫里亚蒂院长']],
     'capital_gate' => [['rb_hawk', '老猎人·霍克'], ['northwind', '守夜人·北风']],
+    'avenue' => [['waldon', '线人·瓦尔顿'], ['rb_waldon', '总会长·瓦尔顿'], ['med_c', '王都药剂师·蘽兰'], ['rank_c', '榜单老人']],
     'cathedral' => [['rb_samuel', '大主教·塞缪尔']],
     'ice_village' => [['dora', '猎户·朵拉'], ['oldfish', '潜水人·老咸鱼']],
     'fo_gate' => [['qingya', '森语者·青芽']],

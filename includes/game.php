@@ -5984,7 +5984,7 @@ function map_regions(): array
         '白石镇' => ['town_sq', 'street_e', 'smith', 'tavern', 'street_w', 'church', 'market', 'supply', 'mansion', 'sewer', 'guild', 'wall', 'gate', 'mine_gate', 'mine1', 'mine2', 'mine3', 'echo_room'],
         '矿坑·灰烬中的低语' => ['mine_gate', 'mine1', 'mine2', 'mine3', 'echo_room'],
         '深渊旧道' => ['tunnel', 'shoal', 'altar', 'prison', 'shop', 'camp'],
-        '白银城·影蚀之潮' => ['silver_gate', 'silver_sq', 'sguild', 'dsewer1', 'dsewer2', 'bmine1', 'bmine2', 'sforest', 'manor', 'baltar', 'rift'],
+        '白银城·影蚀之潮' => ['silver_gate', 'silver_sq', 'sguild', 'dsewer1', 'dsewer2', 'bmine1', 'bmine2', 'sforest', 'manor', 'baltar', 'rift_road', 'rift'],
         '王都·傀儡之夜' => ['capital_gate', 'avenue', 'noble', 'library', 'ctomb', 'slum', 'cathedral', 'observatory', 'theater'],
         '银丝母巢' => ['mx_gate', 'mx_path', 'mx_hall', 'mx_depth', 'mx_nest', 'mx_heart'],
         '公会战场' => ['warfield'],
@@ -6327,9 +6327,9 @@ function ch2_locations(): array
     $m['bmine2'] = ['name' => '矿道二层', 'desc' => '黑袍使徒在这里等你。你的影子比来时长了三寸。', 'exits' => ['bmine1' => '白银矿道一层', 'sforest' => '影蚀森林'], 'monsters' => ['corrupt_guard', 'apostle']];
     $m['sforest'] = ['name' => '影蚀森林', 'desc' => '树是黑的，叶是灰的，落下来像纸片。林心有尊三倍大的傀儡。', 'exits' => ['bmine2' => '矿道二层', 'manor' => '废弃庄园'], 'monsters' => ['shadow_hound', 'corrupt_treant', 'gargoyle', 'guardian']];
     $m['manor'] = ['name' => '废弃庄园', 'desc' => '门开着，安静得不正常。大厅主位上，城主瓦伦丁端着红酒等你。', 'exits' => ['sforest' => '影蚀森林', 'baltar' => '深渊祭坛'], 'monsters' => ['puppet', 'valentin']];
-    $m['rift_road'] = ['name' => '裂隙长路', 'desc' => '从血色祭坛往裂隙口的长路，70~100级练级地（猎犬88/织影者97）。', 'exits' => ['baltar' => '血色祭坛', 'rift' => '深渊裂隙口'], 'monsters' => ['rift_hound', 'rift_weaver', 'colossus']];
-    $m['baltar'] = ['name' => '深渊祭坛', 'desc' => '很大，很黑。核心处站着眼睛发黑、影子如翅的暗影莉莉。', 'exits' => ['manor' => '废弃庄园', 'rift' => '裂隙深处'], 'monsters' => ['dark_lily']];
-    $m['rift'] = ['name' => '裂隙深处', 'desc' => '没有底。你走在黑水上。深渊之眼睁着，瞳孔里是你的影子。', 'exits' => ['baltar' => '深渊祭坛'], 'monsters' => ['abyss_eye']];
+    $m['rift_road'] = ['name' => '裂隙长路', 'desc' => '从深渊祭坛往裂隙口的长路，70~100级练级地（猎犬88/织影者97）。', 'exits' => ['baltar' => '深渊祭坛', 'rift' => '深渊裂隙口'], 'monsters' => ['rift_hound', 'rift_weaver', 'colossus']];
+    $m['baltar'] = ['name' => '深渊祭坛', 'desc' => '很大，很黑。核心处站着眼睛发黑、影子如翅的暗影莉莉。', 'exits' => ['manor' => '废弃庄园', 'rift_road' => '裂隙长路'], 'monsters' => ['dark_lily']];
+    $m['rift'] = ['name' => '裂隙深处', 'desc' => '没有底。你走在黑水上。深渊之眼睁着，瞳孔里是你的影子。', 'exits' => ['rift_road' => '裂隙长路'], 'monsters' => ['abyss_eye']];
     return $m;
 }
 
@@ -6488,7 +6488,7 @@ function roll_aoe_book(int $uid, string $mid): string
 
 function ch2_maps(): array
 {
-    return ['silver_gate', 'silver_sq', 'sguild', 'dsewer1', 'dsewer2', 'bmine1', 'bmine2', 'sforest', 'manor', 'baltar', 'rift'];
+    return ['silver_gate', 'silver_sq', 'sguild', 'dsewer1', 'dsewer2', 'bmine1', 'bmine2', 'sforest', 'manor', 'baltar', 'rift_road', 'rift'];
 }
 
 function ch3_locations(): array

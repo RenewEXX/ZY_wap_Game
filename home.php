@@ -3,6 +3,8 @@ declare(strict_types=1);
 require __DIR__ . '/includes/bootstrap.php';
 
 $u = require_login();
+sin_sync_hp((int) $u['id']);
+$u = user_by_id((int) $u['id']);
 
 // 任务传送：留在行动画面
 $go = (string) ($_GET['go'] ?? '');
@@ -237,7 +239,12 @@ if ($nears === []) {
     echo '<span class="muted">只有风声。</span><br>';
 }
 foreach ($nears as $nu) {
-    echo '·<a href="look.php?id=' . (int) $nu['id'] . '">' . h($nu['username']) . '</a>(' . (int) $nu['lv'] . '级' . h(job_of(['job' => (string) $nu['job']])['name']) . ')<br>';
+    echo '·<a href="look.php?id=' . (int) $nu['id'] . '">' . h($nu['username']) . '</a>(' . (int) $nu['lv'] . '级' . h(job_of(['job' => (string) $nu['job']])['name']) . ')';
+    $tSin = sin_of((int) $nu['id']);
+    if ($tSin >= 100) {
+        echo '<span style="color:#f66">【罪' . $tSin . '】</span><a href="fight.php?a=sin&uid=' . (int) $nu['id'] . '">强制PK</a>';
+    }
+    echo '<br>';
 }
 
 // 打怪：在行动画面直接开打（1分钟一刷新，每种怪各20只，精英2只，BOSS独苗）

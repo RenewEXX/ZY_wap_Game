@@ -4598,6 +4598,7 @@ function wear_equip(int $uid, int $eid): string
             $u['hp'] = min((int) $u['maxhp'], max(1, (int) $u['hp'] + max(0, $delta)));
             $u['maxmp'] = max(0, (int) ($u['maxmp'] ?? 0) + $mDelta);
             $u['mp'] = min((int) $u['maxmp'], max(0, (int) ($u['mp'] ?? 0) + max(0, $mDelta)));
+            sin_gain_array($u, 0);
             user_save($u);
         }
     }
@@ -4639,6 +4640,7 @@ function take_off_equip(int $uid, int $eid): string
             $u['maxmp'] = max(0, (int) ($u['maxmp'] ?? 0) + $mDelta);
             $u['mp'] = min((int) $u['maxmp'], (int) ($u['mp'] ?? 0));
         }
+        sin_gain_array($u, 0);
         user_save($u);
     }
     return '脱下了【' . $eq['name'] . '】。';
@@ -4807,6 +4809,7 @@ function gain_exp(array &$u, int $exp): string
         $u['s_pts'] = (int) ($u['s_pts'] ?? 0) + 3;
         $msg .= '！升级至' . $u['lv'] . '级，伤势尽复，生命上限+10，魔力上限+5，得3属性点';
     }
+    sin_gain_array($u, 0);
     return $msg;
 }
 
@@ -4842,6 +4845,7 @@ function alloc_stat(int $uid, string $k): string
         $u['spi'] = (int) ($u['spi'] ?? 0) + 1;
     }
     $u['s_pts'] = (int) ($u['s_pts'] ?? 0) - $cost;
+    sin_gain_array($u, 0);
     user_save($u);
     return '加点成功，剩' . (int) $u['s_pts'] . '点。';
 }
@@ -4928,6 +4932,7 @@ function use_reset_potion(int $uid): string
     $u['vit'] = 0;
     $u['int'] = 0;
     $u['spi'] = 0;
+    sin_gain_array($u, 0);
     user_save($u);
     return '重修成功，返还' . $back . '潜力点。';
 }
@@ -5468,6 +5473,7 @@ function battle_round(array &$u, array &$b, string $mode): array
                 $b['drops'][] = $ab;
                 $log .= '掉落【' . $ab . '】！';
             }
+            sin_gain_array($u, 1);
             $log .= '第' . $killed . '只倒了！下一只扑上来(剩' . (int) $b['left'] . ')。';
         } else {
         $num = (int) ($b['num'] ?? 1);
@@ -5571,6 +5577,7 @@ function battle_round(array &$u, array &$b, string $mode): array
         $rawExp = (int) (((int) ($b['wexp'] ?? 0) + exp_gain_for($u, (string) ($b['id'] ?? ''), (int) ($b['elite'] ?? 0))) * guild_exp_mult((int) $u['id']) * party_bonus_mult((int) $u['id']));
         war_add_score((int) $u['id'], (string) ($b['id'] ?? ''));
         $msg = ($msg ?? '') . gain_exp($u, $rawExp);
+        sin_gain_array($u, 1);
         $petLvMsg = pet_gain_exp((int) $u['id'], (int) ($b['wexp'] ?? 0) + exp_gain_for($u, (string) ($b['id'] ?? '')));
         $qmap = ['goblin' => 1, 'banshee' => 2, 'ogre' => 3];
         $bid = (string) ($b['id'] ?? '');
@@ -7353,6 +7360,129 @@ function cflag_set(int $uid, string $k, $v): void
     $d = cflags((int) $uid);
     $d[$k] = $v;
     db()->prepare('UPDATE users SET chapter_flags=? WHERE id=?')->execute([json_encode($d, JSON_UNESCAPED_UNICODE), (int) $uid]);
+}
+// ===== 罪值系统 =====
+// 罪值：怪物击杀累积；>100可被任何玩家强制PK，<10时生命上限+20%
+function sin_of(int $uid): int
+{
+    $f = cflags((int) $uid);
+    return max(0, (int) ($f['sin'] ?? 0));
+}
+
+// 在内存用户上结算：加罪值并同步<10的+20%生命（调用方负责 user_save）
+function sin_gain_array(array &$u, int $n = 1): void
+{
+    $uid = (int) ($u['id'] ?? 0);
+    if ($uid <= 0) {
+        return;
+    }
+    $f = cflags($uid);
+    $old = max(0, (int) ($f['sin'] ?? 0));
+    $new = max(0, $old + $n);
+    $have = (int) ($f['sin_hp'] ?? 0);
+    $base = max(1, (int) $u['maxhp'] - $have);
+    $want = $new < 10 ? (int) floor($base * 0.2) : 0;
+    $changed = false;
+    if ($want !== $have) {
+        $u['maxhp'] = max(1, $base + $want);
+        $u['hp'] = max(1, min((int) $u['hp'], (int) $u['maxhp']));
+        $f['sin_hp'] = $want;
+        $changed = true;
+    }
+    if ($n !== 0) {
+        $f['sin'] = $new;
+        $changed = true;
+    }
+    if ($changed) {
+        db()->prepare('UPDATE users SET chapter_flags=? WHERE id=?')->execute([json_encode($f, JSON_UNESCAPED_UNICODE), $uid]);
+    }
+}
+
+// 场景外直接改DB的罪值
+function sin_add(int $uid, int $n): int
+{
+    $uid = (int) $uid;
+    $u = user_by_id($uid);
+    if (!$u) {
+        return 0;
+    }
+    sin_gain_array($u, $n);
+    user_save($u);
+    return sin_of($uid);
+}
+
+// 载入自愈：把<10的+20%生命补进存量（老号首次登录也生效）
+function sin_sync_hp(int $uid): void
+{
+    $uid = (int) $uid;
+    $u = user_by_id($uid);
+    if (!$u) {
+        return;
+    }
+    $f = cflags($uid);
+    $have = (int) ($f['sin_hp'] ?? 0);
+    $base = max(1, (int) $u['maxhp'] - $have);
+    $want = sin_of($uid) < 10 ? (int) floor($base * 0.2) : 0;
+    if ($want === $have) {
+        return;
+    }
+    $u['maxhp'] = max(1, $base + $want);
+    $u['hp'] = max(1, min((int) $u['hp'], (int) $u['maxhp']));
+    user_save($u);
+    cflag_set($uid, 'sin_hp', $want);
+}
+
+// 可被掠夺的赃物池：可交易装备（身上/背包）+ 可交易材料
+function sin_loot_pool(int $uid): array
+{
+    $pool = [];
+    $st = db()->prepare('SELECT * FROM equips WHERE uid=?');
+    $st->execute([(int) $uid]);
+    foreach ($st->fetchAll() as $e) {
+        if (($e['slot'] ?? '') === 'soul') {
+            continue;
+        }
+        if ((int) ($e['quality'] ?? 0) >= 3 || equip_is_set(equip_shortname((string) $e['name']))) {
+            $pool[] = ['t' => 'equip', 'e' => $e];
+        }
+    }
+    foreach (mats_of((int) $uid) as $mid => $num) {
+        if ((int) $num > 0 && is_tradable_mat((string) $mid)) {
+            $pool[] = ['t' => 'mat', 'mid' => (string) $mid, 'num' => (int) $num];
+        }
+    }
+    return $pool;
+}
+
+// 罪值击杀掉落：随机最多2件，掉在原地（1分钟后消失）
+function sin_drop_loot(int $victim, string $loc): array
+{
+    $pool = sin_loot_pool((int) $victim);
+    if ($pool === []) {
+        return [];
+    }
+    shuffle($pool);
+    $out = [];
+    foreach (array_slice($pool, 0, 2) as $it) {
+        if ($it['t'] === 'equip') {
+            $e = $it['e'];
+            $name = equip_shortname((string) $e['name']);
+            if ((string) ($e['pos'] ?? '') === 'wear') {
+                take_off_equip((int) $victim, (int) $e['id']);
+            }
+            db()->prepare('UPDATE equips SET uid=0, pos="ground" WHERE id=?')->execute([(int) $e['id']]);
+            ground_place_equip($loc, (int) $e['id']);
+            $out[] = $name;
+        } else {
+            $mid = (string) $it['mid'];
+            $drop = max(1, min((int) $it['num'], mt_rand(1, (int) ceil((int) $it['num'] * 0.5))));
+            add_mat((int) $victim, $mid, -$drop);
+            ground_place_mat($loc, $mid, $drop);
+            $out[] = mat_name($mid) . 'x' . $drop;
+        }
+    }
+    _gear_uncache((int) $victim);
+    return $out;
 }
 
 function check_ch2_done(int $uid, array $qs): bool

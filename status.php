@@ -3,12 +3,15 @@ declare(strict_types=1);
 require __DIR__ . '/includes/bootstrap.php';
 
 $u = require_login();
+sin_sync_hp((int) $u['id']);
+$u = user_by_id((int) $u['id']);
 $here = loc((string) $u['loc']);
 
 wap_start('状态');
 echo h($u['username']) . '　' . (int) $u['lv'] . '级';
 echo '　' . h(job_of($u)['name']) . '(' . h(job_of($u)['skill']) . ')';
 echo '<br>';
+echo '罪值 ' . sin_of((int) $u['id']) . (sin_of((int) $u['id']) >= 100 ? '（<span style="color:#f66">恶贯满盈，任何人都可强制PK你</span>）' : (sin_of((int) $u['id']) < 10 ? '（<span style="color:#9c9">心地纯善，生命+20%</span>）' : '')) . '<br>';
 echo '<span class="hp">生命 ' . (int) $u['hp'] . '/' . (int) $u['maxhp'] . '</span><br>';
 echo '<span style="color:#6cf">魔力 ' . (int) ($u['mp'] ?? 0) . '/' . (int) ($u['maxmp'] ?? 0) . '</span><br>';
 echo '攻击 ' . player_atk($u) . '　防御 ' . player_def($u) . '<br>';

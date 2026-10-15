@@ -3,6 +3,7 @@ declare(strict_types=1);
 require __DIR__ . '/includes/bootstrap.php';
 
 $u = require_login();
+sin_sync_hp((int) $u['id']);
 $a = (string) ($_GET['a'] ?? '');
 $mid = (string) ($_GET['m'] ?? '');
 $allm = monsters();
@@ -162,9 +163,107 @@ if ($a === 'run') {
     exit;
 }
 
-function pvp_check(array $u, int $tuid): array
+function sin_check(array $u, int $tuid): array
 {
-    if (!war_window_open()) {
+    $t = user_by_id($tuid);
+    if (!$t) {
+        return [null, '那个人不见了。'];
+    }
+    if ((string) ($t['loc'] ?? '') !== (string) ($u['loc'] ?? '')) {
+        return [null, '对方不在这个区域。'];
+    }
+    if (($t['zone'] ?? 'z1') !== (string) ($u['zone'] ?? 'z1')) {
+        return [null, '跨大区不能打。'];
+    }
+    if ((int) $t['id'] === (int) $u['id']) {
+        return [null, '你不能打自己。'];
+    }
+    if ((int) ($t['hp'] ?? 0) <= 0) {
+        return [null, '对方已倒下。'];
+    }
+    if ((int) ($u['hp'] ?? 0) <= 0) {
+        return [null, '你先回满血再来。'];
+    }
+    if (sin_of((int) $t['id']) < 100) {
+        return [null, '对方罪值未满100，不能强制PK。'];
+    }
+    return [$t, ''];
+}
+
+if ($a === 'sin') {
+    [$t, $err] = sin_check($u, (int) ($_GET['uid'] ?? 0));
+    if ($err !== '') {
+        flash_set($err);
+        header('Location: home.php');
+        exit;
+    }
+    $_SESSION['sin'] = ['tuid' => (int) $t['id']];
+    header('Location: fight.php?a=sinfight');
+    exit;
+}
+if ($a === 'sin_hit') {
+    $pk = $_SESSION['sin'] ?? null;
+    [$t, $err] = sin_check($u, (int) ($pk['tuid'] ?? 0));
+    if ($err !== '') {
+        unset($_SESSION['sin']);
+        flash_set($err);
+        header('Location: home.php');
+        exit;
+    }
+    $pd = max(1, player_atk($u) + random_int(0, 3) - player_def($t));
+    $t['hp'] = (int) $t['hp'] - $pd;
+    if ((int) $t['hp'] <= 0) {
+        // 罪值击杀：对方随机最多2件可交易装备/道具掉在原地（1分钟后消失）
+        $loc = (string) ($t['loc'] ?? (string) $u['loc']);
+        $loot = sin_drop_loot((int) $t['id'], $loc);
+        $t = user_by_id((int) $t['id']);
+        $t['hp'] = 1;
+        $t['loc'] = 'camp';
+        user_save($t);
+        unset($_SESSION['sin']);
+        user_save($u);
+        flash_set('你结果了恶贯满盈的【' . $t['username'] . '】！' . ($loot !== [] ? '掉落：' . implode('、', $loot) . '（掉在' . loc($loc)['name'] . '，1分钟后消失）。' : '他身上没有可掉的东西。') . '他被抬回营地。');
+        header('Location: home.php');
+        exit;
+    }
+    user_save($t);
+    $md = max(1, player_atk($t) + random_int(0, 2) - player_def($u));
+    $u['hp'] = (int) $u['hp'] - $md;
+    user_save($u);
+    if ((int) $u['hp'] <= 0) {
+        unset($_SESSION['sin']);
+        $pen = death_penalty($u);
+        user_save($u);
+        flash_set('你被【' . $t['username'] . '】反杀了。' . $pen);
+        header('Location: home.php');
+        exit;
+    }
+    flash_set('你砍' . $pd . '点，对方回敬' . $md . '点。');
+    header('Location: fight.php?a=sinfight');
+    exit;
+}
+if ($a === 'sinfight') {
+    $pk = $_SESSION['sin'] ?? null;
+    [$t, $err] = sin_check($u, (int) ($pk['tuid'] ?? 0));
+    if ($err !== '') {
+        unset($_SESSION['sin']);
+        flash_set($err);
+        header('Location: home.php');
+        exit;
+    }
+    wap_start('强制PK');
+    echo '敌【' . h($t['username']) . '】' . (int) $t['lv'] . '级 罪值' . sin_of((int) $t['id']) . '<br>';
+    echo '<div class="hp">敌生命 ' . (int) $t['hp'] . '/' . (int) $t['maxhp'] . '</div>';
+    echo '<div class="hp">你 ' . (int) $u['hp'] . '/' . (int) $u['maxhp'] . '</div>';
+    echo '<div class="hr">--------</div>';
+    echo '<a href="fight.php?a=sin_hit">砍他一刀</a> <a href="fight.php?a=run">撤</a>';
+    nav_line();
+    wap_end(false);
+    exit;
+}
+
+function pvp_check(array $u, int $tuid): array
+{    if (!war_window_open()) {
         return [null, '战场没开（周六日20点）。'];
     }
     if ((string) ($u['loc'] ?? '') !== 'warfield') {

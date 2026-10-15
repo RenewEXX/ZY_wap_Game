@@ -719,7 +719,9 @@ if ($who === 'soulmaster') {
         echo '·' . h(equip_shortname((string) $so['name'])) . '（' . $lv . '级） <a href="npc.php?who=soulmaster&choice=up&eid=' . (int) $so['id'] . '">升级</a><br>';
     }
 }
+if ($who === 'spider') {
     echo '<a href="npc.php?who=spider&choice=open2">开启副本【傀儡回廊】（300~460级，门票5万，45分钟）</a><br>';
+}
 if (in_array($who, ['bounty_boss', 'bounty_elder', 'bounty_frost'], true)) {
     echo '今日悬赏：<br>';
     foreach (bounty_today() as $i => $b) {

@@ -4,6 +4,10 @@ require __DIR__ . '/includes/bootstrap.php';
 
 $u = require_login();
 sin_sync_hp((int) $u['id']);
+$wm = favor_weekly_tick((int) $u['id']);
+if ($wm !== '') {
+    flash_set($wm);
+}
 $u = user_by_id((int) $u['id']);
 
 // 任务传送：留在行动画面

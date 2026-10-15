@@ -504,6 +504,7 @@ function arena_shop(): array
         'enhance_t3' => ['name' => '上级强化石', 'price' => 80, 'limit' => 5, 'period' => 'day'],
         'pet_food' => ['name' => '宠物粮', 'price' => 50, 'limit' => 5, 'period' => 'month'],
         'egg_unknown' => ['name' => '随机宠物蛋', 'price' => 100, 'limit' => 1, 'period' => 'month'],
+        'qingzui_dan' => ['name' => '清罪丹', 'price' => 60, 'limit' => 1, 'period' => 'month'],
     ];
 }
 
@@ -526,7 +527,7 @@ function arena_shop_buy(int $uid, string $item): string
         return '竞技场币不够，要' . $g['price'] . '币。';
     }
     add_mat((int) $uid, 'arena_coin', -$g['price']);
-    if ($item === 'pet_food' || $item === 'egg_unknown' || str_starts_with($item, 'enhance_')) {
+    if ($item === 'pet_food' || $item === 'egg_unknown' || $item === 'qingzui_dan' || str_starts_with($item, 'enhance_')) {
         add_mat((int) $uid, $item, 1);
     }
     if ($had > 0) {

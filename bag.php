@@ -177,6 +177,11 @@ if ($a === 'usedragon') {
     header('Location: status.php?a=all');
     exit;
 }
+if ($a === 'useqingzui') {
+    flash_set(use_qingzui_dan((int) $u['id']));
+    header('Location: bag.php?tab=func');
+    exit;
+}
 if ($a === 'usebox') {
     flash_set(open_dragon_box((int) $u['id']));
     header('Location: bag.php?tab=func');
@@ -356,6 +361,7 @@ if ($tab === 'equip') {
     if (!empty($mats['dragon_pill'])) {
         $func = true;
         echo '·真龙丹x' . $mats['dragon_pill'] . '(不可交易) <a href="bag.php?a=usedragon">使用(+3自由属性点)</a><br>';
+        if (!empty($mats['qingzui_dan'])) { echo '·清罪丹x' . $mats['qingzui_dan'] . '(随机-5~20罪值) <a href="bag.php?a=useqingzui">使用</a><br>'; }
     }
     if (!empty($mats['dragon_box'])) {
         $func = true;

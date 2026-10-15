@@ -724,7 +724,7 @@ function peak_settle(): void
                 $w = $left[0];
                 $n = (int) $cfg['pills'];
                 add_mat((int) $w['id'], 'dragon_pill', $n);
-                send_mail((int) $w['id'], '巅峰裁决', 'peak', '巅峰之战冠军：真龙丹x' . $n, '你是【' . loc($arena)['name'] . '】最后的站立者！附件是真龙丹（使用+3自由属性点/枚），请查收。', []);
+                send_mail((int) $w['id'], '巅峰裁决', 'peak', '巅峰之战冠军：真龙丹x' . $n . '+清罪丹x1', '你是【' . loc($arena)['name'] . '】最后的站立者！附件是真龙丹（使用+3自由属性点/枚）+清罪丹x1，请查收。', [['t' => 'mat', 'id' => 'qingzui_dan', 'n' => 1]]);
                 peak_world_announce('【巅峰之战】' . loc($arena)['name'] . '胜者是【' . $w['username'] . '】！真龙丹x' . $n . '已发放！');
                 db()->prepare('INSERT INTO peak_result (day, arena, zone, winner_uid, winner_name, created_at) VALUES (?, ?, ?, ?, ?, ?)')->execute([$day, $arena, $zid, (int) $w['id'], (string) $w['username'], time()]);
                 // 散场：胜者传回广场
@@ -3020,12 +3020,16 @@ function skill_catalog(): array
         'h8' => ['name' => '夜幕影杀', 'job' => 'hunter', 'mp' => 55, 'kind' => 'aoe', 'mult' => 2.8, 'el' => 'dark', 't10' => '斩杀：目标血量低于50%时伤害+50%', 'lv20' => '伤害+15%，斩杀线60%'],
         'p7' => ['name' => '噬魂新星', 'job' => 'priest', 'mp' => 60, 'kind' => 'aoe', 'mult' => 2.0, 'el' => 'dark', 't10' => '伤害+30%', 'lv20' => '伤害转奶60%'],
         'p8' => ['name' => '圣光审判', 'job' => 'priest', 'mp' => 60, 'kind' => 'aoe', 'mult' => 1.0, 'heal' => 150, 'el' => 'light', 't10' => '治疗+50', 'lv20' => '治疗+20%，队友80%'],
+        'w9' => ['name' => '血狱狂斩', 'job' => 'warrior', 'mp' => 45, 'kind' => 'sin', 'mult' => 4.5, 'el' => 'dark', 't10' => '斩杀线40%', 'lv20' => '伤害+15%，斩杀线50%'],
+        'm9' => ['name' => '魂蚀天雷', 'job' => 'mage', 'mp' => 50, 'kind' => 'sin', 'mult' => 4.2, 'el' => 'thunder', 't10' => '35%麻痹', 'lv20' => '伤害+15%，麻痹40%'],
+        'h9' => ['name' => '弑神连珠', 'job' => 'hunter', 'mp' => 45, 'kind' => 'sin', 'mult' => 3.4, 'el' => 'dark', 't10' => '斩杀线40%', 'lv20' => '伤害+15%，斩杀线50%'],
+        'p9' => ['name' => '堕天圣裁', 'job' => 'priest', 'mp' => 50, 'kind' => 'sin', 'mult' => 3.0, 'heal' => 200, 'el' => 'dark', 't10' => '伤害转奶80%', 'lv20' => '治疗+20%，转奶100%'],
     ];
 }
 
 function job_skillset(string $job): array
 {
-    return ['warrior' => ['w1', 'w2', 'w3', 'w4', 'w5', 'w6', 'w7', 'w8'], 'mage' => ['m1', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8'], 'hunter' => ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'h7', 'h8'], 'priest' => ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8']][$job] ?? ['w1', 'w2', 'w3', 'w4', 'w5', 'w6', 'w7', 'w8'];
+    return ['warrior' => ['w1', 'w2', 'w3', 'w4', 'w5', 'w6', 'w7', 'w8', 'w9'], 'mage' => ['m1', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8', 'm9'], 'hunter' => ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'h7', 'h8', 'h9'], 'priest' => ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8', 'p9']][$job] ?? ['w1', 'w2', 'w3', 'w4', 'w5', 'w6', 'w7', 'w8', 'w9'];
 }
 
 function skill_books(): array
@@ -3063,6 +3067,10 @@ function skill_books(): array
         'book_h8' => ['skill' => 'h8', 'name' => '夜幕秘籍'],
         'book_p7' => ['skill' => 'p7', 'name' => '噬魂秘籍'],
         'book_p8' => ['skill' => 'p8', 'name' => '审判秘籍'],
+        'book_w9' => ['skill' => 'w9', 'name' => '血狱秘籍'],
+        'book_m9' => ['skill' => 'm9', 'name' => '魂蚀秘籍'],
+        'book_h9' => ['skill' => 'h9', 'name' => '弑神秘籍'],
+        'book_p9' => ['skill' => 'p9', 'name' => '堕天秘籍'],
     ];
 }
 
@@ -3093,15 +3101,43 @@ function active_skill(int $uid, string $job): ?array
     foreach (my_skills($uid) as $s) {
         $mine[$s['skill']] = $s;
     }
+    // 罪值掉下100：强制切掉罪技能
+    $sinSkills = ['w9', 'm9', 'h9', 'p9'];
+    if (sin_of((int) $uid) < 100) {
+        $needFix = false;
+        foreach ($mine as $sid => $s) {
+            if (in_array($sid, $sinSkills, true) && !empty($s['active'])) {
+                $needFix = true;
+            }
+        }
+        if ($needFix) {
+            db()->exec('UPDATE skills SET active=0 WHERE uid=' . (int) $uid);
+            foreach (array_reverse($set) as $sid) {
+                if (isset($mine[$sid]) && !in_array($sid, $sinSkills, true)) {
+                    db()->prepare('UPDATE skills SET active=1 WHERE uid=? AND skill=?')->execute([(int) $uid, $sid]);
+                    break;
+                }
+            }
+            $mine = [];
+            foreach (my_skills($uid) as $s) {
+                $mine[$s['skill']] = $s;
+            }
+        }
+    }
     foreach ($mine as $sid => $s) {
         if (in_array($sid, $set, true) && !empty($s['active'])) {
             return $s + (skill_catalog()[$sid] ?? []);
         }
     }
+    $sinLow = sin_of((int) $uid) < 100;
     foreach (array_reverse($set) as $sid) {
-        if (isset($mine[$sid])) {
-            return $mine[$sid] + (skill_catalog()[$sid] ?? []);
+        if (!isset($mine[$sid])) {
+            continue;
         }
+        if ($sinLow && in_array($sid, ['w9', 'm9', 'h9', 'p9'], true)) {
+            continue;
+        }
+        return $mine[$sid] + (skill_catalog()[$sid] ?? []);
     }
     return null;
 }
@@ -3116,6 +3152,9 @@ function set_active_skill(int $uid, string $sid): string
     $st->execute([$uid, $sid]);
     if (!$st->fetch()) {
         return '你还没学会这个技能。';
+    }
+    if (in_array($sid, ['w9', 'm9', 'h9', 'p9'], true) && sin_of((int) $uid) < 100) {
+        return '罪技能需要罪值≥100（当前' . sin_of((int) $uid) . '），先去杀怪积攒罪值。';
     }
     db()->exec('UPDATE skills SET active=0 WHERE uid=' . (int) $uid);
     db()->prepare('UPDATE skills SET active=1 WHERE uid=? AND skill=?')->execute([$uid, $sid]);
@@ -3155,6 +3194,9 @@ function use_skill_book(int $uid, string $book): string
     }
     $sid = $books[$book]['skill'];
     $cat = skill_catalog()[$sid];
+    if (in_array($sid, ['w9', 'm9', 'h9', 'p9'], true) && sin_of((int) $uid) < 100) {
+        return '罪技能书需要罪值≥100才能领悟（当前' . sin_of((int) $uid) . '）。';
+    }
     $u = user_by_id($uid);
     if (!$u || job_id_of($u) !== $cat['job']) {
         return '职业不符，只有' . job_of(['job' => $cat['job']])['name'] . '能用。';
@@ -3384,6 +3426,9 @@ function mat_name(string $id): string
     }
     if ($id === 'reset_potion') {
         return '属性洗点药';
+    }
+    if ($id === 'qingzui_dan') {
+        return '清罪丹';
     }
     if ($id === 'exp_card_until') {
         return '双倍经验(剩余)';
@@ -5168,6 +5213,74 @@ function battle_round(array &$u, array &$b, string $mode): array
                     $pd = (int) ($pd * 1.5);
                     $logHeal .= '(龙裔杀手)';
                 }
+            } elseif ($sk['kind'] === 'sin') {
+                // 罪技能：罪≥100才能放（战斗中罪掉下去则本轮按普攻算）
+                if (sin_of((int) ($u['id'] ?? 0)) < 100) {
+                    $pd = max(1, player_patk($u) + random_int(0, 3) - monster_pdef($b));
+                    $logHeal .= '(罪值不足，罪技能失效)';
+                } else {
+                    $sinPow = $pow * 1.3;
+                    if ($sid === 'w9') {
+                        // 战士·血狱狂斩：物4.5暗，斩杀（30%血以下+50%，t10线40%，lv20线50%）
+                        $pd = max(1, (int) ((player_patk($u) + random_int(0, 3)) * (float) $sk['mult'] * $sinPow) - monster_pdef($b));
+                        $pd += max(0, (int) (player_matk($u) * 0.5) - (int) (monster_mdef($b) / 2));
+                        $cutLine = $sLv >= 20 ? 0.5 : ($sTier >= 10 ? 0.4 : 0.3);
+                        if ((int) $b['hp'] <= (int) ((int) $b['maxhp'] * $cutLine)) {
+                            $pd = (int) ($pd * 1.5);
+                            $logHeal .= '(血狱斩杀)';
+                        }
+                        if ($sTier >= 10) { $pd = (int) ($pd * 1.3); }
+                        if ($sLv >= 20) { $pd = (int) ($pd * 1.15); }
+                        [$pd, $elTag] = apply_el_convert($u, $b, $pd, $skEl);
+                        $logHeal .= $elTag;
+                        $b['fullEl'] = 1;
+                    } elseif ($sid === 'm9') {
+                        // 法师·魂蚀天雷：法4.2雷，35%麻痹（t10）/40%（lv20）
+                        $pd = max(1, (int) ((player_matk($u) + random_int(4, 7)) * (float) $sk['mult'] * $sinPow) - (int) (monster_mdef($b) / 2));
+                        $stunRate = $sLv >= 20 ? 40 : ($sTier >= 10 ? 35 : 20);
+                        if (mt_rand(1, 100) <= $stunRate) {
+                            $b['stun'] = 1;
+                            $logHeal .= '(魂蚀麻痹)';
+                        }
+                        if ($sTier >= 10) { $pd = (int) ($pd * 1.3); }
+                        if ($sLv >= 20) { $pd = (int) ($pd * 1.15); }
+                        [$pd, $elTag] = apply_el_convert($u, $b, $pd, $skEl);
+                        $logHeal .= $elTag;
+                        $b['fullEl'] = 1;
+                    } elseif ($sid === 'h9') {
+                        // 猎人·弑神连珠：物3.4双段暗，斩杀线同w9
+                        $pd = max(1, (int) ((player_patk($u) + random_int(0, 3)) * (float) $sk['mult'] * $sinPow) - monster_pdef($b));
+                        $pd = (int) ($pd * 0.7) + (int) ($pd * 0.7);
+                        $pd += max(0, (int) (player_matk($u) * 0.5) - (int) (monster_mdef($b) / 2));
+                        $cutLine = $sLv >= 20 ? 0.5 : ($sTier >= 10 ? 0.4 : 0.3);
+                        if ((int) $b['hp'] <= (int) ((int) $b['maxhp'] * $cutLine)) {
+                            $pd = (int) ($pd * 1.5);
+                            $logHeal .= '(弑神斩杀)';
+                        }
+                        if ($sTier >= 10) { $pd = (int) ($pd * 1.3); }
+                        if ($sLv >= 20) { $pd = (int) ($pd * 1.15); }
+                        [$pd, $elTag] = apply_el_convert($u, $b, $pd, $skEl);
+                        $logHeal .= $elTag;
+                        $b['fullEl'] = 1;
+                    } elseif ($sid === 'p9') {
+                        // 牧师·堕天圣裁：法3.0暗+奶200（转奶80%，lv20转100%）
+                        $healSin = (int) ((int) $sk['heal'] * $pow) + (int) (player_matk($u) * 0.3);
+                        if ($sTier >= 10) { $healSin += 30; }
+                        if ($sLv >= 20) { $healSin = (int) ($healSin * 1.2); }
+                        $u['hp'] = min((int) $u['maxhp'], (int) $u['hp'] + $healSin);
+                        $logHeal .= '(堕天回' . $healSin . ')';
+                        $pd = max(1, (int) ((player_matk($u) + random_int(4, 7)) * (float) $sk['mult'] * $sinPow) - (int) (monster_mdef($b) / 2));
+                        if ($sTier >= 10) { $pd = (int) ($pd * 1.3); }
+                        if ($sLv >= 20) { $pd = (int) ($pd * 1.15); }
+                        [$pd, $elTag] = apply_el_convert($u, $b, $pd, $skEl);
+                        $logHeal .= $elTag;
+                        $b['fullEl'] = 1;
+                        $leechRate = $sLv >= 20 ? 1.0 : ($sTier >= 10 ? 0.8 : 0.5);
+                        $leech = (int) ($pd * $leechRate);
+                        $u['hp'] = min((int) $u['maxhp'], (int) $u['hp'] + $leech);
+                        $logHeal .= '(噬罪转奶' . $leech . ')';
+                    }
+                }
             } elseif ($sk['kind'] === 'heal') {
                 // 牧师治疗量吃灵力（法攻两成加成）
                 $heal = (int) ($sk['heal'] * $pow) + (int) (player_matk($u) * 0.2);
@@ -5473,7 +5586,7 @@ function battle_round(array &$u, array &$b, string $mode): array
                 $b['drops'][] = $ab;
                 $log .= '掉落【' . $ab . '】！';
             }
-            sin_gain_array($u, 1);
+            sin_gain_typed($u, ((int) ($b['elite'] ?? 0) === 1) ? 'elite' : 'normal');
             $log .= '第' . $killed . '只倒了！下一只扑上来(剩' . (int) $b['left'] . ')。';
         } else {
         $num = (int) ($b['num'] ?? 1);
@@ -5577,7 +5690,11 @@ function battle_round(array &$u, array &$b, string $mode): array
         $rawExp = (int) (((int) ($b['wexp'] ?? 0) + exp_gain_for($u, (string) ($b['id'] ?? ''), (int) ($b['elite'] ?? 0))) * guild_exp_mult((int) $u['id']) * party_bonus_mult((int) $u['id']));
         war_add_score((int) $u['id'], (string) ($b['id'] ?? ''));
         $msg = ($msg ?? '') . gain_exp($u, $rawExp);
-        sin_gain_array($u, 1);
+        if (is_boss_mid((string) ($b['id'] ?? ''))) {
+            sin_gain_typed($u, 'boss');
+        } else {
+            sin_gain_typed($u, ((int) ($b['elite'] ?? 0) === 1) ? 'elite' : 'normal');
+        }
         $petLvMsg = pet_gain_exp((int) $u['id'], (int) ($b['wexp'] ?? 0) + exp_gain_for($u, (string) ($b['id'] ?? '')));
         $qmap = ['goblin' => 1, 'banshee' => 2, 'ogre' => 3];
         $bid = (string) ($b['id'] ?? '');
@@ -5694,6 +5811,7 @@ function battle_round(array &$u, array &$b, string $mode): array
                 if ($cur === 37) {
                     add_mat((int) $u['id'], 'capital_badge', 1);
                     add_mat((int) $u['id'], 'ch3_proof', 1);
+                    add_mat((int) $u['id'], 'qingzui_dan', 1);
                     $txt .= '。第三章·傀儡之夜完成！影子融入体内（影子伙伴：全属性+5%）。获得【王都徽章】，农场开启，去王都农场种菜！';
                 } else {
                     $txt .= '。本环完成，进下一环！';
@@ -5729,6 +5847,7 @@ function battle_round(array &$u, array &$b, string $mode): array
                     add_mat((int) $u['id'], 'ice_badge', 1);
                     add_mat((int) $u['id'], 'frost_heart', 1);
                     add_mat((int) $u['id'], 'ch4_proof', 1);
+                    add_mat((int) $u['id'], 'qingzui_dan', 1);
                     add_mat((int) $u['id'], 'frost_egg', 1);
                     if (job_id_of($u) === 'mage') { $gn4b = make_equip((int) $u['id'], 'offhand', '寒霜·法杖', 3, 480); } elseif (job_id_of($u) === 'hunter') { $gn4b = make_equip((int) $u['id'], 'weapon', '寒霜·长弓', 3, 480); } elseif (job_id_of($u) === 'priest') { $gn4b = make_equip((int) $u['id'], 'weapon', '寒霜·战锤', 3, 480); } else { $gn4b = make_equip((int) $u['id'], 'weapon', '寒霜·战斧', 3, 480); }
                     if ($gn4b !== '') {
@@ -5769,6 +5888,7 @@ function battle_round(array &$u, array &$b, string $mode): array
                     add_mat((int) $u['id'], 'forest_badge', 1);
                     add_mat((int) $u['id'], 'south_flame_token', 1);
                     add_mat((int) $u['id'], 'ch5_proof', 1);
+                    add_mat((int) $u['id'], 'qingzui_dan', 1);
                     add_mat((int) $u['id'], 'soul_shard', 10);
                     add_mat((int) $u['id'], 'wb_ticket', 1);
                     $sk4 = ['warrior' => 'w4', 'mage' => 'm4', 'hunter' => 'h4', 'priest' => 'p4'][job_id_of($u)] ?? '';
@@ -7372,32 +7492,54 @@ function sin_of(int $uid): int
 // 在内存用户上结算：加罪值并同步<10的+20%生命（调用方负责 user_save）
 function sin_gain_array(array &$u, int $n = 1): void
 {
+    // 罪值曲线（防挂机爆表）：
+    // - 普通怪+0.2，精英+1，BOSS+5；挂机一晚(8h,约480只普通)≈96，刚好卡在红线下
+    // - 衰减：每次结算按在线时长折，每调用一次扣0.002（约每500只抵1点）
+    // - 上限999；<10的+20%生命逻辑不变
     $uid = (int) ($u['id'] ?? 0);
     if ($uid <= 0) {
         return;
     }
     $f = cflags($uid);
-    $old = max(0, (int) ($f['sin'] ?? 0));
-    $new = max(0, $old + $n);
+    $old = (float) ($f['sin_f'] ?? max(0, (int) ($f['sin'] ?? 0)));
+    $gain = $n === 1 ? 0.2 : $n;
+    $new = max(0.0, min(999.0, $old + $gain - 0.002));
+    $newI = (int) floor($new + 1e-9);
     $have = (int) ($f['sin_hp'] ?? 0);
     $base = max(1, (int) $u['maxhp'] - $have);
-    $want = $new < 10 ? (int) floor($base * 0.2) : 0;
-    $changed = false;
-    if ($want !== $have) {
-        $u['maxhp'] = max(1, $base + $want);
-        $u['hp'] = max(1, min((int) $u['hp'], (int) $u['maxhp']));
-        $f['sin_hp'] = $want;
-        $changed = true;
-    }
-    if ($n !== 0) {
-        $f['sin'] = $new;
-        $changed = true;
-    }
-    if ($changed) {
-        db()->prepare('UPDATE users SET chapter_flags=? WHERE id=?')->execute([json_encode($f, JSON_UNESCAPED_UNICODE), $uid]);
+    $want = $newI < 10 ? (int) floor($base * 0.2) : 0;
+    $u['maxhp'] = max(1, $base + $want);
+    $u['hp'] = max(1, min((int) $u['hp'], (int) $u['maxhp']));
+    $f['sin_f'] = $new;
+    $f['sin'] = $newI;
+    $f['sin_hp'] = $want;
+    db()->prepare('UPDATE users SET chapter_flags=? WHERE id=?')->execute([json_encode($f, JSON_UNESCAPED_UNICODE), $uid]);
+    // 罪首次破百：自动领悟本职业罪技能（不抢默认active，玩家去技能页手动切）
+    if ($newI >= 100 && $old < 100) {
+        $uu = user_by_id($uid);
+        if ($uu) {
+            $sid = ['warrior' => 'w9', 'mage' => 'm9', 'hunter' => 'h9', 'priest' => 'p9'][job_id_of($uu)] ?? 'w9';
+            $has = db()->prepare('SELECT skill FROM skills WHERE uid=? AND skill=?');
+            $has->execute([$uid, $sid]);
+            if (!$has->fetch()) {
+                db()->prepare('INSERT OR IGNORE INTO skills (uid, skill, level, prof, tier, active) VALUES (?, ?, 1, 0, 1, 0)')->execute([$uid, $sid]);
+                send_mail($uid, '罪字碑', 'sin', '罪技能领悟：' . (skill_catalog()[$sid]['name'] ?? $sid), '你的罪值已满100，罪字碑为你刻下【' . (skill_catalog()[$sid]['name'] ?? $sid) . '】。去技能页设为默认技能（罪<100会被强制切回）。', []);
+            }
+        }
     }
 }
 
+function sin_gain_typed(array &$u, string $kind): void
+{
+    // kind: normal/elite/boss
+    if ($kind === 'boss') {
+        sin_gain_array($u, 5);
+    } elseif ($kind === 'elite') {
+        sin_gain_array($u, 1);
+    } else {
+        sin_gain_array($u, 1);
+    }
+}
 // 场景外直接改DB的罪值
 function sin_add(int $uid, int $n): int
 {
@@ -7484,6 +7626,180 @@ function sin_drop_loot(int $victim, string $loc): array
     _gear_uncache((int) $victim);
     return $out;
 }
+
+// ===== 好感度系统 =====
+// 8个主要NPC：爱丽丝/薇拉/阿蛛/青芽/老咸鱼/老灰/虚空行者/磐石；好感>=100每周一发清罪丹邮件
+function favor_npcs(): array
+{
+    return [
+        'alice' => '修女·爱丽丝',
+        'vera' => '守渊人·薇拉',
+        'spider' => '断线人·阿蛛',
+        'qingya' => '森语者·青芽',
+        'oldfish' => '潜水人·老咸鱼',
+        'oldash' => '探火人·老灰',
+        'voidwalker' => '虚空行者',
+        'rockwarden' => '岩狱守门人·磐石',
+    ];
+}
+
+function favor_of(int $uid, string $npc): int
+{
+    $f = cflags((int) $uid);
+    return max(0, (int) ($f['favor_' . $npc] ?? 0));
+}
+
+// 赠送：任意锻造材料/强化石/附魔石/药水类都可赠，每件+2；每天每NPC限20件
+function favor_gift(int $uid, string $npc, string $mid, int $n): string
+{
+    $uid = (int) $uid;
+    if (!isset(favor_npcs()[$npc])) {
+        return '这个人不需要你的心意。';
+    }
+    $n = max(1, min(20, (int) $n));
+    $mats = mats_of($uid);
+    if ((int) ($mats[$mid] ?? 0) < $n) {
+        return '你没有这么多【' . mat_name($mid) . '】。';
+    }
+    if (!is_tradable_mat($mid) && !isset(pct_potions()[$mid]) && !in_array($mid, ['hp_pct10', 'hp_pct20', 'hp_pct35', 'hp_pct50', 'mp_pct25', 'mp_pct50', 'tent', 'dragon_box'], true)) {
+        return '【' . mat_name($mid) . '】人家看不上（只收锻造材料/药水/帐篷/龙箱）。';
+    }
+    $f = cflags($uid);
+    $day = date('Ymd');
+    $key = 'favor_day_' . $npc . '_' . $day;
+    $used = (int) ($f[$key] ?? 0);
+    if ($used + $n > 20) {
+        return '今天' . favor_npcs()[$npc] . '已经收了' . $used . '件，再收就撑着了（每天20件）。';
+    }
+    add_mat($uid, $mid, -$n);
+    $f['favor_' . $npc] = favor_of($uid, $npc) + $n * 2;
+    $f[$key] = $used + $n;
+    db()->prepare('UPDATE users SET chapter_flags=? WHERE id=?')->execute([json_encode($f, JSON_UNESCAPED_UNICODE), $uid]);
+    return '赠送【' . mat_name($mid) . '】x' . $n . '，' . favor_npcs()[$npc] . '好感+' . ($n * 2) . '（当前' . $f['favor_' . $npc] . '）。';
+}
+
+// 清罪丹：使用一次降随机5~20罪值
+function use_qingzui_dan(int $uid): string
+{
+    $uid = (int) $uid;
+    $mats = mats_of($uid);
+    if (empty($mats['qingzui_dan'])) {
+        return '你没有清罪丹。';
+    }
+    $u = user_by_id($uid);
+    if (!$u) {
+        return '角色不存在。';
+    }
+    $down = mt_rand(5, 20);
+    add_mat($uid, 'qingzui_dan', -1);
+    $f = cflags($uid);
+    $oldF = (float) ($f['sin_f'] ?? max(0, (int) ($f['sin'] ?? 0)));
+    $new = max(0.0, $oldF - $down);
+    $f['sin_f'] = $new;
+    $f['sin'] = (int) floor($new + 1e-9);
+    db()->prepare('UPDATE users SET chapter_flags=? WHERE id=?')->execute([json_encode($f, JSON_UNESCAPED_UNICODE), $uid]);
+    $u = user_by_id($uid);
+    sin_gain_array($u, 0);
+    user_save($u);
+    return '服下清罪丹，罪值-' . $down . '（当前' . sin_of($uid) . '）。';
+}
+
+// 每周一：好感>=100的NPC各发一封清罪丹邮件（每NPC每周一封）
+function favor_weekly_tick(int $uid): string
+{
+    $uid = (int) $uid;
+    $week = date('oW');
+    $f = cflags($uid);
+    $out = [];
+    foreach (favor_npcs() as $npc => $nm) {
+        if (favor_of($uid, $npc) < 100) {
+            continue;
+        }
+        $key = 'favor_mail_' . $npc . '_' . $week;
+        if (!empty($f[$key])) {
+            continue;
+        }
+        if (send_mail($uid, $nm, 'favor', '故人牵挂', $nm . '念你近来杀气渐重，托人捎来一枚清罪丹，望君早日回头。', [['t' => 'mat', 'id' => 'qingzui_dan', 'n' => 1]])) {
+            $f[$key] = 1;
+            $out[] = $nm;
+        }
+    }
+    if ($out !== []) {
+        db()->prepare('UPDATE users SET chapter_flags=? WHERE id=?')->execute([json_encode($f, JSON_UNESCAPED_UNICODE), $uid]);
+        return '【好感】' . implode('、', $out) . '给你寄来了清罪丹，去邮件领取。';
+    }
+    return '';
+}
+
+// ===== NPC偷袭 =====
+// 8个可偷袭NPC：等级/属性与所在图相符；击败小概率掉专属传说
+function ambush_npcs(): array
+{
+    return [
+        'alice' => ['name' => '修女·爱丽丝', 'lv' => 30, 'hp' => 8000, 'atk' => 120, 'exp' => 3000, 'gold' => 1500, 'legend' => ['slot' => 'necklace', 'base' => '圣骸 rosary', 'rate' => 0.05, 'desc' => '传说项链：治疗+15%，减伤+5%']],
+        'vera' => ['name' => '守渊人·薇拉', 'lv' => 110, 'hp' => 60000, 'atk' => 420, 'exp' => 12000, 'gold' => 4000, 'legend' => ['slot' => 'weapon', 'base' => '守渊之誓', 'rate' => 0.05, 'desc' => '传说副手：法防+120，减伤+8%']],
+        'spider' => ['name' => '断线人·阿蛛', 'lv' => 380, 'hp' => 900000, 'atk' => 2800, 'exp' => 60000, 'gold' => 15000, 'legend' => ['slot' => 'weapon', 'base' => '断线剪', 'rate' => 0.05, 'desc' => '传说主手：暴击+10%，吸血+5%']],
+        'qingya' => ['name' => '森语者·青芽', 'lv' => 550, 'hp' => 1500000, 'atk' => 3800, 'exp' => 90000, 'gold' => 25000, 'legend' => ['slot' => 'body', 'base' => '青芽羽衣', 'rate' => 0.05, 'desc' => '传说上身：闪避+8%，生命+5000']],
+        'oldfish' => ['name' => '潜水人·老咸鱼', 'lv' => 400, 'hp' => 1000000, 'atk' => 3000, 'exp' => 70000, 'gold' => 18000, 'legend' => ['slot' => 'offhand', 'base' => '深渊钓竿', 'rate' => 0.05, 'desc' => '传说副手：物防+150，寻宝+10%']],
+        'oldash' => ['name' => '探火人·老灰', 'lv' => 600, 'hp' => 2000000, 'atk' => 4200, 'exp' => 110000, 'gold' => 30000, 'legend' => ['slot' => 'ring', 'base' => '灰烬之戒', 'rate' => 0.05, 'desc' => '传说戒指：火抗+30，攻击+6%']],
+        'voidwalker' => ['name' => '虚空行者', 'lv' => 680, 'hp' => 2800000, 'atk' => 4800, 'exp' => 150000, 'gold' => 40000, 'legend' => ['slot' => 'weapon', 'base' => '虚空裂刃', 'rate' => 0.08, 'desc' => '传说主手：物攻+12%，穿透+8%']],
+        'rockwarden' => ['name' => '岩狱守门人·磐石', 'lv' => 800, 'hp' => 4000000, 'atk' => 5600, 'exp' => 200000, 'gold' => 50000, 'legend' => ['slot' => 'body', 'base' => '磐石岳铠', 'rate' => 0.08, 'desc' => '传说上身：减伤+12%，生命+12000']],
+    ];
+}
+
+// 偷袭一轮：返回[消息, 结果(npc_dead/player_dead/fight)]
+function ambush_round(array &$u, array &$st): array
+{
+    $npc = (string) $st['npc'];
+    $cfg = ambush_npcs()[$npc] ?? null;
+    if ($cfg === null) {
+        return ['这个人不在。', 'npc_dead'];
+    }
+    $pd = max(1, player_atk($u) + random_int(0, 5) - (int) ($cfg['lv'] * 0.6));
+    $st['hp'] = max(0, (int) $st['hp'] - $pd);
+    $log = '你偷袭' . $cfg['name'] . '，造成' . $pd . '点伤害。';
+    if ((int) $st['hp'] <= 0) {
+        return [$log . ' ' . $cfg['name'] . '倒地不起。', 'npc_dead'];
+    }
+    $md = max(1, (int) ($cfg['atk'] * 0.5) + random_int(0, 4) - player_def($u));
+    $u['hp'] = (int) $u['hp'] - $md;
+    $log .= '对方反击' . $md . '点。';
+    if ((int) $u['hp'] <= 0) {
+        return [$log, 'player_dead'];
+    }
+    return [$log, 'fight'];
+}
+
+// 偷袭奖励：经验金币 + 小概率专属传说
+function ambush_reward(int $uid, string $npc): string
+{
+    $cfg = ambush_npcs()[$npc] ?? null;
+    if ($cfg === null) {
+        return '';
+    }
+    $u = user_by_id($uid);
+    if (!$u) {
+        return '';
+    }
+    $u['gold'] = (int) $u['gold'] + (int) $cfg['gold'];
+    $msg = gain_exp($u, (int) $cfg['exp']);
+    $u = user_by_id($uid);
+    sin_gain_array($u, 0);
+    user_save($u);
+    $loot = '';
+    if (mt_rand(1, 1000) <= (int) round($cfg['legend']['rate'] * 1000)) {
+        $lg = $cfg['legend'];
+        $sn = make_equip($uid, (string) $lg['slot'], (string) $lg['base'], 4, (int) $cfg['lv']);
+        $loot = '掉落传说【' . $sn . '】（' . $lg['desc'] . '）！';
+    }
+    // 打NPC加少量罪
+    $u2 = user_by_id($uid);
+    sin_gain_array($u2, 2);
+    user_save($u2);
+    return '击败' . $cfg['name'] . '：' . $msg . '，金币+' . fmt_money((int) $cfg['gold']) . '。' . $loot;
+}
+
+// 好感/清罪丹入口（每周一由 home 页面触发）
 
 function check_ch2_done(int $uid, array $qs): bool
 {

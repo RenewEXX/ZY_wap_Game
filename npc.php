@@ -69,6 +69,22 @@ if (!isset($people[$who]) || $people[$who]['loc'] !== $cur) {
     exit;
 }
 
+if ($choice === 'gift' && isset(favor_npcs()[$who])) {
+    flash_set(favor_gift((int) $u['id'], $who, (string) ($_GET['mid'] ?? ''), 1));
+    header('Location: npc.php?who=' . $who);
+    exit;
+}
+if ($choice === 'ambush' && isset(ambush_npcs()[$who])) {
+    if ((int) $u['hp'] <= 0) {
+        flash_set('你先回满血再来。');
+        header('Location: home.php');
+        exit;
+    }
+    $cfg = ambush_npcs()[$who];
+    $_SESSION['ambush'] = ['npc' => $who, 'hp' => (int) $cfg['hp'], 'maxhp' => (int) $cfg['hp']];
+    header('Location: fight.php?a=ambushfight');
+    exit;
+}
 if ($who === 'augustus' && $choice === 'accept' && (int) $u['quest'] === 10) {
     $u['quest'] = 11;
     $u['chapter_flags'] = json_encode(['accepted' => true], JSON_UNESCAPED_UNICODE);
@@ -226,6 +242,7 @@ if ($who === 'darklily' && in_array($choice, ['slay', 'talk', 'where'], true) &&
         cflag_set((int) $u['id'], 'lily_gone', 1);
     } else {
         ch2_choice($u, 'lily_done', 'lily_result', 'talk', 0, '你试图理解她。她听着听着，影子翅膀合拢，把你们一起裹进黑暗。等你醒来，祭坛空了。');
+        add_mat((int) $u['id'], 'qingzui_dan', 1);
         cflag_set((int) $u['id'], 'lily_gone', 1);
     }
     chx_advance($u, 26, 'lily_done');
@@ -629,6 +646,9 @@ if ($who === 'eventer' && str_starts_with($choice, 'peak')) {
 if ($who === 'augustus' && (int) $u['quest'] === 15 && in_array($choice, ['expose', 'question', 'hide'], true)) {
     cflag_set((int) $u['id'], 'ending', $choice);
     $u['quest'] = 16;
+    if (in_array($choice, ['expose', 'question'], true)) {
+        add_mat((int) $u['id'], 'qingzui_dan', 1);
+    }
     user_save($u);
     $ending = ['expose' => '你把信交给卡尔。镇长被捕，矿坑封印。莉莉在井边说：你做了正确的选择。', 'question' => '你私下质问奥古斯都。这个疲惫的男人跪了下来，白石镇的未来悬在你的选择上。', 'hide' => '你烧掉了信。白石镇继续运转，但井底的黑雾比昨夜更浓。莉莉对你失望了。'][$choice];
     flash_set($ending . ' 离开时，井底传来你自己的声音：“谢谢你，帮我打开了门。”');
@@ -834,6 +854,25 @@ if ($who === 'augustus' && (int) $u['quest'] === 15) {
     echo '<a href="npc.php?who=augustus&choice=expose">把信交给卡尔，揭发镇长</a><br>';
     echo '<a href="npc.php?who=augustus&choice=question">私下质问奥古斯都</a><br>';
     echo '<a href="npc.php?who=augustus&choice=hide">烧掉信，隐瞒真相</a><br>';
+}
+// 好感度：8主要NPC可赠送
+if (isset(favor_npcs()[$who])) {
+    echo '好感：' . favor_of((int) $u['id'], $who) . (favor_of((int) $u['id'], $who) >= 100 ? '（每周一寄清罪丹）' : '（满100每周一寄清罪丹）') . '<br>';
+    $gm = mats_of((int) $u['id']);
+    $opts = [];
+    foreach (['enhance_t1', 'enhance_t2', 'enhance_t3', 'hp_pct10', 'hp_pct20', 'tent'] as $mid) {
+        if ((int) ($gm[$mid] ?? 0) > 0) {
+            $opts[] = '<a href="npc.php?who=' . $who . '&choice=gift&mid=' . $mid . '">赠' . mat_name($mid) . 'x1</a>';
+        }
+    }
+    if ($opts !== []) {
+        echo '赠送：' . implode(' ', $opts) . '<br>';
+    }
+}
+// 偷袭：8可偷袭NPC
+if (isset(ambush_npcs()[$who])) {
+    $cfg = ambush_npcs()[$who];
+    echo '<a href="npc.php?who=' . $who . '&choice=ambush">偷袭' . h($cfg['name']) . '（' . $cfg['lv'] . '级，胜有' . (int) round($cfg['legend']['rate'] * 100) . '%掉传说' . h($cfg['legend']['base']) . '）</a><br>';
 }
 echo '<a href="home.php">回行动</a>';
 nav_line();

@@ -262,6 +262,67 @@ if ($a === 'sinfight') {
     exit;
 }
 
+if ($a === 'ambushfight') {
+    $st = $_SESSION['ambush'] ?? null;
+    $cfg = is_array($st) ? (ambush_npcs()[(string) ($st['npc'] ?? '')] ?? null) : null;
+    if ($cfg === null) {
+        unset($_SESSION['ambush']);
+        flash_set('偷袭目标不见了。');
+        header('Location: home.php');
+        exit;
+    }
+    wap_start('偷袭');
+    echo '敌【' . h($cfg['name']) . '】' . (int) $cfg['lv'] . '级<br>';
+    echo '<div class="hp">敌生命 ' . (int) $st['hp'] . '/' . (int) $st['maxhp'] . '</div>';
+    echo '<div class="hp">你 ' . (int) $u['hp'] . '/' . (int) $u['maxhp'] . '</div>';
+    echo '<div class="hr">--------</div>';
+    echo '<a href="fight.php?a=ambush_hit">砍他一刀</a> <a href="fight.php?a=run">撤</a>';
+    nav_line();
+    wap_end(false);
+    exit;
+}
+if ($a === 'ambush_hit') {
+    $st = $_SESSION['ambush'] ?? null;
+    $npc = is_array($st) ? (string) ($st['npc'] ?? '') : '';
+    $cfg = ambush_npcs()[$npc] ?? null;
+    if ($cfg === null) {
+        unset($_SESSION['ambush']);
+        flash_set('偷袭目标不见了。');
+        header('Location: home.php');
+        exit;
+    }
+    if ((int) $u['hp'] <= 0) {
+        unset($_SESSION['ambush']);
+        $pen = death_penalty($u);
+        user_save($u);
+        flash_set('偷袭失败，被反杀。' . $pen);
+        header('Location: home.php');
+        exit;
+    }
+    [$msg, $res] = ambush_round($u, $st);
+    $_SESSION['ambush'] = $st;
+    if ($res === 'npc_dead') {
+        unset($_SESSION['ambush']);
+        $rw = ambush_reward((int) $u['id'], $npc);
+        $u = user_by_id((int) $u['id']);
+        user_save($u);
+        flash_set($msg . ' ' . $rw);
+        header('Location: home.php');
+        exit;
+    }
+    user_save($u);
+    if ($res === 'player_dead') {
+        unset($_SESSION['ambush']);
+        $pen = death_penalty($u);
+        user_save($u);
+        flash_set($msg . ' ' . $pen);
+        header('Location: home.php');
+        exit;
+    }
+    flash_set($msg);
+    header('Location: fight.php?a=ambushfight');
+    exit;
+}
 function pvp_check(array $u, int $tuid): array
 {    if (!war_window_open()) {
         return [null, '战场没开（周六日20点）。'];

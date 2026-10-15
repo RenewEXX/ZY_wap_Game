@@ -5991,14 +5991,14 @@ function map_regions(): array
         '公会战场' => ['warfield'],
         '巅峰战场' => ['peak1', 'peak2', 'peak3'],
         '冰原·凛冬' => ['ice_gate', 'ice_trail', 'ice_village', 'frozen_lake', 'snow_field', 'glacier_pass', 'aurora_vale', 'ice_cave', 'wyrm_tunnel', 'blizzard_peak', 'glacier_heart', 'frost_throne'],
-        '冰渊副本' => ['fr_gate', 'fr_descent', 'fr_abyss', 'fr_trench', 'fr_core'],
         '雾森·火山' => ['fo_gate', 'mist_edge', 'deep_woods', 'thorn_maze', 'boa_swamp', 'ape_hollow', 'sage_grove', 'ash_wastes', 'ember_foothill', 'lava_river', 'cult_altar', 'magma_core', 'flame_temple', 'ruin_gate', 'volcano_heart'],
-        '熔心副本' => ['em_gate', 'em_vein', 'em_core'],
-        '傀儡回廊' => ['pz_gate', 'pz_hall', 'pz_gallery', 'pz_stage', 'pz_core'],
-        '雾森祭坛' => ['sen_gate', 'sen_path', 'sen_altar', 'sen_heart', 'sen_core'],
-        '虚空裂隙' => ['vx_gate', 'vx_path', 'vx_hall', 'vx_throne', 'vx_core'],
-        '岩狱·泰坦' => ['ry_gate', 'ry_path', 'ry_hall', 'ry_prison', 'ry_core'],
     ];
+}
+
+// 副本图：只能找NPC进，不参与传送
+function dungeon_maps(): array
+{
+    return array_merge(dsw_maps(), abx_maps(), mx_maps(), fr_maps(), em_maps(), pz_maps(), sen_maps(), ry_maps(), vx_maps());
 }
 
 function exit_dirs(string $from): array

@@ -23,7 +23,7 @@ $backRegion = (string) ($_GET['region'] ?? '');
 $backSuffix = $backRegion !== '' ? '?region=' . urlencode($backRegion) : '';
 if ($go !== '' && isset($all[$go])) {
     $cost = teleport_cost($cur, $go);
-    if (in_array($go, dsw_maps(), true) || in_array($go, abx_maps(), true) || in_array($go, mx_maps(), true)) {
+    if (in_array($go, dungeon_maps(), true)) {
         flash_set('副本只能找NPC进，不能传送。');
         header('Location: teleport.php' . $backSuffix);
         exit;
@@ -98,7 +98,7 @@ foreach (map_regions() as $region => $ids) {
     }
     $cnt = 0;
     foreach ($ids as $id) {
-        if (isset($all[$id]) && !in_array($id, dsw_maps(), true) && !in_array($id, abx_maps(), true) && !in_array($id, mx_maps(), true)) {
+        if (isset($all[$id]) && !in_array($id, dungeon_maps(), true)) {
             $cnt++;
         }
     }
@@ -123,7 +123,7 @@ foreach (map_regions() as $region => $ids) {
             echo '·' . h($all[$id]['name']) . '(到不了)<br>';
             continue;
         }
-        if (in_array($id, dsw_maps(), true) || in_array($id, abx_maps(), true) || in_array($id, mx_maps(), true)) {
+        if (in_array($id, dungeon_maps(), true)) {
             continue;
         }
         $lvTag = teleport_min_lv($id) > 1 ? '需' . teleport_min_lv($id) . '级' : '';

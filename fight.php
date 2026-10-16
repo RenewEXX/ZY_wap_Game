@@ -35,6 +35,10 @@ if ((int) $u['hp'] <= 0) {
         $u['loc'] = 'avenue';
         $pen .= '母巢中倒下，直接传回中央大道。';
     }
+    if (in_array((string) ($u['loc'] ?? ''), gy_maps(), true)) {
+        $u['loc'] = 'square';
+        $pen .= '在罪渊中倒下，被渡罪拖了回来。';
+    }
     user_save($u);
     unset($_SESSION['battle']);
     flash_set('你被拖回营地。' . $pen);

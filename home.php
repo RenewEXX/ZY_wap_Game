@@ -129,7 +129,7 @@ $npcLinks = [
     'town_sq' => [['alice', '修女·爱丽丝'], ['horse_t', '赛马人·老霍'], ['rank_t', '榜单老人']],
     'silver_gate' => [['sentry', '守卫·布雷']], 'sguild' => [['gwen', '会长·格温'], ['gmaster', '公会管理员·霍尔']],
     'silver_sq' => [['vera', '守渊人·薇拉'], ['horse_s', '赛马人·阿金'], ['rank_s', '榜单老人'], ['med_s', '银月药剂师·霜叶'], ['priest_c', '传教神父·奥古'], ['soulmaster', '神魂师·墨老']],
-    'square' => [['horse_g', '赛马人·豆芽'], ['rank_g', '榜单老人'], ['med_g', '雾语药剂师·菘蓝'], ['eventer', '活动专员·阿战'], ['arena_m', '竞技场大师·雷横']],
+    'square' => [['gykeeper', '罪渊守门人·渡罪'], ['horse_g', '赛马人·豆芽'], ['rank_g', '榜单老人'], ['med_g', '雾语药剂师·菘蓝'], ['eventer', '活动专员·阿战'], ['arena_m', '竞技场大师·雷横']],
     'guild' => [['greg', '公会接待·格雷']],
     'dsewer1' => [['reed', '守卫·雷德']], 'dsewer2' => [['lily2', '少女·莉莉']],
     'manor' => [['lord', '城主·瓦伦丁']],
@@ -185,6 +185,10 @@ if (in_array($cur, abx_maps(), true)) {
     $stg = abx_stage((int) $u['id']);
     $need = [1 => '蚀影尘×10（影蚀行者）', 2 => '影蚀徽记×10（腐影守卫）', 3 => '低语残章×8（深渊低语者）', 4 => '王座蚀印×5（影蚀巨像）', 5 => '去君王大门，推开君王王座，杀阿巴顿'][min(5, $stg)];
     echo '<div class="warn">影蚀深渊：剩' . gmdate('i:s', max(0, $left)) . '　阶段' . $stg . '/5：' . h($need) . '</div>';
+}
+if (in_array($cur, gy_maps(), true)) {
+    $left = 1800 - (time() - (int) (mats_of((int) $u['id'])['gy_enter'] ?? time()));
+    echo '<div class="warn">罪渊：剩' . gmdate('i:s', max(0, $left)) . '　杀美德涨罪（+8/只），8%罪书，0.3%罪渊传说！</div>';
 }
 if (in_array($cur, mx_maps(), true)) {
     $left = 2700 - (time() - (int) (mats_of((int) $u['id'])['mx_enter'] ?? time()));

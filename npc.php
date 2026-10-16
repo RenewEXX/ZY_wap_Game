@@ -7,6 +7,7 @@ $who = (string) ($_GET['who'] ?? '');
 $choice = (string) ($_GET['choice'] ?? '');
 $cur = (string) $u['loc'];
 $people = [
+    'gykeeper' => ['name' => '罪渊守门人·渡罪', 'loc' => 'square', 'text' => '这口渊每月只开一次，罪值越高的人进去越安全。里面的怪物只有1滴血——它们叫善意、爱意、友谊，诸如此类。杀了它们，你的罪就涨了。别问我为什么。'],
     'dane' => ['name' => '丹恩·铜须', 'loc' => 'smith', 'text' => '新来的？卡尔说你要下矿。空手去就是送死。我这辈子打过三千把武器，强化找我，炉子没灭过。下级强化石矿里到处是，中级要打精英，上级只在深处。'],
     'martha' => ['name' => '杂货商·玛莎', 'loc' => 'supply', 'text' => '火把、干粮、回城卷轴？下矿可不能没有火把。还有，捡到的破烂别扔，石头比金子值钱。'],
     'aileen' => ['name' => '药剂师·艾琳', 'loc' => 'market', 'text' => '我哥哥艾登·灰叶在调查队里。他没回来。拿着解毒剂。如果找到他的铭牌，请带回来。'],
@@ -69,6 +70,25 @@ if (!isset($people[$who]) || $people[$who]['loc'] !== $cur) {
     exit;
 }
 
+if ($who === 'gykeeper' && $choice === 'enter') {
+    if ((int) ($u['lv'] ?? 1) < 1) {
+        flash_set('你的等级不够。');
+    } else {
+        $curMonth = date('Y-m');
+        $mats = mats_of((int) $u['id']);
+        if ((string) ($mats['gy_month'] ?? '') === $curMonth) {
+            flash_set('渡罪摇头：这个月你已经进去过了。下个月再来。');
+        } else {
+            mat_set((int) $u['id'], 'gy_month', $curMonth);
+            mat_set((int) $u['id'], 'gy_enter', time());
+            $u['loc'] = 'gy_gate';
+            user_save($u);
+            flash_set('渡罪推开罪渊之门，30分钟倒计时开始。杀光它们——或者被它们看着。');
+        }
+    }
+    header('Location: home.php');
+    exit;
+}
 if ($choice === 'gift' && isset(favor_npcs()[$who])) {
     flash_set(favor_gift((int) $u['id'], $who, (string) ($_GET['mid'] ?? ''), 1));
     header('Location: npc.php?who=' . $who);
@@ -784,6 +804,15 @@ if ($who === 'priest_c') {
     $pw = (int) ($pm['active_week'] ?? 0);
     echo '本周有效游玩：' . gmdate('H:i:s', min($pw, 86399)) . '/02:00:00<br>';
     echo '<a href="npc.php?who=priest_c&choice=diamond">兑换10魔钻（每周一次）</a><br>';
+}
+if ($who === 'gykeeper') {
+    $curMonth = date('Y-m');
+    $used = (string) (mats_of((int) $u['id'])['gy_month'] ?? '') === $curMonth;
+    if ($used) {
+        echo '<span class="muted">本月已挑战过错渊，下个月再来。</span><br>';
+    } else {
+        echo '<a href="npc.php?who=gykeeper&choice=enter">进入罪渊（本月限一次，30分钟）</a><br>';
+    }
 }
 if ($who === 'arena_m') {
     if ((int) ($u['lv'] ?? 1) >= 80 && empty(cflags((int) ($u['id'] ?? 0))['arena_guide_done']) && (int) ($u['quest'] ?? 0) === 28) {

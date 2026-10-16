@@ -175,6 +175,14 @@ function monsters(): array
         'rift_weaver' => ['name' => '裂隙织影者', 'hp' => 7800, 'atk' => 260, 'exp' => 11000, 'gold' => 4200],
         'colossus' => ['name' => '影蚀巨像', 'hp' => 6500, 'atk' => 230, 'exp' => 9000, 'gold' => 3500],
         'abaddon' => ['name' => '影蚀君王阿巴顿', 'hp' => 20000, 'atk' => 340, 'exp' => 30000, 'gold' => 20000],
+        'gy_kindness' => ['name' => '善意', 'hp' => 1, 'atk' => 1, 'exp' => 100, 'gold' => 0],
+        'gy_love' => ['name' => '爱意', 'hp' => 1, 'atk' => 1, 'exp' => 100, 'gold' => 0],
+        'gy_friendship' => ['name' => '友谊', 'hp' => 1, 'atk' => 1, 'exp' => 100, 'gold' => 0],
+        'gy_courage' => ['name' => '勇气', 'hp' => 1, 'atk' => 1, 'exp' => 200, 'gold' => 0],
+        'gy_hope' => ['name' => '希望', 'hp' => 1, 'atk' => 1, 'exp' => 200, 'gold' => 0],
+        'gy_trust' => ['name' => '信任', 'hp' => 1, 'atk' => 1, 'exp' => 200, 'gold' => 0],
+        'gy_mercy' => ['name' => '怜悯', 'hp' => 1, 'atk' => 1, 'exp' => 300, 'gold' => 0],
+        'gy_justice' => ['name' => '正义', 'hp' => 1, 'atk' => 1, 'exp' => 500, 'gold' => 0],
         'puppet_guard' => ['name' => '傀儡守卫', 'hp' => 18000, 'atk' => 320, 'exp' => 45500, 'gold' => 23400],
         'masked_noble' => ['name' => '假面贵族', 'hp' => 26000, 'atk' => 380, 'exp' => 52000, 'gold' => 26000],
         'ink_puppet' => ['name' => '墨傀儡', 'hp' => 36000, 'atk' => 460, 'exp' => 80000, 'gold' => 38000],
@@ -2539,6 +2547,9 @@ function equip_set_id(string $shortName): string
     if (str_starts_with($shortName, '荆棘·')) {
         return 'thorn';
     }
+    if (str_starts_with($shortName, '罪渊·')) {
+        return 'sin';
+    }
     if (str_starts_with($shortName, '岩狱·')) {
         return 'rockjail';
     }
@@ -2565,14 +2576,17 @@ function equip_set_pieces(string $set): array
     if ($set === 'thorn') {
         return ['荆棘·雾祭铃', '荆棘·刺甲', '荆棘·蛇牙戒', '荆棘·守卫裙', '荆棘·束腰'];
     }
+    if ($set === 'sin') {
+        return ['罪渊·傲慢之刃', '罪渊·嫉妒之刃', '罪渊·暴怒之刃', '罪渊·懒惰之刃', '罪渊·贪婪之刃', '罪渊·暴食之刃', '罪渊·色欲之刃', '罪渊·悔恨冠', '罪渊·赎罪甲', '罪渊·忏悔束腰', '罪渊·堕天之靴'];
+    }
     return [];
 }
 
 function equip_set_owned_count(int $uid, string $set): int
 {
-    if (in_array($set, ['theater', 'frost', 'ember', 'puppet', 'thorn', 'rockjail'], true)) {
-        $mark = ['theater' => '%剧场·%', 'frost' => '%寒霜·%', 'ember' => '%烬焰·%', 'puppet' => '%傀儡·%', 'thorn' => '%荆棘·%', 'rockjail' => '%岩狱·%'][$set];
-        $cap = ['theater' => 99, 'frost' => 3, 'ember' => 7, 'puppet' => 5, 'thorn' => 4, 'rockjail' => 10][$set];
+    if (in_array($set, ['theater', 'frost', 'ember', 'puppet', 'thorn', 'rockjail', 'sin'], true)) {
+        $mark = ['theater' => '%剧场·%', 'frost' => '%寒霜·%', 'ember' => '%烬焰·%', 'puppet' => '%傀儡·%', 'thorn' => '%荆棘·%', 'rockjail' => '%岩狱·%', 'sin' => '%罪渊·%'][$set];
+        $cap = ['theater' => 99, 'frost' => 3, 'ember' => 7, 'puppet' => 5, 'thorn' => 4, 'rockjail' => 10, 'sin' => 11][$set];
         $st = db()->prepare('SELECT COUNT(*) FROM equips WHERE uid=? AND pos="wear" AND name LIKE ?');
         $st->execute([(int) $uid, $mark]);
         return min($cap, (int) $st->fetchColumn());
@@ -4154,6 +4168,19 @@ function gear_stats(int $uid): array
     if ($rock >= 5) { $s['damage_reduction'] += 8; }
     if ($rock >= 7) { $s['hp'] += 8000; $s['damage_reduction'] += 12; }
     if ($rock >= 10) { $s['hp'] += 20000; $s['damage_reduction'] += 20; }
+    $gy = 0;
+    foreach ($worn as $wn) {
+        if (str_starts_with($wn, '罪渊·')) { $gy++; }
+    }
+    if ($gy > 0) {
+        $sinLv = sin_of($uid);
+        $mult = 1 + $sinLv / 100;
+        $s['atk_pct'] += $gy * 2 * $mult;
+        $s['skill_damage'] += $gy * 2 * $mult;
+        if ($gy >= 5) { $s['lifesteal'] += 5; }
+        if ($gy >= 8) { $s['damage_reduction'] += 10; }
+        if ($gy >= 11) { $s['truedmg'] += $sinLv * 5; $s['damage_reduction'] += min(20, $sinLv / 20); }
+    }
     $qu = db()->prepare('SELECT quest FROM users WHERE id=?');
     $qu->execute([$uid]);
     if ((int) ($qu->fetchColumn() ?: 0) >= 38) {
@@ -4759,6 +4786,7 @@ function monster_lv(string $mid): int
         'shadow_rat' => 30, 'shadow_soldier' => 35, 'corrupt_guard' => 38, 'shadow_hound' => 42, 'corrupt_treant' => 46,
         'gargoyle' => 50, 'puppet' => 55, 'apostle' => 45, 'guardian' => 55, 'valentin' => 62, 'dark_lily' => 66, 'abyss_eye' => 70,
         'shadow_walker' => 55, 'corrupt_warder' => 65, 'whisperer' => 80, 'rift_hound' => 88, 'rift_weaver' => 97, 'colossus' => 95, 'abaddon' => 120,
+        'gy_kindness' => 1, 'gy_love' => 1, 'gy_friendship' => 1, 'gy_courage' => 1, 'gy_hope' => 1, 'gy_trust' => 1, 'gy_mercy' => 1, 'gy_justice' => 1,
         'dark_slime' => 20, 'swamp_slime' => 21, 'swamp_king' => 25,
         'puppet_guard' => 130, 'masked_noble' => 150, 'ink_puppet' => 180, 'silver_undead' => 210,
         'silver_assassin' => 240, 'puppet_priest' => 270, 'star_puppet' => 300, 'silver_puppet' => 310, 'string_puller' => 320,
@@ -5586,7 +5614,15 @@ function battle_round(array &$u, array &$b, string $mode): array
                 $b['drops'][] = $ab;
                 $log .= '掉落【' . $ab . '】！';
             }
-            sin_gain_typed($u, ((int) ($b['elite'] ?? 0) === 1) ? 'elite' : 'normal');
+            if (str_starts_with((string) ($b['id'] ?? ''), 'gy_')) {
+                sin_gain_typed($u, 'gy');
+                $gyMsg = gy_kill_drop((int) ($u['id'] ?? 0), (string) ($b['id'] ?? ''));
+                if ($gyMsg !== '') {
+                    $log .= $gyMsg;
+                }
+            } else {
+                sin_gain_typed($u, ((int) ($b['elite'] ?? 0) === 1) ? 'elite' : 'normal');
+            }
             $log .= '第' . $killed . '只倒了！下一只扑上来(剩' . (int) $b['left'] . ')。';
         } else {
         $num = (int) ($b['num'] ?? 1);
@@ -5690,7 +5726,13 @@ function battle_round(array &$u, array &$b, string $mode): array
         $rawExp = (int) (((int) ($b['wexp'] ?? 0) + exp_gain_for($u, (string) ($b['id'] ?? ''), (int) ($b['elite'] ?? 0))) * guild_exp_mult((int) $u['id']) * party_bonus_mult((int) $u['id']));
         war_add_score((int) $u['id'], (string) ($b['id'] ?? ''));
         $msg = ($msg ?? '') . gain_exp($u, $rawExp);
-        if (is_boss_mid((string) ($b['id'] ?? ''))) {
+        if (str_starts_with((string) ($b['id'] ?? ''), 'gy_')) {
+            sin_gain_typed($u, 'gy');
+            $gyMsg = gy_kill_drop((int) ($u['id'] ?? 0), (string) ($b['id'] ?? ''));
+            if ($gyMsg !== '') {
+                $msg .= $gyMsg;
+            }
+        } elseif (is_boss_mid((string) ($b['id'] ?? ''))) {
             sin_gain_typed($u, 'boss');
         } else {
             sin_gain_typed($u, ((int) ($b['elite'] ?? 0) === 1) ? 'elite' : 'normal');
@@ -6125,7 +6167,7 @@ function map_regions(): array
 // 副本图：只能找NPC进，不参与传送
 function dungeon_maps(): array
 {
-    return array_merge(dsw_maps(), abx_maps(), mx_maps(), fr_maps(), em_maps(), pz_maps(), sen_maps(), ry_maps(), vx_maps());
+    return array_merge(dsw_maps(), abx_maps(), mx_maps(), fr_maps(), em_maps(), pz_maps(), sen_maps(), ry_maps(), vx_maps(), gy_maps());
 }
 
 function exit_dirs(string $from): array
@@ -6419,20 +6461,20 @@ function dungeon_tick(array &$u): void
     $inEm = in_array($loc, em_maps(), true);
     $inPz = in_array($loc, pz_maps(), true);
     $inSen = in_array($loc, sen_maps(), true);
-    $inAs = in_array($loc, as_maps(), true); $inVx = in_array($loc, vx_maps(), true);
-    if (!in_array($loc, dsw_maps(), true) && !in_array($loc, abx_maps(), true) && !in_array($loc, mx_maps(), true) && !$inFr && !$inEm && !$inPz && !$inSen && !$inAs && !$inVx) {
+    $inAs = in_array($loc, as_maps(), true); $inVx = in_array($loc, vx_maps(), true); $inGy = in_array($loc, gy_maps(), true);
+    if (!in_array($loc, dsw_maps(), true) && !in_array($loc, abx_maps(), true) && !in_array($loc, mx_maps(), true) && !$inFr && !$inEm && !$inPz && !$inSen && !$inAs && !$inVx && !$inGy) {
         return;
     }
     $inAbx = in_array($loc, abx_maps(), true);
     $inMx = in_array($loc, mx_maps(), true);
     $mats = mats_of((int) ($u['id'] ?? 0));
-    $enter = (int) ($mats[$inFr ? 'fr_enter' : ($inEm ? 'em_enter' : ($inPz ? 'pz_enter' : ($inSen ? 'sen_enter' : ($inAs ? 'as_enter' : ($inVx ? 'vx_enter' : ($inMx ? 'mx_enter' : ($inAbx ? 'abx_enter' : 'dsw_enter')))))))] ?? time());
+    $enter = (int) ($mats[$inFr ? 'fr_enter' : ($inEm ? 'em_enter' : ($inPz ? 'pz_enter' : ($inSen ? 'sen_enter' : ($inAs ? 'as_enter' : ($inVx ? 'vx_enter' : ($inMx ? 'mx_enter' : ($inAbx ? 'abx_enter' : ((isset($inGy) && $inGy) ? 'gy_enter' : 'dsw_enter'))))))))] ?? time());
     $limit = ($inMx || $inFr || $inEm || $inPz || $inSen || $inAs || $inVx) ? 2700 : 1800;
     if (time() - $enter > $limit) {
         unset($_SESSION['battle']);
-        $u['loc'] = $inFr ? 'ice_village' : ($inEm ? 'ember_foothill' : ($inPz ? 'theater' : ($inSen ? 'fo_gate' : ($inAs ? 'ember_foothill' : ($inVx ? 'volcano_heart' : ($inMx ? 'avenue' : ($inAbx ? 'silver_sq' : 'town_sq')))))));
+        $u['loc'] = $inFr ? 'ice_village' : ($inEm ? 'ember_foothill' : ($inPz ? 'theater' : ($inSen ? 'fo_gate' : ($inAs ? 'ember_foothill' : ($inVx ? 'volcano_heart' : ($inMx ? 'avenue' : ($inAbx ? 'silver_sq' : ((isset($inGy) && $inGy) ? 'square' : 'town_sq'))))))));
         user_save($u);
-        $back = $inFr ? '冰原村' : ($inEm ? '火山麓' : ($inPz ? '傀儡剧场' : ($inSen ? '雾森渡口' : ($inAs ? '火山麓' : ($inVx ? '火山之心' : ($inMx ? '中央大道' : ($inAbx ? '白银广场' : '白石镇广场')))))));
+        $back = $inFr ? '冰原村' : ($inEm ? '火山麓' : ($inPz ? '傀儡剧场' : ($inSen ? '雾森渡口' : ($inAs ? '火山麓' : ($inVx ? '火山之心' : ($inMx ? '中央大道' : ($inAbx ? '白银广场' : ((isset($inGy) && $inGy) ? '灰雾村广场' : '白石镇广场'))))))));
         flash_set(($limit >= 2700 ? '45' : '30') . '分钟到了，你被传回' . $back . '。');
     }
 }
@@ -6894,12 +6936,20 @@ function mx_locations(): array
     $m['mx_depth'] = ['name' => '巢穴深处', 'desc' => '银丝蛾的磷粉像雪。守望者站在茧堆上，一动不动。', 'exits' => ['mx_hall' => '织丝大厅', 'mx_nest' => '育巢'], 'monsters' => ['thread_weaver', 'silk_moth', 'nest_watcher']];
     $m['mx_nest'] = ['name' => '育巢', 'desc' => '育巢侍女抱着卵唱歌。歌声越好听，丝勒得越紧。', 'exits' => ['mx_depth' => '巢穴深处', 'mx_heart' => '母巢之心'], 'monsters' => ['nest_watcher', 'brood_maiden']];
     $m['mx_heart'] = ['name' => '母巢之心', 'desc' => '缠丝之母盘踞在巨茧上。它是牵线者死后留下的最后的卵，孵出来就是下一个牵线者。', 'exits' => ['mx_nest' => '育巢'], 'monsters' => ['silk_mother']];
+    $m['gy_gate'] = ['name' => '罪渊·门', 'desc' => '门上刻着：弃尽美德者，方可入此门。善意在门后等你，杀了它们，你就自由了。', 'exits' => ['gy_hall' => '美德回廊'], 'monsters' => ['gy_kindness', 'gy_love', 'gy_friendship']];
+    $m['gy_hall'] = ['name' => '罪渊·美德回廊', 'desc' => '勇气、希望、信任挂在回廊两侧，像风干的果子。一碰就碎。', 'exits' => ['gy_gate' => '门', 'gy_abyss' => '渊底'], 'monsters' => ['gy_courage', 'gy_hope', 'gy_trust', 'gy_mercy']];
+    $m['gy_abyss'] = ['name' => '罪渊·渊底', 'desc' => '正义坐在渊底，1滴血。它说：动手吧，杀了我，你就是罪本身。', 'exits' => ['gy_hall' => '美德回廊'], 'monsters' => ['gy_mercy', 'gy_justice']];
     return $m;
 }
 
 function mx_maps(): array
 {
     return ['mx_gate', 'mx_path', 'mx_hall', 'mx_depth', 'mx_nest', 'mx_heart'];
+}
+
+function gy_maps(): array
+{
+    return ['gy_gate', 'gy_hall', 'gy_abyss'];
 }
 
 function mx_stage(int $uid): int
@@ -7536,6 +7586,9 @@ function sin_gain_typed(array &$u, string $kind): void
         sin_gain_array($u, 5);
     } elseif ($kind === 'elite') {
         sin_gain_array($u, 1);
+    } elseif ($kind === 'gy') {
+        // 罪渊美德怪：1滴血，杀一只+8罪
+        sin_gain_array($u, 8);
     } else {
         sin_gain_array($u, 1);
     }
@@ -7624,6 +7677,41 @@ function sin_drop_loot(int $victim, string $loc): array
         }
     }
     _gear_uncache((int) $victim);
+    return $out;
+}
+
+// 罪渊击杀掉落：8%本职业罪技能书，0.3%随机罪渊套装件（传说）
+function gy_kill_drop(int $uid, string $mid): string
+{
+    $uid = (int) $uid;
+    $u = user_by_id($uid);
+    if (!$u) {
+        return '';
+    }
+    $out = '';
+    // 罪技能书（本职业那本）
+    if (mt_rand(1, 100) <= 8) {
+        $book = ['warrior' => 'book_w9', 'mage' => 'book_m9', 'hunter' => 'book_h9', 'priest' => 'book_p9'][job_id_of($u)] ?? 'book_w9';
+        $has = db()->prepare('SELECT skill FROM skills WHERE uid=? AND skill=?');
+        $sk = ['warrior' => 'w9', 'mage' => 'm9', 'hunter' => 'h9', 'priest' => 'p9'][job_id_of($u)] ?? 'w9';
+        $has->execute([$uid, $sk]);
+        if (!$has->fetch()) {
+            add_mat($uid, $book, 1);
+            $out .= '掉落【罪技能书·' . mat_name($book) . '】！';
+        }
+    }
+    // 罪渊11件套（0.3%，传说）
+    if (mt_rand(1, 1000) <= 3) {
+        $pieces = [
+            ['weapon', '罪渊·傲慢之刃'], ['weapon', '罪渊·嫉妒之刃'], ['weapon', '罪渊·暴怒之刃'], ['weapon', '罪渊·懒惰之刃'], ['weapon', '罪渊·贪婪之刃'], ['weapon', '罪渊·暴食之刃'], ['weapon', '罪渊·色欲之刃'],
+            ['head', '罪渊·悔恨冠'], ['body', '罪渊·赎罪甲'], ['belt', '罪渊·忏悔束腰'], ['shoes', '罪渊·堕天之靴'],
+        ];
+        $pc = $pieces[array_rand($pieces)];
+        $sn = make_equip($uid, $pc[0], $pc[1], 4, max(1, (int) ($u['lv'] ?? 1)));
+        if ($sn !== '') {
+            $out .= '掉落传说【' . $sn . '】（罪渊套装，罪越高越强）！';
+        }
+    }
     return $out;
 }
 

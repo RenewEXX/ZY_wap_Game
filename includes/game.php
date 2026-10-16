@@ -2582,7 +2582,7 @@ function equip_set_pieces(string $set): array
         return ['荆棘·雾祭铃', '荆棘·刺甲', '荆棘·蛇牙戒', '荆棘·守卫裙', '荆棘·束腰'];
     }
     if ($set === 'sin') {
-        return ['罪渊·傲慢', '罪渊·嫉妒', '罪渊·暴怒', '罪渊·懒惰', '罪渊·贪婪', '罪渊·暴食', '罪渊·色欲', '罪渊·悔恨冠', '罪渊·赎罪甲', '罪渊·忏悔束腰', '罪渊·堕天之靴'];
+        return ['罪渊·傲慢', '罪渊·嫉妒', '罪渊·暴怒', '罪渊·懒惰', '罪渊·贪婪', '罪渊·暴食', '罪渊·色欲', '罪渊·悔恨冠', '罪渊·赎罪甲', '罪渊·缚罪裤', '罪渊·忏悔束腰', '罪渊·堕天靴', '罪渊·噬罪手套', '罪渊·堕羽披风', '罪渊·泣罪戒', '罪渊·殉罪链', '罪渊·赎罪灯'];
     }
     return [];
 }
@@ -2629,6 +2629,9 @@ function equip_set_bonus_text(string $set, int $owned): string
     }
     if ($set === 'thorn') {
         return '【荆棘套装】已穿' . $owned . '/4：3件物攻+6%，4件吸血+3%。';
+    }
+    if ($set === 'sin') {
+        return '【罪渊套装】已穿' . $owned . '/11（10防具+1武器，或9防具+主副手）——每件：攻击+1%、技能伤+1（×罪加成）；3件：生命+罪×2；5件：吸血5%；7件：减伤8%；9件：真伤+罪×3；11件：减伤+罪/20（封顶20）、技能伤+罪/10（封顶50）！';
     }
     if ($set === 'rockjail') {
         return '【岩狱套装】已穿' . $owned . '/10：3件血+3000，5件减伤+8%，7件血+8000减伤+12%，10件血+20000减伤+20%、磐岩（承伤再-5%）。';
@@ -4180,11 +4183,13 @@ function gear_stats(int $uid): array
     if ($gy > 0) {
         $sinLv = sin_of($uid);
         $mult = 1 + $sinLv / 100;
-        $s['atk_pct'] += $gy * 2 * $mult;
-        $s['skill_damage'] += $gy * 2 * $mult;
+        $s['atk_pct'] += $gy * 1 * $mult;
+        $s['skill_damage'] += $gy * 1 * $mult;
+        if ($gy >= 3) { $s['hp'] += $sinLv * 2; }
         if ($gy >= 5) { $s['lifesteal'] += 5; }
-        if ($gy >= 8) { $s['damage_reduction'] += 10; }
-        if ($gy >= 11) { $s['truedmg'] += $sinLv * 5; $s['damage_reduction'] += min(20, $sinLv / 20); }
+        if ($gy >= 7) { $s['damage_reduction'] += 8; }
+        if ($gy >= 9) { $s['truedmg'] += $sinLv * 3; }
+        if ($gy >= 11) { $s['damage_reduction'] += min(20, $sinLv / 20); $s['skill_damage'] += min(50, $sinLv / 10); }
     }
     $qu = db()->prepare('SELECT quest FROM users WHERE id=?');
     $qu->execute([$uid]);
@@ -7709,7 +7714,7 @@ function gy_kill_drop(int $uid, string $mid): string
     if (mt_rand(1, 1000) <= 3) {
         $pieces = [
             ['weapon', '罪渊·傲慢'], ['weapon', '罪渊·嫉妒'], ['weapon', '罪渊·暴怒'], ['weapon', '罪渊·懒惰'], ['weapon', '罪渊·贪婪'], ['weapon', '罪渊·暴食'], ['offhand', '罪渊·色欲'],
-            ['head', '罪渊·悔恨冠'], ['body', '罪渊·赎罪甲'], ['belt', '罪渊·忏悔束腰'], ['shoes', '罪渊·堕天之靴'],
+            ['head', '罪渊·悔恨冠'], ['body', '罪渊·赎罪甲'], ['legs', '罪渊·缚罪裤'], ['belt', '罪渊·忏悔束腰'], ['shoes', '罪渊·堕天靴'], ['gloves', '罪渊·噬罪手套'], ['back', '罪渊·堕羽披风'], ['ring', '罪渊·泣罪戒'], ['necklace', '罪渊·殉罪链'], ['offhand', '罪渊·赎罪灯'],
         ];
         $pc = $pieces[array_rand($pieces)];
         $sn = make_equip($uid, $pc[0], $pc[1], 4, max(1, (int) ($u['lv'] ?? 1)));

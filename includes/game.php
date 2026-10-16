@@ -398,7 +398,7 @@ function mall_goods(): array
 
     // 下架：传奇宠物不直购（魔女之茧）
     $g['dragon_box'] = ['name' => '龙鳞宝箱', 'price' => 200, 'unit' => 1];
-    // 下架：自动售卖时间不再出售（已拥有者继续有效）
+    $g['autosell_time'] = ['name' => '自动售卖', 'price' => 20, 'unit' => 3600];
     $g['exp_card10x'] = ['name' => '10倍经验卡·天', 'price' => 10, 'unit' => 1];
     $g['exp_card1000x'] = ['name' => '1000倍经验卡·天', 'price' => 10, 'unit' => 1];
     $g['tent'] = ['name' => '随身帐篷', 'price' => 100, 'unit' => 1];

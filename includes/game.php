@@ -2198,6 +2198,11 @@ function job_can_twohand(string $job): bool
 // 主手武器细分：按名判定种类，管职业限定+双持判定
 function weapon_sub(string $base): string
 {
+    $sn = equip_shortname($base);
+    $sinMap = ['罪渊·傲慢' => 'staff', '罪渊·嫉妒' => 'axe', '罪渊·暴怒' => 'bow', '罪渊·懒惰' => 'mace', '罪渊·贪婪' => 'shield', '罪渊·暴食' => 'blade', '罪渊·色欲' => 'staff'];
+    if (isset($sinMap[$sn])) {
+        return $sinMap[$sn];
+    }
     foreach (['杖', '法器', '魔杖', '圣杖', '提灯', '法典', '法球'] as $k) {
         if (str_contains($base, $k)) {
             return 'staff';
@@ -2577,7 +2582,7 @@ function equip_set_pieces(string $set): array
         return ['荆棘·雾祭铃', '荆棘·刺甲', '荆棘·蛇牙戒', '荆棘·守卫裙', '荆棘·束腰'];
     }
     if ($set === 'sin') {
-        return ['罪渊·傲慢之杖', '罪渊·嫉妒战斧', '罪渊·暴怒长弓', '罪渊·懒惰重锤', '罪渊·贪婪坚盾', '罪渊·暴食之刃', '罪渊·色欲之刃', '罪渊·悔恨冠', '罪渊·赎罪甲', '罪渊·忏悔束腰', '罪渊·堕天之靴'];
+        return ['罪渊·傲慢', '罪渊·嫉妒', '罪渊·暴怒', '罪渊·懒惰', '罪渊·贪婪', '罪渊·暴食', '罪渊·色欲', '罪渊·悔恨冠', '罪渊·赎罪甲', '罪渊·忏悔束腰', '罪渊·堕天之靴'];
     }
     return [];
 }
@@ -7703,7 +7708,7 @@ function gy_kill_drop(int $uid, string $mid): string
     // 罪渊11件套（0.3%，传说）
     if (mt_rand(1, 1000) <= 3) {
         $pieces = [
-            ['weapon', '罪渊·傲慢之杖'], ['weapon', '罪渊·嫉妒战斧'], ['weapon', '罪渊·暴怒长弓'], ['weapon', '罪渊·懒惰重锤'], ['weapon', '罪渊·贪婪坚盾'], ['weapon', '罪渊·暴食之刃'], ['weapon', '罪渊·色欲之刃'],
+            ['weapon', '罪渊·傲慢'], ['weapon', '罪渊·嫉妒'], ['weapon', '罪渊·暴怒'], ['weapon', '罪渊·懒惰'], ['weapon', '罪渊·贪婪'], ['weapon', '罪渊·暴食'], ['offhand', '罪渊·色欲'],
             ['head', '罪渊·悔恨冠'], ['body', '罪渊·赎罪甲'], ['belt', '罪渊·忏悔束腰'], ['shoes', '罪渊·堕天之靴'],
         ];
         $pc = $pieces[array_rand($pieces)];

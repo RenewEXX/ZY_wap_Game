@@ -7943,10 +7943,7 @@ function ambush_reward(int $uid, string $npc): string
         $sn = make_equip($uid, (string) $lg['slot'], (string) $lg['base'], 4, (int) $cfg['lv']);
         $loot = '掉落传说【' . $sn . '】（' . $lg['desc'] . '）！';
     }
-    // 打NPC加少量罪
-    $u2 = user_by_id($uid);
-    sin_gain_array($u2, 2);
-    user_save($u2);
+    // 罪开战时已+10，这里不再加
     return '击败' . $cfg['name'] . '：' . $msg . '，金币+' . fmt_money((int) $cfg['gold']) . '。' . $loot;
 }
 

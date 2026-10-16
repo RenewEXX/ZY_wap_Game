@@ -100,9 +100,24 @@ if ($choice === 'ambush' && isset(ambush_npcs()[$who])) {
         header('Location: home.php');
         exit;
     }
+    // 即时结算：偷袭一次定胜负，无论胜负+10罪
     $cfg = ambush_npcs()[$who];
-    $_SESSION['ambush'] = ['npc' => $who, 'hp' => (int) $cfg['hp'], 'maxhp' => (int) $cfg['hp']];
-    header('Location: fight.php?a=ambushfight');
+    $u2 = user_by_id((int) $u['id']);
+    sin_gain_array($u2, 10);
+    user_save($u2);
+    $winRate = max(5, min(90, (int) (50 + ((int) ($u['lv'] ?? 1) - (int) $cfg['lv']) * 2)));
+    if (mt_rand(1, 100) <= $winRate) {
+        $rw = ambush_reward((int) $u['id'], $who);
+        $u = user_by_id((int) $u['id']);
+        user_save($u);
+        flash_set('你偷袭' . $cfg['name'] . '得手（胜率' . $winRate . '%）！罪值+10。' . $rw);
+    } else {
+        $u = user_by_id((int) $u['id']);
+        $pen = death_penalty($u);
+        user_save($u);
+        flash_set('你偷袭' . $cfg['name'] . '失手被反杀（胜率' . $winRate . '%）！罪值+10。' . $pen);
+    }
+    header('Location: home.php');
     exit;
 }
 if ($who === 'augustus' && $choice === 'accept' && (int) $u['quest'] === 10) {

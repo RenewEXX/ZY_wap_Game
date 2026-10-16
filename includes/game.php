@@ -73,7 +73,7 @@ function locations(): array
         'gate' => [
             'name' => '白石镇道口',
             'desc' => '黑雾贴地爬行。石碑字迹模糊。往北是白石镇广场，往南是断桥，往下是腐骨甬道。',
-            'exits' => ['town_sq' => '白石镇广场', 'bridge' => '断桥', 'tunnel' => '腐骨甬道', 'shop' => '黑市', 'camp' => '残火营地', 'silver_gate' => '白银城门'],
+            'exits' => ['town_sq' => '白石镇广场', 'bridge' => '断桥', 'tunnel' => '腐骨甬道', 'shop' => '黑市', 'camp' => '残火营地', 'buf12a' => '银道荒径'],
             'monsters' => ['rat'],
         ],
         'tunnel' => [
@@ -183,6 +183,14 @@ function monsters(): array
         'gy_trust' => ['name' => '信任', 'hp' => 1, 'atk' => 1, 'exp' => 200, 'gold' => 0],
         'gy_mercy' => ['name' => '怜悯', 'hp' => 1, 'atk' => 1, 'exp' => 300, 'gold' => 0],
         'gy_justice' => ['name' => '正义', 'hp' => 1, 'atk' => 1, 'exp' => 500, 'gold' => 0],
+        'road_wolf' => ['name' => '拦路野狼', 'hp' => 900, 'atk' => 70, 'exp' => 800, 'gold' => 300],
+        'road_bandit' => ['name' => '拦路强人', 'hp' => 1400, 'atk' => 95, 'exp' => 1400, 'gold' => 600],
+        'dust_raider' => ['name' => '尘埃劫掠者', 'hp' => 9000, 'atk' => 280, 'exp' => 14000, 'gold' => 6000],
+        'dust_marauder' => ['name' => '尘埃掠夺者', 'hp' => 14000, 'atk' => 330, 'exp' => 20000, 'gold' => 9000],
+        'snow_drifter' => ['name' => '雪原流浪者', 'hp' => 180000, 'atk' => 2100, 'exp' => 400000, 'gold' => 190000],
+        'snow_reaver' => ['name' => '雪原掠夺者', 'hp' => 200000, 'atk' => 2250, 'exp' => 450000, 'gold' => 210000],
+        'ash_drifter' => ['name' => '灰烬流浪者', 'hp' => 260000, 'atk' => 2900, 'exp' => 600000, 'gold' => 280000],
+        'ash_reaver' => ['name' => '灰烬掠夺者', 'hp' => 290000, 'atk' => 3100, 'exp' => 680000, 'gold' => 320000],
         'puppet_guard' => ['name' => '傀儡守卫', 'hp' => 18000, 'atk' => 320, 'exp' => 45500, 'gold' => 23400],
         'masked_noble' => ['name' => '假面贵族', 'hp' => 26000, 'atk' => 380, 'exp' => 52000, 'gold' => 26000],
         'ink_puppet' => ['name' => '墨傀儡', 'hp' => 36000, 'atk' => 460, 'exp' => 80000, 'gold' => 38000],
@@ -390,7 +398,7 @@ function mall_goods(): array
 
     // 下架：传奇宠物不直购（魔女之茧）
     $g['dragon_box'] = ['name' => '龙鳞宝箱', 'price' => 200, 'unit' => 1];
-    $g['autosell_time'] = ['name' => '自动售卖', 'price' => 20, 'unit' => 3600];
+    // 下架：自动售卖时间不再出售（已拥有者继续有效）
     $g['exp_card10x'] = ['name' => '10倍经验卡·天', 'price' => 10, 'unit' => 1];
     $g['exp_card1000x'] = ['name' => '1000倍经验卡·天', 'price' => 10, 'unit' => 1];
     $g['tent'] = ['name' => '随身帐篷', 'price' => 100, 'unit' => 1];
@@ -895,6 +903,9 @@ function open_war(int $gid): ?array
 
 function declare_war(int $uid, int $targetGid): string
 {
+    if (!war_window_open()) {
+        return '公会战只在周六、周日20:00~21:00开放宣战。';
+    }
     $g = my_guild($uid);
     if (!$g || ($g['role'] ?? '') !== 'leader') {
         return '只有会长能宣战。';
@@ -4797,6 +4808,7 @@ function monster_lv(string $mid): int
         'gargoyle' => 50, 'puppet' => 55, 'apostle' => 45, 'guardian' => 55, 'valentin' => 62, 'dark_lily' => 66, 'abyss_eye' => 70,
         'shadow_walker' => 55, 'corrupt_warder' => 65, 'whisperer' => 80, 'rift_hound' => 88, 'rift_weaver' => 97, 'colossus' => 95, 'abaddon' => 120,
         'gy_kindness' => 1, 'gy_love' => 1, 'gy_friendship' => 1, 'gy_courage' => 1, 'gy_hope' => 1, 'gy_trust' => 1, 'gy_mercy' => 1, 'gy_justice' => 1,
+        'road_wolf' => 22, 'road_bandit' => 26, 'dust_raider' => 80, 'dust_marauder' => 95, 'snow_drifter' => 325, 'snow_reaver' => 335, 'ash_drifter' => 470, 'ash_reaver' => 485,
         'dark_slime' => 20, 'swamp_slime' => 21, 'swamp_king' => 25,
         'puppet_guard' => 130, 'masked_noble' => 150, 'ink_puppet' => 180, 'silver_undead' => 210,
         'silver_assassin' => 240, 'puppet_priest' => 270, 'star_puppet' => 300, 'silver_puppet' => 310, 'string_puller' => 320,
@@ -6164,6 +6176,10 @@ function map_regions(): array
         '矿坑·灰烬中的低语' => ['mine_gate', 'mine1', 'mine2', 'mine3', 'echo_room'],
         '深渊旧道' => ['tunnel', 'shoal', 'altar', 'prison', 'shop', 'camp'],
         '白银城·影蚀之潮' => ['silver_gate', 'silver_sq', 'sguild', 'dsewer1', 'dsewer2', 'bmine1', 'bmine2', 'sforest', 'manor', 'baltar', 'rift_road', 'rift'],
+        '银道荒径' => ['buf12a', 'buf12b'],
+        '尘埃长路' => ['buf23a', 'buf23b'],
+        '风雪关道' => ['buf34a', 'buf34b'],
+        '灰雾关道' => ['buf35a', 'buf35b'],
         '王都·傀儡之夜' => ['capital_gate', 'avenue', 'noble', 'library', 'ctomb', 'slum', 'cathedral', 'observatory', 'theater'],
         '银丝母巢' => ['mx_gate', 'mx_path', 'mx_hall', 'mx_depth', 'mx_nest', 'mx_heart'],
         '公会战场' => ['warfield'],
@@ -6272,6 +6288,20 @@ function exit_dirs(string $from): array
 
 function teleport_min_lv(string $loc): int
 {
+    // 主城/关口（无怪，fallback会漏）：按章节卡等级
+    $cityLv = [
+        'silver_gate' => 18, 'silver_sq' => 25, 'sguild' => 25,
+        'capital_gate' => 100, 'avenue' => 110, 'arena_gate' => 110, 'farm' => 110,
+        'buf12a' => 15, 'buf12b' => 20, 'buf23a' => 70, 'buf23b' => 85,
+        'buf34a' => 315, 'buf34b' => 325, 'ice_gate' => 330,
+        'buf35a' => 460, 'buf35b' => 475, 'fo_gate' => 480,
+        'frostburg_gate' => 330, 'frostburg_sq' => 340, 'bounty_hall' => 340, 'fire_inn' => 340, 'furnace_st' => 340,
+        'greenheart_gate' => 480, 'greenheart_sq' => 490, 'spore_market' => 490, 'rain_inn' => 490, 'elder_tree' => 490,
+        'ice_village' => 335, 'ember_foothill' => 580,
+    ];
+    if (isset($cityLv[$loc])) {
+        return $cityLv[$loc];
+    }
     if (in_array($loc, abx_maps(), true)) {
         return 50;
     }
@@ -6493,8 +6523,8 @@ function dungeon_tick(array &$u): void
 function ch2_locations(): array
 {
     $m = [];
-    $m['silver_gate'] = ['name' => '白银城门', 'desc' => '灰白城墙高耸。守卫面朝内，影子被夕阳拉得很长，像黑色的手指。', 'exits' => ['gate' => '罪渊入口', 'silver_sq' => '白银广场'], 'monsters' => []];
-    $m['silver_sq'] = ['name' => '白银广场', 'desc' => '天黑后街上没人。每一道影子都可能自己动。', 'exits' => ['silver_gate' => '白银城门', 'sguild' => '公会大厅', 'dsewer1' => '下水道一层', 'warfield' => '荒芜战场', 'capital_gate' => '王都城门', 'shadow_den' => '影爪巢穴'], 'monsters' => []];
+    $m['silver_gate'] = ['name' => '白银城门', 'desc' => '灰白城墙高耸。守卫面朝内，影子被夕阳拉得很长，像黑色的手指。', 'exits' => ['buf12b' => '银道荒径', 'silver_sq' => '白银广场'], 'monsters' => []];
+    $m['silver_sq'] = ['name' => '白银广场', 'desc' => '天黑后街上没人。每一道影子都可能自己动。', 'exits' => ['silver_gate' => '白银城门', 'sguild' => '公会大厅', 'dsewer1' => '下水道一层', 'warfield' => '荒芜战场', 'buf23a' => '尘埃长路', 'shadow_den' => '影爪巢穴'], 'monsters' => []];
     $m['warfield'] = ['name' => '荒芜战场', 'desc' => '公会战专用。周末晚上，这里只讲拳头。杀不同公会的人+1战功。', 'exits' => ['silver_sq' => '白银广场'], 'monsters' => []];
     $m['peak1'] = ['name' => '巅峰战场·初', 'desc' => '100~300级的角斗场。活到最后的人，只需要一个。', 'exits' => ['square' => '灰雾村·广场'], 'monsters' => []];
     $m['peak2'] = ['name' => '巅峰战场·中', 'desc' => '301~600级的角斗场。影子在这里也会出汗。', 'exits' => ['square' => '灰雾村·广场'], 'monsters' => []];
@@ -6673,7 +6703,7 @@ function ch2_maps(): array
 function ch3_locations(): array
 {
     $m = [];
-    $m['capital_gate'] = ['name' => '王都城门', 'desc' => '城墙高耸入云。守卫动作僵硬，像被线提着，关节处有细小的银丝连着天空。', 'exits' => ['silver_sq' => '白银广场', 'avenue' => '中央大道', 'ice_gate' => '冰原渡口', 'fo_gate' => '雾森渡口'], 'monsters' => []];
+    $m['capital_gate'] = ['name' => '王都城门', 'desc' => '城墙高耸入云。守卫动作僵硬，像被线提着，关节处有细小的银丝连着天空。', 'exits' => ['buf23b' => '尘埃长路', 'avenue' => '中央大道', 'buf34a' => '风雪关道', 'buf35a' => '灰雾关道'], 'monsters' => []];
     $m['avenue'] = ['name' => '王都中央大道', 'desc' => '市民走路没有声音，关节咔咔作响。瓦尔顿在街角等你：真正的王都二十年前就没了。', 'exits' => ['capital_gate' => '王都城门', 'noble' => '贵族区', 'library' => '皇家图书馆', 'slum' => '贫民窟'], 'monsters' => ['puppet_guard']];
     $m['noble'] = ['name' => '贵族区', 'desc' => '舞会彻夜不停。贵族们脚不沾地，被银丝吊在天花板上跳舞。', 'exits' => ['avenue' => '中央大道', 'cathedral' => '光明大教堂'], 'monsters' => ['masked_noble']];
     $m['library'] = ['name' => '皇家图书馆', 'desc' => '满架子全是剧本，记载着王都每一天该发生什么。墨傀儡在吃掉关于真王都的记载。', 'exits' => ['avenue' => '中央大道', 'ctomb' => '皇家陵墓'], 'monsters' => ['ink_puppet', 'mimic_chest']];
@@ -6694,7 +6724,15 @@ function ch3_maps(): array
 function ice_locations(): array
 {
     $m = [];
-    $m['ice_gate'] = ['name' => '冰原渡口', 'desc' => '王都北门外，一步之遥就是风雪。守夜人·北风裹着熊皮：往北走，别回头，冻死比被吃掉体面。', 'exits' => ['capital_gate' => '王都城门', 'ice_trail' => '风雪小径'], 'monsters' => []];
+    $m['buf12a'] = ['name' => '银道荒径·前', 'desc' => '白石镇到白银城的老路，野狼和强人在此拦路。走过去，才是白银城门。', 'exits' => ['gate' => '白石镇道口', 'buf12b' => '银道荒径·后'], 'monsters' => ['road_wolf']];
+    $m['buf12b'] = ['name' => '银道荒径·后', 'desc' => '离城门只剩一步，强人比狼更凶。', 'exits' => ['buf12a' => '银道荒径·前', 'silver_gate' => '白银城门'], 'monsters' => ['road_bandit']];
+    $m['buf23a'] = ['name' => '尘埃长路·前', 'desc' => '白银城到王都的尘埃路，劫掠者在风里等活物。', 'exits' => ['silver_sq' => '白银广场', 'buf23b' => '尘埃长路·后'], 'monsters' => ['dust_raider']];
+    $m['buf23b'] = ['name' => '尘埃长路·后', 'desc' => '王都城墙已经看得见，但掠夺者不会让你白走。', 'exits' => ['buf23a' => '尘埃长路·前', 'capital_gate' => '王都城门'], 'monsters' => ['dust_marauder']];
+    $m['buf34a'] = ['name' => '风雪关道·前', 'desc' => '王都北门外的风雪关道，流浪者在雪里刨食，也刨人。', 'exits' => ['capital_gate' => '王都城门', 'buf34b' => '风雪关道·后'], 'monsters' => ['snow_drifter']];
+    $m['buf34b'] = ['name' => '风雪关道·后', 'desc' => '再往前就是冰原渡口，雪更大，人更凶。', 'exits' => ['buf34a' => '风雪关道·前', 'ice_gate' => '冰原渡口'], 'monsters' => ['snow_reaver']];
+    $m['buf35a'] = ['name' => '灰雾关道·前', 'desc' => '王都南门外的灰雾关道，雾里有人影晃，不是人。', 'exits' => ['capital_gate' => '王都城门', 'buf35b' => '灰雾关道·后'], 'monsters' => ['ash_drifter']];
+    $m['buf35b'] = ['name' => '灰雾关道·后', 'desc' => '雾森渡口就在前面，掠夺者在雾里磨刀。', 'exits' => ['buf35a' => '灰雾关道·前', 'fo_gate' => '雾森渡口'], 'monsters' => ['ash_reaver']];
+    $m['ice_gate'] =['name' => '冰原渡口', 'desc' => '王都北门外，一步之遥就是风雪。守夜人·北风裹着熊皮：往北走，别回头，冻死比被吃掉体面。', 'exits' => ['buf34b' => '风雪关道', 'ice_trail' => '风雪小径'], 'monsters' => []];
     $m['ice_trail'] = ['name' => '风雪小径', 'desc' => '雪没过膝盖。冻原霜狼在风里若隐若现，跟着落单的人。', 'exits' => ['ice_gate' => '渡口', 'ice_village' => '冰原村', 'frozen_lake' => '冰封湖'], 'monsters' => ['frost_wolf']];
     $m['ice_village'] = ['name' => '冰原村', 'desc' => '地火烧得很旺。猎户·朵拉在分肉干：湖上有怨灵，场上有猛犸，认路再走。冰渊副本从这进。', 'exits' => ['ice_trail' => '小径', 'snow_field' => '雪原', 'frostburg_gate' => '霜炉堡', 'frost_graveyard' => '霜语墓园'], 'monsters' => []];
     $m['frozen_lake'] = ['name' => '冰封湖', 'desc' => '湖面冻得发蓝，底下有东西在游。冰隙怨灵顺着裂缝爬出来，找替身。', 'exits' => ['ice_trail' => '小径', 'snow_field' => '雪原', 'frostburg_gate' => '霜炉堡', 'frost_graveyard' => '霜语墓园'], 'monsters' => ['ice_specter', 'frost_wolf']];
@@ -6735,7 +6773,7 @@ function fr_maps(): array
 function fo_locations(): array
 {
     $m = [];
-    $m['fo_gate'] = ['name' => '雾森渡口', 'desc' => '王都南门外，雾浓得化不开。森语者·青芽：林子认得路，人不认。跟着萤火虫，别跟着声音。', 'exits' => ['capital_gate' => '王都城门', 'mist_edge' => '雾森边缘', 'greenheart_gate' => '青叶城'], 'monsters' => []];
+    $m['fo_gate'] = ['name' => '雾森渡口', 'desc' => '王都南门外，雾浓得化不开。森语者·青芽：林子认得路，人不认。跟着萤火虫，别跟着声音。', 'exits' => ['buf35b' => '灰雾关道', 'mist_edge' => '雾森边缘', 'greenheart_gate' => '青叶城'], 'monsters' => []];
     $m['mist_edge'] = ['name' => '雾森边缘', 'desc' => '雾刚没脚面。雾森树人站着不动，动的就是你眼花——希望是眼花。', 'exits' => ['fo_gate' => '渡口', 'deep_woods' => '密林深处'], 'monsters' => ['mist_treant']];
     $m['deep_woods'] = ['name' => '密林深处', 'desc' => '孢子像下雪。吸一口，甜的；吸两口，看见你太奶。群落在雾里开花。', 'exits' => ['mist_edge' => '边缘', 'thorn_maze' => '荆棘迷宫'], 'monsters' => ['spore_colony', 'mist_treant']];
     $m['thorn_maze'] = ['name' => '荆棘迷宫', 'desc' => '荆棘会自己换位置。猎手在刺后面学鸟叫，学得最像的那只不是鸟。', 'exits' => ['deep_woods' => '密林', 'boa_swamp' => '蚺沼'], 'monsters' => ['thorn_hunter', 'spore_colony']];
@@ -7543,10 +7581,25 @@ function cflag_set(int $uid, string $k, $v): void
 }
 // ===== 罪值系统 =====
 // 罪值：怪物击杀累积；>100可被任何玩家强制PK，<10时生命上限+20%
+function sin_name_html(string $name, int $sin): string
+{
+    $safe = h($name);
+    if ($sin >= 999) {
+        return '<span style="background:linear-gradient(135deg,#a0f,#000);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:bold">' . $safe . '</span>';
+    }
+    if ($sin > 500) {
+        return '<span style="color:#c0f;font-weight:bold">' . $safe . '</span>';
+    }
+    if ($sin > 100) {
+        return '<span style="color:#f33;font-weight:bold">' . $safe . '</span>';
+    }
+    return $safe;
+}
+
 function sin_of(int $uid): int
 {
     $f = cflags((int) $uid);
-    return max(0, (int) ($f['sin'] ?? 0));
+    return max(0, min(999, (int) ($f['sin'] ?? 0)));
 }
 
 // 在内存用户上结算：加罪值并同步<10的+20%生命（调用方负责 user_save）

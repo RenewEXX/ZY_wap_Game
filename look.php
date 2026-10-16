@@ -25,7 +25,7 @@ if ((int) $t['id'] === (int) $u['id']) {
 }
 
 wap_start('查看玩家');
-echo '【' . h($t['username']) . '】<br>';
+echo '【' . sin_name_html((string) $t['username'], sin_of((int) $t['id'])) . '】<br>';
 echo '等级：' . (int) $t['lv'] . '<br>';
 echo '职业：' . h(job_of($t)['name']) . '（' . h(job_of($t)['skill']) . '）<br>';
 echo '生命：' . (int) $t['hp'] . '/' . (int) $t['maxhp'] . '<br>';

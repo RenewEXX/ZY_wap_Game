@@ -432,7 +432,11 @@ foreach (guild_rank((string) ($u['zone'] ?? 'z1')) as $r) {
         echo ' <a href="guild.php?a=join&gid=' . $r['id'] . '">加入</a>';
     }
     if ($g && ($g['role'] ?? '') === 'leader' && (int) $r['id'] !== (int) $g['id']) {
-        echo ' <a href="guild.php?a=war&gid=' . $r['id'] . '">宣战(50银)</a>';
+        if (war_window_open()) {
+            echo ' <a href="guild.php?a=war&gid=' . $r['id'] . '">宣战(50银)</a>';
+        } else {
+            echo ' <span class="muted">(宣战：周六日20点)</span>';
+        }
     }
     echo '<br>';
 }

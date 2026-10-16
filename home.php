@@ -248,7 +248,7 @@ if ($nears === []) {
     echo '<span class="muted">只有风声。</span><br>';
 }
 foreach ($nears as $nu) {
-    echo '·<a href="look.php?id=' . (int) $nu['id'] . '">' . h($nu['username']) . '</a>(' . (int) $nu['lv'] . '级' . h(job_of(['job' => (string) $nu['job']])['name']) . ')';
+    echo '·<a href="look.php?id=' . (int) $nu['id'] . '">' . sin_name_html((string) $nu['username'], sin_of((int) $nu['id'])) . '</a>(' . (int) $nu['lv'] . '级' . h(job_of(['job' => (string) $nu['job']])['name']) . ')';
     $tSin = sin_of((int) $nu['id']);
     if ($tSin >= 100) {
         echo '<span style="color:#f66">【罪' . $tSin . '】</span><a href="fight.php?a=sin&uid=' . (int) $nu['id'] . '">强制PK</a>';

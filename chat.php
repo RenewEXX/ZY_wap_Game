@@ -44,7 +44,7 @@ if ($flash !== '') {
 }
 echo '<div id="msgs">';
 foreach (chat_fetch($ch, $target, 0, (string) ($u['zone'] ?? 'z1')) as $m) {
-    echo '<div>【' . h($m['username']) . '】' . h($m['text']) . '</div>';
+    echo '<div>【' . sin_name_html((string) $m['username'], sin_of((int) ($m['uid'] ?? 0))) . '】' . h($m['text']) . '</div>';
 }
 echo '</div>';
 echo '<form method="post" action="chat.php?ch=' . h($ch) . '">';

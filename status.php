@@ -8,7 +8,7 @@ $u = user_by_id((int) $u['id']);
 $here = loc((string) $u['loc']);
 
 wap_start('状态');
-echo h($u['username']) . '　' . (int) $u['lv'] . '级';
+echo sin_name_html((string) $u['username'], sin_of((int) $u['id'])) . '　' . (int) $u['lv'] . '级';
 echo '　' . h(job_of($u)['name']) . '(' . h(job_of($u)['skill']) . ')';
 echo '<br>';
 echo '罪值 ' . sin_of((int) $u['id']) . (sin_of((int) $u['id']) >= 100 ? '（<span style="color:#f66">恶贯满盈，任何人都可强制PK你</span>）' : (sin_of((int) $u['id']) < 10 ? '（<span style="color:#9c9">心地纯善，生命+20%</span>）' : '')) . '<br>';

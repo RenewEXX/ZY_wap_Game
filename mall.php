@@ -29,9 +29,6 @@ if ($a === 'buy') {
         user_save($u);
         spend_diamonds((int) $u['id'], $goods[$m]['price'] * $n);
         if ($m === 'offline_mod' || $m === 'offline_time') {
-    if ($m === 'autosell_time') {
-        echo '效果：在线每得装备即按品质自动卖（离线结算同样适用），去背包功能栏选品质开关<br>';
-    }
             add_mat((int) $u['id'], 'offline_time', 3600 * $n);
             mat_set((int) $u['id'], 'offline_on', 1);
             mat_set((int) $u['id'], 'dummy_on', 1);
@@ -133,6 +130,8 @@ if ($m !== '' && isset($goods[$m])) {
         echo '<a href="mall.php?a=buy&m=exp_card100&n=1">买1</a><br>';
         echo '·<b><span style="color:#6cf">【未知宠物蛋】</span></b> <b>' . h(fmt_diamond(10)) . '</b>/个 ';
         echo '<a href="mall.php?a=buy&m=egg_unknown&n=1">买1</a><br>';
+        echo '·<b><span style="color:#6cf">【自动售卖】</span></b> <b>' . h(fmt_diamond(20)) . '</b>/小时（在线得装备按品质自动卖） ';
+        echo '<a href="mall.php?a=buy&m=autosell_time&n=1">买1小时</a><br>';
         echo '·<b><span style="color:#fc3">【下级强化石】</span></b> <b>' . h(fmt_diamond(mall_stones()['enhance_t1'])) . '</b>/个 ';
         echo '<a href="mall.php?a=buy&m=enhance_t1&n=1">买1</a><br>';
     }
@@ -172,6 +171,9 @@ if ($m !== '' && isset($goods[$m])) {
         echo '<b>' . h(fmt_diamond(50)) . '</b>/小时 ';
         echo '<a href="mall.php?a=buy&m=offline_mod&n=1">买1小时</a> ';
         echo '<a href="mall.php?a=buy&m=offline_mod&n=5">买5小时</a><br>';
+        echo '·<b><span style="color:#6cf">【自动售卖】</span></b> <b>' . h(fmt_diamond(20)) . '</b>/小时（在线得装备按品质自动卖，去背包功能栏开品质） ';
+        echo '<a href="mall.php?a=buy&m=autosell_time&n=1">买1小时</a> ';
+        echo '<a href="mall.php?a=buy&m=autosell_time&n=5">买5小时</a><br>';
     }
     if ($tab === 'pet') {
         echo '金币区：·<b>【宠物粮食】</b> <b>1金</b>/个(清宠物疲劳，去宠物页喂) ';
@@ -186,6 +188,9 @@ if ($m !== '' && isset($goods[$m])) {
     }
     if ($tab === 'func') {
         echo '功能道具：<br>';
+        echo '·<b><span style="color:#6cf">【自动售卖】</span></b> <b>' . h(fmt_diamond(20)) . '</b>/小时（在线得装即按品质自动卖，去背包功能栏开品质） ';
+        echo '<a href="mall.php?a=buy&m=autosell_time&n=1">买1小时</a> ';
+        echo '<a href="mall.php?a=buy&m=autosell_time&n=5">买5小时</a><br>';
         echo '·【<span style="color:#fc3">龙鳞宝箱</span>】 <b>' . h(fmt_diamond(200)) . '</b>/个(开强化石10~50+未知蛋3~20+陪练1~3小时+随机称号，龙威最低) ';
         echo '<a href="mall.php?a=buy&m=dragon_box&n=1">买1个</a> ';
         echo '<a href="mall.php?a=buy&m=dragon_box&n=5">买5个</a><br>';

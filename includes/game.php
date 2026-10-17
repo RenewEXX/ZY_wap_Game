@@ -314,12 +314,12 @@ function monsters(): array
         'frostborn_hunter' => ['name' => '霜裔猎手', 'hp' => 400000, 'atk' => 2900, 'exp' => 806000, 'gold' => 390000],
         'avalanche_titan' => ['name' => '雪崩巨人', 'hp' => 1900000, 'atk' => 5000, 'exp' => 4500000, 'gold' => 2100000],
         'sulfur_sprite' => ['name' => '硫磺精', 'hp' => 1100000, 'atk' => 4900, 'exp' => 2000000, 'gold' => 960000],
-        'obsidian_colossus' => ['name' => '黑曜石巨像', 'hp' => 2400000, 'atk' => 5600, 'exp' => 5500000, 'gold' => 2600000],        // 灰烬深渊副本（600~680级，二转群攻书掉落）
+        'obsidian_colossus' => ['name' => '黑曜石巨像', 'hp' => 2400000, 'atk' => 5600, 'exp' => 5500000, 'gold' => 2600000],        // 灰烬深渊副本（600~680级，2觉群攻书掉落）
         'cinder_crawler' => ['name' => '灰烬爬行者', 'hp' => 1900000, 'atk' => 6200, 'exp' => 3600000, 'gold' => 1720000],
         'cinder_stalker' => ['name' => '灰烬潜伏者', 'hp' => 2100000, 'atk' => 6450, 'exp' => 4000000, 'gold' => 1900000],
         'cinder_warden' => ['name' => '灰烬守望者', 'hp' => 2300000, 'atk' => 6700, 'exp' => 4400000, 'gold' => 2100000],
         'cinder_horror' => ['name' => '灰烬恐惧', 'hp' => 2500000, 'atk' => 6950, 'exp' => 4800000, 'gold' => 2300000],
-        'ash_titan' => ['name' => '深渊灰烬泰坦', 'hp' => 4200000, 'atk' => 8200, 'exp' => 14300000, 'gold' => 6760000],        // 虚空裂隙副本（二转，600~680级）
+        'ash_titan' => ['name' => '深渊灰烬泰坦', 'hp' => 4200000, 'atk' => 8200, 'exp' => 14300000, 'gold' => 6760000],        // 虚空裂隙副本（2觉，600~680级）
         'vx_spawn' => ['name' => '裂隙孳生体', 'hp' => 1600000, 'atk' => 4600, 'exp' => 3000000, 'gold' => 1440000],
         'vx_stalker' => ['name' => '虚空潜伏者', 'hp' => 1750000, 'atk' => 4800, 'exp' => 3300000, 'gold' => 1580000],
         'vx_mage' => ['name' => '裂隙低语者', 'hp' => 1900000, 'atk' => 5000, 'exp' => 3600000, 'gold' => 1720000],
@@ -3074,7 +3074,7 @@ function quest_mats(): array
 {
     return ['blackcoin' => '不断下坠的黑币', 'aiden_badge' => '艾登·灰叶的铭牌', 'investigation_record' => '调查队记录', 'augustus_letter' => '镇长的信', 'dsw_ticket' => '黑暗沼泽副本入场券', 'dsw_item1' => '幽暗黏液', 'dsw_item2' => '沼泽之核', 'dsw_item3' => '腐泥之心', 'dsw_item4' => '王座徽记', 'abx_ticket' => '影蚀深渊入场券', 'abx_item1' => '蚀影尘', 'abx_item2' => '影蚀徽记', 'abx_item3' => '低语残章', 'abx_item4' => '王座蚀印', 'capital_badge' => '王都徽章', 'puppet_eye' => '傀儡之眼', 'ch3_proof' => '第三章通关证明', 'mx_ticket' => '银丝母巢入场券', 'mx_item1' => '黏丝束', 'mx_item2' => '茧壳碎片', 'mx_item3' => '织线梭', 'mx_item4' => '蛾翼磷粉', 'mx_item5' => '守望之瞳', 'mx_item6' => '育巢摇篮曲', 'farm_coin' => '农场币', 'seed_green' => '青菜种子', 'seed_radish' => '萝卜种子', 'seed_melon' => '南瓜种子', 'seed_tomato' => '番茄种子', 'seed_strawberry' => '草莓种子',
  'ice_badge' => '冰原徽章', 'frost_heart' => '霜王之心', 'ch4_proof' => '第四章通关证明', 'fr_ticket' => '冰渊副本入场券', 'fr_item1' => '渊底冰核', 'fr_item2' => '利维坦之牙',
- 'forest_badge' => '森语徽章', 'south_flame_token' => '南炎信物', 'ch5_proof' => '第五章通关证明', 'rb2_proof' => '二转证明', 'em_ticket' => '熔心副本入场券', 'pz_ticket' => '傀儡回廊入场券', 'tt_ticket' => '岩狱副本入场券', 'sen_ticket' => '雾森祭坛入场券', 'em_item1' => '熔核碎片', 'em_item2' => '熔心之血',
+ 'forest_badge' => '森语徽章', 'south_flame_token' => '南炎信物', 'ch5_proof' => '第五章通关证明', 'rb2_proof' => '2觉证明', 'em_ticket' => '熔心副本入场券', 'pz_ticket' => '傀儡回廊入场券', 'tt_ticket' => '岩狱副本入场券', 'sen_ticket' => '雾森祭坛入场券', 'em_item1' => '熔核碎片', 'em_item2' => '熔心之血',
  'soul_shard' => '神魂碎片', 'wb_ticket' => '龙鳞引（世界BOSS入场券）'];
 }
 
@@ -3296,7 +3296,7 @@ function use_skill_book(int $uid, string $book): string
     }
     $needRb2 = ['w5' => 'berserker', 'w6' => 'aegis', 'm5' => 'wintermage', 'm6' => 'wildfire', 'h5' => 'ranger', 'h6' => 'assassin', 'p5' => 'shadowbishop', 'p6' => 'holybishop', 'w7' => 'berserker', 'w8' => 'aegis', 'm7' => 'wintermage', 'm8' => 'wildfire', 'h7' => 'ranger', 'h8' => 'assassin', 'p7' => 'shadowbishop', 'p8' => 'holybishop'][$sid] ?? '';
     if ($needRb2 !== '' && (cflags($uid)['rb2_job'] ?? '') !== $needRb2) {
-        return '这是二转【' . rebirth2_name($needRb2) . '】的群攻秘籍，先599级二转再学。';
+        return '这是2觉【' . rebirth2_name($needRb2) . '】的群攻秘籍，先599级2觉再学。';
     }
     $mats = mats_of($uid);
     if (empty($mats[$book])) {
@@ -4119,6 +4119,8 @@ function roll_drop(int $uid, string $mid, int $elite = 0): string
     }
     $mlv = monster_lv($mid);
     $m = 1 + $mlv * 0.03 + min(200, gear_stats($uid)['magic_find']) / 100;
+    // 转生：掉落率+20%
+    if (function_exists('rs_drop_mult')) { $m *= rs_drop_mult($uid); }
     $chances = [4 => 0.0002 * $m, 3 => 0.0007 * $m, 2 => 0.0025 * $m, 1 => 0.01 * $m, 0 => 0.04 * $m];
     $roll = mt_rand() / mt_getrandmax();
     $q = -1;
@@ -4176,7 +4178,7 @@ function gear_stats(int $uid): array
     }
         $tw = (string) (mats_of($uid)['title_wear'] ?? '');
     if ($tw !== '') {
-        $tb = ['title_ch1' => ['atk' => 30, 'hp' => 500], 'title_ch2' => ['def' => 30, 'hp' => 800], 'title_ch3' => ['crit' => 1.0, 'atk' => 50], 'title_ch4' => ['mdef' => 40, 'hp' => 1200], 'title_ch5' => ['matk' => 50, 'hp' => 1500], 'title_rb2' => ['skill_damage' => 3.0, 'hp' => 2000], 'title_dragon1' => ['critdmg' => 5.0, 'hp' => 1500], 'title_dragon2' => ['atk' => 100, 'matk' => 100], 'title_dragon3' => ['skill_damage' => 8.0, 'truedmg' => 200.0], 'title_god' => ['skill_damage' => 12.0, 'truedmg' => 500.0, 'hp' => 5000.0]][$tw] ?? [];
+        $tb = ['title_ch1' => ['atk' => 30, 'hp' => 500], 'title_ch2' => ['def' => 30, 'hp' => 800], 'title_ch3' => ['crit' => 1.0, 'atk' => 50], 'title_ch4' => ['mdef' => 40, 'hp' => 1200], 'title_ch5' => ['matk' => 50, 'hp' => 1500], 'title_rb2' => ['skill_damage' => 3.0, 'hp' => 2000], 'title_dragon1' => ['critdmg' => 5.0, 'hp' => 1500], 'title_dragon2' => ['atk' => 100, 'matk' => 100], 'title_dragon3' => ['skill_damage' => 8.0, 'truedmg' => 200.0], 'title_god' => ['skill_damage' => 12.0, 'truedmg' => 500.0, 'hp' => 5000.0], 'title_rs_god' => ['skill_damage' => 20.0, 'truedmg' => 1000.0, 'all_attr' => 100.0], 'title_rs_lord' => ['skill_damage' => 16.0, 'truedmg' => 700.0, 'all_attr' => 70.0], 'title_rs_king' => ['skill_damage' => 13.0, 'truedmg' => 500.0, 'all_attr' => 50.0], 'title_rs_gen' => ['skill_damage' => 10.0, 'truedmg' => 300.0, 'all_attr' => 30.0]][$tw] ?? [];
         foreach ($tb as $tk => $tv) { $s[$tk] += $tv; }
     }
 // 全属性按攻击、防御、生命各加一次；百分比属性按设计上限截断。
@@ -4290,6 +4292,32 @@ function gear_stats(int $uid): array
     if ((int) ($qu->fetchColumn() ?: 0) >= 38) {
         $s['atk_pct'] += 5;
         $s['all_attr'] += 10;
+    }
+    // 转生加成：基础属性 × 转生次数 × 10%
+    $rsN = function_exists('rs_count') ? rs_count((int) $uid) : 0;
+    if ($rsN > 0) {
+        $m = 1 + $rsN * 0.10;
+        foreach (['atk', 'matk', 'def', 'mdef', 'hp', 'truedmg'] as $k) {
+            if (!empty($s[$k])) {
+                $s[$k] = (int) round($s[$k] * $m);
+            }
+        }
+    }
+    // 源罪技能树
+    if (function_exists('src_sin_effects')) {
+        $se = src_sin_effects((int) $uid);
+        if ($se['atk_pct'] > 0) {
+            $s['atk_pct'] += $se['atk_pct'];
+        }
+        if ($se['hp_pct'] > 0) {
+            $s['hp'] = (int) round($s['hp'] * (1 + $se['hp_pct'] / 100));
+        }
+        if ($se['speed'] > 0) {
+            $s['speed'] += $se['speed'];
+        }
+        if ($se['lord']) {
+            $s['sin_dmg_pct'] = sin_of((int) $uid) * 0.5;
+        }
     }
     $cache[$uid] = $s;
     return $s;
@@ -4835,7 +4863,11 @@ function player_patk(array $u): int
     }
     $str = (int) ($u['str'] ?? 0);
     $base = (int) $u['atk'] + $str + (int) gear_stats((int) ($u['id'] ?? 0))['atk'];
-    // 一转·浴血：生命每降低10%，攻击+4%，最多+32%
+    // 转生：基础属性 × 转生次数 × 10%
+    if (function_exists('rs_stat_mult')) {
+        $base = (int) round($base * rs_stat_mult((int) ($u['id'] ?? 0)));
+    }
+    // 1觉·浴血：生命每降低10%，攻击+4%，最多+32%
     if (!empty(cflags((int) ($u['id'] ?? 0))['rb1_job']) && cflags((int) ($u['id'] ?? 0))['rb1_job'] === 'warrior' && (int) ($u['maxhp'] ?? 0) > 0) {
         $lost = 1 - (int) $u['hp'] / max(1, (int) $u['maxhp']);
         $steps = min(8, (int) floor($lost * 10));
@@ -4856,6 +4888,10 @@ function player_matk(array $u): int
         $gs = gear_stats((int) ($u['id'] ?? 0));
         $m += (int) $gs['atk'] + (int) ($m * (float) $gs['atk_pct'] / 100);
     }
+    // 转生：基础属性 × 转生次数 × 10%
+    if (function_exists('rs_stat_mult') && $m > 0) {
+        $m = (int) round($m * rs_stat_mult((int) ($u['id'] ?? 0)));
+    }
     return $m;
 }
 
@@ -4867,13 +4903,21 @@ function player_def(array $u): int
 // 物理防御：护甲+坚毅+装备
 function player_pdef(array $u): int
 {
-    return (int) $u['def'] + (int) ($u['agi'] ?? 0) + (int) gear_stats((int) ($u['id'] ?? 0))['def'];
+    $v = (int) $u['def'] + (int) ($u['agi'] ?? 0) + (int) gear_stats((int) ($u['id'] ?? 0))['def'];
+    if (function_exists('rs_stat_mult')) {
+        $v = (int) round($v * rs_stat_mult((int) ($u['id'] ?? 0)));
+    }
+    return $v;
 }
 
 // 魔法防御：护甲一半+坚毅+抗性装备（坚毅既加物防也加法防）
 function player_mdef(array $u): int
 {
-    return (int) ((int) $u['def'] / 2) + (int) ($u['agi'] ?? 0) + (int) gear_stats((int) ($u['id'] ?? 0))['mdef'];
+    $v = (int) ((int) $u['def'] / 2) + (int) ($u['agi'] ?? 0) + (int) gear_stats((int) ($u['id'] ?? 0))['mdef'];
+    if (function_exists('rs_stat_mult')) {
+        $v = (int) round($v * rs_stat_mult((int) ($u['id'] ?? 0)));
+    }
+    return $v;
 }
 
 function exp_need(int $lv): int
@@ -4967,31 +5011,55 @@ function gain_exp(array &$u, int $exp): string
     if ($card > time()) {
         $exp = $exp * max(2, (int) ($mm['exp_card_mult'] ?? 2));
     }
-    // 一转卡级：三章通关（quest>=38）未一转（rb1_job为空），299级经验冻结
+    // 1觉卡级：三章通关（quest>=38）未1觉（rb1_job为空），299级经验冻结
     $rbDone = !empty(cflags((int) ($u['id'] ?? 0))['rb1_job']);
-    if ((int) ($u['quest'] ?? 0) >= 38 && !$rbDone && (int) ($u['lv'] ?? 1) >= 299) {
-        return '经验+' . $exp . '（299级瓶颈：一转后继续累积，去找瓦尔顿）';
+    // 已转生者不受299级冻结约束（转生后可一路修到999）
+    $rsN0 = function_exists('rs_count') ? rs_count((int) $u['id']) : 0;
+    if ((int) ($u['quest'] ?? 0) >= 38 && !$rbDone && $rsN0 === 0 && (int) ($u['lv'] ?? 1) >= 299) {
+        return '经验+' . $exp . '（299级瓶颈：1觉后继续累积，去找瓦尔顿）';
+    }
+    // 转生：经验获取+50%
+    $rsN = function_exists('rs_count') ? rs_count((int) $u['id']) : 0;
+    if ($rsN > 0) {
+        $exp = (int) ($exp * rs_exp_mult((int) $u['id']));
     }
     $u['exp'] = (int) $u['exp'] + $exp;
     $msg = '经验+' . $exp;
+    // 999级封顶：满级后必须转生
+    if ((int) $u['lv'] >= lv_cap()) {
+        $u['exp'] = 0;
+        return $msg . '（' . lv_cap() . '级已封顶：完成转生条件后可转生）';
+    }
     while ((int) $u['exp'] >= exp_need((int) $u['lv'])) {
         $u['exp'] -= exp_need((int) $u['lv']);
         $u['lv'] = (int) $u['lv'] + 1;
-        $u['maxhp'] = (int) $u['maxhp'] + 10;
-        $u['maxmp'] = (int) ($u['maxmp'] ?? 0) + 5;
+        // 转生后每级成长翻倍
+        $g = $rsN > 0 ? 2 : 1;
+        $u['maxhp'] = (int) $u['maxhp'] + 10 * $g;
+        $u['maxmp'] = (int) ($u['maxmp'] ?? 0) + 5 * $g;
         // 升级成长按职业：战士猎手长物攻，法师牧师长智慧（法攻）+灵力（魔力）
         if (in_array(job_id_of($u), ['mage', 'priest'], true)) {
-            $u['int'] = (int) ($u['int'] ?? 0) + 1;
-            $u['spi'] = (int) ($u['spi'] ?? 0) + 1;
-            $u['maxmp'] = (int) ($u['maxmp'] ?? 0) + 5;
+            $u['int'] = (int) ($u['int'] ?? 0) + $g;
+            $u['spi'] = (int) ($u['spi'] ?? 0) + $g;
+            $u['maxmp'] = (int) ($u['maxmp'] ?? 0) + 5 * $g;
         } else {
-            $u['atk'] = (int) $u['atk'] + 1;
+            $u['atk'] = (int) $u['atk'] + $g;
         }
-        $u['def'] = (int) $u['def'] + 1;
+        $u['def'] = (int) $u['def'] + $g;
         $u['hp'] = (int) $u['maxhp'];
         $u['mp'] = (int) ($u['maxmp'] ?? 0);
         $u['s_pts'] = (int) ($u['s_pts'] ?? 0) + 3;
-        $msg .= '！升级至' . $u['lv'] . '级，伤势尽复，生命上限+10，魔力上限+5，得3属性点';
+        // 转生后：每达成一个百级档送1源罪点数
+        if ($rsN > 0) {
+            $stage = (int) ((int) $u['lv'] / 100);
+            $got = (int) (cflags((int) $u['id'])['rs_stage'] ?? 0);
+            if ($stage > $got) {
+                cflag_set((int) $u['id'], 'rs_stage', $stage);
+                mat_set((int) $u['id'], 'rs_point', (int) (mats_of((int) $u['id'])['rs_point'] ?? 0) + ($stage - $got));
+                $msg .= '，源罪点数+' . ($stage - $got);
+            }
+        }
+        $msg .= '！升级至' . lv_text((int) $u['id'], (int) $u['lv']) . '，伤势尽复，生命上限+' . (10 * $g) . '，魔力上限+' . (5 * $g) . '，得3属性点';
     }
     sin_gain_array($u, 0);
     return $msg;
@@ -5582,7 +5650,7 @@ function battle_round(array &$u, array &$b, string $mode): array
         if ($isSkill && $skillName !== '拳击' && ($b['id'] ?? '') === 'banshee') {
             $pd += 4;
         }
-    // 一转被动：法师元素亲和/猎手标记
+    // 1觉被动：法师元素亲和/猎手标记
     $rbJob = cflags((int) ($u['id'] ?? 0))['rb1_job'] ?? '';
     if ($rbJob === 'mage' && $skEl !== '') { $pd = (int)($pd * 1.12); $logHeal .= '(元素亲和)'; }
     if ($rbJob === 'hunter' && $pd > 0 && ($b['hp'] ?? 1) > 0) { $b['mark'] = 2; if (mt_rand(1, 100) <= 15) { $pd = (int)($pd * 1.1); $logHeal .= '(猎物标记)'; } }
@@ -5611,7 +5679,7 @@ function battle_round(array &$u, array &$b, string $mode): array
     // 真实伤害（神魂/烬焰7件）：无视防御，闪避也躲不掉
     $trueDmg = (int) soul_truedmg((int) ($u['id'] ?? 0));
     if ($trueDmg > 0) { $b['hp'] = (int) $b['hp'] - $trueDmg; $logHeal .= '(真伤+' . $trueDmg . ')'; }
-    // 一转·猎手标记：目标易伤10%（剩余轮数在受伤时结算）
+    // 1觉·猎手标记：目标易伤10%（剩余轮数在受伤时结算）
     if ($pd > 0 && !empty($b['mark']) && ($b['hp'] ?? 1) > 0) { $pd = (int)($pd * 1.1); $b['hp'] = (int)$b['hp'] - (int)($pd * 0.1); $b['mark'] = (int)$b['mark'] - 1; $logHeal .= '(易伤)'; }
     $verb = $skillName === '拳击' ? '你挥出一拳，造成' : ($isSkill ? '你放出' . $skillName . '，造成' : '你劈出');
     $log = $pd === 0 ? '你的攻击被' . $b['name'] . '闪避了。' : $verb . $pd . '点。' . $logHeal . $logNoMp . $profMsg . $tankMp;
@@ -5833,6 +5901,10 @@ function battle_round(array &$u, array &$b, string $mode): array
             $msg = ($msg ?? '') . '。沼泽之王倒下，你被传回白石镇广场';
         }
         $g = (int) ($b['wgold'] ?? 0) + monster_gold_reward((int) $b['gold']);
+        // 转生：金币获取+30%
+        if (function_exists('rs_gold_mult')) {
+            $g = (int) round($g * rs_gold_mult((int) ($u['id'] ?? 0)));
+        }
         $u['gold'] = (int) $u['gold'] + $g;
         $rawExp = (int) (((int) ($b['wexp'] ?? 0) + exp_gain_for($u, (string) ($b['id'] ?? ''), (int) ($b['elite'] ?? 0))) * guild_exp_mult((int) $u['id']) * party_bonus_mult((int) $u['id']));
         war_add_score((int) $u['id'], (string) ($b['id'] ?? ''));
@@ -6116,7 +6188,7 @@ function battle_round(array &$u, array &$b, string $mode): array
                 add_mat((int) $u['id'], 'reset_potion', 1);
                 add_mat((int) $u['id'], 'soul_shard', 20);
                 add_mat((int) $u['id'], 'rb2_proof', 1);
-                $txt .= '。二转·群攻之路完成！获得100万+洗点药+神魂碎片×20+二转证明！去虚空裂隙/灰烬深渊刷群攻秘籍！';
+                $txt .= '。2觉·群攻之路完成！获得100万+洗点药+神魂碎片×20+2觉证明！去虚空裂隙/灰烬深渊刷群攻秘籍！';
             }
             else { $txt .= '。【' . rebirth2_quests()[$cur]['name'] . '】找瓦尔顿继续。'; }
         }
@@ -6191,7 +6263,7 @@ function battle_round(array &$u, array &$b, string $mode): array
     if ((cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '') === 'aegis') { $md = (int) ($md * 0.92); }
     }
     $u['hp'] = (int) $u['hp'] - $md;
-    // 一转被动（牧师）：5%减伤40%，每轮回3%
+    // 1觉被动（牧师）：5%减伤40%，每轮回3%
     $rbJob2 = cflags((int) ($u['id'] ?? 0))['rb1_job'] ?? '';
     if ($rbJob2 === 'priest' && $md > 0) {
         if (mt_rand(1, 100) <= 5) { $u['hp'] = (int)$u['hp'] + (int)($md * 0.4); $md = (int)($md * 0.6); $log .= '(圣光庇护)'; }
@@ -6294,6 +6366,23 @@ function find_route(string $from, string $to): array
         }
     }
     return [];
+}
+
+function teleport_region_order(): array
+{
+    $order = [];
+    foreach (map_regions() as $region => $ids) {
+        if ($region === '公会战场') {
+            continue;
+        }
+        $min = PHP_INT_MAX;
+        foreach ($ids as $id) {
+            $min = min($min, teleport_min_lv((string) $id));
+        }
+        $order[$region] = $min === PHP_INT_MAX ? 1 : $min;
+    }
+    asort($order);
+    return $order;
 }
 
 function map_regions(): array
@@ -6646,7 +6735,7 @@ function dungeon_tick(array &$u): void
     }
 }
 
-// 二转群攻书掉落：深渊小怪2%随机一本，泰坦40%随机一本
+// 2觉群攻书掉落：深渊小怪2%随机一本，泰坦40%随机一本
 function ch2_locations(): array
 {
     $m = [];
@@ -6669,7 +6758,7 @@ function ch2_locations(): array
     return $m;
 }
 
-// 二转群攻书掉落：深渊小怪2%随机w5-p6一本，泰坦40%；裂隙小怪2%随机w7-p8一本，暴君40%
+// 2觉群攻书掉落：深渊小怪2%随机w5-p6一本，泰坦40%；裂隙小怪2%随机w7-p8一本，暴君40%
 // 主线章完成奖称号（幂等，缺勤补发）
 // 龙鳞宝箱：单抽（石头45%/蛋30%/陪练20%/称号5%，龙威0.3%大奖）
 function open_dragon_box(int $uid): string
@@ -6703,11 +6792,11 @@ function open_dragon_box(int $uid): string
 // 称号走装备背包（slot=title）
 function title_ids(): array
 {
-    return ['title_ch1' => '称号·灰雾行者', 'title_ch2' => '称号·白银守望', 'title_ch3' => '称号·王都破局者', 'title_ch4' => '称号·凛冬行者', 'title_ch5' => '称号·南炎见证', 'title_rb2' => '称号·虚空征服者', 'title_dragon1' => '称号·龙鳞初醒', 'title_dragon2' => '称号·龙血沸騰', 'title_dragon3' => '称号·灭世龙威', 'title_god' => '称号·神界主宰'];
+    return ['title_ch1' => '称号·灰雾行者', 'title_ch2' => '称号·白银守望', 'title_ch3' => '称号·王都破局者', 'title_ch4' => '称号·凛冬行者', 'title_ch5' => '称号·南炎见证', 'title_rb2' => '称号·虚空征服者', 'title_dragon1' => '称号·龙鳞初醒', 'title_dragon2' => '称号·龙血沸騰', 'title_dragon3' => '称号·灭世龙威', 'title_god' => '称号·神界主宰', 'title_rs_god' => '称号·源罪之神', 'title_rs_lord' => '称号·源罪之主', 'title_rs_king' => '称号·源罪之王', 'title_rs_gen' => '称号·源罪之将'];
 }
 function title_bonus(string $tid): array
 {
-    return ['title_ch1' => ['atk' => 30.0, 'hp' => 500.0], 'title_ch2' => ['def' => 30.0, 'hp' => 800.0], 'title_ch3' => ['crit' => 1.0, 'atk' => 50.0], 'title_ch4' => ['mdef' => 40.0, 'hp' => 1200.0], 'title_ch5' => ['matk' => 50.0, 'hp' => 1500.0], 'title_rb2' => ['skill_damage' => 3.0, 'hp' => 2000.0], 'title_dragon1' => ['critdmg' => 5.0, 'hp' => 1500.0], 'title_dragon2' => ['atk' => 100.0, 'matk' => 100.0], 'title_dragon3' => ['skill_damage' => 8.0, 'truedmg' => 200.0], 'title_god' => ['skill_damage' => 12.0, 'truedmg' => 500.0, 'hp' => 5000.0]][$tid] ?? [];
+    return ['title_ch1' => ['atk' => 30.0, 'hp' => 500.0], 'title_ch2' => ['def' => 30.0, 'hp' => 800.0], 'title_ch3' => ['crit' => 1.0, 'atk' => 50.0], 'title_ch4' => ['mdef' => 40.0, 'hp' => 1200.0], 'title_ch5' => ['matk' => 50.0, 'hp' => 1500.0], 'title_rb2' => ['skill_damage' => 3.0, 'hp' => 2000.0], 'title_dragon1' => ['critdmg' => 5.0, 'hp' => 1500.0], 'title_dragon2' => ['atk' => 100.0, 'matk' => 100.0], 'title_dragon3' => ['skill_damage' => 8.0, 'truedmg' => 200.0], 'title_god' => ['skill_damage' => 12.0, 'truedmg' => 500.0, 'hp' => 5000.0], 'title_rs_god' => ['skill_damage' => 20.0, 'truedmg' => 1000.0, 'all_attr' => 100.0], 'title_rs_lord' => ['skill_damage' => 16.0, 'truedmg' => 700.0, 'all_attr' => 70.0], 'title_rs_king' => ['skill_damage' => 13.0, 'truedmg' => 500.0, 'all_attr' => 50.0], 'title_rs_gen' => ['skill_damage' => 10.0, 'truedmg' => 300.0, 'all_attr' => 30.0]][$tid] ?? [];
 }
 function give_title(int $uid, string $tid): bool
 {
@@ -7047,7 +7136,7 @@ function wild45_locations(): array
 function as_locations(): array
 {
     $m = [];
-    $m['as_gate'] = ['name' => '灰烬深渊·入口', 'desc' => '火山底下的裂缝，灰往上冒。引路人说：二转的群攻书，全在这底下。', 'exits' => ['as_trail' => '灰烬小径'], 'monsters' => ['cinder_crawler']];
+    $m['as_gate'] = ['name' => '灰烬深渊·入口', 'desc' => '火山底下的裂缝，灰往上冒。引路人说：2觉的群攻书，全在这底下。', 'exits' => ['as_trail' => '灰烬小径'], 'monsters' => ['cinder_crawler']];
     $m['as_trail'] = ['name' => '灰烬小径', 'desc' => '灰没脚面。爬行者在灰里游，游出一条条沟。', 'exits' => ['as_gate' => '入口', 'as_vein' => '灰脉'], 'monsters' => ['cinder_crawler', 'cinder_stalker']];
     $m['as_vein'] = ['name' => '灰脉', 'desc' => '灰烬像血一样流动。潜伏者在流动里眨眼。', 'exits' => ['as_trail' => '小径', 'as_hollow' => '灰烬空洞'], 'monsters' => ['cinder_stalker', 'cinder_warden']];
     $m['as_hollow'] = ['name' => '灰烬空洞', 'desc' => '空洞里全是灰。守望者站成一圈，恐惧在圈里开花。', 'exits' => ['as_vein' => '灰脉', 'as_core' => '泰坦之座'], 'monsters' => ['cinder_warden', 'cinder_horror']];
@@ -7485,7 +7574,7 @@ function quest_state(array $u): array
     if ($q >= 40 && $q <= 45) {
         $all = rebirth1_quests();
         if (!isset($all[$q])) {
-            return ['name' => '影子伙伴', 'step' => '完成', 'todo' => '一转完成！你的路已经选定（被动生效），继续练级吧', 'loc' => 'avenue', 'locname' => '中央大道', 'id' => 99, 'ch' => 4, 'need' => []];
+            return ['name' => '影子伙伴', 'step' => '完成', 'todo' => '1觉完成！你的路已经选定（被动生效），继续练级吧', 'loc' => 'avenue', 'locname' => '中央大道', 'id' => 99, 'ch' => 4, 'need' => []];
         }
         // 试炼类任务不需要杀怪，need为空
         return $all[$q] + ['id' => $q, 'ch' => 4, 'step' => ($q - 39) . '/6'];
@@ -7506,14 +7595,14 @@ function quest_state(array $u): array
     }
     if ($q === 76) {
         if ((int) ($u['lv'] ?? 1) >= 599) {
-            return ['name' => '二转·群攻之路', 'step' => '序', 'todo' => '599级了！去王都中央大道找总会长瓦尔顿，开启二转（八条路，群攻）', 'loc' => 'avenue', 'locname' => '中央大道', 'id' => 76, 'ch' => 6, 'need' => []];
+            return ['name' => '2觉·群攻之路', 'step' => '序', 'todo' => '599级了！去王都中央大道找总会长瓦尔顿，开启2觉（八条路，群攻）', 'loc' => 'avenue', 'locname' => '中央大道', 'id' => 76, 'ch' => 6, 'need' => []];
         }
-        return ['name' => '南炎守望', 'step' => '完成', 'todo' => '五章全通关！世界BOSS每天刷新，神魂还能升级（找神魂师）。599级找瓦尔顿二转', 'loc' => 'volcano_heart', 'locname' => '火山之心', 'id' => 99, 'ch' => 6, 'need' => []];
+        return ['name' => '南炎守望', 'step' => '完成', 'todo' => '五章全通关！世界BOSS每天刷新，神魂还能升级（找神魂师）。599级找瓦尔顿2觉', 'loc' => 'volcano_heart', 'locname' => '火山之心', 'id' => 99, 'ch' => 6, 'need' => []];
     }
     if ($q >= 77 && $q <= 80) {
         $all = rebirth2_quests();
         if (!isset($all[$q])) {
-            return ['name' => '群攻之路·完', 'step' => '完成', 'todo' => '二转完成！虚空裂隙/灰烬深渊刷群攻书', 'loc' => 'vx_gate', 'locname' => '虚空裂隙', 'id' => 99, 'ch' => 7, 'need' => []];
+            return ['name' => '群攻之路·完', 'step' => '完成', 'todo' => '2觉完成！虚空裂隙/灰烬深渊刷群攻书', 'loc' => 'vx_gate', 'locname' => '虚空裂隙', 'id' => 99, 'ch' => 7, 'need' => []];
         }
         return $all[$q] + ['id' => $q, 'ch' => 7, 'step' => ($q - 76) . '/4'];
     }
@@ -7531,14 +7620,14 @@ function quest_state(array $u): array
         if ((int) ($u['lv'] ?? 1) >= 700) {
             return ['name' => '神界·天门', 'step' => '待启', 'todo' => '700级了！去青叶广场往上走到【神界·天门】找神使·伽楼，开启第八章', 'loc' => 'god_gate', 'locname' => '神界·天门', 'id' => 81, 'ch' => 7, 'need' => []];
         }
-        return ['name' => '虚空守望', 'step' => '完成', 'todo' => '二转完成！群攻在手，虚空裂隙/灰烬深渊/世界BOSS等你（700级开神界）', 'loc' => 'vx_gate', 'locname' => '虚空裂隙', 'id' => 99, 'ch' => 7, 'need' => []];
+        return ['name' => '虚空守望', 'step' => '完成', 'todo' => '2觉完成！群攻在手，虚空裂隙/灰烬深渊/世界BOSS等你（700级开神界）', 'loc' => 'vx_gate', 'locname' => '虚空裂隙', 'id' => 99, 'ch' => 7, 'need' => []];
     }
     if ($q >= 38) {
-        // 三章通关但没299：自由探索；299了进一转
+        // 三章通关但没299：自由探索；299了进1觉
         if ((int) ($u['lv'] ?? 1) >= 299) {
-            return ['name' => '一转·觉醒之路', 'step' => '序', 'todo' => '299级了！去王都中央大道找总会长瓦尔顿，开启一转（不转职卡299级）', 'loc' => 'avenue', 'locname' => '中央大道', 'id' => 38, 'ch' => 3, 'need' => []];
+            return ['name' => '1觉·觉醒之路', 'step' => '序', 'todo' => '299级了！去王都中央大道找总会长瓦尔顿，开启1觉（不觉醒卡299级）', 'loc' => 'avenue', 'locname' => '中央大道', 'id' => 38, 'ch' => 3, 'need' => []];
         }
-        return ['name' => '影子伙伴', 'step' => '完成', 'todo' => '第三章完成！农场、母巢、公会战等你（影子伙伴：全属性+5%）。299级后找瓦尔顿一转', 'loc' => 'farm', 'locname' => '王都农场', 'id' => 99, 'ch' => 3, 'need' => []];
+        return ['name' => '影子伙伴', 'step' => '完成', 'todo' => '第三章完成！农场、母巢、公会战等你（影子伙伴：全属性+5%）。299级后找瓦尔顿1觉', 'loc' => 'farm', 'locname' => '王都农场', 'id' => 99, 'ch' => 3, 'need' => []];
     }
     if ($q >= 20 && $q <= 27) {
         $all = ch2_quests();
@@ -7619,27 +7708,27 @@ function ch5_quests(): array
         75 => ['name' => '南炎柱', 'todo' => '火山之心：南炎守卫×60、击败遗迹守卫，见熔火守望者（别惊动巨龙）', 'loc' => 'volcano_heart', 'locname' => '火山之心', 'need' => ['south_flame_guard' => 60, 'ancient_ruin_golem' => 1], 'flag' => 'doyle_met'],
     ];
 }
-// 一转·觉醒之路（quest 40~45）：四试炼+抉择，不杀怪，纯NPC交互
+// 1觉·觉醒之路（quest 40~45）：四试炼+抉择，不杀怪，纯NPC交互
 function rebirth1_quests(): array
 {
     return [
-        40 => ['name' => '一转·抉择之始', 'todo' => '去王都中央大道找总会长瓦尔顿，听他讲四条路', 'loc' => 'avenue', 'locname' => '中央大道', 'need' => [], 'flag' => 'rb1_start'],
-        41 => ['name' => '一转·四重试炼', 'todo' => '完成四重试炼：竞技场铁拳（承伤）/图书馆莫里亚蒂（答题）/郊野霍克（追鹿）/大教堂塞缪尔（舍药），顺序不限', 'loc' => 'avenue', 'locname' => '中央大道', 'need' => [], 'flag' => null],
-        42 => ['name' => '一转·战士试炼', 'todo' => '（已并入四重试炼）', 'loc' => 'arena', 'locname' => '王都竞技场', 'need' => [], 'flag' => 'rb1_war'],
-        43 => ['name' => '一转·法师试炼', 'todo' => '（已并入四重试炼）', 'loc' => 'library', 'locname' => '皇家图书馆', 'need' => [], 'flag' => 'rb1_mag'],
-        44 => ['name' => '一转·猎手试炼', 'todo' => '（已并入四重试炼）', 'loc' => 'suburb', 'locname' => '外城郊野', 'need' => [], 'flag' => 'rb1_hun'],
-        45 => ['name' => '一转·抉择', 'todo' => '四试炼完成，回中央大道找瓦尔顿选择你的路（牧师试炼在大教堂找塞缪尔）', 'loc' => 'avenue', 'locname' => '中央大道', 'need' => [], 'flag' => null],
+        40 => ['name' => '1觉·抉择之始', 'todo' => '去王都中央大道找总会长瓦尔顿，听他讲四条路', 'loc' => 'avenue', 'locname' => '中央大道', 'need' => [], 'flag' => 'rb1_start'],
+        41 => ['name' => '1觉·四重试炼', 'todo' => '完成四重试炼：竞技场铁拳（承伤）/图书馆莫里亚蒂（答题）/郊野霍克（追鹿）/大教堂塞缪尔（舍药），顺序不限', 'loc' => 'avenue', 'locname' => '中央大道', 'need' => [], 'flag' => null],
+        42 => ['name' => '1觉·战士试炼', 'todo' => '（已并入四重试炼）', 'loc' => 'arena', 'locname' => '王都竞技场', 'need' => [], 'flag' => 'rb1_war'],
+        43 => ['name' => '1觉·法师试炼', 'todo' => '（已并入四重试炼）', 'loc' => 'library', 'locname' => '皇家图书馆', 'need' => [], 'flag' => 'rb1_mag'],
+        44 => ['name' => '1觉·猎手试炼', 'todo' => '（已并入四重试炼）', 'loc' => 'suburb', 'locname' => '外城郊野', 'need' => [], 'flag' => 'rb1_hun'],
+        45 => ['name' => '1觉·抉择', 'todo' => '四试炼完成，回中央大道找瓦尔顿选择你的路（牧师试炼在大教堂找塞缪尔）', 'loc' => 'avenue', 'locname' => '中央大道', 'need' => [], 'flag' => null],
     ];
 }
 
-// 二转·群攻之路（quest 77~80）：599级接取，试炼杀怪，抉择双向
+// 2觉·群攻之路（quest 77~80）：599级接取，试炼杀怪，抉择双向
 function rebirth2_quests(): array
 {
     return [
-        77 => ['name' => '二转·抉择之始', 'todo' => '去王都中央大道找总会长瓦尔顿，听他讲八条路', 'loc' => 'avenue', 'locname' => '中央大道', 'need' => [], 'flag' => 'rb2_start'],
-        78 => ['name' => '二转·虚空试炼', 'todo' => '火山之心：南炎守卫×40、击败遗迹守卫', 'loc' => 'volcano_heart', 'locname' => '火山之心', 'need' => ['south_flame_guard' => 40, 'ancient_ruin_golem' => 1], 'flag' => null],
-        79 => ['name' => '二转·两条路', 'todo' => '回中央大道找瓦尔顿，从本职业两个方向选一个', 'loc' => 'avenue', 'locname' => '中央大道', 'need' => [], 'flag' => 'rb2_job'],
-        80 => ['name' => '二转·加冕', 'todo' => '找瓦尔顿加冕，领取群攻之路奖励', 'loc' => 'avenue', 'locname' => '中央大道', 'need' => [], 'flag' => 'rb2_done'],
+        77 => ['name' => '2觉·抉择之始', 'todo' => '去王都中央大道找总会长瓦尔顿，听他讲八条路', 'loc' => 'avenue', 'locname' => '中央大道', 'need' => [], 'flag' => 'rb2_start'],
+        78 => ['name' => '2觉·虚空试炼', 'todo' => '火山之心：南炎守卫×40、击败遗迹守卫', 'loc' => 'volcano_heart', 'locname' => '火山之心', 'need' => ['south_flame_guard' => 40, 'ancient_ruin_golem' => 1], 'flag' => null],
+        79 => ['name' => '2觉·两条路', 'todo' => '回中央大道找瓦尔顿，从本职业两个方向选一个', 'loc' => 'avenue', 'locname' => '中央大道', 'need' => [], 'flag' => 'rb2_job'],
+        80 => ['name' => '2觉·加冕', 'todo' => '找瓦尔顿加冕，领取群攻之路奖励', 'loc' => 'avenue', 'locname' => '中央大道', 'need' => [], 'flag' => 'rb2_done'],
     ];
 }
 
@@ -7669,7 +7758,7 @@ function rebirth2_skill2(string $rb2): string
 
 
 
-// 二转被动技能目录：抉择即自动领悟，效果常驻
+// 2觉被动技能目录：抉择即自动领悟，效果常驻
 
 
 function rb2_passive_catalog(): array
@@ -7838,6 +7927,10 @@ function sin_of(int $uid): int
 // 在内存用户上结算：加罪值并同步<10的+20%生命（调用方负责 user_save）
 function sin_gain_array(array &$u, int $n = 1): void
 {
+    // 源罪·神之罪主：罪值获取减半
+    if ($n > 0 && function_exists('src_sin_effects') && src_sin_effects((int) ($u['id'] ?? 0))['lord']) {
+        $n = max(1, (int) floor($n / 2));
+    }
     // 罪值曲线（防挂机爆表）：
     // - 普通怪+0.2，精英+1，BOSS+5；挂机一晚(8h,约480只普通)≈96，刚好卡在红线下
     // - 衰减：每次结算按在线时长折，每调用一次扣0.002（约每500只抵1点）

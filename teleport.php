@@ -92,7 +92,8 @@ if ($flash !== '') {
     echo '<div class="warn">' . h($flash) . '</div>';
 }
 $openRegion = $backRegion;
-foreach (map_regions() as $region => $ids) {
+foreach (teleport_region_order() as $region => $rMinLv) {
+    $ids = map_regions()[$region] ?? [];
     if ($region === '巅峰战场') {
         continue;
     }

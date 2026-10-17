@@ -4,6 +4,10 @@ require __DIR__ . '/includes/bootstrap.php';
 
 $u = require_login();
 $tab = (string) ($_GET['tab'] ?? 'power');
+if ($tab === 'rs') {
+    require __DIR__ . '/rank_rs.php';
+    exit;
+}
 if ($tab === 'recharge') {
     $tab = 'spend';
 }
@@ -16,7 +20,7 @@ if (!isset(jobs()[$job])) {
 }
 
 wap_start('排行榜');
-echo '<a href="rank.php?tab=power">战力</a> <a href="rank.php?tab=active">活跃</a> <a href="rank.php?tab=spend">消费</a> <a href="rank.php?tab=pet">宠物</a> <a href="rank.php?tab=horse">赛马</a><br>';
+echo '<a href="rank.php?tab=power">战力</a> <a href="rank.php?tab=active">活跃</a> <a href="rank.php?tab=spend">消费</a> <a href="rank.php?tab=pet">宠物</a> <a href="rank.php?tab=horse">赛马</a> <a href="rank.php?tab=rs">转生</a><br>';
 if ($tab === 'power') {
     echo '职业：<a href="rank.php?tab=power">全部</a> ';
     foreach (jobs() as $jid => $j) {

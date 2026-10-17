@@ -9,6 +9,7 @@ $cur = (string) $u['loc'];
 $people = [
     'gallu' => ['name' => '神使·伽楼', 'loc' => 'god_gate', 'text' => '我守这扇门七百年，从没见过有人真的走完神界。神座会告诉你真相，堕天阶会告诉你代价。'],
     'godmerchant' => ['name' => '神界商人·白羽', 'loc' => 'god_hall', 'text' => '神界也收金币，收得更狠。战力不够就别往天柱去，那里的执政官看谁都像叛徒。'],
+    'rspriest' => ['name' => '转生祭司·源罪', 'loc' => 'god_hall', 'text' => '凡人的巅峰是999级。再往上，只有把自己献祭给源罪——神魂满级、斩世界BOSS，你来找我。'],
     'fallenguide' => ['name' => '堕天引路·堕羽', 'loc' => 'god_throne', 'text' => '想见神帝？先把神座打碎。下面是纯粹的坠落——45分钟，活着回来，或者留在星星之间。'],
     'mirrorelder' => ['name' => '镜厅长老·镜胜雪', 'loc' => 'god_mirror', 'text' => '每面镜子都是一条判词，满厅都是。想照镜子？先把剑磨快，镜子认得血，不认得人。'],
     'celia' => ['name' => '堕天传令·赛丽亚', 'loc' => 'gf_stair', 'text' => '我替神帝跑腿，也替坠落的人引路。你要是杀上来，记得先杀传令官，再杀我，最后杀他。规矩不能乱。'],    'gykeeper' => ['name' => '罪渊守门人·渡罪', 'loc' => 'square', 'text' => '这口渊每月只开一次，罪值越高的人进去越安全。里面的怪物只有1滴血——它们叫善意、爱意、友谊，诸如此类。杀了它们，你的罪就涨了。别问我为什么。'],
@@ -133,6 +134,21 @@ if ($who === 'godmerchant' && $choice === 'heal') {
         flash_set('白羽弹了个响指，你的伤全好了。');
     }
     header('Location: npc.php?who=godmerchant');
+    exit;
+}
+if ($who === 'rspriest' && $choice === 'rite') {
+    if (!rs_can_rebirth((int) $u['id'])) {
+        flash_set('源罪祭司摇头：源罪未满——' . rs_require_text((int) $u['id']));
+    } else {
+        flash_set('源罪祭司的声音像从井底传来：「源罪已满。现在，你只需要做一个选择。转生之后，你会失去等级，但会得到超越等级的力量。你确定吗？」<a href="npc.php?who=rspriest&choice=confirm">【确认转生】</a> / <a href="home.php">【再等等】</a>');
+    }
+    header('Location: npc.php?who=rspriest');
+    exit;
+}
+if ($who === 'rspriest' && $choice === 'confirm') {
+    $out = rs_perform((int) $u['id']);
+    flash_set(h($out));
+    header('Location: home.php');
     exit;
 }
 if ($choice === 'gift' && isset(favor_npcs()[$who])) {
@@ -336,13 +352,13 @@ if ($who === 'rb_waldon' && $choice === 'start' && (int) $u['quest'] === 38 && (
     $u['quest'] = 40;
     user_save($u);
     cflag_set((int) $u['id'], 'rb1_start', 1);
-    flash_set('瓦尔顿：一转·觉醒之路开启！去见四位导师，完成四重试炼再回来。');
+    flash_set('瓦尔顿：1觉·觉醒之路开启！去见四位导师，完成四重试炼再回来。');
     header('Location: npc.php?who=rb_waldon');
 if ($who === 'rb_waldon' && $choice === 'start2' && (int) $u['quest'] === 76 && (int) ($u['lv'] ?? 1) >= 599) {
     $u['quest'] = 77;
     user_save($u);
     cflag_set((int) $u['id'], 'rb2_start', 1);
-    flash_set('瓦尔顿：二转·群攻之路开启！去火山之心完成虚空试炼再回来。');
+    flash_set('瓦尔顿：2觉·群攻之路开启！去火山之心完成虚空试炼再回来。');
     header('Location: npc.php?who=rb_waldon');
     exit;
 }
@@ -355,8 +371,8 @@ if ($who === 'rb_waldon' && $choice === 'crown' && (int) $u['quest'] === 80 && !
         add_mat((int) $u['id'], 'soul_shard', 20);
         add_mat((int) $u['id'], 'rb2_proof', 1);
         $job = (string) (cflags((int) $u['id'])['rb2_job'] ?? '');
-        send_mail((int) $u['id'], '总会长', 'rebirth', '二转', rebirth2_name($job) . '加冕！群攻之路完成，得100万+洗点药+神魂碎片×20。去虚空裂隙/灰烬深渊刷你的群攻秘籍吧！', []);
-        flash_set('加冕完成！二转证明+100万+洗点药+碎片×20已发放，去刷群攻秘籍吧！');
+        send_mail((int) $u['id'], '总会长', 'rebirth', '2觉', rebirth2_name($job) . '加冕！群攻之路完成，得100万+洗点药+神魂碎片×20。去虚空裂隙/灰烬深渊刷你的群攻秘籍吧！', []);
+        flash_set('加冕完成！2觉证明+100万+洗点药+碎片×20已发放，去刷群攻秘籍吧！');
         $u = user_by_id((int) $u['id']);
         $u['quest'] = 81;
         user_save($u);
@@ -504,7 +520,7 @@ if ($who === 'oldash' && $choice === 'open2') {
     exit;
 }
 }
-// 一转四试炼：铁拳承伤/莫里亚蒂答题/霍克追鹿/塞缪尔舍药
+// 1觉四试炼：铁拳承伤/莫里亚蒂答题/霍克追鹿/塞缪尔舍药
 if ($who === 'rb_iron' && $choice === 'try' && in_array((int) $u['quest'], [40, 41], true)) {
     $f = cflags((int) $u['id']);
     if (!empty($f['rb1_war'])) { flash_set('铁拳：这关你过了，别再来找打。'); }
@@ -563,9 +579,9 @@ if ($who === 'rb_waldon' && in_array($choice, ['warrior','mage','hunter','priest
         $sk = ['warrior' => 'w3', 'mage' => 'm3', 'hunter' => 'h3', 'priest' => 'p3'][$choice] ?? '';
         if ($sk !== "") { $bk = "book_" . $sk; add_mat((int) $u["id"], $bk, 1); }
         $rn = rebirth1_names()[$choice] ?? $choice; $pd2 = rebirth1_passive_desc($choice);
-        send_mail((int) $u['id'], '总会长', 'rebirth', '一转', $rn . $pd2, []);
+        send_mail((int) $u['id'], '总会长', 'rebirth', '1觉', $rn . $pd2, []);
         $rn2 = rebirth1_names()[$choice] ?? $choice;
-        flash_set('一转完成' . $rn2);
+        flash_set('1觉完成' . $rn2);
     }
     header('Location: npc.php?who=rb_waldon'); exit;
 }
@@ -752,9 +768,9 @@ if ($who === 'waldon' && (int) $u['quest'] === 28) {
     echo '<a href="npc.php?who=waldon&choice=start">递上推荐信，开启第三章·傀儡之夜</a><br>';
 }
 if ($who === 'rb_waldon' && (int) $u['quest'] === 38 && (int) ($u['lv'] ?? 1) >= 299) {
-    echo '<a href="npc.php?who=rb_waldon&choice=start">聆听四条路，开启一转·觉醒之路</a><br>';
+    echo '<a href="npc.php?who=rb_waldon&choice=start">聆听四条路，开启1觉·觉醒之路</a><br>';
 if ($who === 'rb_waldon' && (int) $u['quest'] === 76 && (int) ($u['lv'] ?? 1) >= 599) {
-    echo '<a href="npc.php?who=rb_waldon&choice=start2">聆听八条路，开启二转·群攻之路</a><br>';
+    echo '<a href="npc.php?who=rb_waldon&choice=start2">聆听八条路，开启2觉·群攻之路</a><br>';
 }
 }
 if ($who === 'rb_waldon' && (int) $u['quest'] === 45) {
@@ -860,11 +876,16 @@ if ($who === 'gallu') {
     if ((int) ($u['quest'] ?? 0) >= 81 && (int) ($u['lv'] ?? 1) >= 700) {
         echo '<a href="npc.php?who=gallu&choice=start">开启第八章·神界（需要700级）</a><br>';
     } else {
-        echo '<span class="muted">（700级、二转完成后可从这里进入神界主线）</span><br>';
+        echo '<span class="muted">（700级、2觉完成后可从这里进入神界主线）</span><br>';
     }
 }
 if ($who === 'fallenguide') {
     echo '<a href="npc.php?who=fallenguide&choice=enter">进入堕天阶（消耗堕天阶入场券，45分钟）</a><br>';
+}
+if ($who === 'rspriest') {
+    echo '转生条件：999级 + 当日世界BOSS + 任一神魂X级。<br>';
+    echo '当前：' . h(rs_require_text((int) $u['id'])) . '<br>';
+    echo '<a href="npc.php?who=rspriest&choice=rite">举行转生仪式</a><br>';
 }
 if ($who === 'godmerchant') {
     echo '<a href="npc.php?who=godmerchant&choice=heal">圣愿（花50000铜回满血魔）</a><br>';

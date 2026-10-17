@@ -393,7 +393,7 @@ if ($tab === 'equip') {
     $dn = (int) ($dm['dummy_num'] ?? 6);
     echo '每次打怪：' . ($dn === 1 ? '<b>1只(稳)</b>' : '<a href="bag.php?a=dummynum&n=1">1只(稳)</a>') . ' ' . ($dn === 3 ? '<b>3只</b>' : '<a href="bag.php?a=dummynum&n=3">3只</a>') . ' ' . ($dn === 6 ? '<b>6只(快)</b>' : '<a href="bag.php?a=dummynum&n=6">6只(快)</a>') . '<br>';
     $am = mats_of((int) $u['id']);
-    echo '自动售卖：' . (!empty($am['autosell_on']) ? '开(剩' . h(dummy_fmt((int) ($am['autosell_time'] ?? 0))) . ') <a href="bag.php?a=autosell&v=0">关</a>' : (empty($am['autosell_time']) ? '没时间，去<a href="mall.php">商城人偶栏</a>买' : '<a href="bag.php?a=autosell&v=1">开</a>'));
+    echo '自动售卖：' . (!empty($am['autosell_on']) ? '开(剩' . h(dummy_fmt((int) ($am['autosell_time'] ?? 0))) . ') <a href="bag.php?a=autosell&v=0">关</a>' : (empty($am['autosell_time']) ? '没时间，去<a href="mall.php">商城功能栏</a>买' : '<a href="bag.php?a=autosell&v=1">开</a>'));
     $aq = (int) ($am['autosell_q'] ?? 2);
     echo ' 卖：' . ($aq === 0 ? '<b>低劣</b>' : '<a href="bag.php?a=autosell&q=0">低劣</a>') . ' ' . ($aq === 1 ? '<b>普通及以下</b>' : '<a href="bag.php?a=autosell&q=1">普通及以下</a>') . ' ' . ($aq === 2 ? '<b>优秀及以下</b>' : '<a href="bag.php?a=autosell&q=2">优秀及以下</a>') . '<br>';
     $cardLeft = (int) ($mats['exp_card_until'] ?? 0) - time();

@@ -45,7 +45,7 @@ if ($rb2j !== '') {
         echo '<span class="muted">' . h($pc['desc']) . '</span><br>';
     }
 } else {
-    echo '<span class="muted">二转后自动领悟被动技能（599级找瓦尔顿）。</span><br>';
+    echo '<span class="muted">2觉后自动领悟被动技能（599级找瓦尔顿）。</span><br>';
 }
 echo '<div class="hr">--------</div>';
 echo '技能书：<br>';

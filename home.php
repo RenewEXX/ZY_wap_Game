@@ -139,7 +139,7 @@ $npcLinks = [
     'arena_gate' => [['rb_iron', '铁拳']],
     'library' => [['rb_mori', '莫里亚蒂院长']],
     'capital_gate' => [['rb_hawk', '老猎人·霍克'], ['northwind', '守夜人·北风']],
-    'god_gate' => [['gallu', '神使·伽楼']], 'god_hall' => [['godmerchant', '神界商人·白羽']], 'god_mirror' => [['mirrorelder', '镜厅长老·镜胜雪']], 'god_throne' => [['fallenguide', '堕天引路·堕羽']], 'gf_stair' => [['celia', '堕天传令·赛丽亚']],
+    'god_gate' => [['gallu', '神使·伽楼']], 'god_hall' => [['godmerchant', '神界商人·白羽'], ['rspriest', '转生祭司·源罪']], 'god_mirror' => [['mirrorelder', '镜厅长老·镜胜雪']], 'god_throne' => [['fallenguide', '堕天引路·堕羽']], 'gf_stair' => [['celia', '堕天传令·赛丽亚']],
     'avenue' => [['waldon', '线人·瓦尔顿'], ['rb_waldon', '总会长·瓦尔顿'], ['med_c', '王都药剂师·蘽兰'], ['rank_c', '榜单老人']],
     'cathedral' => [['rb_samuel', '大主教·塞缪尔']],
     'ice_village' => [['dora', '猎户·朵拉'], ['oldfish', '潜水人·老咸鱼']],

@@ -8,7 +8,7 @@ $u = user_by_id((int) $u['id']);
 $here = loc((string) $u['loc']);
 
 wap_start('状态');
-echo sin_name_html((string) $u['username'], sin_of((int) $u['id'])) . '　' . (int) $u['lv'] . '级';
+echo sin_name_html((string) $u['username'], sin_of((int) $u['id'])) . '　' . h(lv_text((int) $u['id'], (int) $u['lv']));
 echo '　' . h(job_of($u)['name']) . '(' . h(job_of($u)['skill']) . ')';
 echo '<br>';
 echo '罪值 ' . sin_of((int) $u['id']) . (sin_of((int) $u['id']) >= 100 ? '（<span style="color:#f66">恶贯满盈，任何人都可强制PK你</span>）' : (sin_of((int) $u['id']) < 10 ? '（<span style="color:#9c9">心地纯善，生命+20%</span>）' : '')) . '<br>';
@@ -34,6 +34,15 @@ if ($worn !== []) {
     }
     echo '</span><br>';
 }
+$rsN = rs_count((int) $u['id']);
+echo '<div class="hr">--------</div>【转生】<br>';
+echo '转生次数：' . $rsN . '/' . rs_max() . '　等级上限：' . lv_cap() . '<br>';
+if ($rsN > 0) {
+    echo '当前加成：基础属性+' . ($rsN * 10) . '%、每级成长×2、经验+50%、掉落+20%、金币+30%<br>';
+    echo '源罪点数：' . src_sin_point((int) $u['id']) . '<br>';
+}
+echo '转生条件：' . h(rs_require_text((int) $u['id'])) . '<br>';
+echo '<a href="rank.php?a=rs">转生榜 / 源罪技能树</a><br>';
 if ((string) ($_GET['a'] ?? '') === 'alloc') {
     flash_set(alloc_stat((int) $u['id'], (string) ($_GET['k'] ?? '')));
     header('Location: status.php?a=all');

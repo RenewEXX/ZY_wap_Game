@@ -7,18 +7,22 @@ $a = (string) ($_GET['a'] ?? '');
 // 学源罪技能
 if ($a === 'learn') {
     flash_set(h(src_sin_learn((int) $u['id'], (string) ($_GET['s'] ?? ''))));
-    header('Location: rank.php?a=rs');
+    header('Location: rank.php?tab=rs&view=tree');
     exit;
 }
 
 // 周结算（每周首次访问触发）
 $settle = rs_weekly_settle();
-
-rs_weekly_settle();
 $myRs = rs_count((int) $u['id']);
 $rank = rs_rank();
 
 wap_start('转生榜');
+// 顶部导航：榜 / 技能树
+$view = (string) ($_GET['view'] ?? '');
+echo '<a href="rank.php?tab=rs">转生榜</a> · <a href="rank.php?tab=rs&view=tree">源罪技能树</a><br>';
+if ($view === 'tree') {
+    echo '<a href="#srcsin">↓ 跳到技能树</a><br>';
+}
 echo '你的转生：' . ($myRs > 0 ? $myRs . '转' : '未转生') . '　源罪点数：' . src_sin_point((int) $u['id']) . '<br>';
 echo '<div class="hr">--------</div>转生条件：999级 + 当日世界BOSS + 神魂X级。当前：' . h(rs_require_text((int) $u['id'])) . '<br>';
 
@@ -42,7 +46,7 @@ foreach (array_slice($rank, 0, 20) as $i => $r) {
 }
 
 // 源罪技能树
-echo '<div class="hr">--------</div>【源罪技能树】<br>';
+echo '<div class="hr">--------</div><a name="srcsin"></a>【源罪技能树】<br>';
 if (!src_sin_unlock((int) $u['id'])) {
     echo '<span class="muted">转生后解锁源罪技能树（每次转生+1源罪点数）。</span><br>';
 } else {
@@ -55,7 +59,7 @@ if (!src_sin_unlock((int) $u['id'])) {
         }
         $has = isset($own[$sid]);
         echo '·' . h($sk['name']) . '：' . h($sk['desc']) . '（需' . src_sin_cost($sid) . '点）　';
-        echo $has ? '<span class="gold">已学</span>' : '<a href="rank.php?a=learn&s=' . h($sid) . '">学习</a>';
+        echo $has ? '<span class="gold">已学</span>' : '<a href="rank.php?tab=rs&view=tree&a=learn&s=' . h($sid) . '">学习</a>';
         echo '<br>';
     }
 }

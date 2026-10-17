@@ -42,7 +42,7 @@ if ($rsN > 0) {
     echo '源罪点数：' . src_sin_point((int) $u['id']) . '<br>';
 }
 echo '转生条件：' . h(rs_require_text((int) $u['id'])) . '<br>';
-echo '<a href="rank.php?a=rs">转生榜 / 源罪技能树</a><br>';
+echo '<a href="rank.php?tab=rs">转生榜</a> · <a href="rank.php?tab=rs&view=tree">源罪技能树</a><br>';
 if ((string) ($_GET['a'] ?? '') === 'alloc') {
     flash_set(alloc_stat((int) $u['id'], (string) ($_GET['k'] ?? '')));
     header('Location: status.php?a=all');

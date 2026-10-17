@@ -203,6 +203,7 @@ function monsters(): array
         'god_highpriest' => ['name' => '神界大祭司', 'hp' => 4600000, 'atk' => 8800, 'exp' => 7600000, 'gold' => 3600000],
         'god_archon' => ['name' => '神界执政官', 'hp' => 8000000, 'atk' => 9600, 'exp' => 12000000, 'gold' => 6000000],
         'gf_seraphim' => ['name' => '堕天炽天使', 'hp' => 4200000, 'atk' => 8500, 'exp' => 7000000, 'gold' => 3400000],
+        'yz_boss' => ['name' => '源罪·本相', 'hp' => 88000000, 'atk' => 11200, 'exp' => 45000000, 'gold' => 22000000],
         'god_pilgrim' => ['name' => '拾光朝圣者', 'hp' => 2300000, 'atk' => 6400, 'exp' => 4100000, 'gold' => 1900000],
         'god_librarian' => ['name' => '藏星典吏', 'hp' => 3100000, 'atk' => 7200, 'exp' => 5300000, 'gold' => 2500000],
         'god_gardener' => ['name' => '种星园丁', 'hp' => 3500000, 'atk' => 7900, 'exp' => 6000000, 'gold' => 2800000],
@@ -1203,7 +1204,7 @@ function war_enemies(int $uid): array
 
 function boss_of_map(string $loc): string
 {
-    static $m = ['boss' => 'knight', 'echo_room' => 'echo_rayne', 'rift' => 'abyss_eye', 'baltar' => 'dark_lily', 'dsw_throne' => 'swamp_king', 'abx_throne' => 'abaddon', 'theater' => 'string_puller', 'mx_heart' => 'silk_mother', 'frost_throne' => 'winter_king', 'fr_core' => 'fr_leviathan', 'volcano_heart' => 'ancient_ruin_golem', 'em_core' => 'em_heart', 'pz_core' => 'pz_master', 'sen_core' => 'sen_avatar', 'shadow_den' => 'shadow_claw', 'brass_chapel' => 'brass_bishop', 'wanderer_camp' => 'tundra_wanderer', 'ice_fall' => 'avalanche_titan', 'obsidian_field' => 'obsidian_colossus', 'as_core' => 'ash_titan', 'vx_core' => 'vx_tyrant', 'ry_core' => 'ry_titan', 'god_throne' => 'god_avatar', 'gf_core' => 'god_emperor'];
+    static $m = ['boss' => 'knight', 'echo_room' => 'echo_rayne', 'rift' => 'abyss_eye', 'baltar' => 'dark_lily', 'dsw_throne' => 'swamp_king', 'abx_throne' => 'abaddon', 'theater' => 'string_puller', 'mx_heart' => 'silk_mother', 'frost_throne' => 'winter_king', 'fr_core' => 'fr_leviathan', 'volcano_heart' => 'ancient_ruin_golem', 'em_core' => 'em_heart', 'pz_core' => 'pz_master', 'sen_core' => 'sen_avatar', 'shadow_den' => 'shadow_claw', 'brass_chapel' => 'brass_bishop', 'wanderer_camp' => 'tundra_wanderer', 'ice_fall' => 'avalanche_titan', 'obsidian_field' => 'obsidian_colossus', 'as_core' => 'ash_titan', 'vx_core' => 'vx_tyrant', 'ry_core' => 'ry_titan', 'god_throne' => 'god_avatar', 'gf_core' => 'god_emperor', 'yz_core' => 'yz_boss'];
     return $m[$loc] ?? '';
 }
 
@@ -2610,6 +2611,11 @@ function equip_set_id(string $shortName): string
     }
     if (str_starts_with($shortName, '暮影·')) {
         return 'dusk';
+    }    if (str_starts_with($shortName, '寂灭·')) {
+        return 'jimie';
+    }
+    if (str_starts_with($shortName, '噬渊·')) {
+        return 'shiyuan';
     }
     if (str_starts_with($shortName, '神铸·')) {
         return 'god';
@@ -2645,6 +2651,11 @@ function equip_set_pieces(string $set): array
     }
     if ($set === 'dusk') {
         return ['暮影·暮刃', '暮影·暮誓手套', '暮影·暮链'];
+    }    if ($set === 'jimie') {
+        return ['寂灭·终末之刃', '寂灭·永恒寂灭冠', '寂灭·虚无礼赞袍', '寂灭·终焉铭刻链', '寂灭·寂静终戒指'];
+    }
+    if ($set === 'shiyuan') {
+        return ['噬渊·深渊吞噬者', '噬渊·万渊之腹甲', '噬渊·噬魂万手', '噬渊·无尽深渊裹腿', '噬渊·归墟沉没披风'];
     }
     if ($set === 'god') {
         return ['神铸·裁决', '神铸·雷霆', '神铸·苍穹', '神铸·铁律', '神铸·圣盾', '神铸·天罚', '神铸·曙光', '神铸·圣冠', '神铸·羽甲', '神铸·天裤', '神铸·云腰', '神铸·踏云靴', '神铸·执掌手套', '神铸·天翼披风', '神铸·星辰戒', '神铸·神谕链', '神铸·圣灯'];
@@ -2654,9 +2665,9 @@ function equip_set_pieces(string $set): array
 
 function equip_set_owned_count(int $uid, string $set): int
 {
-    if (in_array($set, ['theater', 'frost', 'ember', 'puppet', 'thorn', 'rockjail', 'sin', 'god'], true)) {
-        $mark = ['theater' => '%剧场·%', 'frost' => '%寒霜·%', 'ember' => '%烬焰·%', 'puppet' => '%傀儡·%', 'thorn' => '%荆棘·%', 'rockjail' => '%岩狱·%', 'sin' => '%罪渊·%', 'god' => '%神铸·%', 'dusk' => '%暮影·%'][$set];
-        $cap = ['theater' => 99, 'frost' => 3, 'ember' => 7, 'puppet' => 5, 'thorn' => 4, 'rockjail' => 10, 'sin' => 11, 'god' => 11, 'dusk' => 3][$set];
+    if (in_array($set, ['theater', 'frost', 'ember', 'puppet', 'thorn', 'rockjail', 'sin', 'god', 'dusk', 'jimie', 'shiyuan'], true)) {
+        $mark = ['theater' => '%剧场·%', 'frost' => '%寒霜·%', 'ember' => '%烬焰·%', 'puppet' => '%傀儡·%', 'thorn' => '%荆棘·%', 'rockjail' => '%岩狱·%', 'sin' => '%罪渊·%', 'god' => '%神铸·%', 'dusk' => '%暮影·%', 'jimie' => '%寂灭·%', 'shiyuan' => '%噬渊·%'][$set];
+        $cap = ['theater' => 99, 'frost' => 3, 'ember' => 7, 'puppet' => 5, 'thorn' => 4, 'rockjail' => 10, 'sin' => 11, 'god' => 11, 'dusk' => 3, 'jimie' => 5, 'shiyuan' => 5][$set];
         $st = db()->prepare('SELECT COUNT(*) FROM equips WHERE uid=? AND pos="wear" AND name LIKE ?');
         $st->execute([(int) $uid, $mark]);
         return min($cap, (int) $st->fetchColumn());
@@ -2703,6 +2714,12 @@ function equip_set_bonus_text(string $set, int $owned): string
     }
     if ($set === 'dusk') {
         return '【暮影套装】已穿' . $owned . '/3（暮刃/暮誓手套/暮链）——2件：物/法攻+15%、技能伤+10%；3件：暴击+8%、真伤+等级×10！流浪者的执念，有罪者佩之更强。';
+    }
+    if ($set === 'jimie') {
+        return '【寂灭套装】已穿' . $owned . '/5（终末之刃/永恒寂灭冠/虚无礼赞袍/终焉铭刻链/寂静终戒指）——每件：全伤+3%；2件：技伤+12%、真伤+等级×15；3件：减伤+15%；5件：真伤+等级×40、技能伤+20%！把一切归零。';
+    }
+    if ($set === 'shiyuan') {
+        return '【噬渊套装】已穿' . $owned . '/5（深渊吞噬者/万渊之腹甲/噬魂万手/无尽深渊裹腿/归墟沉没披风）——每件：吸血+2%；2件：攻+12%、吸血+6%；3件：真伤+等级×20；5件：全属性+等级×5、减伤+20%！深渊回赠你一口。';
     }
     if ($set === 'rockjail') {
         return '【岩狱套装】已穿' . $owned . '/10：3件血+3000，5件减伤+8%，7件血+8000减伤+12%，10件血+20000减伤+20%、磐岩（承伤再-5%）。';
@@ -4284,6 +4301,24 @@ function gear_stats(int $uid): array
     $dusk = 0;
     foreach ($worn as $wn) {
         if (str_starts_with($wn, '暮影·')) { $dusk++; }
+    }    $jm = 0; $sy = 0;
+    foreach ($worn as $wn) {
+        if (str_starts_with($wn, '寂灭·')) { $jm++; }
+        if (str_starts_with($wn, '噬渊·')) { $sy++; }
+    }
+    if ($jm > 0) {
+        $uls = max(1, (int) (db()->query('SELECT lv FROM users WHERE id=' . (int) $uid)->fetchColumn() ?: 1));
+        $s['skill_damage'] += $jm * 3;
+        if ($jm >= 2) { $s['skill_damage'] += 12; $s['truedmg'] += $uls * 15; }
+        if ($jm >= 3) { $s['damage_reduction'] += 15; }
+        if ($jm >= 5) { $s['truedmg'] += $uls * 40; }
+    }
+    if ($sy > 0) {
+        $uls2 = max(1, (int) (db()->query('SELECT lv FROM users WHERE id=' . (int) $uid)->fetchColumn() ?: 1));
+        $s['lifesteal'] += $sy * 2;
+        if ($sy >= 2) { $s['atk_pct'] += 12; $s['lifesteal'] += 6; }
+        if ($sy >= 3) { $s['truedmg'] += $uls2 * 20; }
+        if ($sy >= 5) { $s['all_attr'] += $uls2 * 5; $s['damage_reduction'] += 20; }
     }
     if ($dusk >= 2) { $s['atk_pct'] += 15; $s['skill_damage'] += 10; }
     if ($dusk >= 3) { $s['crit'] += 8; $s['truedmg'] += max(1, (int) (db()->query('SELECT lv FROM users WHERE id=' . (int) $uid)->fetchColumn() ?: 1)) * 10; }
@@ -4940,7 +4975,7 @@ function monster_lv(string $mid): int
         'god_seraph' => 720, 'god_cloud' => 745, 'god_watcher' => 770, 'god_judge' => 795, 'god_warden' => 815, 'god_forger' => 840, 'god_golem' => 865, 'god_titan' => 900, 'god_avatar' => 935,
         'gf_shade' => 820, 'gf_void' => 850, 'gf_reaper' => 880, 'gf_herald' => 915, 'god_emperor' => 999,
         'god_cherub' => 710, 'god_heraldg' => 785, 'god_highpriest' => 890, 'god_archon' => 960, 'gf_seraphim' => 890,
-        'god_pilgrim' => 720, 'god_librarian' => 805, 'god_gardener' => 845, 'god_mirror' => 905, 'god_sleeper' => 930, 'god_serpent' => 945, 'gf_fallen' => 830,
+        'god_pilgrim' => 720, 'god_librarian' => 805, 'god_gardener' => 845, 'god_mirror' => 905, 'god_sleeper' => 930, 'god_serpent' => 945, 'gf_fallen' => 830, 'yz_boss' => 999,
         'road_wolf' => 22, 'road_bandit' => 26, 'dust_raider' => 80, 'dust_marauder' => 95, 'snow_drifter' => 325, 'snow_reaver' => 335, 'ash_drifter' => 470, 'ash_reaver' => 485,
         'dark_slime' => 20, 'swamp_slime' => 21, 'swamp_king' => 25,
         'puppet_guard' => 130, 'masked_noble' => 150, 'ink_puppet' => 180, 'silver_undead' => 210,
@@ -5925,6 +5960,9 @@ function battle_round(array &$u, array &$b, string $mode): array
         $duskMsg = dusk_kill_drop((int) ($u['id'] ?? 0), (string) ($b['id'] ?? ''));
         if ($duskMsg !== '') {
             $msg .= $duskMsg;
+        }        $yzMsg = yz_kill_drop((int) ($u['id'] ?? 0), (string) ($b['id'] ?? ''));
+        if ($yzMsg !== '') {
+            $msg .= $yzMsg;
         } elseif (is_boss_mid((string) ($b['id'] ?? ''))) {
             sin_gain_typed($u, 'boss');
         } else {
@@ -6396,6 +6434,7 @@ function map_regions(): array
         '王都·傀儡之夜' => ['capital_gate', 'avenue', 'noble', 'library', 'ctomb', 'slum', 'cathedral', 'observatory', 'theater'],
         '神界' => ['god_gate', 'god_hall', 'god_pilgrim', 'god_library', 'god_sea', 'god_garden', 'god_orchard', 'god_court', 'god_mirror', 'god_forge', 'god_pillar', 'god_sleeper', 'god_serpent', 'god_throne'],
         '神界·堕天阶' => ['gf_gate', 'gf_stair', 'gf_void', 'gf_wing', 'gf_core'],
+        '源罪渊' => ['yz_gate', 'yz_core'],
         '银丝母巢' => ['mx_gate', 'mx_path', 'mx_hall', 'mx_depth', 'mx_nest', 'mx_heart'],
         '公会战场' => ['warfield'],
         '公会战场' => ['warfield'],
@@ -6408,7 +6447,7 @@ function map_regions(): array
 // 副本图：只能找NPC进，不参与传送
 function dungeon_maps(): array
 {
-    return array_merge(dsw_maps(), abx_maps(), mx_maps(), fr_maps(), em_maps(), pz_maps(), sen_maps(), ry_maps(), vx_maps(), gy_maps(), gf_maps());
+    return array_merge(dsw_maps(), abx_maps(), mx_maps(), fr_maps(), em_maps(), pz_maps(), sen_maps(), ry_maps(), vx_maps(), gy_maps(), gf_maps(), yz_maps());
 }
 
 function exit_dirs(string $from): array
@@ -6513,7 +6552,7 @@ function teleport_min_lv(string $loc): int
         'frostburg_gate' => 330, 'frostburg_sq' => 340, 'bounty_hall' => 340, 'fire_inn' => 340, 'furnace_st' => 340,
         'greenheart_gate' => 480, 'greenheart_sq' => 490, 'spore_market' => 490, 'rain_inn' => 490, 'elder_tree' => 490,
         'ice_village' => 335, 'ember_foothill' => 580,
-        'god_gate' => 700, 'god_hall' => 700, 'god_pilgrim' => 720, 'god_library' => 800, 'god_sea' => 710, 'god_garden' => 840, 'god_orchard' => 850, 'god_court' => 760, 'god_mirror' => 900, 'god_forge' => 810, 'god_pillar' => 860, 'god_sleeper' => 925, 'god_serpent' => 940, 'god_throne' => 900, 'gf_wing' => 880, 'gf_gate' => 750, 'gf_stair' => 800, 'gf_void' => 850, 'gf_core' => 900,
+        'god_gate' => 700, 'god_hall' => 700, 'god_pilgrim' => 720, 'god_library' => 800, 'god_sea' => 710, 'god_garden' => 840, 'god_orchard' => 850, 'god_court' => 760, 'god_mirror' => 900, 'god_forge' => 810, 'god_pillar' => 860, 'god_sleeper' => 925, 'god_serpent' => 940, 'god_throne' => 900, 'gf_wing' => 880, 'yz_gate' => 700, 'yz_core' => 700, 'gf_gate' => 750, 'gf_stair' => 800, 'gf_void' => 850, 'gf_core' => 900,
     ];
     if (isset($cityLv[$loc])) {
         return $cityLv[$loc];
@@ -6717,21 +6756,35 @@ function dungeon_tick(array &$u): void
     $inEm = in_array($loc, em_maps(), true);
     $inPz = in_array($loc, pz_maps(), true);
     $inSen = in_array($loc, sen_maps(), true);
-    $inAs = in_array($loc, as_maps(), true); $inVx = in_array($loc, vx_maps(), true); $inGy = in_array($loc, gy_maps(), true); $inGf = in_array($loc, gf_maps(), true);
-    if (!in_array($loc, dsw_maps(), true) && !in_array($loc, abx_maps(), true) && !in_array($loc, mx_maps(), true) && !$inFr && !$inEm && !$inPz && !$inSen && !$inAs && !$inVx && !$inGy && !$inGf) {
+    $inAs = in_array($loc, as_maps(), true); $inVx = in_array($loc, vx_maps(), true); $inGy = in_array($loc, gy_maps(), true); $inGf = in_array($loc, gf_maps(), true); $inYz = in_array($loc, yz_maps(), true);
+    if (!in_array($loc, dsw_maps(), true) && !in_array($loc, abx_maps(), true) && !in_array($loc, mx_maps(), true) && !$inFr && !$inEm && !$inPz && !$inSen && !$inAs && !$inVx && !$inGy && !$inGf && !$inYz) {
         return;
     }
     $inAbx = in_array($loc, abx_maps(), true);
     $inMx = in_array($loc, mx_maps(), true);
     $mats = mats_of((int) ($u['id'] ?? 0));
-    $enter = (int) ($mats[$inFr ? 'fr_enter' : ($inEm ? 'em_enter' : ($inPz ? 'pz_enter' : ($inSen ? 'sen_enter' : ($inAs ? 'as_enter' : ($inVx ? 'vx_enter' : ($inMx ? 'mx_enter' : ($inAbx ? 'abx_enter' : ((isset($inGy) && $inGy) ? 'gy_enter' : ((isset($inGf) && $inGf) ? 'gf_enter' : 'dsw_enter')))))))))] ?? time());
+    $enterKey = 'dsw_enter';
+    if ($inAbx) { $enterKey = 'abx_enter'; } elseif ($inMx) { $enterKey = 'mx_enter'; }
+    elseif ($inVx) { $enterKey = 'vx_enter'; } elseif ($inAs) { $enterKey = 'as_enter'; }
+    elseif ($inSen) { $enterKey = 'sen_enter'; } elseif ($inPz) { $enterKey = 'pz_enter'; }
+    elseif ($inEm) { $enterKey = 'em_enter'; } elseif ($inFr) { $enterKey = 'fr_enter'; }
+    elseif (!empty($inGy)) { $enterKey = 'gy_enter'; } elseif (!empty($inGf)) { $enterKey = 'gf_enter'; }
+    elseif (!empty($inYz)) { $enterKey = 'yz_enter'; }
+    $enter = (int) ($mats[$enterKey] ?? time());
     $limit = ($inMx || $inFr || $inEm || $inPz || $inSen || $inAs || $inVx || $inGf) ? 2700 : 1800;
     if (time() - $enter > $limit) {
         unset($_SESSION['battle']);
-        $u['loc'] = $inFr ? 'ice_village' : ($inEm ? 'ember_foothill' : ($inPz ? 'theater' : ($inSen ? 'fo_gate' : ($inAs ? 'ember_foothill' : ($inVx ? 'volcano_heart' : ($inMx ? 'avenue' : ($inAbx ? 'silver_sq' : ((isset($inGy) && $inGy) ? 'square' : ((isset($inGf) && $inGf) ? 'greenheart_sq' : 'town_sq')))))))));
+        $eject = 'town_sq';
+        if ($inFr) { $eject = 'ice_village'; } elseif ($inEm) { $eject = 'ember_foothill'; }
+        elseif ($inPz) { $eject = 'theater'; } elseif ($inSen) { $eject = 'fo_gate'; }
+        elseif ($inAs) { $eject = 'ember_foothill'; } elseif ($inVx) { $eject = 'volcano_heart'; }
+        elseif ($inMx) { $eject = 'avenue'; } elseif ($inAbx) { $eject = 'silver_sq'; }
+        elseif (!empty($inGy)) { $eject = 'square'; } elseif (!empty($inGf)) { $eject = 'greenheart_sq'; }
+        elseif (!empty($inYz)) { $eject = 'god_hall'; }
+        $u['loc'] = $eject;
         user_save($u);
-        $back = $inFr ? '冰原村' : ($inEm ? '火山麓' : ($inPz ? '傀儡剧场' : ($inSen ? '雾森渡口' : ($inAs ? '火山麓' : ($inVx ? '火山之心' : ($inMx ? '中央大道' : ($inAbx ? '白银广场' : ((isset($inGy) && $inGy) ? '灰雾村广场' : ((isset($inGf) && $inGf) ? '青叶广场' : '白石镇广场')))))))));
-        flash_set(($limit >= 2700 ? '45' : '30') . '分钟到了，你被传回' . $back . '。');
+        $backName = ['ice_village' => '冰原村', 'ember_foothill' => '火山麓', 'theater' => '傀儡剧场', 'fo_gate' => '雾森渡口', 'volcano_heart' => '火山之心', 'avenue' => '中央大道', 'silver_sq' => '白银广场', 'square' => '灰雾村广场', 'greenheart_sq' => '青叶广场', 'god_hall' => '神界圣都', 'town_sq' => '白石镇广场'][$eject] ?? '白石镇广场';
+        flash_set(($limit >= 2700 ? '45' : '30') . '分钟到了，你被传回' . $backName . '。');
     }
 }
 
@@ -7210,6 +7263,9 @@ function gf_locations(): array
     $m['gf_void'] = ['name' => '虚空回廊', 'desc' => '没有墙，只有坠落的星在缓慢地掉。噬者就在星星之间。', 'exits' => ['gf_stair' => '坠落之阶', 'gf_wing' => '折翼回廊'], 'monsters' => ['gf_void', 'gf_reaper']];
     $m['gf_wing'] = ['name' => '折翼回廊', 'desc' => '折翼圣者排成两列，翅膀铺在地上当红毯。你踩上去，脚底全是旧伤。', 'exits' => ['gf_void' => '虚空回廊', 'gf_core' => '天罚之座'], 'monsters' => ['gf_fallen']];
     $m['gf_core'] = ['name' => '天罚之座', 'desc' => '堕天神帝坐在自己的断翼上。他抬头看你：连神明也会坠落，你凭什么站着。', 'exits' => ['gf_wing' => '折翼回廊'], 'monsters' => ['gf_herald', 'gf_seraphim', 'god_emperor']];
+    // 源罪渊·月度副本（700级+，每月一次，单BOSS）
+    $m['yz_gate'] = ['name' => '源罪渊·门', 'desc' => '门上没有锁，只有一行字：你所犯的罪，已经够开这扇门了。每月只开一次，门后只有一个东西在等你。', 'exits' => ['yz_core' => '渊底'], 'monsters' => []];
+    $m['yz_core'] = ['name' => '渊底·本相之座', 'desc' => '整个世界所有的罪，收缩成一个人形。它没有脸，因为它就是每个人的脸。你杀的不是它，是你自己的罪。', 'exits' => ['yz_gate' => '门'], 'monsters' => ['yz_boss']];
     return $m;
 }
 
@@ -7256,6 +7312,11 @@ function mx_maps(): array
 function gy_maps(): array
 {
     return ['gy_gate', 'gy_hall', 'gy_abyss'];
+}
+
+function yz_maps(): array
+{
+    return ['yz_gate', 'yz_core'];
 }
 
 function mx_stage(int $uid): int
@@ -8112,6 +8173,35 @@ function dusk_kill_drop(int $uid, string $mid): string
         return '';
     }
     return '掉落传说【' . $sn . '】（暮影套装，拾光者的执念）！';
+}
+// 【源罪渊】BOSS掉落：70%概率给一件【寂灭】/【噬渊】套装或同主题传说
+function yz_kill_drop(int $uid, string $mid): string
+{
+    $uid = (int) $uid;
+    if ($mid !== 'yz_boss') {
+        return '';
+    }
+    if (mt_rand(1, 100) > 70) {
+        return '本相散了，什么都没留下。（源罪渊掉落 70%）';
+    }
+    $u = user_by_id($uid);
+    if (!$u) {
+        return '';
+    }
+    // 主题池：两套各5件 + 同主题传说单件
+    $pool = [
+        ['jimie', 'weapon', '寂灭·终末之刃'], ['jimie', 'head', '寂灭·永恒寂灭冠'], ['jimie', 'body', '寂灭·虚无礼赞袍'], ['jimie', 'necklace', '寂灭·终焉铭刻链'], ['jimie', 'ring', '寂灭·寂静终戒指'],
+        ['shiyuan', 'weapon', '噬渊·深渊吞噬者'], ['shiyuan', 'body', '噬渊·万渊之腹甲'], ['shiyuan', 'gloves', '噬渊·噬魂万手'], ['shiyuan', 'legs', '噬渊·无尽深渊裹腿'], ['shiyuan', 'back', '噬渊·归墟沉没披风'],
+        ['', 'ring', '源罪·本相之瞳'], ['', 'offhand', '渊底·无声之钟'], ['', 'belt', '噬渊·深渊之口'], ['', 'shoes', '源罪·万罪加身'], ['', 'back', '渊心·无底囊'], ['', 'necklace', '寂灭·终末之钥'],
+    ];
+    $c = $pool[array_rand($pool)];
+    $lv = max(1, (int) ($u['lv'] ?? 1));
+    $sn = make_equip($uid, $c[1], $c[2], 4, $lv);
+    if ($sn === '') {
+        return '';
+    }
+    $tag = $c[0] === 'jimie' ? '寂灭套装' : ($c[0] === 'shiyuan' ? '噬渊套装' : '源罪渊传说');
+    return '源罪本相崩解！掉落传说【' . $sn . '】（' . $tag . '）！';
 }
 
 // 罪渊击杀掉落：8%本职业罪技能书，0.3%随机罪渊套装件（传说）

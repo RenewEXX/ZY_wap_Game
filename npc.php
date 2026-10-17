@@ -9,6 +9,7 @@ $cur = (string) $u['loc'];
 $people = [
     'gallu' => ['name' => '神使·伽楼', 'loc' => 'god_gate', 'text' => '我守这扇门七百年，从没见过有人真的走完神界。神座会告诉你真相，堕天阶会告诉你代价。'],
     'godmerchant' => ['name' => '神界商人·白羽', 'loc' => 'god_hall', 'text' => '神界也收金币，收得更狠。战力不够就别往天柱去，那里的执政官看谁都像叛徒。'],
+    'yzkeeper' => ['name' => '渊门引路人·缄默', 'loc' => 'god_hall', 'text' => '源罪渊每月只开一次。里面没有小怪，只有一个东西——你自己犯过的所有罪，捏成了一个人形。700级以上。它不问你准备好了没有。'],
     'rspriest' => ['name' => '转生祭司·源罪', 'loc' => 'god_hall', 'text' => '凡人的巅峰是999级。再往上，只有把自己献祭给源罪——神魂满级、斩世界BOSS，你来找我。'],
     'fallenguide' => ['name' => '堕天引路·堕羽', 'loc' => 'god_throne', 'text' => '想见神帝？先把神座打碎。下面是纯粹的坠落——45分钟，活着回来，或者留在星星之间。'],
     'mirrorelder' => ['name' => '镜厅长老·镜胜雪', 'loc' => 'god_mirror', 'text' => '每面镜子都是一条判词，满厅都是。想照镜子？先把剑磨快，镜子认得血，不认得人。'],
@@ -148,6 +149,25 @@ if ($who === 'rspriest' && $choice === 'rite') {
 if ($who === 'rspriest' && $choice === 'confirm') {
     $out = rs_perform((int) $u['id']);
     flash_set(h($out));
+    header('Location: home.php');
+    exit;
+}
+if ($who === 'yzkeeper' && $choice === 'enter') {
+    if ((int) ($u['lv'] ?? 1) < 700) {
+        flash_set('缄默：你太干净了。源罪渊只接待罪人，700级再来。');
+    } else {
+        $ym = date('Y-m');
+        $ymats = mats_of((int) $u['id']);
+        if ((string) ($ymats['yz_month'] ?? '') === $ym) {
+            flash_set('缄默：这个月你已经见过它了。它记得你的脸。下个月再来。');
+        } else {
+            mat_set((int) $u['id'], 'yz_month', $ym);
+            mat_set((int) $u['id'], 'yz_enter', time());
+            $u['loc'] = 'yz_gate';
+            user_save($u);
+            flash_set('缄默侧身让路。门开了。30分钟。');
+        }
+    }
     header('Location: home.php');
     exit;
 }
@@ -881,6 +901,18 @@ if ($who === 'gallu') {
 }
 if ($who === 'fallenguide') {
     echo '<a href="npc.php?who=fallenguide&choice=enter">进入堕天阶（消耗堕天阶入场券，45分钟）</a><br>';
+}
+if ($who === 'yzkeeper') {
+    $ym = date('Y-m');
+    $used = (string) (mats_of((int) $u['id'])['yz_month'] ?? '') === $ym;
+    if ((int) ($u['lv'] ?? 1) < 700) {
+        echo '<span class="muted">需要700级。</span><br>';
+    } elseif ($used) {
+        echo '<span class="muted">本月已挑战过源罪渊，下个月再来。</span><br>';
+    } else {
+        echo '<a href="npc.php?who=yzkeeper&choice=enter">进入源罪渊（700级+，每月一次，30分钟）</a><br>';
+    }
+    echo '<span class="muted">单BOSS；击杀后70%概率获得【寂灭】/【噬渊】套装或源罪渊传说。</span><br>';
 }
 if ($who === 'rspriest') {
     echo '转生条件：999级 + 当日世界BOSS + 任一神魂X级。<br>';

@@ -1,7 +1,6 @@
-*.db
-*.sqlite
-*.sqlite-journal
-*.log
-test.php
 .DS_Store
 Thumbs.db
+
+# 运行期数据（账号存档、击杀缓存），不入版本库
+data/*
+!data/.gitkeep

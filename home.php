@@ -141,7 +141,7 @@ $npcLinks = [
     'capital_gate' => [['rb_hawk', '老猎人·霍克'], ['northwind', '守夜人·北风']],
     'god_gate' => [['gallu', '神使·伽楼']], 'god_hall' => [['godmerchant', '神界商人·白羽'], ['rspriest', '转生祭司·源罪'], ['yzkeeper', '渊门引路人·缄默']], 'god_mirror' => [['mirrorelder', '镜厅长老·镜胜雪']], 'god_throne' => [['fallenguide', '堕天引路·堕羽']], 'gf_stair' => [['celia', '堕天传令·赛丽亚']],
     'avenue' => [['waldon', '线人·瓦尔顿'], ['rb_waldon', '总会长·瓦尔顿'], ['med_c', '王都药剂师·蘽兰'], ['rank_c', '榜单老人']],
-    'cathedral' => [['rb_samuel', '大主教·塞缪尔']],
+    'cathedral' => [['rb_samuel', '大主教·塞缪尔']], 'slum' => [['rb_veil', '深渊引渡人·帷幕']],
     'ice_village' => [['dora', '猎户·朵拉'], ['oldfish', '潜水人·老咸鱼']],
     'fo_gate' => [['qingya', '森语者·青芽']],
     'ember_foothill' => [['oldash', '探火人·老灰']],

@@ -8,6 +8,7 @@ function jobs(): array
         'mage' => ['name' => '法师', 'hp' => 42, 'mp' => 55, 'atk' => 11, 'def' => 1, 'skill' => '火球术', 'weapon' => 'staff', 'armor' => 'cloth', 'desc' => '纯法术炮台，伤害看智慧+法攻。火球/狂雷/寒霜全是法伤。只能用法杖法器，力量对法师无效'],
         'hunter' => ['name' => '猎手', 'hp' => 50, 'mp' => 30, 'atk' => 8, 'def' => 3, 'skill' => '双连射', 'weapon' => 'bow', 'armor' => 'cloth', 'desc' => '物理连射+爆炸箭（火伤）。只能用弓弩匕首'],
         'priest' => ['name' => '牧师', 'hp' => 54, 'mp' => 45, 'atk' => 6, 'def' => 3, 'skill' => '治疗术', 'weapon' => 'mace', 'armor' => 'cloth', 'desc' => '治疗看法攻，神圣伤害也是法伤。能用锤杖盾'],
+        'summoner' => ['name' => '召唤师', 'short' => '召', 'hp' => 48, 'mp' => 52, 'atk' => 9, 'def' => 2, 'skill' => '深渊契约', 'weapon' => 'relic', 'armor' => 'cloth', 'desc' => '法系/召唤/持续伤害。不信神，不靠元素，把自己当容器与深渊游魂签订契约。战斗中可即时召唤深渊小鬼，召唤兽替你承伤也替你输出。主手限魂契器（魂灯/契杖/骨杖），副手限深渊契匣'],
     ];
 }
 
@@ -2248,15 +2249,21 @@ function job_can_twohand(string $job): bool
 // 主手武器细分：按名判定种类，管职业限定+双持判定
 function weapon_sub(string $base): string
 {
+    foreach (['魂灯', '契杖', '骨杖', '魂契', '灵幡', '契匣', '深渊契匣'] as $k) {
+        if (str_contains($base, $k)) {
+            return 'relic';
+        }
+    }
     $sn = equip_shortname($base);
     $sinMap = ['罪渊·傲慢' => 'staff', '罪渊·嫉妒' => 'axe', '罪渊·暴怒' => 'bow', '罪渊·懒惰' => 'mace', '罪渊·贪婪' => 'shield', '罪渊·暴食' => 'blade', '罪渊·色欲' => 'staff'];
     if (isset($sinMap[$sn])) {
         return $sinMap[$sn];
     }
-    $godMap = ['神铸·裁决' => 'staff', '神铸·雷霆' => 'axe', '神铸·苍穹' => 'bow', '神铸·铁律' => 'mace', '神铸·圣盾' => 'shield', '神铸·天罚' => 'blade', '神铸·曙光' => 'staff'];
+    $godMap = ['神铸·裁决' => 'staff', '神铸·雷霆' => 'axe', '神铸·苍穹' => 'bow', '神铸·铁律' => 'mace', '神铸·圣盾' => 'shield', '神铸·天罚' => 'blade', '神铸·曙光' => 'staff', '神铸·幽契' => 'relic'];
     if (isset($godMap[$sn])) {
         return $godMap[$sn];
     }
+
     foreach (['杖', '法器', '魔杖', '圣杖', '提灯', '法典', '法球'] as $k) {
         if (str_contains($base, $k)) {
             return 'staff';
@@ -2288,7 +2295,8 @@ function weapon_jobs(string $sub): array
         'mace' => ['priest', 'warrior'],
         'shield' => ['warrior', 'priest'],
         'blade' => ['warrior', 'hunter'],
-    ][$sub] ?? ['warrior', 'hunter', 'mage', 'priest'];
+        'relic' => ['summoner'],
+    ][$sub] ?? ['warrior', 'hunter', 'mage', 'priest', 'summoner'];
 }
 
 function weapon_is_twohand(string $base): bool
@@ -2616,6 +2624,8 @@ function equip_set_id(string $shortName): string
     }
     if (str_starts_with($shortName, '噬渊·')) {
         return 'shiyuan';
+    }    if (str_starts_with($shortName, '魂契·')) {
+        return 'soulpact';
     }
     if (str_starts_with($shortName, '神铸·')) {
         return 'god';
@@ -2656,6 +2666,8 @@ function equip_set_pieces(string $set): array
     }
     if ($set === 'shiyuan') {
         return ['噬渊·深渊吞噬者', '噬渊·万渊之腹甲', '噬渊·噬魂万手', '噬渊·无尽深渊裹腿', '噬渊·归墟沉没披风'];
+    }    if ($set === 'soulpact') {
+        return ['魂契·万鬼招魂幡', '魂契·深渊引魂灯', '魂契·亡者契约冠', '魂契·幽魂缚魂链', '魂契·献祭者骨戒'];
     }
     if ($set === 'god') {
         return ['神铸·裁决', '神铸·雷霆', '神铸·苍穹', '神铸·铁律', '神铸·圣盾', '神铸·天罚', '神铸·曙光', '神铸·圣冠', '神铸·羽甲', '神铸·天裤', '神铸·云腰', '神铸·踏云靴', '神铸·执掌手套', '神铸·天翼披风', '神铸·星辰戒', '神铸·神谕链', '神铸·圣灯'];
@@ -2665,9 +2677,9 @@ function equip_set_pieces(string $set): array
 
 function equip_set_owned_count(int $uid, string $set): int
 {
-    if (in_array($set, ['theater', 'frost', 'ember', 'puppet', 'thorn', 'rockjail', 'sin', 'god', 'dusk', 'jimie', 'shiyuan'], true)) {
-        $mark = ['theater' => '%剧场·%', 'frost' => '%寒霜·%', 'ember' => '%烬焰·%', 'puppet' => '%傀儡·%', 'thorn' => '%荆棘·%', 'rockjail' => '%岩狱·%', 'sin' => '%罪渊·%', 'god' => '%神铸·%', 'dusk' => '%暮影·%', 'jimie' => '%寂灭·%', 'shiyuan' => '%噬渊·%'][$set];
-        $cap = ['theater' => 99, 'frost' => 3, 'ember' => 7, 'puppet' => 5, 'thorn' => 4, 'rockjail' => 10, 'sin' => 11, 'god' => 11, 'dusk' => 3, 'jimie' => 5, 'shiyuan' => 5][$set];
+    if (in_array($set, ['theater', 'frost', 'ember', 'puppet', 'thorn', 'rockjail', 'sin', 'god', 'dusk', 'jimie', 'shiyuan', 'soulpact'], true)) {
+        $mark = ['theater' => '%剧场·%', 'frost' => '%寒霜·%', 'ember' => '%烬焰·%', 'puppet' => '%傀儡·%', 'thorn' => '%荆棘·%', 'rockjail' => '%岩狱·%', 'sin' => '%罪渊·%', 'god' => '%神铸·%', 'dusk' => '%暮影·%', 'jimie' => '%寂灭·%', 'shiyuan' => '%噬渊·%', 'soulpact' => '%魂契·%'][$set];
+        $cap = ['theater' => 99, 'frost' => 3, 'ember' => 7, 'puppet' => 5, 'thorn' => 4, 'rockjail' => 10, 'sin' => 11, 'god' => 11, 'dusk' => 3, 'jimie' => 5, 'shiyuan' => 5, 'soulpact' => 5][$set];
         $st = db()->prepare('SELECT COUNT(*) FROM equips WHERE uid=? AND pos="wear" AND name LIKE ?');
         $st->execute([(int) $uid, $mark]);
         return min($cap, (int) $st->fetchColumn());
@@ -2720,6 +2732,9 @@ function equip_set_bonus_text(string $set, int $owned): string
     }
     if ($set === 'shiyuan') {
         return '【噬渊套装】已穿' . $owned . '/5（深渊吞噬者/万渊之腹甲/噬魂万手/无尽深渊裹腿/归墟沉没披风）——每件：吸血+2%；2件：攻+12%、吸血+6%；3件：真伤+等级×20；5件：全属性+等级×5、减伤+20%！深渊回赠你一口。';
+    }
+    if ($set === 'soulpact') {
+        return '【魂契套装】已穿' . $owned . '/5（万鬼招魂幡/深渊引魂灯/亡者契约冠/幽魂缚魂链/献祭者骨戒）——每件：召唤兽伤害+8%；2件：召唤上限+1、真伤+等级×10；3件：召唤兽攻击+等级×4；5件：召唤兽存活+2轮、召唤兽死亡必爆炸！容器越空，召唤越强。';
     }
     if ($set === 'rockjail') {
         return '【岩狱套装】已穿' . $owned . '/10：3件血+3000，5件减伤+8%，7件血+8000减伤+12%，10件血+20000减伤+20%、磐岩（承伤再-5%）。';
@@ -2947,7 +2962,7 @@ function equip_req_text(array $e): string
 // 装备详情用：哪些职业能穿
 function equip_job_text(array $e): string
 {
-    $names = ['warrior' => '战士', 'mage' => '法师', 'hunter' => '猎手', 'priest' => '牧师'];
+    $names = ['warrior' => '战士', 'mage' => '法师', 'hunter' => '猎手', 'priest' => '牧师', 'summoner' => '召唤师'];
     $slot = (string) ($e['slot'] ?? '');
     if ($slot === 'weapon') {
         $jobs = weapon_jobs(weapon_sub((string) ($e['name'] ?? '')));
@@ -2958,10 +2973,10 @@ function equip_job_text(array $e): string
         } elseif (str_contains($nm, '法器') || str_contains($nm, '法杖') || str_contains($nm, '提灯')) {
             $jobs = ['mage', 'priest'];
         } else {
-            $jobs = ['warrior', 'mage', 'hunter', 'priest'];
+            $jobs = ['warrior', 'mage', 'hunter', 'priest', 'summoner'];
         }
     } else {
-        $jobs = ['warrior', 'mage', 'hunter', 'priest'];
+        $jobs = ['warrior', 'mage', 'hunter', 'priest', 'summoner'];
     }
     return implode('/', array_map(fn($j) => $names[$j] ?? $j, $jobs));
 }
@@ -2972,7 +2987,7 @@ function equip_jobs_text(array $e): string
     $nm = (string) ($e['name'] ?? '');
     if ($slot === 'title') { return '全职业（100级可戴）'; }
     if ($slot === 'weapon') {
-        $m = ['staff' => '法师/牧师', 'axe' => '战士', 'bow' => '猎手', 'mace' => '战士/牧师', 'shield' => '战士/牧师', 'blade' => '战士/猎手'];
+        $m = ['staff' => '法师/牧师', 'axe' => '战士', 'bow' => '猎手', 'mace' => '战士/牧师', 'shield' => '战士/牧师', 'blade' => '战士/猎手', 'relic' => '召唤师'];
         return $m[weapon_sub($nm)] ?? '战士';
     }
     if ($slot === 'offhand') {
@@ -2999,7 +3014,7 @@ function equip_can_wear(array $u, array $e): string
     if ($slot === 'weapon') {
         $sub = weapon_sub((string) ($e['name'] ?? ''));
         if (!in_array($job, weapon_jobs($sub), true)) {
-            return '拿不动：' . (rebirth1_names()[$job] ?? job_of($u)['name']) . '用不了' . (['staff' => '法杖', 'axe' => '战斧', 'bow' => '弓弩', 'mace' => '战锤', 'shield' => '盾牌', 'blade' => '刀剑'][$sub] ?? '这种武器') . '。';
+            return '拿不动：' . (rebirth1_names()[$job] ?? job_of($u)['name']) . '用不了' . (['staff' => '法杖', 'axe' => '战斧', 'bow' => '弓弩', 'mace' => '战锤', 'shield' => '盾牌', 'blade' => '刀剑', 'relic' => '魂契器'][$sub] ?? '这种武器') . '。';
         }
     }
     if ($slot === 'offhand') {
@@ -3009,6 +3024,10 @@ function equip_can_wear(array $u, array $e): string
         }
         if ((str_contains($nm, '法器') || str_contains($nm, '法杖') || str_contains($nm, '提灯')) && !in_array($job, ['mage', 'priest'], true)) {
             return '拿不动：法器只有法师/牧师能用。';
+        }        if (str_contains($nm, '契匣') || str_contains($nm, '魂匣') || str_contains($nm, '灵幡')) {
+            if ($job !== 'summoner') {
+                return '封不住：契匣只有召唤师能契。';
+            }
         }
     }
     return '';
@@ -3132,14 +3151,23 @@ function skill_catalog(): array
         'p8' => ['name' => '圣光审判', 'job' => 'priest', 'mp' => 60, 'kind' => 'aoe', 'mult' => 1.0, 'heal' => 150, 'el' => 'light', 't10' => '治疗+50', 'lv20' => '治疗+20%，队友80%'],
         'w9' => ['name' => '血狱狂斩', 'job' => 'warrior', 'mp' => 45, 'kind' => 'sin', 'mult' => 4.5, 'el' => 'dark', 't10' => '斩杀线40%', 'lv20' => '伤害+15%，斩杀线50%'],
         'm9' => ['name' => '魂蚀天雷', 'job' => 'mage', 'mp' => 50, 'kind' => 'sin', 'mult' => 4.2, 'el' => 'thunder', 't10' => '35%麻痹', 'lv20' => '伤害+15%，麻痹40%'],
-        'h9' => ['name' => '弑神连珠', 'job' => 'hunter', 'mp' => 45, 'kind' => 'sin', 'mult' => 3.4, 'el' => 'dark', 't10' => '斩杀线40%', 'lv20' => '伤害+15%，斩杀线50%'],
+        'h9' => ['name' => '弑神连珠', 'job' => 'hunter', 'mp' => 45, 'kind' => 'sin', 'mult' => 3.4, 'el' => 'dark', 't10' => '斩杀线40%', 'lv20' => '伤害+15%，斩杀线50%'],        // 召唤师：召唤/腐蚀/献祭
+        's1' => ['name' => '深渊契约', 'job' => 'summoner', 'mp' => 10, 'kind' => 'summon', 'mult' => 1.2, 'el' => 'dark', 't10' => '召唤1只深渊小鬼', 'lv20' => '小鬼存活+1轮'],
+        's2' => ['name' => '腐魂咒', 'job' => 'summoner', 'mp' => 14, 'kind' => 'magic', 'mult' => 0, 'el' => 'dark', 't10' => '腐蚀：每回合掉最大生命3%持续3轮', 'lv20' => '腐蚀提升到4%，伤害+15%'],
+        's3' => ['name' => '血祭', 'job' => 'summoner', 'mp' => 16, 'kind' => 'magic', 'mult' => 1.8, 'el' => 'dark', 't10' => '献祭10%当前生命，本次伤害+50%', 'lv20' => '献祭伤害加成提高到70%'],
+        's4' => ['name' => '小鬼潮', 'job' => 'summoner', 'mp' => 30, 'kind' => 'summon', 'mult' => 1.5, 'el' => 'dark', 't10' => '召唤2只深渊小鬼', 'lv20' => '召唤3只，小鬼伤害+15%'],
+        's5' => ['name' => '死灵之拥', 'job' => 'summoner', 'mp' => 40, 'kind' => 'summon', 'mult' => 2.2, 'el' => 'dark', 't10' => '召唤深渊恶鬼，召唤兽死亡时爆炸', 'lv20' => '同时召唤多只，爆炸范围+50%'],
+        's6' => ['name' => '痛苦盛宴', 'job' => 'summoner', 'mp' => 40, 'kind' => 'magic', 'mult' => 1.6, 'el' => 'dark', 't10' => '灵魂腐蚀：每回合掉血并将30%伤害转为自身生命', 'lv20' => '转化提高到50%，腐蚀+1轮'],
+        's7' => ['name' => '群魂爆裂', 'job' => 'summoner', 'mp' => 52, 'kind' => 'aoe', 'mult' => 2.6, 'el' => 'dark', 't10' => '引爆全部召唤兽，范围伤害', 'lv20' => '引爆伤害+40%'],
+        's8' => ['name' => '永夜契约', 'job' => 'summoner', 'mp' => 52, 'kind' => 'aoe', 'mult' => 2.8, 'el' => 'dark', 't10' => '召唤3只恶鬼，敌全体腐蚀', 'lv20' => '腐蚀+1轮，召唤兽伤害+25%'],
+        's9' => ['name' => '深渊主宰', 'job' => 'summoner', 'mp' => 45, 'kind' => 'sin', 'mult' => 3.4, 'el' => 'dark', 't10' => '献祭全部召唤兽，全部伤害转化生命', 'lv20' => '伤害+15%，转化率翻倍'],
         'p9' => ['name' => '堕天圣裁', 'job' => 'priest', 'mp' => 50, 'kind' => 'sin', 'mult' => 3.0, 'heal' => 200, 'el' => 'dark', 't10' => '伤害转奶80%', 'lv20' => '治疗+20%，转奶100%'],
     ];
 }
 
 function job_skillset(string $job): array
 {
-    return ['warrior' => ['w1', 'w2', 'w3', 'w4', 'w5', 'w6', 'w7', 'w8', 'w9'], 'mage' => ['m1', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8', 'm9'], 'hunter' => ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'h7', 'h8', 'h9'], 'priest' => ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8', 'p9']][$job] ?? ['w1', 'w2', 'w3', 'w4', 'w5', 'w6', 'w7', 'w8', 'w9'];
+    return ['warrior' => ['w1', 'w2', 'w3', 'w4', 'w5', 'w6', 'w7', 'w8', 'w9'], 'mage' => ['m1', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8', 'm9'], 'hunter' => ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'h7', 'h8', 'h9'], 'priest' => ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8', 'p9'], 'summoner' => ['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9']][$job] ?? ['w1', 'w2', 'w3', 'w4', 'w5', 'w6', 'w7', 'w8', 'w9'];
 }
 
 function skill_books(): array
@@ -3181,6 +3209,7 @@ function skill_books(): array
         'book_m9' => ['skill' => 'm9', 'name' => '魂蚀秘籍'],
         'book_h9' => ['skill' => 'h9', 'name' => '弑神秘籍'],
         'book_p9' => ['skill' => 'p9', 'name' => '堕天秘籍'],
+        'book_s9' => ['skill' => 's9', 'name' => '深渊主宰秘籍'],
     ];
 }
 
@@ -4171,7 +4200,7 @@ function gear_stats(int $uid): array
         return $cache[$uid];
     }
     unset($GLOBALS['_gear_bust']);
-    $keys = ['atk', 'matk', 'def', 'mdef', 'hp', 'truedmg', 'crit', 'critdmg', 'dodge', 'lifesteal', 'atk_pct', 'speed', 'element', 'penetration', 'skill_damage', 'execute', 'damage_reduction', 'resist', 'thorns', 'regen', 'energy', 'cooldown', 'hit', 'exp_gain', 'move_speed', 'control_resist', 'slow_resist', 'all_attr', 'gold_gain', 'magic_find', 'res_light', 'res_dark', 'res_fire', 'res_wind', 'res_ice', 'res_thunder', 'allres', 'bagcap'];
+    $keys = ['atk', 'matk', 'def', 'mdef', 'hp', 'truedmg', 'crit', 'critdmg', 'dodge', 'lifesteal', 'atk_pct', 'speed', 'element', 'penetration', 'skill_damage', 'execute', 'damage_reduction', 'resist', 'thorns', 'regen', 'energy', 'cooldown', 'hit', 'exp_gain', 'move_speed', 'control_resist', 'slow_resist', 'all_attr', 'gold_gain', 'magic_find', 'summon_power', 'res_light', 'res_dark', 'res_fire', 'res_wind', 'res_ice', 'res_thunder', 'allres', 'bagcap'];
     $s = array_fill_keys($keys, 0.0);
     $st = db()->prepare('SELECT * FROM equips WHERE uid=? AND pos="wear"');
     $st->execute([$uid]);
@@ -4301,7 +4330,17 @@ function gear_stats(int $uid): array
     $dusk = 0;
     foreach ($worn as $wn) {
         if (str_starts_with($wn, '暮影·')) { $dusk++; }
-    }    $jm = 0; $sy = 0;
+    }    $jm = 0; $sy = 0;    $sp2 = 0;
+    foreach ($worn as $wn) {
+        if (str_starts_with($wn, '魂契·')) { $sp2++; }
+    }
+    if ($sp2 > 0) {
+        $splv = max(1, (int) (db()->query('SELECT lv FROM users WHERE id=' . (int) $uid)->fetchColumn() ?: 1));
+        $s['summon_power'] += $sp2 * 8;
+        if ($sp2 >= 2) { $s['truedmg'] += $splv * 10; }
+        if ($sp2 >= 3) { $s['summon_power'] += $splv * 4; }
+        if ($sp2 >= 5) { $s['summon_power'] += 50; }
+    }
     foreach ($worn as $wn) {
         if (str_starts_with($wn, '寂灭·')) { $jm++; }
         if (str_starts_with($wn, '噬渊·')) { $sy++; }
@@ -4386,6 +4425,185 @@ function soul_craft(int $uid): string
 function soul_lv(int $uid, int $eid): int
 {
     return max(0, (int) (mats_of((int) $uid)['soul_lv_' . (int) $eid] ?? 0));
+}
+// ========== 召唤师·深渊召唤兽 ==========
+function summon_units(): array
+{
+    return [
+        'imp' => ['name' => '深渊小鬼', 'atk_mult' => 0.30, 'hp_mult' => 0.35, 'turns' => 3, 'bomb' => false],
+        'wraith' => ['name' => '深渊恶鬼', 'atk_mult' => 0.55, 'hp_mult' => 0.60, 'turns' => 4, 'bomb' => true],
+        'bone' => ['name' => '白骨从者', 'atk_mult' => 0.45, 'hp_mult' => 0.70, 'turns' => 4, 'bomb' => false],
+    ];
+}
+
+function summon_cap(array $u): int
+{
+    $rb2 = cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '';
+    // 死灵之拥：可同时召唤多只
+    $cap = $rb2 === 'necro' ? 4 : 2;
+    // 魂契2件：召唤上限+1
+    if (equip_set_owned_count((int) ($u['id'] ?? 0), 'soulpact') >= 2) {
+        $cap++;
+    }
+    return $cap;
+}
+
+function summon_power_bonus(array $u): float
+{
+    return (float) gear_stats((int) ($u['id'] ?? 0))['summon_power'];
+}
+
+function summon_list(): array
+{
+    $b = $_SESSION['battle'] ?? [];
+    return is_array($b['summons'] ?? null) ? $b['summons'] : [];
+}
+
+function summon_save(array $list): void
+{
+    if (!isset($_SESSION['battle'])) {
+        return;
+    }
+    $_SESSION['battle']['summons'] = array_values($list);
+}
+
+// 清空全部召唤兽（深渊主宰献祭）
+function summon_clear(): void
+{
+    summon_save([]);
+}
+
+// 生成一只召唤兽
+function summon_spawn(string $kind, int $patk, int $php, array $u): array
+{
+    $cfg = summon_units()[$kind] ?? summon_units()['imp'];
+    $sp = 1 + summon_power_bonus($u) / 100;
+    $turns = $cfg['turns'];
+    // 魂契5件：召唤兽存活+2轮
+    if (equip_set_owned_count((int) ($u['id'] ?? 0), 'soulpact') >= 5) {
+        $turns += 2;
+    }
+    return [
+        'kind' => $kind,
+        'name' => $cfg['name'],
+        'hp' => max(1, (int) ($php * $cfg['hp_mult'])),
+        'maxhp' => max(1, (int) ($php * $cfg['hp_mult'])),
+        'atk' => max(1, (int) ($patk * $cfg['atk_mult'] * $sp)),
+        'turns' => $turns,
+        'bomb' => $cfg['bomb'] || equip_set_owned_count((int) ($u['id'] ?? 0), 'soulpact') >= 5,
+    ];
+}
+
+// 尝试召唤（受上限约束）
+function summon_add(string $kind, array $u, int $bonusTurns = 0): string
+{
+    $list = summon_list();
+    $cap = summon_cap($u);
+    if (count($list) >= $cap) {
+        $list = array_slice($list, 0, $cap - 1);
+    }
+    $petHp = 0;
+    $pm = db()->prepare("SELECT COUNT(*) FROM pets WHERE uid=? AND hp>?");
+    $pm->execute([(int) $u['id'], 0]);
+    if ((int) $pm->fetchColumn() > 0) {
+        $petHp = (int) (user_by_id((int) $u['id'])['maxhp'] ?? 0);
+    }
+    $s = summon_spawn($kind, player_matk($u), (int) $u['maxhp'], $u);
+    if ($bonusTurns > 0) {
+        $s['turns'] += $bonusTurns;
+    }
+    $list[] = $s;
+    summon_save($list);
+    return $s['name'] . '应召而来（存活' . $s['turns'] . '回合）！';
+}
+
+// 1觉被动【魂契】：受击10%概率自动召唤小鬼
+function summon_soulpact_trigger(array $u): string
+{
+    if (job_id_of($u) !== 'summoner') {
+        return '';
+    }
+    if ((cflags((int) ($u['id'] ?? 0))['rb1_job'] ?? '') !== 'summoner') {
+        return '';
+    }
+    if (mt_rand(1, 100) > 10) {
+        return '';
+    }
+    return summon_add('imp', $u);
+}
+
+// 召唤兽行动：自动攻击 + 回合衰减
+function summon_turn(array $b): array
+{
+    $list = summon_list();
+    if ($list === []) {
+        return ['dmg' => 0, 'log' => '', 'left' => []];
+    }
+    $dmg = 0;
+    $log = '';
+    $left = [];
+    foreach ($list as $s) {
+        $hit = max(1, (int) ($s['atk'] * random_int(85, 115) / 100));
+        $dmg += $hit;
+        $log .= $s['name'] . '扑上去，造成' . $hit . '点暗影伤害。';
+        $s['turns']--;
+        if ($s['turns'] > 0) {
+            $left[] = $s;
+        } else {
+            $log .= $s['name'] . '化作黑雾散去。';
+        }
+    }
+    summon_save($left);
+    return ['dmg' => $dmg, 'log' => $log, 'left' => $left];
+}
+
+// 召唤兽承伤：优先由召唤兽吃伤害
+function summon_absorb(int $md): array
+{
+    $list = summon_list();
+    if ($list === [] || $md <= 0) {
+        return [$md, ''];
+    }
+    $first = $list[0];
+    $abs = min($md, (int) $first['hp']);
+    $first['hp'] -= $abs;
+    $rest = $md - $abs;
+    $log = $first['name'] . '替你挡下' . $abs . '点伤害。';
+    if ($first['hp'] <= 0) {
+        $log .= $first['name'] . '被打散了。';
+        if (!empty($first['bomb'])) {
+            $log .= '尸骸炸开，溅出' . $first['atk'] . '点暗影伤害。';
+        }
+        $list = array_slice($list, 1);
+    } else {
+        $list[0] = $first;
+    }
+    summon_save($list);
+    return [$rest, $log];
+}
+
+// 召唤兽死亡爆炸（2觉·死灵之拥）
+function summon_bomb(array &$b): string
+{
+    $list = summon_list();
+    $uid = (int) ($_SESSION['uid'] ?? 0);
+    $rb2 = cflags($uid)['rb2_job'] ?? '';
+    $fullSet = equip_set_owned_count($uid, 'soulpact') >= 5;
+    if (($rb2 !== 'necro' && !$fullSet) || $list === []) {
+        return '';
+    }
+    $log = '';
+    foreach ($list as $s) {
+        if (!empty($s['bomb'])) {
+            $d = max(1, (int) ($s['atk'] * 1.5));
+            $b['hp'] = max(0, (int) $b['hp'] - $d);
+            $log .= $s['name'] . '死亡爆炸，造成' . $d . '点范围伤害！';
+        }
+    }
+    if ($log !== '') {
+        summon_save([]);
+    }
+    return $log;
 }
 function soul_truedmg(int $uid): int
 {
@@ -4893,7 +5111,7 @@ function player_atk(array $u): int
 // 物理攻击：力量+装备。法师牧师恒为0
 function player_patk(array $u): int
 {
-    if (in_array(job_id_of($u), ['mage', 'priest'], true)) {
+    if (in_array(job_id_of($u), ['mage', 'priest', 'summoner'], true)) {
         return 0;
     }
     $str = (int) ($u['str'] ?? 0);
@@ -4917,9 +5135,9 @@ function player_patk(array $u): int
 function player_matk(array $u): int
 {
     $job = job_id_of($u);
-    $base = in_array($job, ['mage', 'priest'], true) ? (int) (jobs()[$job]['atk'] ?? 0) : 0;
+    $base = in_array($job, ['mage', 'priest', 'summoner'], true) ? (int) (jobs()[$job]['atk'] ?? 0) : 0;
     $m = $base + (int) ($u['int'] ?? 0) + (int) gear_stats((int) ($u['id'] ?? 0))['matk'];
-    if ($job !== '' && in_array($job, ['mage', 'priest'], true)) {
+    if ($job !== '' && in_array($job, ['mage', 'priest', 'summoner'], true)) {
         $gs = gear_stats((int) ($u['id'] ?? 0));
         $m += (int) $gs['atk'] + (int) ($m * (float) $gs['atk_pct'] / 100);
     }
@@ -5073,7 +5291,7 @@ function gain_exp(array &$u, int $exp): string
         $u['maxhp'] = (int) $u['maxhp'] + 10 * $g;
         $u['maxmp'] = (int) ($u['maxmp'] ?? 0) + 5 * $g;
         // 升级成长按职业：战士猎手长物攻，法师牧师长智慧（法攻）+灵力（魔力）
-        if (in_array(job_id_of($u), ['mage', 'priest'], true)) {
+        if (in_array(job_id_of($u), ['mage', 'priest', 'summoner'], true)) {
             $u['int'] = (int) ($u['int'] ?? 0) + $g;
             $u['spi'] = (int) ($u['spi'] ?? 0) + $g;
             $u['maxmp'] = (int) ($u['maxmp'] ?? 0) + 5 * $g;
@@ -5114,7 +5332,7 @@ function alloc_stat(int $uid, string $k): string
         return '属性点不够（剩' . (int) ($u['s_pts'] ?? 0) . '点，要' . $cost . '点），升级获取。';
     }
     if ($k === 'str') {
-        if (in_array(job_id_of($u), ['mage', 'priest'], true)) {
+        if (in_array(job_id_of($u), ['mage', 'priest', 'summoner'], true)) {
             return '法师牧师的身体练不出物理伤害，别浪费点数，去加智慧吧。';
         }
         $u['str'] = (int) ($u['str'] ?? 0) + 1;
@@ -5147,7 +5365,7 @@ function alloc_all_stat(int $uid, string $k): string
     if (!$u) {
         return '角色不存在。';
     }
-    if ($k === 'str' && in_array(job_id_of($u), ['mage', 'priest'], true)) {
+    if ($k === 'str' && in_array(job_id_of($u), ['mage', 'priest', 'summoner'], true)) {
         return '法师牧师的身体练不出物理伤害，别浪费点数，去加智慧吧。';
     }
     $n = 0;
@@ -5288,8 +5506,8 @@ function dmg_to_monster(array $u, array $m = []): int
 {
     // 法师牧师普攻转元素（法师火、牧师光），不再造成物理伤害
     $job = job_id_of($u);
-    if (in_array($job, ['mage', 'priest'], true)) {
-        $el = $job === 'mage' ? 'fire' : 'light';
+    if (in_array($job, ['mage', 'priest', 'summoner'], true)) {
+        $el = $job === 'mage' ? 'fire' : ($job === 'summoner' ? 'dark' : 'light');
         $d = max(1, player_matk($u) + random_int(1, 3) - (int) (monster_mdef($m) / 2));
         [$d, $elTag] = apply_el_convert($u, $m, $d, $el);
         $GLOBALS['_melee_el_tag'] = $elTag;
@@ -5364,6 +5582,12 @@ function battle_round(array &$u, array &$b, string $mode): array
             } elseif ($job === 'priest') {
                 $u['hp'] = min((int) $u['maxhp'], (int) $u['hp'] + 25);
                 $pd = max(1, (int) (player_matk($u) * 0.5) + 2 - (int) (monster_mdef($b) / 2));
+            } elseif ($job === 'summoner') {
+                // 召唤师平A：献祭5%生命换伤害
+                $cost = max(1, (int) ($u['hp'] * 0.05));
+                $u['hp'] = max(1, (int) $u['hp'] - $cost);
+                $pd = max(1, (int) (player_matk($u) * 0.85) + 2 - (int) (monster_mdef($b) / 2));
+                $logHeal .= '(献祭' . $cost . '血)';
             }
             $skillName = job_of($u)['skill'];
         } elseif ((int) ($u['mp'] ?? 0) >= (int) $sk['mp']) {
@@ -5431,6 +5655,29 @@ function battle_round(array &$u, array &$b, string $mode): array
                 if ($sid === 'm4' && $sTier >= 10 && mt_rand(1, 100) <= 10) {
                     $b['frost'] = 3;
                     $logHeal .= '(冰葬冻结)';
+                }
+                // 召唤师·腐魂咒：腐蚀3轮（t10强化4%）
+                if ($sid === 's2' && $sTier >= 10) {
+                    $b['poison'] = 3;
+                    $b['poison_pct'] = $sLv >= 20 ? 4 : 3;
+                    $logHeal .= '(灵魂腐蚀)';
+                }
+                // 召唤师·血祭：献祭10%当前生命，本次伤害+50%（lv20 +70%）
+                if ($sid === 's3') {
+                    $sac = max(1, (int) floor((int) ($u['hp'] ?? 1) * 0.10));
+                    $u['hp'] = max(1, (int) ($u['hp'] ?? 1) - $sac);
+                    $rate = $sLv >= 20 ? 0.70 : 0.50;
+                    $pd = (int) ($pd * (1 + $rate));
+                    $logHeal .= '(血祭+' . (int) ($rate * 100) . '%)';
+                }
+                // 召唤师·痛苦盛宴：腐蚀+部分伤害转生命
+                if ($sid === 's6') {
+                    $b['poison'] = ($sLv >= 20 ? 4 : 3);
+                    $b['poison_pct'] = $sLv >= 20 ? 5 : 4;
+                    $leechR = $sLv >= 20 ? 0.5 : 0.3;
+                    $leech6 = (int) ($pd * $leechR);
+                    $u['hp'] = min((int) $u['maxhp'], (int) ($u['hp'] ?? 0) + $leech6);
+                    $logHeal .= '(盛宴回' . $leech6 . ')';
                 }
             } elseif ($sk['kind'] === 'multi2') {
                 // 猎手连射：物理段过物防；爆炸箭（h2火）/淬毒箭（h3暗）再加一段法伤，整体转属性
@@ -5521,6 +5768,21 @@ function battle_round(array &$u, array &$b, string $mode): array
                         $leech = (int) ($pd * $leechRate);
                         $u['hp'] = min((int) $u['maxhp'], (int) $u['hp'] + $leech);
                         $logHeal .= '(噬罪转奶' . $leech . ')';
+                    } elseif ($sid === 's9') {
+                        // 召唤师·深渊主宰：法3.4暗，献祭全部召唤兽按存活数加伤，全部伤害转化生命
+                        $sacN = count(summon_list());
+                        $pd = max(1, (int) ((player_matk($u) + random_int(4, 7)) * (float) $sk['mult'] * $sinPow) - (int) (monster_mdef($b) / 2));
+                        if ($sacN > 0) { $pd = (int) ($pd * (1 + $sacN * 0.2)); $logHeal .= '(献祭' . $sacN . '只)'; }
+                        if ($sTier >= 10) { $pd = (int) ($pd * 1.3); }
+                        if ($sLv >= 20) { $pd = (int) ($pd * 1.15); }
+                        [$pd, $elTag] = apply_el_convert($u, $b, $pd, $skEl);
+                        $logHeal .= $elTag;
+                        $b['fullEl'] = 1;
+                        $leechS9 = $sLv >= 20 ? 1.0 : 0.5;
+                        $leech9 = (int) ($pd * $leechS9);
+                        $u['hp'] = min((int) $u['maxhp'], (int) ($u['hp'] ?? 0) + $leech9);
+                        $logHeal .= '(主宰转命' . $leech9 . ')';
+                        summon_clear();
                     }
                 }
             } elseif ($sk['kind'] === 'heal') {
@@ -5607,6 +5869,19 @@ function battle_round(array &$u, array &$b, string $mode): array
                 if ($sid === 'h8' && (int) ($b['maxhp'] ?? 1) > 0 && (int) ($b['hp'] ?? 1) <= (int) ($b['maxhp'] ?? 1) * $exeLine8) {
                     $pd = (int) ($pd * 1.5);
                     $logHeal .= '(夜幕斩杀)';
+                }
+                // 召唤师·群魂爆裂：引爆回血（爆炸伤害由 summon_bomb 另算）
+                if ($sid === 's7') {
+                    $leechS7 = $sLv >= 20 ? 0.4 : 0.25;
+                    $hlS7 = (int) ($pd * $leechS7);
+                    $u['hp'] = min((int) $u['maxhp'], (int) ($u['hp'] ?? 0) + $hlS7);
+                    $logHeal .= '(群魂噬回+' . $hlS7 . ')';
+                }
+                // 召唤师·永夜契约：敌全体腐蚀2轮
+                if ($sid === 's8') {
+                    $b['poison'] = ($sLv >= 20 ? 3 : 2);
+                    $b['poison_pct'] = 4;
+                    $logHeal .= '(永夜腐蚀)';
                 }
                 if ($sid === 'p7') {
                     $leechRate7 = $sLv >= 20 ? 0.6 : 0.5;
@@ -5711,6 +5986,24 @@ function battle_round(array &$u, array &$b, string $mode): array
         }
         unset($GLOBALS['_melee_el_tag']);
     }
+    // 召唤师：召唤型技能 → 召唤兽入场并参战（承伤+自动攻击）
+    if ($mode !== 'hit' && $isSkill && isset($sk['kind']) && $sk['kind'] === 'summon' && job_id_of($u) === 'summoner') {
+        $sid2 = (string) ($sid ?? '');
+        $sLv2 = (int) ($sLv ?? 0);
+        $kind = 'imp';
+        $bt = 0;
+        if ($sid2 === 's4') { $bt = ($sLv2 >= 20 ? 1 : 0); }
+        elseif (in_array($sid2, ['s5', 's7', 's8'], true)) { $kind = 'wraith'; }
+        $logHeal .= summon_add($kind, $u, $bt);
+    }
+    // 召唤兽自动攻击
+    if ($mode !== 'hit' && summon_list() !== []) {
+        $st2 = summon_turn($b);
+        if ($st2['dmg'] > 0 && (int) ($b['hp'] ?? 0) > 0) {
+            $b['hp'] = max(0, (int) $b['hp'] - $st2['dmg']);
+            $logHeal .= $st2['log'];
+        }
+    }
     // 真实伤害（神魂/烬焰7件）：无视防御，闪避也躲不掉
     $trueDmg = (int) soul_truedmg((int) ($u['id'] ?? 0));
     if ($trueDmg > 0) { $b['hp'] = (int) $b['hp'] - $trueDmg; $logHeal .= '(真伤+' . $trueDmg . ')'; }
@@ -5734,10 +6027,12 @@ function battle_round(array &$u, array &$b, string $mode): array
         $log .= $petMsg;
     }
     if (!empty($b['poison']) && (int) $b['hp'] > 0) {
-        $pt = max(1, (int) ((int) ($b['maxhp'] ?? 1) * 0.05));
+            $pct = isset($b['poison_pct']) ? (float) $b['poison_pct'] : 5;
+            $ptag = isset($b['poison_pct']) ? '腐蚀发作' : '剧毒发作';
+            $pt = max(1, (int) ((int) ($b['maxhp'] ?? 1) * $pct / 100));
         $b['hp'] = (int) $b['hp'] - $pt;
         $b['poison'] = (int) $b['poison'] - 1;
-        $log .= '剧毒发作，' . $b['name'] . '掉' . $pt . '点生命。';
+        $log .= $ptag . '，' . $b['name'] . '掉' . $pt . '点生命。';
     }
     if ($skEl !== '' && empty($b['fullEl']) && (int) $b['hp'] > 0) {
         $meld = monster_element((string) ($b['id'] ?? ''));
@@ -5963,6 +6258,9 @@ function battle_round(array &$u, array &$b, string $mode): array
         }        $yzMsg = yz_kill_drop((int) ($u['id'] ?? 0), (string) ($b['id'] ?? ''));
         if ($yzMsg !== '') {
             $msg .= $yzMsg;
+        }        $spMsg = soulpact_kill_drop((int) ($u['id'] ?? 0), (string) ($b['id'] ?? ''));
+        if ($spMsg !== '') {
+            $msg .= $spMsg;
         } elseif (is_boss_mid((string) ($b['id'] ?? ''))) {
             sin_gain_typed($u, 'boss');
         } else {
@@ -5984,7 +6282,7 @@ function battle_round(array &$u, array &$b, string $mode): array
             }
             if ($bid === 'ogre') {
                 $msg .= '。咕噜让路，送你本命武器+黑币！桥通了，去白石镇吧';
-                $bb = make_equip((int) $u['id'], 'weapon', (['warrior' => '大骨棒', 'mage' => '雾纹法杖', 'hunter' => '断弦短弓', 'priest' => '燕麦木槌'][job_id_of($u)] ?? '大骨棒'), 1);
+                $bb = make_equip((int) $u['id'], 'weapon', (['warrior' => '大骨棒', 'mage' => '雾纹法杖', 'hunter' => '断弦短弓', 'priest' => '燕麦木槌', 'summoner' => '深渊引魂灯'][job_id_of($u)] ?? '大骨棒'), 1);
                 $msg .= '。【' . $bb . '】已放进背包，去穿上吧';
                 add_mat((int) $u['id'], 'blackcoin', 1);
                 $msg .= '。获得任务物品【不断下坠的黑币】';
@@ -6112,7 +6410,7 @@ function battle_round(array &$u, array &$b, string $mode): array
                 } elseif ($cur === 117) {
                     add_mat((int) $u['id'], 'god_proof', 1);
                     give_title((int) $u['id'], 'title_god');
-                    $gw = ['warrior' => '神铸·雷霆', 'mage' => '神铸·裁决', 'hunter' => '神铸·苍穹', 'priest' => '神铸·铁律'][job_id_of($u)] ?? '神铸·天罚';
+                    $gw = ['warrior' => '神铸·雷霆', 'mage' => '神铸·裁决', 'hunter' => '神铸·苍穹', 'priest' => '神铸·铁律', 'summoner' => '神铸·幽契'][job_id_of($u)] ?? '神铸·天罚';
                     $gn = make_equip((int) $u['id'], 'weapon', $gw, 4, max(1, (int) $u['lv']));
                     $txt .= '。第八章·神界完成！堕天神帝陨落，你夺得【称号·神界主宰】' . ($gn !== '' ? '与【' . $gn . '】' : '') . '！';
                 } else {
@@ -6130,7 +6428,7 @@ function battle_round(array &$u, array &$b, string $mode): array
                 $u['quest'] = $cur + 1;
                 $txt .= quest_potion_gift((int) $u['id'], 5);
                 $u['gold'] = (int) $u['gold'] + [50 => 50000, 51 => 60000, 52 => 70000, 53 => 80000, 54 => 90000, 55 => 100000, 56 => 120000, 57 => 140000, 58 => 160000, 59 => 180000, 60 => 220000, 61 => 300000][$cur];
-                if ($cur === 55) { $gear4 = ['warrior' => ['weapon', '寒霜·战斧', 2, 380], 'mage' => ['offhand', '寒霜·法杖', 2, 380], 'hunter' => ['weapon', '寒霜·长弓', 2, 380], 'priest' => ['weapon', '寒霜·战锤', 2, 380]][job_id_of($u)] ?? null; } elseif ($cur === 59) { $gear4 = ['warrior' => ['offhand', '寒霜·冰盾', 3, 460], 'mage' => ['offhand', '寒霜·法杖', 3, 460], 'hunter' => ['body', '寒霜·骑士铠', 3, 460], 'priest' => ['offhand', '寒霜·冰盾', 3, 460]][job_id_of($u)] ?? null; } else { $gear4 = [52 => ['body', '雪原皮甲', 2, 370], 54 => ['legs', '寒霜·胫甲', 2, 410], 57 => ['head', '霜母之冠', 2, 450], 58 => ['body', '冰河重铠', 3, 465]][$cur] ?? null; }
+                if ($cur === 55) { $gear4 = ['warrior' => ['weapon', '寒霜·战斧', 2, 380], 'mage' => ['offhand', '寒霜·法杖', 2, 380], 'hunter' => ['weapon', '寒霜·长弓', 2, 380], 'priest' => ['weapon', '寒霜·战锤', 2, 380], 'summoner' => ['weapon', '寒霜·魂灯', 2, 380]][job_id_of($u)] ?? null; } elseif ($cur === 59) { $gear4 = ['warrior' => ['offhand', '寒霜·冰盾', 3, 460], 'mage' => ['offhand', '寒霜·法杖', 3, 460], 'hunter' => ['body', '寒霜·骑士铠', 3, 460], 'priest' => ['offhand', '寒霜·冰盾', 3, 460], 'summoner' => ['offhand', '寒霜·契匣', 3, 460]][job_id_of($u)] ?? null; } else { $gear4 = [52 => ['body', '雪原皮甲', 2, 370], 54 => ['legs', '寒霜·胫甲', 2, 410], 57 => ['head', '霜母之冠', 2, 450], 58 => ['body', '冰河重铠', 3, 465]][$cur] ?? null; }
                 if ($gear4 !== null) {
                     $gn4 = make_equip((int) $u['id'], $gear4[0], $gear4[1], $gear4[2], $gear4[3]);
                     if ($gn4 !== '') {
@@ -6151,7 +6449,7 @@ function battle_round(array &$u, array &$b, string $mode): array
                     add_mat((int) $u['id'], 'ch4_proof', 1);
                     add_mat((int) $u['id'], 'qingzui_dan', 1);
                     add_mat((int) $u['id'], 'frost_egg', 1);
-                    if (job_id_of($u) === 'mage') { $gn4b = make_equip((int) $u['id'], 'offhand', '寒霜·法杖', 3, 480); } elseif (job_id_of($u) === 'hunter') { $gn4b = make_equip((int) $u['id'], 'weapon', '寒霜·长弓', 3, 480); } elseif (job_id_of($u) === 'priest') { $gn4b = make_equip((int) $u['id'], 'weapon', '寒霜·战锤', 3, 480); } else { $gn4b = make_equip((int) $u['id'], 'weapon', '寒霜·战斧', 3, 480); }
+                    if (job_id_of($u) === 'mage') { $gn4b = make_equip((int) $u['id'], 'offhand', '寒霜·法杖', 3, 480); } elseif (job_id_of($u) === 'hunter') { $gn4b = make_equip((int) $u['id'], 'weapon', '寒霜·长弓', 3, 480); } elseif (job_id_of($u) === 'priest') { $gn4b = make_equip((int) $u['id'], 'weapon', '寒霜·战锤', 3, 480); } elseif (job_id_of($u) === 'summoner') { $gn4b = make_equip((int) $u['id'], 'weapon', '寒霜·魂灯', 3, 480); } else { $gn4b = make_equip((int) $u['id'], 'weapon', '寒霜·战斧', 3, 480); }
                     if ($gn4b !== '') {
                         $txt .= '。获得【' . $gn4b . '】！';
                     }
@@ -6171,7 +6469,7 @@ function battle_round(array &$u, array &$b, string $mode): array
                 $u['quest'] = $cur + 1;
                 $txt .= quest_potion_gift((int) $u['id'], 6);
                 $u['gold'] = (int) $u['gold'] + [62 => 300000, 63 => 320000, 64 => 350000, 65 => 380000, 66 => 400000, 67 => 430000, 68 => 460000, 69 => 500000, 70 => 550000, 71 => 600000, 72 => 650000, 73 => 700000, 74 => 800000, 75 => 1000000][$cur];
-                if ($cur === 67) { $gear5 = ['warrior' => ['legs', '烬焰·熔渣腿', 2, 575], 'mage' => ['offhand', '腐叶法器', 2, 575], 'hunter' => ['weapon', '烬焰·焚心弓', 2, 575], 'priest' => ['offhand', '腐叶法器', 2, 575]][job_id_of($u)] ?? null; } elseif ($cur === 71) { $gear5 = ['warrior' => ['offhand', '烬焰·熔盾', 3, 635], 'mage' => ['necklace', '烬焰·余火链', 3, 635], 'hunter' => ['offhand', '烬焰·余烬囊', 3, 635], 'priest' => ['offhand', '烬焰·熔盾', 3, 635]][job_id_of($u)] ?? null; } elseif ($cur === 73) { $gear5 = ['warrior' => ['weapon', '烬焰·龙裔刃', 3, 665], 'mage' => ['weapon', '烬焰·灰烬法杖', 3, 665], 'hunter' => ['weapon', '烬焰·焚心弓', 3, 665], 'priest' => ['weapon', '烬焰·熔核锤', 3, 665]][job_id_of($u)] ?? null; } else { $gear5 = [64 => ['offhand', '烬焰·余烬囊', 2, 530], 74 => ['legs', '烬焰·熔渣腿', 3, 680]][$cur] ?? null; }
+                if ($cur === 67) { $gear5 = ['warrior' => ['legs', '烬焰·熔渣腿', 2, 575], 'mage' => ['offhand', '腐叶法器', 2, 575], 'hunter' => ['weapon', '烬焰·焚心弓', 2, 575], 'priest' => ['offhand', '腐叶法器', 2, 575], 'summoner' => ['offhand', '裹魂契匣', 2, 575]][job_id_of($u)] ?? null; } elseif ($cur === 71) { $gear5 = ['warrior' => ['offhand', '烬焰·熔盾', 3, 635], 'mage' => ['necklace', '烬焰·余火链', 3, 635], 'hunter' => ['offhand', '烬焰·余烬囊', 3, 635], 'priest' => ['offhand', '烬焰·熔盾', 3, 635], 'summoner' => ['offhand', '烬焰·契匣', 3, 635]][job_id_of($u)] ?? null; } elseif ($cur === 73) { $gear5 = ['warrior' => ['weapon', '烬焰·龙裔刃', 3, 665], 'mage' => ['weapon', '烬焰·灰烬法杖', 3, 665], 'hunter' => ['weapon', '烬焰·焚心弓', 3, 665], 'priest' => ['weapon', '烬焰·熔核锤', 3, 665], 'summoner' => ['weapon', '烬焰·契杖', 3, 665]][job_id_of($u)] ?? null; } else { $gear5 = [64 => ['offhand', '烬焰·余烬囊', 2, 530], 74 => ['legs', '烬焰·熔渣腿', 3, 680]][$cur] ?? null; }
                 if ($gear5 !== null) {
                     $gn5 = make_equip((int) $u['id'], $gear5[0], $gear5[1], $gear5[2], $gear5[3]);
                     if ($gn5 !== '') {
@@ -6193,11 +6491,11 @@ function battle_round(array &$u, array &$b, string $mode): array
                     add_mat((int) $u['id'], 'qingzui_dan', 1);
                     add_mat((int) $u['id'], 'soul_shard', 10);
                     add_mat((int) $u['id'], 'wb_ticket', 1);
-                    $sk4 = ['warrior' => 'w4', 'mage' => 'm4', 'hunter' => 'h4', 'priest' => 'p4'][job_id_of($u)] ?? '';
+                    $sk4 = ['warrior' => 'w4', 'mage' => 'm4', 'hunter' => 'h4', 'priest' => 'p4', 'summoner' => 's4'][job_id_of($u)] ?? '';
                     if ($sk4 !== '') {
                         add_mat((int) $u['id'], 'book_' . $sk4, 1);
                     }
-                    $eset = ['warrior' => ['body', '烬焰·守卫铠', 660], 'mage' => ['necklace', '烬焰·余火链', 650], 'hunter' => ['ring', '烬焰·灰烬戒', 700], 'priest' => ['head', '烬焰·祭司冠', 680]][job_id_of($u)] ?? ['body', '烬焰·守卫铠', 660];
+                    $eset = ['warrior' => ['body', '烬焰·守卫铠', 660], 'mage' => ['necklace', '烬焰·余火链', 650], 'hunter' => ['ring', '烬焰·灰烬戒', 700], 'priest' => ['head', '烬焰·祭司冠', 680], 'summoner' => ['head', '烬焰·契者兜帽', 680]][job_id_of($u)] ?? ['body', '烬焰·守卫铠', 660];
                     $gn5b = make_equip((int) $u['id'], $eset[0], $eset[1], 3, $eset[2]);
                     if ($gn5b !== '') {
                         $txt .= '。获得【' . $gn5b . '】！';
@@ -6300,7 +6598,19 @@ function battle_round(array &$u, array &$b, string $mode): array
         }
     if ((cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '') === 'aegis') { $md = (int) ($md * 0.92); }
     }
+    // 召唤兽优先承伤
+    [$md, $slog] = summon_absorb($md);
+    if ($slog !== '') {
+        $logHeal .= $slog;
+    }
     $u['hp'] = (int) $u['hp'] - $md;
+    // 1觉被动（召唤师·魂契）：受击10%概率召唤深渊小鬼
+    if ($md > 0) {
+        $sp = summon_soulpact_trigger($u);
+        if ($sp !== '') {
+            $logHeal .= $sp;
+        }
+    }
     // 1觉被动（牧师）：5%减伤40%，每轮回3%
     $rbJob2 = cflags((int) ($u['id'] ?? 0))['rb1_job'] ?? '';
     if ($rbJob2 === 'priest' && $md > 0) {
@@ -7800,12 +8110,13 @@ function rebirth2_names(): array
         'mage' => ['wintermage' => '凛冬法师', 'wildfire' => '燎原使者'],
         'hunter' => ['ranger' => '游侠', 'assassin' => '影刺客'],
         'priest' => ['shadowbishop' => '暗影主教', 'holybishop' => '神圣主教'],
+        'summoner' => ['necro' => '死灵之拥', 'plague' => '痛苦盛宴'],
     ];
 }
 
 function rebirth2_skill(string $rb2): string
 {
-    return ['berserker' => 'w5', 'aegis' => 'w6', 'wintermage' => 'm5', 'wildfire' => 'm6', 'ranger' => 'h5', 'assassin' => 'h6', 'shadowbishop' => 'p5', 'holybishop' => 'p6'][$rb2] ?? '';
+    return ['berserker' => 'w5', 'aegis' => 'w6', 'wintermage' => 'm5', 'wildfire' => 'm6', 'ranger' => 'h5', 'assassin' => 'h6', 'shadowbishop' => 'p5', 'holybishop' => 'p6', 'necro' => 's5', 'plague' => 's6'][$rb2] ?? '';
 }
 
 
@@ -7813,7 +8124,7 @@ function rebirth2_skill2(string $rb2): string
 
 {
 
-    return ['berserker' => 'w7', 'aegis' => 'w8', 'wintermage' => 'm7', 'wildfire' => 'm8', 'ranger' => 'h7', 'assassin' => 'h8', 'shadowbishop' => 'p7', 'holybishop' => 'p8'][$rb2] ?? '';
+    return ['berserker' => 'w7', 'aegis' => 'w8', 'wintermage' => 'm7', 'wildfire' => 'm8', 'ranger' => 'h7', 'assassin' => 'h8', 'shadowbishop' => 'p7', 'holybishop' => 'p8', 'necro' => 's7', 'plague' => 's8'][$rb2] ?? '';
 
 }
 
@@ -7860,6 +8171,8 @@ function rebirth2_passive_desc(string $rb2): string
         'assassin' => '影遁：闪避+8%',
         'shadowbishop' => '鲜血契约：吸血+3%',
         'holybishop' => '圣光灌注：治疗+15%',
+        'necro' => '亡者军团：可同时召唤多只深渊生物，召唤物死亡时爆炸对周围造成范围伤害',
+        'plague' => '灵魂腐蚀：攻击附带强烈腐蚀，敌人每回合掉血，部分伤害转化为自身生命值',
     ][$rb2] ?? '';
 }
 
@@ -7874,7 +8187,7 @@ function rebirth2_name(string $rb2): string
 }
 function rebirth1_names(): array
 {
-    return ['warrior' => '狂战士', 'mage' => '元素使', 'hunter' => '追猎者', 'priest' => '圣光牧师'];
+    return ['warrior' => '狂战士', 'mage' => '元素使', 'hunter' => '追猎者', 'priest' => '圣光牧师', 'summoner' => '缚魂使'];
 }
 
 function rebirth1_passive_desc(string $job): string
@@ -7883,7 +8196,8 @@ function rebirth1_passive_desc(string $job): string
         'warrior' => '浴血：生命每降低10%，攻击+4%（最多+32%，保底不亏）',
         'mage' => '元素亲和：元素伤害+12%',
         'hunter' => '鹰眼：暴击+8%，命中+8%，15%概率标记使目标易伤10%持续2轮',
-        'priest' => '圣光庇护：每轮回3%最大生命，受伤5%概率减伤40%',
+        'priest' => '圣光庇护：每回合3%最大生命，受伤5%概率减伤40%',
+        'summoner' => '魂契：每当你或你的宠物受到伤害，10%概率召唤一只深渊小鬼助战。小鬼存活3回合，自动攻击敌人造成30%攻击力的暗影伤害，并替你承伤。',
     ][$job] ?? '';
 }
 
@@ -8018,7 +8332,7 @@ function sin_gain_array(array &$u, int $n = 1): void
     if ($newI >= 100 && $old < 100) {
         $uu = user_by_id($uid);
         if ($uu) {
-            $sid = ['warrior' => 'w9', 'mage' => 'm9', 'hunter' => 'h9', 'priest' => 'p9'][job_id_of($uu)] ?? 'w9';
+            $sid = ['warrior' => 'w9', 'mage' => 'm9', 'hunter' => 'h9', 'priest' => 'p9', 'summoner' => 's9'][job_id_of($uu)] ?? 'w9';
             $has = db()->prepare('SELECT skill FROM skills WHERE uid=? AND skill=?');
             $has->execute([$uid, $sid]);
             if (!$has->fetch()) {
@@ -8203,6 +8517,34 @@ function yz_kill_drop(int $uid, string $mid): string
     $tag = $c[0] === 'jimie' ? '寂灭套装' : ($c[0] === 'shiyuan' ? '噬渊套装' : '源罪渊传说');
     return '源罪本相崩解！掉落传说【' . $sn . '】（' . $tag . '）！';
 }
+// 【召唤师·魂契】BOSS掉落：专用副手深渊契匣 + 魂契套装 + 主题传说
+function soulpact_kill_drop(int $uid, string $mid): string
+{
+    $uid = (int) $uid;
+    if ($mid !== 'god_avatar' && $mid !== 'god_archon' && $mid !== 'gy_justice' && $mid !== 'yz_boss') {
+        return '';
+    }
+    $rate = ['yz_boss' => 15, 'god_avatar' => 8, 'god_archon' => 4, 'gy_justice' => 10][$mid];
+    if (mt_rand(1, 100) > $rate) {
+        return '';
+    }
+    $u = user_by_id($uid);
+    if (!$u) {
+        return '';
+    }
+    $pool = [
+        ['offhand', '召唤师·深渊契匣', '专用副手'],
+        ['weapon', '魂契·万鬼招魂幡'], ['weapon', '召唤师·深渊引魂灯'],
+        ['head', '魂契·亡者契约冠'], ['necklace', '魂契·幽魂缚魂链'], ['ring', '魂契·献祭者骨戒'],
+        ['', 'offhand', '幽冥·招魂匣'], ['', 'back', '深渊·万鬼披风'], ['', 'ring', '亡者·空洞之瞳'], ['', 'belt', '献祭·逆生带'], ['', 'shoes', '游魂·踏虚靴'], ['', 'body', '蚀月·裹尸衣'],
+    ];
+    $c = $pool[array_rand($pool)];
+    $sn = make_equip($uid, $c[0], $c[1], 4, max(1, (int) ($u['lv'] ?? 1)));
+    if ($sn === '') {
+        return '';
+    }
+    return '深渊低语回应！掉落传说【' . $sn . '】（' . ($c[2] ?? '魂契套装') . '）！';
+}
 
 // 罪渊击杀掉落：8%本职业罪技能书，0.3%随机罪渊套装件（传说）
 function gy_kill_drop(int $uid, string $mid): string
@@ -8215,9 +8557,9 @@ function gy_kill_drop(int $uid, string $mid): string
     $out = '';
     // 罪技能书（本职业那本）
     if (mt_rand(1, 100) <= 8) {
-        $book = ['warrior' => 'book_w9', 'mage' => 'book_m9', 'hunter' => 'book_h9', 'priest' => 'book_p9'][job_id_of($u)] ?? 'book_w9';
+        $book = ['warrior' => 'book_w9', 'mage' => 'book_m9', 'hunter' => 'book_h9', 'priest' => 'book_p9', 'summoner' => 'book_s9'][job_id_of($u)] ?? 'book_w9';
         $has = db()->prepare('SELECT skill FROM skills WHERE uid=? AND skill=?');
-        $sk = ['warrior' => 'w9', 'mage' => 'm9', 'hunter' => 'h9', 'priest' => 'p9'][job_id_of($u)] ?? 'w9';
+        $sk = ['warrior' => 'w9', 'mage' => 'm9', 'hunter' => 'h9', 'priest' => 'p9', 'summoner' => 's9'][job_id_of($u)] ?? 'w9';
         $has->execute([$uid, $sk]);
         if (!$has->fetch()) {
             add_mat($uid, $book, 1);

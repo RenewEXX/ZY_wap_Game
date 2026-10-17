@@ -624,7 +624,7 @@ function user_create(string $name, string $pass, string $job = '', string $zone 
     // 出身加点：战士力量5，法师智慧8，猎手力量3坚毅2，牧师智慧5体质2（法师从创建就不长物理）
     // 出身点已含在职业底攻(jobs())里，属性面板保持0，特色直接体现在攻/防/血/魔
     // 出身武器直接发新装备并穿上（职业限定：斧/杖/弓/锤）
-    $wnames = ['warrior' => '生锈战斧', 'mage' => '桦木法杖', 'hunter' => '猎弓', 'priest' => '白木槌'];
+    $wnames = ['warrior' => '生锈战斧', 'mage' => '桦木法杖', 'hunter' => '猎弓', 'priest' => '白木槌', 'summoner' => '残魂灯'];
     $wbase = $wnames[$job] ?? '生锈铁剑';
     make_equip($id, 'weapon', $wbase, 0, 1);
     $ins = db()->prepare('UPDATE equips SET pos="wear" WHERE id=(SELECT id FROM equips WHERE uid=? AND slot=? ORDER BY id DESC LIMIT 1)');

@@ -86,7 +86,7 @@ function arena_ensure(string $zone): void
     }
     if ($n > 0) { return; }
     $pool = arena_name_pool();
-    $jobs = ['战士', '法师', '猎手', '牧师'];
+    $jobs = ['战士', '法师', '猎手', '牧师', '召唤师'];
     $pets = ['影猫', '石灵', '幽灵', '幼龙', '深渊魔龙'];
     $used = [];
     $st = db()->prepare('INSERT OR IGNORE INTO arena_rank (uid, zone, rank, name, job, lv, power, is_dummy, season) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)');

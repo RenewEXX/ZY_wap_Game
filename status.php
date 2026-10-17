@@ -14,7 +14,6 @@ echo '<br>';
 echo '罪值 ' . sin_of((int) $u['id']) . (sin_of((int) $u['id']) >= 100 ? '（<span style="color:#f66">恶贯满盈，任何人都可强制PK你</span>）' : (sin_of((int) $u['id']) < 10 ? '（<span style="color:#9c9">心地纯善，生命+20%</span>）' : '')) . '<br>';
 echo '<span class="hp">生命 ' . (int) $u['hp'] . '/' . (int) $u['maxhp'] . '</span><br>';
 echo '<span style="color:#6cf">魔力 ' . (int) ($u['mp'] ?? 0) . '/' . (int) ($u['maxmp'] ?? 0) . '</span><br>';
-echo '攻击 ' . player_atk($u) . '　防御 ' . player_def($u) . '<br>';
 echo '物攻 ' . player_patk($u) . '　法攻 ' . player_matk($u) . '　物防 ' . player_pdef($u) . '　法防 ' . player_mdef($u) . '<br>';
 echo '<span class="gold">' . h(fmt_money((int) $u['gold'])) . '</span><br>';
 echo '经验 ' . (int) $u['exp'] . '/' . exp_need((int) $u['lv']) . '<br>';

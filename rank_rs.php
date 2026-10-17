@@ -19,7 +19,7 @@ $rank = rs_rank();
 wap_start('转生榜');
 // 顶部导航：榜 / 技能树
 $view = (string) ($_GET['view'] ?? '');
-echo '<a href="rank.php?tab=rs">转生榜</a> · <a href="rank.php?tab=rs&view=tree">源罪技能树</a><br>';
+echo '<a href="rank.php?tab=rs">转生榜</a> · <a href="rank.php?tab=rs&view=tree">源罪技能树</a> · <a href="home.php">返回</a><br>';
 if ($view === 'tree') {
     echo '<a href="#srcsin">↓ 跳到技能树</a><br>';
 }
@@ -63,4 +63,7 @@ if (!src_sin_unlock((int) $u['id'])) {
         echo '<br>';
     }
 }
+// 返回：主画面快捷栏 + 显式返回链接
+nav_line();
+echo '<a href="home.php">返回主画面</a><br>';
 wap_end(false);

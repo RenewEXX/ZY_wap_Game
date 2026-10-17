@@ -6301,11 +6301,7 @@ function map_regions(): array
         '白石镇' => ['town_sq', 'street_e', 'smith', 'tavern', 'street_w', 'church', 'market', 'supply', 'mansion', 'sewer', 'guild', 'wall', 'gate', 'mine_gate', 'mine1', 'mine2', 'mine3', 'echo_room'],
         '矿坑·灰烬中的低语' => ['mine_gate', 'mine1', 'mine2', 'mine3', 'echo_room'],
         '深渊旧道' => ['tunnel', 'shoal', 'altar', 'prison', 'shop', 'camp'],
-        '白银城·影蚀之潮' => ['silver_gate', 'silver_sq', 'sguild', 'dsewer1', 'dsewer2', 'bmine1', 'bmine2', 'sforest', 'manor', 'baltar', 'rift_road', 'rift'],
-        '银道荒径' => ['buf12a', 'buf12b'],
-        '尘埃长路' => ['buf23a', 'buf23b'],
-        '风雪关道' => ['buf34a', 'buf34b'],
-        '灰雾关道' => ['buf35a', 'buf35b'],
+        '白银城·影蚀之潮' => ['silver_gate', 'silver_sq', 'sguild', 'dsewer1', 'dsewer2', 'bmine1', 'bmine2', 'sforest', 'manor', 'baltar', 'rift_road', 'rift', 'buf12a', 'buf12b', 'buf23a', 'buf23b'],
         '王都·傀儡之夜' => ['capital_gate', 'avenue', 'noble', 'library', 'ctomb', 'slum', 'cathedral', 'observatory', 'theater'],
         '神界' => ['god_gate', 'god_hall', 'god_pilgrim', 'god_library', 'god_sea', 'god_garden', 'god_orchard', 'god_court', 'god_mirror', 'god_forge', 'god_pillar', 'god_sleeper', 'god_serpent', 'god_throne'],
         '神界·堕天阶' => ['gf_gate', 'gf_stair', 'gf_void', 'gf_wing', 'gf_core'],
@@ -6313,8 +6309,8 @@ function map_regions(): array
         '公会战场' => ['warfield'],
         '公会战场' => ['warfield'],
         '巅峰战场' => ['peak1', 'peak2', 'peak3'],
-        '冰原·凛冬' => ['ice_gate', 'ice_trail', 'ice_village', 'frozen_lake', 'snow_field', 'glacier_pass', 'aurora_vale', 'ice_cave', 'wyrm_tunnel', 'blizzard_peak', 'glacier_heart', 'frost_throne'],
-        '雾森·火山' => ['fo_gate', 'mist_edge', 'deep_woods', 'thorn_maze', 'boa_swamp', 'ape_hollow', 'sage_grove', 'ash_wastes', 'ember_foothill', 'lava_river', 'cult_altar', 'magma_core', 'flame_temple', 'ruin_gate', 'volcano_heart'],
+        '冰原·凛冬' => ['ice_gate', 'ice_trail', 'ice_village', 'frozen_lake', 'snow_field', 'glacier_pass', 'aurora_vale', 'ice_cave', 'wyrm_tunnel', 'blizzard_peak', 'glacier_heart', 'frost_throne', 'buf34a', 'buf34b'],
+        '雾森·火山' => ['fo_gate', 'mist_edge', 'deep_woods', 'thorn_maze', 'boa_swamp', 'ape_hollow', 'sage_grove', 'ash_wastes', 'ember_foothill', 'lava_river', 'cult_altar', 'magma_core', 'flame_temple', 'ruin_gate', 'volcano_heart', 'buf35a', 'buf35b'],
     ];
 }
 

@@ -4849,8 +4849,10 @@ function player_patk(array $u): int
 // 魔法攻击（无属性）：智慧+法攻装备
 function player_matk(array $u): int
 {
-    $m = (int) ($u['int'] ?? 0) + (int) gear_stats((int) ($u['id'] ?? 0))['matk'];
-    if (in_array(job_id_of($u), ['mage', 'priest'], true)) {
+    $job = job_id_of($u);
+    $base = in_array($job, ['mage', 'priest'], true) ? (int) (jobs()[$job]['atk'] ?? 0) : 0;
+    $m = $base + (int) ($u['int'] ?? 0) + (int) gear_stats((int) ($u['id'] ?? 0))['matk'];
+    if ($job !== '' && in_array($job, ['mage', 'priest'], true)) {
         $gs = gear_stats((int) ($u['id'] ?? 0));
         $m += (int) $gs['atk'] + (int) ($m * (float) $gs['atk_pct'] / 100);
     }

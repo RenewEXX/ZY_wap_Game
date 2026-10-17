@@ -619,19 +619,10 @@ function user_create(string $name, string $pass, string $job = '', string $zone 
         'INSERT INTO users (username, pass, lv, exp, hp, maxhp, mp, maxmp, atk, def, gold, loc, weapon, armor, potion, job, quest, zone, account, created_at) VALUES (?, ?, 1, 0, ?, ?, ?, ?, ?, ?, 20, "smithy", "", "", 0, ?, 0, ?, ?, ?)'
     );
     // 新建1级：物攻法攻基础全0（武器给起步伤害，防具给起步防御）
-    $st->execute([$name, $hashed ? $pass : password_hash($pass, PASSWORD_DEFAULT), $j['hp'], $j['hp'], $j['mp'] ?? 30, $j['mp'] ?? 30, 0, 0, $job, $zone, $account !== '' ? $account : $name, time()]);
+    $st->execute([$name, $hashed ? $pass : password_hash($pass, PASSWORD_DEFAULT), $j['hp'], $j['hp'], $j['mp'] ?? 30, $j['mp'] ?? 30, (int) $j['atk'], (int) $j['def'], $job, $zone, $account !== '' ? $account : $name, time()]);
     $id = (int) db()->lastInsertId();
     // 出身加点：战士力量5，法师智慧8，猎手力量3坚毅2，牧师智慧5体质2（法师从创建就不长物理）
-    $born = ['warrior' => ['str' => 5], 'mage' => ['int' => 8], 'hunter' => ['str' => 3, 'agi' => 2], 'priest' => ['int' => 5, 'vit' => 2]][$job] ?? [];
-    foreach ($born as $k => $v) {
-        if ($k === 'vit') {
-            db()->prepare('UPDATE users SET maxhp=maxhp+?, hp=hp+?, vit=vit+? WHERE id=?')->execute([$v * 10, $v * 10, $v, $id]);
-        } elseif ($k === 'int') {
-            db()->prepare('UPDATE users SET maxmp=maxmp+?, mp=mp+?, `int`=`int`+? WHERE id=?')->execute([$v * 3, $v * 3, $v, $id]);
-        } else {
-            db()->prepare('UPDATE users SET `' . $k . '`=`' . $k . '`+? WHERE id=?')->execute([$v, $id]);
-        }
-    }
+    // 出身点已含在职业底攻(jobs())里，属性面板保持0，特色直接体现在攻/防/血/魔
     // 出身武器直接发新装备并穿上（职业限定：斧/杖/弓/锤）
     $wnames = ['warrior' => '生锈战斧', 'mage' => '桦木法杖', 'hunter' => '猎弓', 'priest' => '白木槌'];
     $wbase = $wnames[$job] ?? '生锈铁剑';

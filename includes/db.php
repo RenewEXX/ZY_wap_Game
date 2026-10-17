@@ -623,12 +623,14 @@ function user_create(string $name, string $pass, string $job = '', string $zone 
     $id = (int) db()->lastInsertId();
     // 出身加点：战士力量5，法师智慧8，猎手力量3坚毅2，牧师智慧5体质2（法师从创建就不长物理）
     $born = ['warrior' => ['str' => 5], 'mage' => ['int' => 8], 'hunter' => ['str' => 3, 'agi' => 2], 'priest' => ['int' => 5, 'vit' => 2]][$job] ?? [];
-    $bornPts = 0;
-    foreach ($born as $v) {
-        $bornPts += $v;
-    }
-    if ($bornPts > 0) {
-        db()->prepare('UPDATE users SET s_pts=s_pts+? WHERE id=?')->execute([$bornPts, $id]);
+    foreach ($born as $k => $v) {
+        if ($k === 'vit') {
+            db()->prepare('UPDATE users SET maxhp=maxhp+?, hp=hp+?, vit=vit+? WHERE id=?')->execute([$v * 10, $v * 10, $v, $id]);
+        } elseif ($k === 'int') {
+            db()->prepare('UPDATE users SET maxmp=maxmp+?, mp=mp+?, `int`=`int`+? WHERE id=?')->execute([$v * 3, $v * 3, $v, $id]);
+        } else {
+            db()->prepare('UPDATE users SET `' . $k . '`=`' . $k . '`+? WHERE id=?')->execute([$v, $id]);
+        }
     }
     // 出身武器直接发新装备并穿上（职业限定：斧/杖/弓/锤）
     $wnames = ['warrior' => '生锈战斧', 'mage' => '桦木法杖', 'hunter' => '猎弓', 'priest' => '白木槌'];

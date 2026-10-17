@@ -7093,8 +7093,8 @@ function god_locations(): array
 {
     $m = [];
     $m['god_gate'] = ['name' => '神界·天门', 'desc' => '云在脚下断成两半。门楣上没有字，是六只眼睛。神使·伽楼：往上去，七百年才开一次。', 'exits' => ['god_hall' => '圣都', 'greenheart_sq' => '青叶广场'], 'monsters' => ['god_seraph']];
-    $m['god_hall'] = ['name' => '神界·圣都', 'desc' => '云砌的城，路上没有影子。神界商人只收金币，不问你从哪来。', 'exits' => ['god_gate' => '天门', 'god_sea' => '云海'], 'monsters' => []];
-    $m['god_sea'] = ['name' => '云海', 'desc' => '云海托着碎掉的星。执事在云上走，不留下脚印。', 'exits' => ['god_hall' => '圣都', 'god_court' => '神庭'], 'monsters' => ['god_seraph', 'god_cloud', 'god_cherub']];
+    $m['god_hall'] = ['name' => '神界·圣都', 'desc' => '云砌的城，路上没有影子。神界商人只收金币，不问你从哪来。', 'exits' => ['god_gate' => '天门', 'god_sea' => '云海', 'god_pilgrim' => '拾光阶'], 'monsters' => []];
+    $m['god_sea'] = ['name' => '云海', 'desc' => '云海托着碎掉的星。执事在云上走，不留下脚印。', 'exits' => ['god_hall' => '圣都', 'god_court' => '神庭', 'god_library' => '藏星馆', 'god_garden' => '种星园'], 'monsters' => ['god_seraph', 'god_cloud', 'god_cherub']];
     $m['god_court'] = ['name' => '神庭', 'desc' => '白色的大厅没有影子。守望和裁决并排站着，谁也不看谁。', 'exits' => ['god_sea' => '云海', 'god_forge' => '神铸台', 'god_mirror' => '镜厅', 'god_orchard' => '星果林'], 'monsters' => ['god_watcher', 'god_judge']];
     $m['god_forge'] = ['name' => '神铸台', 'desc' => '神匠锤打的是自己的骨头。守卫从炉火里站起来。', 'exits' => ['god_court' => '神庭', 'god_pillar' => '天柱'], 'monsters' => ['god_forger', 'god_warden', 'god_heraldg']];
     $m['god_pillar'] = ['name' => '天柱', 'desc' => '一根柱子撑住整片天。石像爬在柱上，泰坦在柱顶。', 'exits' => ['god_forge' => '神铸台', 'god_throne' => '神座'], 'monsters' => ['god_golem', 'god_titan', 'god_highpriest']];

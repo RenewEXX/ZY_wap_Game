@@ -3042,13 +3042,13 @@ function make_equip(int $uid, string $slot, string $base, int $q, int $itemLevel
     $reqStr = $isStr ? $req['str'] : 0;
     $reqAgi = !$isStr ? $req['str'] : 0;
     $primary = equip_primary($slot, $offKind);
-    if ($slot === 'weapon' && weapon_sub((string) $base) === 'staff') {
+    if ($slot === 'weapon' && in_array(weapon_sub((string) $base), ['staff', 'relic'], true)) {
         $primary = 'matk';
     }
     $legendId = (string) ($legend['extra']['k'] ?? '');
     $legendGroup = $legendId !== '' ? (string) (affix_catalog()[$legendId]['data']['group'] ?? '') : '';
     $pool = array_values(array_filter(slot_pools()[$slot] ?? ['atk', 'def', 'hp'], fn($id) => $id !== $primary && $id !== $legendId));
-    if ($slot === 'weapon' && weapon_sub((string) $base) === 'staff') {
+    if ($slot === 'weapon' && in_array(weapon_sub((string) $base), ['staff', 'relic'], true)) {
         $pool = array_values(array_map(fn($id) => $id === 'atk' ? 'matk' : $id, $pool));
     }
     if ($pool === []) {

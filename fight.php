@@ -39,6 +39,11 @@ if ((int) $u['hp'] <= 0) {
         $u['loc'] = 'square';
         $pen .= '在罪渊中倒下，被渡罪拖了回来。';
     }
+    if (in_array((string) ($u['loc'] ?? ''), gf_maps(), true)) {
+        $u['loc'] = 'god_hall';
+        unset($_SESSION['battle']);
+        $pen .= '你在堕天阶坠落，被云接住，送回圣都。';
+    }
     user_save($u);
     unset($_SESSION['battle']);
     flash_set('你被拖回营地。' . $pen);

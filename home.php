@@ -139,6 +139,7 @@ $npcLinks = [
     'arena_gate' => [['rb_iron', '铁拳']],
     'library' => [['rb_mori', '莫里亚蒂院长']],
     'capital_gate' => [['rb_hawk', '老猎人·霍克'], ['northwind', '守夜人·北风']],
+    'god_gate' => [['gallu', '神使·伽楼']], 'god_hall' => [['godmerchant', '神界商人·白羽']], 'god_mirror' => [['mirrorelder', '镜厅长老·镜胜雪']], 'god_throne' => [['fallenguide', '堕天引路·堕羽']], 'gf_stair' => [['celia', '堕天传令·赛丽亚']],
     'avenue' => [['waldon', '线人·瓦尔顿'], ['rb_waldon', '总会长·瓦尔顿'], ['med_c', '王都药剂师·蘽兰'], ['rank_c', '榜单老人']],
     'cathedral' => [['rb_samuel', '大主教·塞缪尔']],
     'ice_village' => [['dora', '猎户·朵拉'], ['oldfish', '潜水人·老咸鱼']],
@@ -185,6 +186,10 @@ if (in_array($cur, abx_maps(), true)) {
     $stg = abx_stage((int) $u['id']);
     $need = [1 => '蚀影尘×10（影蚀行者）', 2 => '影蚀徽记×10（腐影守卫）', 3 => '低语残章×8（深渊低语者）', 4 => '王座蚀印×5（影蚀巨像）', 5 => '去君王大门，推开君王王座，杀阿巴顿'][min(5, $stg)];
     echo '<div class="warn">影蚀深渊：剩' . gmdate('i:s', max(0, $left)) . '　阶段' . $stg . '/5：' . h($need) . '</div>';
+}
+if (in_array($cur, gf_maps(), true)) {
+    $left = 2700 - (time() - (int) (mats_of((int) $u['id'])['gf_enter'] ?? time()));
+    echo '<div class="warn">堕天阶：剩' . gmdate('i:s', max(0, $left)) . '　击杀有1.2%掉神铸件，神帝保底！</div>';
 }
 if (in_array($cur, gy_maps(), true)) {
     $left = 1800 - (time() - (int) (mats_of((int) $u['id'])['gy_enter'] ?? time()));

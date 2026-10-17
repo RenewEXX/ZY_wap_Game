@@ -7,7 +7,11 @@ $who = (string) ($_GET['who'] ?? '');
 $choice = (string) ($_GET['choice'] ?? '');
 $cur = (string) $u['loc'];
 $people = [
-    'gykeeper' => ['name' => '罪渊守门人·渡罪', 'loc' => 'square', 'text' => '这口渊每月只开一次，罪值越高的人进去越安全。里面的怪物只有1滴血——它们叫善意、爱意、友谊，诸如此类。杀了它们，你的罪就涨了。别问我为什么。'],
+    'gallu' => ['name' => '神使·伽楼', 'loc' => 'god_gate', 'text' => '我守这扇门七百年，从没见过有人真的走完神界。神座会告诉你真相，堕天阶会告诉你代价。'],
+    'godmerchant' => ['name' => '神界商人·白羽', 'loc' => 'god_hall', 'text' => '神界也收金币，收得更狠。战力不够就别往天柱去，那里的执政官看谁都像叛徒。'],
+    'fallenguide' => ['name' => '堕天引路·堕羽', 'loc' => 'god_throne', 'text' => '想见神帝？先把神座打碎。下面是纯粹的坠落——45分钟，活着回来，或者留在星星之间。'],
+    'mirrorelder' => ['name' => '镜厅长老·镜胜雪', 'loc' => 'god_mirror', 'text' => '每面镜子都是一条判词，满厅都是。想照镜子？先把剑磨快，镜子认得血，不认得人。'],
+    'celia' => ['name' => '堕天传令·赛丽亚', 'loc' => 'gf_stair', 'text' => '我替神帝跑腿，也替坠落的人引路。你要是杀上来，记得先杀传令官，再杀我，最后杀他。规矩不能乱。'],    'gykeeper' => ['name' => '罪渊守门人·渡罪', 'loc' => 'square', 'text' => '这口渊每月只开一次，罪值越高的人进去越安全。里面的怪物只有1滴血——它们叫善意、爱意、友谊，诸如此类。杀了它们，你的罪就涨了。别问我为什么。'],
     'dane' => ['name' => '丹恩·铜须', 'loc' => 'smith', 'text' => '新来的？卡尔说你要下矿。空手去就是送死。我这辈子打过三千把武器，强化找我，炉子没灭过。下级强化石矿里到处是，中级要打精英，上级只在深处。'],
     'martha' => ['name' => '杂货商·玛莎', 'loc' => 'supply', 'text' => '火把、干粮、回城卷轴？下矿可不能没有火把。还有，捡到的破烂别扔，石头比金子值钱。'],
     'aileen' => ['name' => '药剂师·艾琳', 'loc' => 'market', 'text' => '我哥哥艾登·灰叶在调查队里。他没回来。拿着解毒剂。如果找到他的铭牌，请带回来。'],
@@ -87,6 +91,48 @@ if ($who === 'gykeeper' && $choice === 'enter') {
         }
     }
     header('Location: home.php');
+    exit;
+}
+if ($who === 'gallu' && $choice === 'start') {
+    if ((int) ($u['lv'] ?? 1) < 700 || (int) ($u['quest'] ?? 0) < 81) {
+        flash_set('伽楼看了你一眼：还不够。把你的名字磨到700级再来。');
+    } else {
+        $u['quest'] = 100;
+        user_save($u);
+        quest_god_baseline((int) $u['id'], 100);
+        flash_set('伽楼侧身让路：天门开了。去杀六翼天使——它们会让路，或者不。');
+    }
+    header('Location: home.php');
+    exit;
+}
+if ($who === 'fallenguide' && $choice === 'enter') {
+    $free = !empty(cflags((int) $u['id'])['gf_free']);
+    $mats = mats_of((int) $u['id']);
+    if (!$free && empty($mats['gf_ticket'])) {
+        flash_set('堕羽：没有【堕天阶入场券】进不去。杀神座化身拿一张，或者把主线走到神座碎（112环后免票）。');
+    } else {
+        if (!$free) {
+            add_mat((int) $u['id'], 'gf_ticket', -1);
+        }
+        mat_set((int) $u['id'], 'gf_enter', time());
+        $u['loc'] = 'gf_gate';
+        user_save($u);
+        flash_set($free ? '堕羽低头：归路已赦免。45分钟，往下走。' : '堕羽吹灭了灯：45分钟，往下走就是坠落。');
+    }
+    header('Location: home.php');
+    exit;
+}
+if ($who === 'godmerchant' && $choice === 'heal') {
+    if ((int) $u['gold'] < 50000) {
+        flash_set('白羽摇头：50000铜，一个子儿不能少。');
+    } else {
+        $u['gold'] = (int) $u['gold'] - 50000;
+        $u['hp'] = (int) $u['maxhp'];
+        $u['mp'] = (int) ($u['maxmp'] ?? 0);
+        user_save($u);
+        flash_set('白羽弹了个响指，你的伤全好了。');
+    }
+    header('Location: npc.php?who=godmerchant');
     exit;
 }
 if ($choice === 'gift' && isset(favor_npcs()[$who])) {
@@ -809,6 +855,19 @@ if ($who === 'priest_c') {
     $pw = (int) ($pm['active_week'] ?? 0);
     echo '本周有效游玩：' . gmdate('H:i:s', min($pw, 86399)) . '/02:00:00<br>';
     echo '<a href="npc.php?who=priest_c&choice=diamond">兑换10魔钻（每周一次）</a><br>';
+}
+if ($who === 'gallu') {
+    if ((int) ($u['quest'] ?? 0) >= 81 && (int) ($u['lv'] ?? 1) >= 700) {
+        echo '<a href="npc.php?who=gallu&choice=start">开启第八章·神界（需要700级）</a><br>';
+    } else {
+        echo '<span class="muted">（700级、二转完成后可从这里进入神界主线）</span><br>';
+    }
+}
+if ($who === 'fallenguide') {
+    echo '<a href="npc.php?who=fallenguide&choice=enter">进入堕天阶（消耗堕天阶入场券，45分钟）</a><br>';
+}
+if ($who === 'godmerchant') {
+    echo '<a href="npc.php?who=godmerchant&choice=heal">圣愿（花50000铜回满血魔）</a><br>';
 }
 if ($who === 'gykeeper') {
     $curMonth = date('Y-m');

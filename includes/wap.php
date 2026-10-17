@@ -26,9 +26,9 @@ a{color:#8cf;text-decoration:none}
 input{background:#111;color:#cfc;border:1px solid #363;padding:4px;font:13px monospace}
 </style></head><body>';
     echo '<div class="t">【' . h($title) . '】</div>';
-    if (function_exists('war_banner')) {
+    if (function_exists('war_banner') && !empty($_SESSION['uid'])) {
         try {
-            $wb = war_banner();
+            $wb = war_banner((int) $_SESSION['uid']);
             if ($wb !== '') {
                 echo '<div class="warn">' . h($wb) . '</div>';
             }
@@ -188,7 +188,7 @@ function quest_of(int $q): array
 function quest_banner(array $u, string $page = 'home.php'): void
 {
     $qs = quest_state($u);
-    $prog = (($qs['ch'] ?? 0) === 2) ? quest_progress2_text((int) ($u['id'] ?? 0), $qs) : ((($qs['ch'] ?? 0) === 3) ? quest_progress3_text((int) ($u['id'] ?? 0), $qs) : quest_progress_text((int) ($u['id'] ?? 0), $qs));
+    $prog = (($qs['ch'] ?? 0) === 2) ? quest_progress2_text((int) ($u['id'] ?? 0), $qs) : (($qs['ch'] ?? 0) >= 3 ? quest_progress3_text((int) ($u['id'] ?? 0), $qs) : quest_progress_text((int) ($u['id'] ?? 0), $qs));
     echo '<div class="warn">【任务' . h($qs['step'] ?? '') . '·' . h($qs['name']) . '】' . h($qs['todo']);
     if ($prog !== '') {
         echo '<br>' . h($prog);

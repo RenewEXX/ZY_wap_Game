@@ -112,7 +112,7 @@ function locations(): array
             'exits' => ['gate' => '罪渊入口'],
             'monsters' => [],
         ],
-    ] + ch1_locations() + dsw_locations() + ch2_locations() + abx_locations() + ch3_locations() + mx_locations() + farm_locations() + ice_locations() + fr_locations() + fo_locations() + em_locations() + wb_locations() + pz_locations() + sen_locations() + wild3_locations() + frostburg_locations() + greenheart_locations() + wild45_locations() + as_locations() + vx_locations() + gr_locations() + ry_locations();
+    ] + ch1_locations() + dsw_locations() + ch2_locations() + abx_locations() + ch3_locations() + mx_locations() + farm_locations() + ice_locations() + fr_locations() + fo_locations() + em_locations() + wb_locations() + pz_locations() + sen_locations() + wild3_locations() + frostburg_locations() + greenheart_locations() + wild45_locations() + as_locations() + vx_locations() + gr_locations() + ry_locations() + god_locations() + gf_locations();
 }
 
 function loc(string $id): array
@@ -183,6 +183,33 @@ function monsters(): array
         'gy_trust' => ['name' => '信任', 'hp' => 1, 'atk' => 1, 'exp' => 200, 'gold' => 0],
         'gy_mercy' => ['name' => '怜悯', 'hp' => 1, 'atk' => 1, 'exp' => 300, 'gold' => 0],
         'gy_justice' => ['name' => '正义', 'hp' => 1, 'atk' => 1, 'exp' => 500, 'gold' => 0],
+        // ---- 神界（700~999级） ----
+        'god_seraph' => ['name' => '六翼天使', 'hp' => 2400000, 'atk' => 6500, 'exp' => 4200000, 'gold' => 2000000],
+        'god_cloud' => ['name' => '云海执事', 'hp' => 2600000, 'atk' => 6800, 'exp' => 4500000, 'gold' => 2150000],
+        'god_watcher' => ['name' => '神庭守望', 'hp' => 2800000, 'atk' => 7000, 'exp' => 4800000, 'gold' => 2300000],
+        'god_judge' => ['name' => '裁决天使', 'hp' => 3000000, 'atk' => 7300, 'exp' => 5100000, 'gold' => 2450000],
+        'god_warden' => ['name' => '神铸守卫', 'hp' => 3200000, 'atk' => 7500, 'exp' => 5400000, 'gold' => 2600000],
+        'god_forger' => ['name' => '神匠', 'hp' => 3400000, 'atk' => 7800, 'exp' => 5800000, 'gold' => 2800000],
+        'god_golem' => ['name' => '天柱石像', 'hp' => 3600000, 'atk' => 8000, 'exp' => 6200000, 'gold' => 3000000],
+        'god_titan' => ['name' => '天柱泰坦', 'hp' => 4000000, 'atk' => 8500, 'exp' => 7000000, 'gold' => 3400000],
+        'god_avatar' => ['name' => '神座化身', 'hp' => 6000000, 'atk' => 9200, 'exp' => 9000000, 'gold' => 4400000],
+        'gf_shade' => ['name' => '堕天幽影', 'hp' => 3300000, 'atk' => 7600, 'exp' => 5600000, 'gold' => 2700000],
+        'gf_void' => ['name' => '虚空噬者', 'hp' => 3500000, 'atk' => 7900, 'exp' => 6000000, 'gold' => 2900000],
+        'gf_reaper' => ['name' => '天罚收割者', 'hp' => 3700000, 'atk' => 8200, 'exp' => 6500000, 'gold' => 3100000],
+        'gf_herald' => ['name' => '堕天传令', 'hp' => 4000000, 'atk' => 8600, 'exp' => 7200000, 'gold' => 3500000],
+        'god_emperor' => ['name' => '堕天神帝·路西法', 'hp' => 30000000, 'atk' => 10000, 'exp' => 20000000, 'gold' => 10000000],
+        'god_cherub' => ['name' => '智天使', 'hp' => 2200000, 'atk' => 6300, 'exp' => 4000000, 'gold' => 1900000],
+        'god_heraldg' => ['name' => '神界传令', 'hp' => 2900000, 'atk' => 7100, 'exp' => 5100000, 'gold' => 2450000],
+        'god_highpriest' => ['name' => '神界大祭司', 'hp' => 4600000, 'atk' => 8800, 'exp' => 7600000, 'gold' => 3600000],
+        'god_archon' => ['name' => '神界执政官', 'hp' => 8000000, 'atk' => 9600, 'exp' => 12000000, 'gold' => 6000000],
+        'gf_seraphim' => ['name' => '堕天炽天使', 'hp' => 4200000, 'atk' => 8500, 'exp' => 7000000, 'gold' => 3400000],
+        'god_pilgrim' => ['name' => '拾光朝圣者', 'hp' => 2300000, 'atk' => 6400, 'exp' => 4100000, 'gold' => 1900000],
+        'god_librarian' => ['name' => '藏星典吏', 'hp' => 3100000, 'atk' => 7200, 'exp' => 5300000, 'gold' => 2500000],
+        'god_gardener' => ['name' => '种星园丁', 'hp' => 3500000, 'atk' => 7900, 'exp' => 6000000, 'gold' => 2800000],
+        'god_mirror' => ['name' => '镜中判者', 'hp' => 4800000, 'atk' => 9000, 'exp' => 8000000, 'gold' => 3800000],
+        'god_sleeper' => ['name' => '失翼沉眠者', 'hp' => 5800000, 'atk' => 9300, 'exp' => 9500000, 'gold' => 4600000],
+        'god_serpent' => ['name' => '衔尾天蛇', 'hp' => 7500000, 'atk' => 9500, 'exp' => 11000000, 'gold' => 5500000],
+        'gf_fallen' => ['name' => '折翼圣者', 'hp' => 3600000, 'atk' => 8000, 'exp' => 6200000, 'gold' => 3000000],
         'road_wolf' => ['name' => '拦路野狼', 'hp' => 900, 'atk' => 70, 'exp' => 800, 'gold' => 300],
         'road_bandit' => ['name' => '拦路强人', 'hp' => 1400, 'atk' => 95, 'exp' => 1400, 'gold' => 600],
         'dust_raider' => ['name' => '尘埃劫掠者', 'hp' => 9000, 'atk' => 280, 'exp' => 14000, 'gold' => 6000],
@@ -570,12 +597,19 @@ function guild_warehouse_cap(int $level): int
     return 20 + (int) $level * 10;
 }
 
-function war_banner(): string
+function war_banner(?int $uid = null): string
 {
     $st = db()->query('SELECT a_gid, b_gid, ends_at FROM wars WHERE status="open" ORDER BY id DESC LIMIT 1');
     $w = $st->fetch();
     if (!$w) {
         return '';
+    }
+    if ($uid !== null) {
+        $g = my_guild((int) $uid);
+        $gid = (int) ($g['id'] ?? 0);
+        if ($gid !== (int) $w['a_gid'] && $gid !== (int) $w['b_gid']) {
+            return '';
+        }
     }
     $ga = db()->query('SELECT name FROM guilds WHERE id=' . (int) $w['a_gid'])->fetchColumn();
     $gb = db()->query('SELECT name FROM guilds WHERE id=' . (int) $w['b_gid'])->fetchColumn();
@@ -935,7 +969,11 @@ function declare_war(int $uid, int $targetGid): string
     db()->prepare('INSERT INTO wars (a_gid, b_gid, ends_at, status) VALUES (?, ?, ?, "open")')->execute([$myGid, $targetGid, time() + 86400]);
     $ga = db()->query('SELECT name FROM guilds WHERE id=' . $myGid)->fetchColumn();
     $gb = db()->query('SELECT name FROM guilds WHERE id=' . $targetGid)->fetchColumn();
-    db()->prepare('INSERT INTO chat_msgs (uid, username, channel, target, text, created_at) VALUES (0, "战报", "world", 0, ?, ?)')->execute(['【公会战】' . $ga . '向' . $gb . '宣战！24小时刷怪比战功，去荒芜战场找军需官参战！', time()]);
+    foreach ([$myGid, $targetGid] as $gg) {
+        foreach (db()->query('SELECT uid FROM guild_members WHERE gid=' . (int) $gg)->fetchAll() as $mm) {
+            send_mail((int) $mm['uid'], '战场军需官', 'war', '公会战开启', $ga . ' VS ' . $gb . '：24小时刷怪比战功，去荒芜战场找军需官参战！', []);
+        }
+    }
     return '宣战成功！24小时内双方成员刷怪涨战功。';
 }
 
@@ -1165,7 +1203,7 @@ function war_enemies(int $uid): array
 
 function boss_of_map(string $loc): string
 {
-    static $m = ['boss' => 'knight', 'echo_room' => 'echo_rayne', 'rift' => 'abyss_eye', 'baltar' => 'dark_lily', 'dsw_throne' => 'swamp_king', 'abx_throne' => 'abaddon', 'theater' => 'string_puller', 'mx_heart' => 'silk_mother', 'frost_throne' => 'winter_king', 'fr_core' => 'fr_leviathan', 'volcano_heart' => 'ancient_ruin_golem', 'em_core' => 'em_heart', 'pz_core' => 'pz_master', 'sen_core' => 'sen_avatar', 'shadow_den' => 'shadow_claw', 'brass_chapel' => 'brass_bishop', 'wanderer_camp' => 'tundra_wanderer', 'ice_fall' => 'avalanche_titan', 'obsidian_field' => 'obsidian_colossus', 'as_core' => 'ash_titan', 'vx_core' => 'vx_tyrant', 'ry_core' => 'ry_titan'];
+    static $m = ['boss' => 'knight', 'echo_room' => 'echo_rayne', 'rift' => 'abyss_eye', 'baltar' => 'dark_lily', 'dsw_throne' => 'swamp_king', 'abx_throne' => 'abaddon', 'theater' => 'string_puller', 'mx_heart' => 'silk_mother', 'frost_throne' => 'winter_king', 'fr_core' => 'fr_leviathan', 'volcano_heart' => 'ancient_ruin_golem', 'em_core' => 'em_heart', 'pz_core' => 'pz_master', 'sen_core' => 'sen_avatar', 'shadow_den' => 'shadow_claw', 'brass_chapel' => 'brass_bishop', 'wanderer_camp' => 'tundra_wanderer', 'ice_fall' => 'avalanche_titan', 'obsidian_field' => 'obsidian_colossus', 'as_core' => 'ash_titan', 'vx_core' => 'vx_tyrant', 'ry_core' => 'ry_titan', 'god_throne' => 'god_avatar', 'gf_core' => 'god_emperor'];
     return $m[$loc] ?? '';
 }
 
@@ -2214,6 +2252,10 @@ function weapon_sub(string $base): string
     if (isset($sinMap[$sn])) {
         return $sinMap[$sn];
     }
+    $godMap = ['神铸·裁决' => 'staff', '神铸·雷霆' => 'axe', '神铸·苍穹' => 'bow', '神铸·铁律' => 'mace', '神铸·圣盾' => 'shield', '神铸·天罚' => 'blade', '神铸·曙光' => 'staff'];
+    if (isset($godMap[$sn])) {
+        return $godMap[$sn];
+    }
     foreach (['杖', '法器', '魔杖', '圣杖', '提灯', '法典', '法球'] as $k) {
         if (str_contains($base, $k)) {
             return 'staff';
@@ -2566,6 +2608,12 @@ function equip_set_id(string $shortName): string
     if (str_starts_with($shortName, '罪渊·')) {
         return 'sin';
     }
+    if (str_starts_with($shortName, '暮影·')) {
+        return 'dusk';
+    }
+    if (str_starts_with($shortName, '神铸·')) {
+        return 'god';
+    }
     if (str_starts_with($shortName, '岩狱·')) {
         return 'rockjail';
     }
@@ -2595,14 +2643,20 @@ function equip_set_pieces(string $set): array
     if ($set === 'sin') {
         return ['罪渊·傲慢', '罪渊·嫉妒', '罪渊·暴怒', '罪渊·懒惰', '罪渊·贪婪', '罪渊·暴食', '罪渊·色欲', '罪渊·悔恨冠', '罪渊·赎罪甲', '罪渊·缚罪裤', '罪渊·忏悔束腰', '罪渊·堕天靴', '罪渊·噬罪手套', '罪渊·堕羽披风', '罪渊·泣罪戒', '罪渊·殉罪链', '罪渊·赎罪灯'];
     }
+    if ($set === 'dusk') {
+        return ['暮影·暮刃', '暮影·暮誓手套', '暮影·暮链'];
+    }
+    if ($set === 'god') {
+        return ['神铸·裁决', '神铸·雷霆', '神铸·苍穹', '神铸·铁律', '神铸·圣盾', '神铸·天罚', '神铸·曙光', '神铸·圣冠', '神铸·羽甲', '神铸·天裤', '神铸·云腰', '神铸·踏云靴', '神铸·执掌手套', '神铸·天翼披风', '神铸·星辰戒', '神铸·神谕链', '神铸·圣灯'];
+    }
     return [];
 }
 
 function equip_set_owned_count(int $uid, string $set): int
 {
-    if (in_array($set, ['theater', 'frost', 'ember', 'puppet', 'thorn', 'rockjail', 'sin'], true)) {
-        $mark = ['theater' => '%剧场·%', 'frost' => '%寒霜·%', 'ember' => '%烬焰·%', 'puppet' => '%傀儡·%', 'thorn' => '%荆棘·%', 'rockjail' => '%岩狱·%', 'sin' => '%罪渊·%'][$set];
-        $cap = ['theater' => 99, 'frost' => 3, 'ember' => 7, 'puppet' => 5, 'thorn' => 4, 'rockjail' => 10, 'sin' => 11][$set];
+    if (in_array($set, ['theater', 'frost', 'ember', 'puppet', 'thorn', 'rockjail', 'sin', 'god'], true)) {
+        $mark = ['theater' => '%剧场·%', 'frost' => '%寒霜·%', 'ember' => '%烬焰·%', 'puppet' => '%傀儡·%', 'thorn' => '%荆棘·%', 'rockjail' => '%岩狱·%', 'sin' => '%罪渊·%', 'god' => '%神铸·%', 'dusk' => '%暮影·%'][$set];
+        $cap = ['theater' => 99, 'frost' => 3, 'ember' => 7, 'puppet' => 5, 'thorn' => 4, 'rockjail' => 10, 'sin' => 11, 'god' => 11, 'dusk' => 3][$set];
         $st = db()->prepare('SELECT COUNT(*) FROM equips WHERE uid=? AND pos="wear" AND name LIKE ?');
         $st->execute([(int) $uid, $mark]);
         return min($cap, (int) $st->fetchColumn());
@@ -2641,8 +2695,14 @@ function equip_set_bonus_text(string $set, int $owned): string
     if ($set === 'thorn') {
         return '【荆棘套装】已穿' . $owned . '/4：3件物攻+6%，4件吸血+3%。';
     }
+    if ($set === 'god') {
+        return '【神铸套装】已穿' . $owned . '/11（10防具+1武器，或9防具+主副手）——每件：物攻/法攻+3%、减伤+1%；3件：生命+等级×40；5件：吸血8%；7件：减伤+12%；9件：真伤+等级×20；11件：技能伤+30%、全属性+等级×5！';
+    }
     if ($set === 'sin') {
         return '【罪渊套装】已穿' . $owned . '/11（10防具+1武器，或9防具+主副手）——每件：攻击+1%、技能伤+1（×罪加成）；3件：生命+罪×2；5件：吸血5%；7件：减伤8%；9件：真伤+罪×3；11件：减伤+罪/20（封顶20）、技能伤+罪/10（封顶50）！';
+    }
+    if ($set === 'dusk') {
+        return '【暮影套装】已穿' . $owned . '/3（暮刃/暮誓手套/暮链）——2件：物/法攻+15%、技能伤+10%；3件：暴击+8%、真伤+等级×10！流浪者的执念，有罪者佩之更强。';
     }
     if ($set === 'rockjail') {
         return '【岩狱套装】已穿' . $owned . '/10：3件血+3000，5件减伤+8%，7件血+8000减伤+12%，10件血+20000减伤+20%、磐岩（承伤再-5%）。';
@@ -3460,6 +3520,9 @@ function mat_name(string $id): string
     if ($id === 'reset_potion') {
         return '属性洗点药';
     }
+    if ($id === 'god_badge') { return '神界勋章'; }
+    if ($id === 'gf_ticket') { return '堕天阶入场券'; }
+    if ($id === 'god_proof') { return '抗神证明'; }
     if ($id === 'qingzui_dan') {
         return '清罪丹';
     }
@@ -4113,7 +4176,7 @@ function gear_stats(int $uid): array
     }
         $tw = (string) (mats_of($uid)['title_wear'] ?? '');
     if ($tw !== '') {
-        $tb = ['title_ch1' => ['atk' => 30, 'hp' => 500], 'title_ch2' => ['def' => 30, 'hp' => 800], 'title_ch3' => ['crit' => 1.0, 'atk' => 50], 'title_ch4' => ['mdef' => 40, 'hp' => 1200], 'title_ch5' => ['matk' => 50, 'hp' => 1500], 'title_rb2' => ['skill_damage' => 3.0, 'hp' => 2000], 'title_dragon1' => ['critdmg' => 5.0, 'hp' => 1500], 'title_dragon2' => ['atk' => 100, 'matk' => 100], 'title_dragon3' => ['skill_damage' => 8.0, 'truedmg' => 200.0]][$tw] ?? [];
+        $tb = ['title_ch1' => ['atk' => 30, 'hp' => 500], 'title_ch2' => ['def' => 30, 'hp' => 800], 'title_ch3' => ['crit' => 1.0, 'atk' => 50], 'title_ch4' => ['mdef' => 40, 'hp' => 1200], 'title_ch5' => ['matk' => 50, 'hp' => 1500], 'title_rb2' => ['skill_damage' => 3.0, 'hp' => 2000], 'title_dragon1' => ['critdmg' => 5.0, 'hp' => 1500], 'title_dragon2' => ['atk' => 100, 'matk' => 100], 'title_dragon3' => ['skill_damage' => 8.0, 'truedmg' => 200.0], 'title_god' => ['skill_damage' => 12.0, 'truedmg' => 500.0, 'hp' => 5000.0]][$tw] ?? [];
         foreach ($tb as $tk => $tv) { $s[$tk] += $tv; }
     }
 // 全属性按攻击、防御、生命各加一次；百分比属性按设计上限截断。
@@ -4202,6 +4265,26 @@ function gear_stats(int $uid): array
         if ($gy >= 9) { $s['truedmg'] += $sinLv * 3; }
         if ($gy >= 11) { $s['damage_reduction'] += min(20, $sinLv / 20); $s['skill_damage'] += min(50, $sinLv / 10); }
     }
+    $god = 0;
+    foreach ($worn as $wn) {
+        if (str_starts_with($wn, '神铸·')) { $god++; }
+    }
+    if ($god > 0) {
+        $ulv = (int) (db()->query('SELECT lv FROM users WHERE id=' . (int) $uid)->fetchColumn() ?: 1);
+        $s['atk_pct'] += $god * 3;
+        $s['damage_reduction'] += $god * 1;
+        if ($god >= 3) { $s['hp'] += $ulv * 40; }
+        if ($god >= 5) { $s['lifesteal'] += 8; }
+        if ($god >= 7) { $s['damage_reduction'] += 12; }
+        if ($god >= 9) { $s['truedmg'] += $ulv * 20; }
+        if ($god >= 11) { $s['skill_damage'] += 30; $s['all_attr'] += $ulv * 5; }
+    }
+    $dusk = 0;
+    foreach ($worn as $wn) {
+        if (str_starts_with($wn, '暮影·')) { $dusk++; }
+    }
+    if ($dusk >= 2) { $s['atk_pct'] += 15; $s['skill_damage'] += 10; }
+    if ($dusk >= 3) { $s['crit'] += 8; $s['truedmg'] += max(1, (int) (db()->query('SELECT lv FROM users WHERE id=' . (int) $uid)->fetchColumn() ?: 1)) * 10; }
     $qu = db()->prepare('SELECT quest FROM users WHERE id=?');
     $qu->execute([$uid]);
     if ((int) ($qu->fetchColumn() ?: 0) >= 38) {
@@ -4808,6 +4891,10 @@ function monster_lv(string $mid): int
         'gargoyle' => 50, 'puppet' => 55, 'apostle' => 45, 'guardian' => 55, 'valentin' => 62, 'dark_lily' => 66, 'abyss_eye' => 70,
         'shadow_walker' => 55, 'corrupt_warder' => 65, 'whisperer' => 80, 'rift_hound' => 88, 'rift_weaver' => 97, 'colossus' => 95, 'abaddon' => 120,
         'gy_kindness' => 1, 'gy_love' => 1, 'gy_friendship' => 1, 'gy_courage' => 1, 'gy_hope' => 1, 'gy_trust' => 1, 'gy_mercy' => 1, 'gy_justice' => 1,
+        'god_seraph' => 720, 'god_cloud' => 745, 'god_watcher' => 770, 'god_judge' => 795, 'god_warden' => 815, 'god_forger' => 840, 'god_golem' => 865, 'god_titan' => 900, 'god_avatar' => 935,
+        'gf_shade' => 820, 'gf_void' => 850, 'gf_reaper' => 880, 'gf_herald' => 915, 'god_emperor' => 999,
+        'god_cherub' => 710, 'god_heraldg' => 785, 'god_highpriest' => 890, 'god_archon' => 960, 'gf_seraphim' => 890,
+        'god_pilgrim' => 720, 'god_librarian' => 805, 'god_gardener' => 845, 'god_mirror' => 905, 'god_sleeper' => 930, 'god_serpent' => 945, 'gf_fallen' => 830,
         'road_wolf' => 22, 'road_bandit' => 26, 'dust_raider' => 80, 'dust_marauder' => 95, 'snow_drifter' => 325, 'snow_reaver' => 335, 'ash_drifter' => 470, 'ash_reaver' => 485,
         'dark_slime' => 20, 'swamp_slime' => 21, 'swamp_king' => 25,
         'puppet_guard' => 130, 'masked_noble' => 150, 'ink_puppet' => 180, 'silver_undead' => 210,
@@ -5754,6 +5841,16 @@ function battle_round(array &$u, array &$b, string $mode): array
             if ($gyMsg !== '') {
                 $msg .= $gyMsg;
             }
+        }
+        if (str_starts_with((string) ($b['id'] ?? ''), 'god_') || str_starts_with((string) ($b['id'] ?? ''), 'gf_')) {
+            $godMsg = god_kill_drop((int) ($u['id'] ?? 0), (string) ($b['id'] ?? ''));
+            if ($godMsg !== '') {
+                $msg .= $godMsg;
+            }
+        }
+        $duskMsg = dusk_kill_drop((int) ($u['id'] ?? 0), (string) ($b['id'] ?? ''));
+        if ($duskMsg !== '') {
+            $msg .= $duskMsg;
         } elseif (is_boss_mid((string) ($b['id'] ?? ''))) {
             sin_gain_typed($u, 'boss');
         } else {
@@ -5884,6 +5981,35 @@ function battle_round(array &$u, array &$b, string $mode): array
                 user_save($u);
             } else {
                 $txt .= '。【' . $qs3['name'] . '】' . quest_progress3_text((int) $u['id'], $qs3);
+            }
+        }
+        if ($cur >= 100 && $cur <= 117) {
+            $qsg = god_quests()[$cur] + ['id' => $cur];
+            if (check_ch3_done((int) $u['id'], $qsg)) {
+                $u['quest'] = $cur + 1;
+                $u['gold'] = (int) $u['gold'] + [100 => 200000, 101 => 220000, 102 => 260000, 103 => 300000, 104 => 350000, 105 => 400000, 106 => 450000, 107 => 500000, 108 => 600000, 109 => 700000, 110 => 800000, 111 => 1000000, 112 => 1200000, 113 => 1400000, 114 => 1600000, 115 => 1800000, 116 => 2000000, 117 => 3000000][$cur];
+                if ($cur === 100) {
+                    add_mat((int) $u['id'], 'god_badge', 1);
+                    $txt .= '。【神界勋章】入手，伽楼说：往上去，别回头。';
+                } elseif ($cur === 112) {
+                    $u2a = user_by_id((int) $u['id']);
+                    $uu2 = is_array($u2a) ? $u2a : $u;
+                    cflag_set((int) $u['id'], 'gf_free', 1);
+                    user_save($uu2);
+                    $txt .= '。神座化身消散了。堕天传令·赛丽亚落地行礼：下面请走堕天阶，归路已为你赦免（进堕天阶不再收票）。';
+                } elseif ($cur === 117) {
+                    add_mat((int) $u['id'], 'god_proof', 1);
+                    give_title((int) $u['id'], 'title_god');
+                    $gw = ['warrior' => '神铸·雷霆', 'mage' => '神铸·裁决', 'hunter' => '神铸·苍穹', 'priest' => '神铸·铁律'][job_id_of($u)] ?? '神铸·天罚';
+                    $gn = make_equip((int) $u['id'], 'weapon', $gw, 4, max(1, (int) $u['lv']));
+                    $txt .= '。第八章·神界完成！堕天神帝陨落，你夺得【称号·神界主宰】' . ($gn !== '' ? '与【' . $gn . '】' : '') . '！';
+                } else {
+                    $txt .= '。本轮完成，进下一环！';
+                }
+                quest_god_baseline((int) $u['id'], $cur + 1);
+                user_save($u);
+            } else {
+                $txt .= '。【' . $qsg['name'] . '】' . quest_progress3_text((int) $u['id'], $qsg);
             }
         }
         if ($cur >= 50 && $cur <= 61) {
@@ -6181,6 +6307,8 @@ function map_regions(): array
         '风雪关道' => ['buf34a', 'buf34b'],
         '灰雾关道' => ['buf35a', 'buf35b'],
         '王都·傀儡之夜' => ['capital_gate', 'avenue', 'noble', 'library', 'ctomb', 'slum', 'cathedral', 'observatory', 'theater'],
+        '神界' => ['god_gate', 'god_hall', 'god_pilgrim', 'god_library', 'god_sea', 'god_garden', 'god_orchard', 'god_court', 'god_mirror', 'god_forge', 'god_pillar', 'god_sleeper', 'god_serpent', 'god_throne'],
+        '神界·堕天阶' => ['gf_gate', 'gf_stair', 'gf_void', 'gf_wing', 'gf_core'],
         '银丝母巢' => ['mx_gate', 'mx_path', 'mx_hall', 'mx_depth', 'mx_nest', 'mx_heart'],
         '公会战场' => ['warfield'],
         '公会战场' => ['warfield'],
@@ -6193,7 +6321,7 @@ function map_regions(): array
 // 副本图：只能找NPC进，不参与传送
 function dungeon_maps(): array
 {
-    return array_merge(dsw_maps(), abx_maps(), mx_maps(), fr_maps(), em_maps(), pz_maps(), sen_maps(), ry_maps(), vx_maps(), gy_maps());
+    return array_merge(dsw_maps(), abx_maps(), mx_maps(), fr_maps(), em_maps(), pz_maps(), sen_maps(), ry_maps(), vx_maps(), gy_maps(), gf_maps());
 }
 
 function exit_dirs(string $from): array
@@ -6298,6 +6426,7 @@ function teleport_min_lv(string $loc): int
         'frostburg_gate' => 330, 'frostburg_sq' => 340, 'bounty_hall' => 340, 'fire_inn' => 340, 'furnace_st' => 340,
         'greenheart_gate' => 480, 'greenheart_sq' => 490, 'spore_market' => 490, 'rain_inn' => 490, 'elder_tree' => 490,
         'ice_village' => 335, 'ember_foothill' => 580,
+        'god_gate' => 700, 'god_hall' => 700, 'god_pilgrim' => 720, 'god_library' => 800, 'god_sea' => 710, 'god_garden' => 840, 'god_orchard' => 850, 'god_court' => 760, 'god_mirror' => 900, 'god_forge' => 810, 'god_pillar' => 860, 'god_sleeper' => 925, 'god_serpent' => 940, 'god_throne' => 900, 'gf_wing' => 880, 'gf_gate' => 750, 'gf_stair' => 800, 'gf_void' => 850, 'gf_core' => 900,
     ];
     if (isset($cityLv[$loc])) {
         return $cityLv[$loc];
@@ -6501,20 +6630,20 @@ function dungeon_tick(array &$u): void
     $inEm = in_array($loc, em_maps(), true);
     $inPz = in_array($loc, pz_maps(), true);
     $inSen = in_array($loc, sen_maps(), true);
-    $inAs = in_array($loc, as_maps(), true); $inVx = in_array($loc, vx_maps(), true); $inGy = in_array($loc, gy_maps(), true);
-    if (!in_array($loc, dsw_maps(), true) && !in_array($loc, abx_maps(), true) && !in_array($loc, mx_maps(), true) && !$inFr && !$inEm && !$inPz && !$inSen && !$inAs && !$inVx && !$inGy) {
+    $inAs = in_array($loc, as_maps(), true); $inVx = in_array($loc, vx_maps(), true); $inGy = in_array($loc, gy_maps(), true); $inGf = in_array($loc, gf_maps(), true);
+    if (!in_array($loc, dsw_maps(), true) && !in_array($loc, abx_maps(), true) && !in_array($loc, mx_maps(), true) && !$inFr && !$inEm && !$inPz && !$inSen && !$inAs && !$inVx && !$inGy && !$inGf) {
         return;
     }
     $inAbx = in_array($loc, abx_maps(), true);
     $inMx = in_array($loc, mx_maps(), true);
     $mats = mats_of((int) ($u['id'] ?? 0));
-    $enter = (int) ($mats[$inFr ? 'fr_enter' : ($inEm ? 'em_enter' : ($inPz ? 'pz_enter' : ($inSen ? 'sen_enter' : ($inAs ? 'as_enter' : ($inVx ? 'vx_enter' : ($inMx ? 'mx_enter' : ($inAbx ? 'abx_enter' : ((isset($inGy) && $inGy) ? 'gy_enter' : 'dsw_enter'))))))))] ?? time());
-    $limit = ($inMx || $inFr || $inEm || $inPz || $inSen || $inAs || $inVx) ? 2700 : 1800;
+    $enter = (int) ($mats[$inFr ? 'fr_enter' : ($inEm ? 'em_enter' : ($inPz ? 'pz_enter' : ($inSen ? 'sen_enter' : ($inAs ? 'as_enter' : ($inVx ? 'vx_enter' : ($inMx ? 'mx_enter' : ($inAbx ? 'abx_enter' : ((isset($inGy) && $inGy) ? 'gy_enter' : ((isset($inGf) && $inGf) ? 'gf_enter' : 'dsw_enter')))))))))] ?? time());
+    $limit = ($inMx || $inFr || $inEm || $inPz || $inSen || $inAs || $inVx || $inGf) ? 2700 : 1800;
     if (time() - $enter > $limit) {
         unset($_SESSION['battle']);
-        $u['loc'] = $inFr ? 'ice_village' : ($inEm ? 'ember_foothill' : ($inPz ? 'theater' : ($inSen ? 'fo_gate' : ($inAs ? 'ember_foothill' : ($inVx ? 'volcano_heart' : ($inMx ? 'avenue' : ($inAbx ? 'silver_sq' : ((isset($inGy) && $inGy) ? 'square' : 'town_sq'))))))));
+        $u['loc'] = $inFr ? 'ice_village' : ($inEm ? 'ember_foothill' : ($inPz ? 'theater' : ($inSen ? 'fo_gate' : ($inAs ? 'ember_foothill' : ($inVx ? 'volcano_heart' : ($inMx ? 'avenue' : ($inAbx ? 'silver_sq' : ((isset($inGy) && $inGy) ? 'square' : ((isset($inGf) && $inGf) ? 'greenheart_sq' : 'town_sq')))))))));
         user_save($u);
-        $back = $inFr ? '冰原村' : ($inEm ? '火山麓' : ($inPz ? '傀儡剧场' : ($inSen ? '雾森渡口' : ($inAs ? '火山麓' : ($inVx ? '火山之心' : ($inMx ? '中央大道' : ($inAbx ? '白银广场' : ((isset($inGy) && $inGy) ? '灰雾村广场' : '白石镇广场'))))))));
+        $back = $inFr ? '冰原村' : ($inEm ? '火山麓' : ($inPz ? '傀儡剧场' : ($inSen ? '雾森渡口' : ($inAs ? '火山麓' : ($inVx ? '火山之心' : ($inMx ? '中央大道' : ($inAbx ? '白银广场' : ((isset($inGy) && $inGy) ? '灰雾村广场' : ((isset($inGf) && $inGf) ? '青叶广场' : '白石镇广场')))))))));
         flash_set(($limit >= 2700 ? '45' : '30') . '分钟到了，你被传回' . $back . '。');
     }
 }
@@ -6576,11 +6705,11 @@ function open_dragon_box(int $uid): string
 // 称号走装备背包（slot=title）
 function title_ids(): array
 {
-    return ['title_ch1' => '称号·灰雾行者', 'title_ch2' => '称号·白银守望', 'title_ch3' => '称号·王都破局者', 'title_ch4' => '称号·凛冬行者', 'title_ch5' => '称号·南炎见证', 'title_rb2' => '称号·虚空征服者', 'title_dragon1' => '称号·龙鳞初醒', 'title_dragon2' => '称号·龙血沸騰', 'title_dragon3' => '称号·灭世龙威'];
+    return ['title_ch1' => '称号·灰雾行者', 'title_ch2' => '称号·白银守望', 'title_ch3' => '称号·王都破局者', 'title_ch4' => '称号·凛冬行者', 'title_ch5' => '称号·南炎见证', 'title_rb2' => '称号·虚空征服者', 'title_dragon1' => '称号·龙鳞初醒', 'title_dragon2' => '称号·龙血沸騰', 'title_dragon3' => '称号·灭世龙威', 'title_god' => '称号·神界主宰'];
 }
 function title_bonus(string $tid): array
 {
-    return ['title_ch1' => ['atk' => 30.0, 'hp' => 500.0], 'title_ch2' => ['def' => 30.0, 'hp' => 800.0], 'title_ch3' => ['crit' => 1.0, 'atk' => 50.0], 'title_ch4' => ['mdef' => 40.0, 'hp' => 1200.0], 'title_ch5' => ['matk' => 50.0, 'hp' => 1500.0], 'title_rb2' => ['skill_damage' => 3.0, 'hp' => 2000.0], 'title_dragon1' => ['critdmg' => 5.0, 'hp' => 1500.0], 'title_dragon2' => ['atk' => 100.0, 'matk' => 100.0], 'title_dragon3' => ['skill_damage' => 8.0, 'truedmg' => 200.0]][$tid] ?? [];
+    return ['title_ch1' => ['atk' => 30.0, 'hp' => 500.0], 'title_ch2' => ['def' => 30.0, 'hp' => 800.0], 'title_ch3' => ['crit' => 1.0, 'atk' => 50.0], 'title_ch4' => ['mdef' => 40.0, 'hp' => 1200.0], 'title_ch5' => ['matk' => 50.0, 'hp' => 1500.0], 'title_rb2' => ['skill_damage' => 3.0, 'hp' => 2000.0], 'title_dragon1' => ['critdmg' => 5.0, 'hp' => 1500.0], 'title_dragon2' => ['atk' => 100.0, 'matk' => 100.0], 'title_dragon3' => ['skill_damage' => 8.0, 'truedmg' => 200.0], 'title_god' => ['skill_damage' => 12.0, 'truedmg' => 500.0, 'hp' => 5000.0]][$tid] ?? [];
 }
 function give_title(int $uid, string $tid): bool
 {
@@ -6892,7 +7021,7 @@ function greenheart_locations(): array
 {
     $m = [];
     $m['greenheart_gate'] = ['name' => '青叶城·树门', 'desc' => '整座城长在一棵树上。树门会眨眼，眨一下放一个人。', 'exits' => ['fo_gate' => '雾森渡口', 'greenheart_sq' => '青叶广场'], 'monsters' => []];
-    $m['greenheart_sq'] = ['name' => '青叶广场', 'desc' => '广场是片大叶子，踩上去软乎乎。孢子商人摆了一地发光的东西。', 'exits' => ['greenheart_gate' => '树门', 'spore_market' => '孢子市场', 'rain_inn' => '雨枝旅店', 'elder_tree' => '古树议会'], 'monsters' => []];
+    $m['greenheart_sq'] = ['name' => '青叶广场', 'desc' => '广场是片大叶子，踩上去软乎乎。孢子商人摆了一地发光的东西。', 'exits' => ['greenheart_gate' => '树门', 'spore_market' => '孢子市场', 'rain_inn' => '雨枝旅店', 'elder_tree' => '古树议会', 'god_gate' => '神界·天门'], 'monsters' => []];
     $m['spore_market'] = ['name' => '孢子市场', 'desc' => '卖什么的都有，买什么的都得砍价。砍不下来就打一架，打赢了白拿——开玩笑的，别当真。', 'exits' => ['greenheart_sq' => '广场'], 'monsters' => []];
     $m['rain_inn'] = ['name' => '雨枝旅店', 'desc' => '屋顶漏雨，店小二说那是特色。床是干的，这就够了。', 'exits' => ['greenheart_sq' => '广场'], 'monsters' => []];
     $m['elder_tree'] = ['name' => '古树议会', 'desc' => '三棵老树在开会，开了三百年。悬赏单贴在树皮上，风一吹哗哗响。', 'exits' => ['greenheart_sq' => '广场'], 'monsters' => []];
@@ -6958,6 +7087,48 @@ function ry_locations(): array
 function ry_maps(): array
 {
     return ['ry_gate', 'ry_path', 'ry_hall', 'ry_prison', 'ry_core'];
+}
+// 神界：700~999级主线，从青叶广场天门进入
+function god_locations(): array
+{
+    $m = [];
+    $m['god_gate'] = ['name' => '神界·天门', 'desc' => '云在脚下断成两半。门楣上没有字，是六只眼睛。神使·伽楼：往上去，七百年才开一次。', 'exits' => ['god_hall' => '圣都', 'greenheart_sq' => '青叶广场'], 'monsters' => ['god_seraph']];
+    $m['god_hall'] = ['name' => '神界·圣都', 'desc' => '云砌的城，路上没有影子。神界商人只收金币，不问你从哪来。', 'exits' => ['god_gate' => '天门', 'god_sea' => '云海'], 'monsters' => []];
+    $m['god_sea'] = ['name' => '云海', 'desc' => '云海托着碎掉的星。执事在云上走，不留下脚印。', 'exits' => ['god_hall' => '圣都', 'god_court' => '神庭'], 'monsters' => ['god_seraph', 'god_cloud', 'god_cherub']];
+    $m['god_court'] = ['name' => '神庭', 'desc' => '白色的大厅没有影子。守望和裁决并排站着，谁也不看谁。', 'exits' => ['god_sea' => '云海', 'god_forge' => '神铸台', 'god_mirror' => '镜厅', 'god_orchard' => '星果林'], 'monsters' => ['god_watcher', 'god_judge']];
+    $m['god_forge'] = ['name' => '神铸台', 'desc' => '神匠锤打的是自己的骨头。守卫从炉火里站起来。', 'exits' => ['god_court' => '神庭', 'god_pillar' => '天柱'], 'monsters' => ['god_forger', 'god_warden', 'god_heraldg']];
+    $m['god_pillar'] = ['name' => '天柱', 'desc' => '一根柱子撑住整片天。石像爬在柱上，泰坦在柱顶。', 'exits' => ['god_forge' => '神铸台', 'god_throne' => '神座'], 'monsters' => ['god_golem', 'god_titan', 'god_highpriest']];
+    $m['god_pilgrim'] = ['name' => '拾光阶', 'desc' => '朝圣者拾起碎掉的星光，一片片拼回去。拼好了，星又碎了。他们不生气，继续拼。', 'exits' => ['god_hall' => '圣都', 'god_library' => '藏星馆'], 'monsters' => ['god_pilgrim']];
+    $m['god_library'] = ['name' => '藏星馆', 'desc' => '典吏把星星登记造册，一颗编号一颗命。借走的星，没有一颗按时还过。', 'exits' => ['god_pilgrim' => '拾光阶', 'god_sea' => '云海'], 'monsters' => ['god_librarian']];
+    $m['god_garden'] = ['name' => '种星园', 'desc' => '园丁把星种进土里，浇的是晨光。摘星的时候不许哭，哭了星就咸了。', 'exits' => ['god_sea' => '云海', 'god_orchard' => '星果林'], 'monsters' => ['god_gardener']];
+    $m['god_orchard'] = ['name' => '星果林', 'desc' => '果子熟了会自己掉下来，砸在地上变成下一颗星的种子。', 'exits' => ['god_garden' => '种星园', 'god_court' => '神庭'], 'monsters' => ['god_gardener']];
+    $m['god_mirror'] = ['name' => '镜厅', 'desc' => '满墙的镜子照不出人脸，只照出判词。判者站在镜子里，等你自己走进来认罪。', 'exits' => ['god_court' => '神庭', 'god_throne' => '神座'], 'monsters' => ['god_mirror']];
+    $m['god_sleeper'] = ['name' => '沉眠谷', 'desc' => '失翼者在这里睡觉，睡了三百年。他们的梦漏出来，变成谷里的雾。', 'exits' => ['god_pillar' => '天柱', 'god_serpent' => '衔尾渊'], 'monsters' => ['god_sleeper']];
+    $m['god_serpent'] = ['name' => '衔尾渊', 'desc' => '天蛇咬着自己的尾巴，围成一个圈。圈里的时间是圆的，走进去的人都会回到入口——除了你。', 'exits' => ['god_sleeper' => '沉眠谷', 'god_throne' => '神座'], 'monsters' => ['god_serpent']];
+    $m['god_throne'] = ['name' => '神座', 'desc' => '空的神座，坐着一团没有脸的光。它是这世界的第一个谎言。', 'exits' => ['god_pillar' => '天柱', 'god_mirror' => '镜厅', 'god_serpent' => '衔尾渊', 'gf_gate' => '堕天阶·入口'], 'monsters' => ['god_avatar', 'god_archon']];
+    return $m;
+}
+
+function god_maps(): array
+{
+    return ['god_gate', 'god_hall', 'god_pilgrim', 'god_library', 'god_sea', 'god_garden', 'god_orchard', 'god_court', 'god_mirror', 'god_forge', 'god_pillar', 'god_sleeper', 'god_serpent', 'god_throne'];
+}
+
+// 神界副本·堕天阶（750~999级，45分钟）
+function gf_locations(): array
+{
+    $m = [];
+    $m['gf_gate'] = ['name' => '堕天阶·入口', 'desc' => '台阶是折断的翅膀铺成的。往下走，越走越亮，亮得刺眼。', 'exits' => ['gf_stair' => '坠落之阶'], 'monsters' => ['gf_shade']];
+    $m['gf_stair'] = ['name' => '坠落之阶', 'desc' => '每一步都踩在别人的坠路上。幽影贴着阶梯往上爬。', 'exits' => ['gf_gate' => '入口', 'gf_void' => '虚空回廊'], 'monsters' => ['gf_shade', 'gf_void']];
+    $m['gf_void'] = ['name' => '虚空回廊', 'desc' => '没有墙，只有坠落的星在缓慢地掉。噬者就在星星之间。', 'exits' => ['gf_stair' => '坠落之阶', 'gf_wing' => '折翼回廊'], 'monsters' => ['gf_void', 'gf_reaper']];
+    $m['gf_wing'] = ['name' => '折翼回廊', 'desc' => '折翼圣者排成两列，翅膀铺在地上当红毯。你踩上去，脚底全是旧伤。', 'exits' => ['gf_void' => '虚空回廊', 'gf_core' => '天罚之座'], 'monsters' => ['gf_fallen']];
+    $m['gf_core'] = ['name' => '天罚之座', 'desc' => '堕天神帝坐在自己的断翼上。他抬头看你：连神明也会坠落，你凭什么站着。', 'exits' => ['gf_wing' => '折翼回廊'], 'monsters' => ['gf_herald', 'gf_seraphim', 'god_emperor']];
+    return $m;
+}
+
+function gf_maps(): array
+{
+    return ['gf_gate', 'gf_stair', 'gf_void', 'gf_wing', 'gf_core'];
 }
 function vx_locations(): array
 {
@@ -7236,6 +7407,57 @@ function ch1_quests(): array
     ];
 }
 
+function god_quests(): array
+{
+    return [
+        // 第一幕·登天（伽楼：天碎了，拾光去）
+        100 => ['name' => '天碎之后', 'todo' => '神界·天门：六翼天使×30（伽楼：天碎了，拾光去，真相在云上面）', 'loc' => 'god_gate', 'locname' => '神界·天门', 'need' => ['god_seraph' => 30], 'flag' => null],
+        101 => ['name' => '拾光阶', 'todo' => '拾光阶：拾光朝圣者×30（他们说：光不等人，等星）', 'loc' => 'god_pilgrim', 'locname' => '拾光阶', 'need' => ['god_pilgrim' => 30], 'flag' => null],
+        // 第二幕·藏星（白羽的人情，情报换门票）
+        102 => ['name' => '借星不还', 'todo' => '藏星馆：藏星典吏×30（白羽：典吏欠我三颗星，你去讨，顺便问问"第一个谎言"）', 'loc' => 'god_library', 'locname' => '藏星馆', 'need' => ['god_librarian' => 30], 'flag' => null],
+        103 => ['name' => '云海执事', 'todo' => '云海：云海执事×30、智天使×20（执事在云上走，不留下脚印，只留下账）', 'loc' => 'god_sea', 'locname' => '云海', 'need' => ['god_cloud' => 30, 'god_cherub' => 20], 'flag' => null],
+        // 第三幕·种星园
+        104 => ['name' => '摘星', 'todo' => '种星园：种星园丁×40（园丁：摘星的时候不许哭，哭了星就咸了）', 'loc' => 'god_garden', 'locname' => '种星园', 'need' => ['god_gardener' => 40], 'flag' => null],
+        105 => ['name' => '星果林', 'todo' => '星果林：种星园丁×40（熟了的星自己掉下来，砸成下一颗星的种子）', 'loc' => 'god_orchard', 'locname' => '星果林', 'need' => ['god_gardener' => 40], 'flag' => null],
+        // 第四幕·神庭之影
+        106 => ['name' => '神庭双卫', 'todo' => '神庭：神庭守望×30、裁决天使×30（白色大厅没有影子，影子都在镜厅）', 'loc' => 'god_court', 'locname' => '神庭', 'need' => ['god_watcher' => 30, 'god_judge' => 30], 'flag' => null],
+        107 => ['name' => '镜中判词', 'todo' => '镜厅：镜中判者×40（镜胜雪每面镜子都要你认一条罪，去赎罪——用剑）', 'loc' => 'god_mirror', 'locname' => '镜厅', 'need' => ['god_mirror' => 40], 'flag' => null],
+        // 第五幕·神铸之骨
+        108 => ['name' => '锤骨', 'todo' => '神铸台：神匠×50、神铸守卫×40、神界传令×20（神匠锤打的是自己的骨头）', 'loc' => 'god_forge', 'locname' => '神铸台', 'need' => ['god_forger' => 50, 'god_warden' => 40, 'god_heraldg' => 20], 'flag' => null],
+        109 => ['name' => '天柱', 'todo' => '天柱：天柱石像×50、天柱泰坦×30、神界大祭司×15（一根柱子撑住整片天，撑不住了）', 'loc' => 'god_pillar', 'locname' => '天柱', 'need' => ['god_golem' => 50, 'god_titan' => 30, 'god_highpriest' => 15], 'flag' => null],
+        // 第六幕·梦与尾
+        110 => ['name' => '沉眠谷', 'todo' => '沉眠谷：失翼沉眠者×40（他们的梦漏出来，变成谷里的雾）', 'loc' => 'god_sleeper', 'locname' => '沉眠谷', 'need' => ['god_sleeper' => 40], 'flag' => null],
+        111 => ['name' => '衔尾渊', 'todo' => '衔尾渊：衔尾天蛇×30（圈里的时间是圆的——除了你）', 'loc' => 'god_serpent', 'locname' => '衔尾渊', 'need' => ['god_serpent' => 30], 'flag' => null],
+        // 第七幕·神座之谎（堕天赛丽亚迎接，免票进堕天阶）
+        112 => ['name' => '空的神座', 'todo' => '神座：神座化身×1、神界执政官×10（它是这世界的第一个谎言，它说：杀了我）', 'loc' => 'god_throne', 'locname' => '神座', 'need' => ['god_avatar' => 1, 'god_archon' => 10], 'flag' => null],
+        // 第八幕·坠落（堕天阶）
+        113 => ['name' => '堕天阶', 'todo' => '堕天阶·入口：堕天幽影×30（台阶是折断的翅膀铺成的）', 'loc' => 'gf_gate', 'locname' => '堕天阶·入口', 'need' => ['gf_shade' => 30], 'flag' => null],
+        114 => ['name' => '坠落之阶', 'todo' => '坠落之阶：虚空噬者×40（每一步都踩在别人的坠路上）', 'loc' => 'gf_stair', 'locname' => '坠落之阶', 'need' => ['gf_void' => 40], 'flag' => null],
+        115 => ['name' => '折翼回廊', 'todo' => '折翼回廊：折翼圣者×30（翅膀铺在地上当红毯，脚底全是旧伤）', 'loc' => 'gf_wing', 'locname' => '折翼回廊', 'need' => ['gf_fallen' => 30], 'flag' => null],
+        116 => ['name' => '虚空回廊', 'todo' => '虚空回廊：天罚收割者×40、堕天炽天使×20（噬者就在星星之间）', 'loc' => 'gf_void', 'locname' => '虚空回廊', 'need' => ['gf_reaper' => 40, 'gf_seraphim' => 20], 'flag' => null],
+        // 终幕·天罚之座（三指环，终局抉择在杀神帝时触发）
+        117 => ['name' => '天罚之座', 'todo' => '天罚之座：堕天传令×30、堕天神帝·路西法×1（他抬头看你：连神明也会坠落，你凭什么站着）', 'loc' => 'gf_core', 'locname' => '天罚之座', 'need' => ['gf_herald' => 30, 'god_emperor' => 1], 'flag' => null],
+    ];
+}
+
+function quest_god_baseline(int $uid, int $q): void
+{
+    $qs = god_quests()[$q] ?? null;
+    if (!$qs || empty($qs['need'])) {
+        return;
+    }
+    $ex = cflags((int) $uid)['qb' . $q] ?? null;
+    if (is_array($ex) && $ex !== []) {
+        return;
+    }
+    $c = kill_counts((int) $uid);
+    $b = [];
+    foreach ($qs['need'] as $mid => $need) {
+        $b[$mid] = (int) ($c[$mid] ?? 0);
+    }
+    cflag_set((int) $uid, 'qb' . $q, $b);
+}
+
 function quest_state(array $u): array
 {
     $q = (int) ($u['quest'] ?? 0);
@@ -7297,8 +7519,21 @@ function quest_state(array $u): array
         }
         return $all[$q] + ['id' => $q, 'ch' => 7, 'step' => ($q - 76) . '/4'];
     }
+    if ($q >= 100 && $q <= 117) {
+        $all = god_quests();
+        if (!isset($all[$q])) {
+            return ['name' => '神界守望', 'step' => '完成', 'todo' => '神界通关！堕天神帝已伏诛。神铸/堕天套装、圣都商人等你', 'loc' => 'god_hall', 'locname' => '神界·圣都', 'id' => 99, 'ch' => 8, 'need' => []];
+        }
+        return $all[$q] + ['id' => $q, 'ch' => 8, 'step' => ($q - 99) . '/18'];
+    }
+    if ($q >= 118) {
+        return ['name' => '神界守望', 'step' => '完成', 'todo' => '神界通关！堕天神帝已伏诛。神铸/堕天套装、圣都商人等你', 'loc' => 'god_hall', 'locname' => '神界·圣都', 'id' => 99, 'ch' => 8, 'need' => []];
+    }
     if ($q >= 81) {
-        return ['name' => '虚空守望', 'step' => '完成', 'todo' => '二转完成！群攻在手，虚空裂隙/灰烬深渊/世界BOSS等你', 'loc' => 'vx_gate', 'locname' => '虚空裂隙', 'id' => 99, 'ch' => 7, 'need' => []];
+        if ((int) ($u['lv'] ?? 1) >= 700) {
+            return ['name' => '神界·天门', 'step' => '待启', 'todo' => '700级了！去青叶广场往上走到【神界·天门】找神使·伽楼，开启第八章', 'loc' => 'god_gate', 'locname' => '神界·天门', 'id' => 81, 'ch' => 7, 'need' => []];
+        }
+        return ['name' => '虚空守望', 'step' => '完成', 'todo' => '二转完成！群攻在手，虚空裂隙/灰烬深渊/世界BOSS等你（700级开神界）', 'loc' => 'vx_gate', 'locname' => '虚空裂隙', 'id' => 99, 'ch' => 7, 'need' => []];
     }
     if ($q >= 38) {
         // 三章通关但没299：自由探索；299了进一转
@@ -7741,6 +7976,51 @@ function sin_drop_loot(int $victim, string $loc): array
     }
     _gear_uncache((int) $victim);
     return $out;
+}
+
+// 神界击杀掉落：1.2%随机神铸件，BOSS保底
+function god_kill_drop(int $uid, string $mid): string
+{
+    $uid = (int) $uid;
+    $u = user_by_id($uid);
+    if (!$u) {
+        return '';
+    }
+    $boss = in_array($mid, ['god_avatar', 'god_emperor'], true);
+    $chance = $boss ? 100 : 1.2;
+    if (mt_rand(1, 1000) / 10 > $chance) {
+        return '';
+    }
+    $pieces = [
+        ['weapon', '神铸·雷霆'], ['weapon', '神铸·苍穹'], ['weapon', '神铸·铁律'], ['weapon', '神铸·天罚'], ['weapon', '神铸·圣盾'], ['weapon', '神铸·裁决'], ['weapon', '神铸·曙光'],
+        ['head', '神铸·圣冠'], ['body', '神铸·羽甲'], ['legs', '神铸·天裤'], ['belt', '神铸·云腰'], ['shoes', '神铸·踏云靴'], ['gloves', '神铸·执掌手套'], ['back', '神铸·天翼披风'], ['ring', '神铸·星辰戒'], ['necklace', '神铸·神谕链'], ['offhand', '神铸·圣灯'],
+    ];
+    $pc = $pieces[array_rand($pieces)];
+    $sn = make_equip($uid, $pc[0], $pc[1], 4, max(1, (int) ($u['lv'] ?? 1)));
+    if ($sn === '') {
+        return '';
+    }
+    return '掉落传说【' . $sn . '】（神铸套装，等级越高越强）！';
+}
+
+function dusk_kill_drop(int $uid, string $mid): string
+{
+    $uid = (int) $uid;
+    $rate = ['god_emperor' => 25, 'god_avatar' => 10, 'god_highpriest' => 5][$mid] ?? 0;
+    if ($rate <= 0 || mt_rand(1, 100) > $rate) {
+        return '';
+    }
+    $u = user_by_id($uid);
+    if (!$u) {
+        return '';
+    }
+    $pieces = [['weapon', '暮影·暮刃'], ['gloves', '暮影·暮誓手套'], ['necklace', '暮影·暮链']];
+    $pc = $pieces[array_rand($pieces)];
+    $sn = make_equip($uid, $pc[0], $pc[1], 4, max(1, (int) ($u['lv'] ?? 1)));
+    if ($sn === '') {
+        return '';
+    }
+    return '掉落传说【' . $sn . '】（暮影套装，拾光者的执念）！';
 }
 
 // 罪渊击杀掉落：8%本职业罪技能书，0.3%随机罪渊套装件（传说）

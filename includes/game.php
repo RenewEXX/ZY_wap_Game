@@ -2390,6 +2390,8 @@ function affix_catalog(): array
         'speed' => ['name' => '攻速', 'slots' => ['weapon', 'gloves'], 'data' => $r([[1, 2], [2, 4], [4, 6], [6, 8], [7, 10]], 90, 'speed', 1)],
         'element' => ['name' => '元素伤害', 'slots' => ['weapon', 'offhand', 'ring'], 'data' => $r([[2, 4], [4, 8], [8, 13], [13, 19], [15, 25]], 70)],
         'lifesteal' => ['name' => '生命偷取', 'slots' => ['weapon', 'ring'], 'data' => $r([[0.2, 0.5], [0.5, 0.9], [0.9, 1.4], [1.4, 2.0], [2, 3]], 50, 'lifesteal', 1)],
+        'summon_power' => ['name' => '召唤兽伤害', 'slots' => ['weapon', 'offhand', 'necklace', 'ring'], 'data' => $r([[2, 5], [5, 9], [9, 15], [15, 22], [22, 32]], 60, 'summon_power', 1)],
+        'summon_hp' => ['name' => '召唤兽生命', 'slots' => ['weapon', 'offhand', 'necklace', 'ring'], 'data' => $r([[3, 6], [6, 11], [11, 18], [18, 26], [26, 38]], 55, 'summon_hp', 1)],
         'res_light' => ['name' => '光抗性', 'slots' => ['body', 'necklace'], 'data' => $r([[1, 2], [2, 4], [4, 7], [7, 11], [10, 15]], 40, '', 1)],
         'res_dark' => ['name' => '暗抗性', 'slots' => ['body', 'necklace'], 'data' => $r([[1, 2], [2, 4], [4, 7], [7, 11], [10, 15]], 40, '', 1)],
         'res_fire' => ['name' => '火抗性', 'slots' => ['body', 'necklace'], 'data' => $r([[1, 2], [2, 4], [4, 7], [7, 11], [10, 15]], 40, '', 1)],
@@ -2857,7 +2859,7 @@ function monster_drops(string $mid): array
         'corrupt_rat' => ['slot' => 'gloves', 'base' => '腐化鼠皮手套', 'rate' => 0.03, 'q' => [60, 35, 5, 0, 0]],
         'deep_bat' => ['slot' => 'shoes', 'base' => '深渊蝠翼靴', 'rate' => 0.04, 'q' => [20, 50, 30, 0, 0]],
         'runaway_miner' => ['slot' => 'weapon', 'base' => '矿工重锤', 'rate' => 0.05, 'q' => [0, 35, 45, 20, 0]],
-        'abyss_spore' => ['slot' => 'necklace', 'base' => '孢子呼吸器', 'rate' => 0.06, 'q' => [0, 20, 50, 30, 0]],
+        'abyss_spore' => ['slot' => 'necklace', 'base' => '孢子呼吸器', 'rate' => 0.06, 'q' => [0, 20, 50, 30, 0], 'legendary' => ['base' => '孢子呼吸器·万菌共鸣', 'extra' => ['k' => 'summon_power', 'v' => 30.0]]],
         'echo_rayne' => ['slot' => 'ring', 'base' => '残响指环', 'rate' => 0.30, 'q' => [0, 0, 20, 50, 30], 'legendary' => ['base' => '雷恩回响戒', 'extra' => ['k' => 'lifesteal', 'v' => 1.0]]],
         'shadow_rat' => ['slot' => 'gloves', 'base' => '影蚀手套'],
         'shadow_soldier' => ['slot' => 'body', 'base' => '影蚀甲'],
@@ -2868,14 +2870,14 @@ function monster_drops(string $mid): array
         'puppet' => ['slot' => 'body', 'base' => '符文外壳'],
         'apostle' => ['slot' => 'offhand', 'off' => 'magic', 'base' => '使徒法器'],
         'guardian' => ['slot' => 'offhand', 'off' => 'shield', 'base' => '守护者之盾'],
-        'valentin' => ['slot' => 'necklace', 'base' => '城主徽记'],
+        'valentin' => ['slot' => 'necklace', 'base' => '城主徽记', 'rate' => 0.3, 'q' => [0, 0, 20, 50, 30], 'legendary' => ['base' => '城主徽记·统御', 'extra' => ['k' => 'summon_power', 'v' => 25.0]]],
         'dark_lily' => ['slot' => 'back', 'base' => '暗影披风'],
-        'abyss_eye' => ['slot' => 'weapon', 'base' => '深渊之瞳'],
+        'abyss_eye' => ['slot' => 'weapon', 'base' => '深渊之瞳', 'rate' => 0.5, 'q' => [0, 0, 0, 70, 30], 'legendary' => ['base' => '深渊之瞳·万渊', 'extra' => ['k' => 'summon_hp', 'v' => 80.0]]],
         'shadow_walker' => ['slot' => 'gloves', 'base' => '深渊护手'],
         'corrupt_warder' => ['slot' => 'body', 'base' => '蚀影甲'],
         'whisperer' => ['slot' => 'back', 'base' => '低语披风'],
         'colossus' => ['slot' => 'body', 'base' => '巨像重铠'],
-        'abaddon' => ['slot' => 'weapon', 'base' => '君王蚀影刃'],
+        'abaddon' => ['slot' => 'weapon', 'base' => '君王蚀影刃', 'rate' => 0.5, 'q' => [0, 0, 0, 70, 30], 'legendary' => ['base' => '影蚀·万魂蚀影', 'extra' => ['k' => 'summon_power', 'v' => 60.0]]],
         'silk_spider' => ['slot' => 'body', 'base' => '剧场·幕布甲'],
         'leech' => ['slot' => 'belt', 'base' => '幽灵束带', 'rate' => 0.04, 'q' => [50, 35, 15, 0, 0]],
         'cocoon_guard' => ['slot' => 'legs', 'base' => '剧场·悬丝裤'],
@@ -3125,6 +3127,13 @@ function make_equip(int $uid, string $slot, string $base, int $q, int $itemLevel
     $primary = equip_primary($slot, $offKind);
     if ($slot === 'weapon' && in_array(weapon_sub((string) $base), ['staff', 'relic'], true)) {
         $primary = 'matk';
+    }
+    // 召唤师专属主副手主词条：魂契器(主手)→召唤兽伤害，深渊契匣(副手)→召唤兽生命
+    if ($slot === 'weapon' && weapon_sub((string) $base) === 'relic') {
+        $primary = 'summon_power';
+    }
+    if ($slot === 'offhand' && function_exists('summoner_offhands') && isset(summoner_offhands()[(string) $base])) {
+        $primary = 'summon_hp';
     }
     $legendId = (string) ($legend['extra']['k'] ?? '');
     $legendGroup = $legendId !== '' ? (string) (affix_catalog()[$legendId]['data']['group'] ?? '') : '';
@@ -3533,6 +3542,45 @@ function buy_pct_potion(int $uid, string $mid): string
     return '买到【' . $tab['name'] . '】（回' . $tab['pct'] . '%血，战斗中手动喝）。';
 }
 
+// 血瓶溢出治疗：自己满血时转治疗召唤物和宠物（召唤物优先，再宠物）。
+// 返回 log；$done=false 表示没人需要治疗，调用方不该扣药。
+function drink_heal_allies(array &$u, string $mid, array $tab): array
+{
+    $pct = (int) $tab['pct'];
+    $uid = (int) ($u['id'] ?? 0);
+    $log = '';
+    $done = false;
+    // 召唤物（战斗中才会非空）：每只各回 pct% 生命
+    $list = summon_list();
+    foreach ($list as $i => $s) {
+        $heal = max(0, min((int) $s['maxhp'] - (int) $s['hp'], (int) ((int) $s['maxhp'] * $pct / 100)));
+        if ($heal > 0) {
+            $list[$i]['hp'] = (int) $list[$i]['hp'] + $heal;
+            $log .= $s['name'] . '恢复' . $heal . '点生命。';
+            $done = true;
+        }
+    }
+    if ($log !== '') {
+        summon_save($list);
+    }
+    // 宠物（出战的那只）
+    $p = active_pet($uid);
+    if ($p) {
+        $st = pet_stats($p);
+        $heal = max(0, min((int) $st['maxhp'] - (int) $p['hp'], (int) ((int) $st['maxhp'] * $pct / 100)));
+        if ($heal > 0) {
+            db()->prepare('UPDATE pets SET hp=? WHERE id=?')->execute([(int) $p['hp'] + $heal, (int) $p['id']]);
+            $log .= pet_species()[$p['species']]['name'] . '恢复' . $heal . '点生命。';
+            $done = true;
+        }
+    }
+    if (!$done) {
+        return ['', false];
+    }
+    add_mat($uid, $mid, -1);
+    return ['喝下【' . $tab['name'] . '】——你血是满的，药喂给了同伴：' . $log, true];
+}
+
 function drink_pct_potion(array &$u, string $mid): string
 {
     $tab = pct_potions()[$mid] ?? null;
@@ -3553,8 +3601,13 @@ function drink_pct_potion(array &$u, string $mid): string
         user_save($u);
         return '喝下【' . $tab['name'] . '】，回复魔力' . $heal . '（' . $tab['pct'] . '%）。';
     }
+    // 优先自己；血满时转治疗召唤物和宠物
     if ((int) $u['hp'] >= (int) $u['maxhp']) {
-        return '血是满的，别浪费药。';
+        [$msg, $did] = drink_heal_allies($u, $mid, $tab);
+        if ($did) {
+            return $msg;
+        }
+        return '血是满的，召唤物和宠物也都健康，别浪费药。';
     }
     add_mat((int) ($u['id'] ?? 0), $mid, -1);
     $heal = min((int) $u['maxhp'] - (int) $u['hp'], (int) ((int) $u['maxhp'] * $tab['pct'] / 100));
@@ -4347,7 +4400,7 @@ function gear_stats(int $uid): array
         return $cache[$uid];
     }
     unset($GLOBALS['_gear_bust']);
-    $keys = ['atk', 'matk', 'def', 'mdef', 'hp', 'truedmg', 'crit', 'critdmg', 'dodge', 'lifesteal', 'atk_pct', 'matk_pct', 'precision', 'speed', 'element', 'penetration', 'skill_damage', 'execute', 'damage_reduction', 'resist', 'thorns', 'regen', 'energy', 'cooldown', 'hit', 'exp_gain', 'move_speed', 'control_resist', 'slow_resist', 'all_attr', 'gold_gain', 'magic_find', 'summon_power', 'res_light', 'res_dark', 'res_fire', 'res_wind', 'res_ice', 'res_thunder', 'allres', 'bagcap'];
+    $keys = ['atk', 'matk', 'def', 'mdef', 'hp', 'truedmg', 'crit', 'critdmg', 'dodge', 'lifesteal', 'atk_pct', 'matk_pct', 'precision', 'speed', 'element', 'penetration', 'skill_damage', 'execute', 'damage_reduction', 'resist', 'thorns', 'regen', 'energy', 'cooldown', 'hit', 'exp_gain', 'move_speed', 'control_resist', 'slow_resist', 'all_attr', 'gold_gain', 'magic_find', 'summon_power', 'summon_hp', 'res_light', 'res_dark', 'res_fire', 'res_wind', 'res_ice', 'res_thunder', 'allres', 'bagcap'];
     $s = array_fill_keys($keys, 0.0);
     $st = db()->prepare('SELECT * FROM equips WHERE uid=? AND pos="wear"');
     $st->execute([$uid]);
@@ -4656,6 +4709,13 @@ function summon_power_bonus(array $u): float
     return $bonus + summoner_offhand_eff((int) ($u['id'] ?? 0))['power'];
 }
 
+// 召唤兽生命加成（%）：装备 summon_hp + 契匣 hp 效果
+function summon_hp_bonus(array $u): float
+{
+    $bonus = (float) gear_stats((int) ($u['id'] ?? 0))['summon_hp'];
+    return $bonus + summoner_offhand_eff((int) ($u['id'] ?? 0))['hp'];
+}
+
 function summon_list(): array
 {
     $b = $_SESSION['battle'] ?? [];
@@ -4688,11 +4748,13 @@ function summon_spawn(string $kind, int $patk, int $php, array $u): array
     }
     // 契匣：传说匣再加存活轮数
     $turns += summoner_offhand_eff((int) ($u['id'] ?? 0))['turns'];
+    // 召唤兽生命：基础生命 × 召唤兽生命%(装备 summon_hp + 契匣 hp)
+    $shp = $php * $cfg['hp_mult'] * (1 + summon_hp_bonus($u) / 100);
     return [
         'kind' => $kind,
         'name' => $cfg['name'],
-        'hp' => max(1, (int) ($php * $cfg['hp_mult'])),
-        'maxhp' => max(1, (int) ($php * $cfg['hp_mult'])),
+        'hp' => max(1, (int) $shp),
+        'maxhp' => max(1, (int) $shp),
         'atk' => max(1, (int) ($patk * $cfg['atk_mult'] * $sp)),
         'turns' => $turns,
         'bomb' => $cfg['bomb'] || equip_set_owned_count((int) ($u['id'] ?? 0), 'soulpact') >= 5,

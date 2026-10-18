@@ -29,10 +29,10 @@ function summoner_offhands(): array
         '剧场·提线匣' => ['lv' => 600, 'summon' => 'abom', 'eff' => ['power' => 25], 'legend' => false, 'intro' => '开场召唤1只憎恶聚合体（死时爆炸，召唤兽伤害+25%）。'],
         '烬焰·契匣' => ['lv' => 635, 'summon' => 'abom', 'eff' => ['power' => 25], 'legend' => false, 'intro' => '开场召唤1只憎恶聚合体（死时爆炸，召唤兽伤害+25%）。'],
         // —— 毕业：传说基底（只出传说，带额外特殊效果）——
-        '召唤师·深渊契匣' => ['lv' => 700, 'summon' => 'abom', 'eff' => ['turns' => 2, 'power' => 30, 'cap' => 1], 'legend' => true, 'intro' => '开场召唤1只憎恶聚合体；召唤上限+1；召唤兽存活+2轮；召唤兽伤害+30%。'],
-        '幽冥·招魂匣' => ['lv' => 800, 'summon' => 'mare', 'eff' => ['turns' => 2, 'power' => 50, 'guard' => 15], 'legend' => true, 'intro' => '开场召唤1只无面梦魇（最强）；召唤兽存活+2轮；召唤兽伤害+50%；有召唤兽在场时你减伤+15%。'],
+        '召唤师·深渊契匣' => ['lv' => 700, 'summon' => 'abom', 'eff' => ['turns' => 2, 'power' => 30, 'hp' => 40, 'cap' => 1], 'legend' => true, 'intro' => '开场召唤1只憎恶聚合体；召唤上限+1；召唤兽存活+2轮；召唤兽伤害+30%；召唤兽生命+40%。'],
+        '幽冥·招魂匣' => ['lv' => 800, 'summon' => 'mare', 'eff' => ['turns' => 2, 'power' => 50, 'hp' => 80, 'guard' => 15], 'legend' => true, 'intro' => '开场召唤1只无面梦魇（最强）；召唤兽存活+2轮；召唤兽伤害+50%；召唤兽生命+80%；有召唤兽在场时你减伤+15%。'],
         // —— 魂契套装散件也算契匣（武器位，但同样吃开场召唤）——
-        '魂契·深渊引魂灯' => ['lv' => 700, 'summon' => 'abom', 'eff' => ['power' => 30, 'cap' => 1], 'legend' => true, 'intro' => '开场召唤1只憎恶聚合体；召唤上限+1；召唤兽伤害+30%。'],
+        '魂契·深渊引魂灯' => ['lv' => 700, 'summon' => 'abom', 'eff' => ['power' => 30, 'hp' => 40, 'cap' => 1], 'legend' => true, 'intro' => '开场召唤1只憎恶聚合体；召唤上限+1；召唤兽伤害+30%；召唤兽生命+40%。'],
     ];
 }
 
@@ -91,6 +91,7 @@ function summoner_offhand_eff(int $uid): array
     return [
         'cap' => (int) ($e['cap'] ?? 0),
         'power' => (float) ($e['power'] ?? 0),
+        'hp' => (float) ($e['hp'] ?? 0),
         'turns' => (int) ($e['turns'] ?? 0),
         'guard' => (float) ($e['guard'] ?? 0),
     ];

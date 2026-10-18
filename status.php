@@ -99,7 +99,7 @@ if ((string) ($_GET['a'] ?? '') === 'all') {
     echo '生命' . (int) $u['maxhp'] . '<br>';
     echo '魔力' . (int) ($u['maxmp'] ?? 0) . '<br>';
     echo '四维：力' . (int) ($u['str'] ?? 0) . ' 毅' . (int) ($u['agi'] ?? 0) . ' 体' . (int) ($u['vit'] ?? 0) . ' 智' . (int) ($u['int'] ?? 0) . '<br>';
-    foreach (['atk_pct', 'matk_pct', 'precision', 'matk', 'mdef', 'crit', 'critdmg', 'speed', 'element', 'lifesteal', 'penetration', 'skill_damage', 'execute', 'damage_reduction', 'resist', 'thorns', 'regen', 'cooldown', 'hit', 'exp_gain', 'dodge', 'move_speed', 'control_resist', 'slow_resist', 'all_attr', 'gold_gain', 'magic_find', 'res_light', 'res_dark', 'res_fire', 'res_wind', 'res_ice', 'res_thunder', 'allres'] as $k) {
+    foreach (['atk_pct', 'matk_pct', 'precision', 'summon_power', 'summon_hp', 'matk', 'mdef', 'crit', 'critdmg', 'speed', 'element', 'lifesteal', 'penetration', 'skill_damage', 'execute', 'damage_reduction', 'resist', 'thorns', 'regen', 'cooldown', 'hit', 'exp_gain', 'dodge', 'move_speed', 'control_resist', 'slow_resist', 'all_attr', 'gold_gain', 'magic_find', 'res_light', 'res_dark', 'res_fire', 'res_wind', 'res_ice', 'res_thunder', 'allres'] as $k) {
         if ((float) ($gs[$k] ?? 0) == 0.0) {
             continue;
         }

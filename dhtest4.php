@@ -24,9 +24,12 @@ chk4('引爆清空', hunter_dot_stacks($b3), []);
 
 // —— 召唤师契匣 ——
 chk4('契匣表非空', count(summoner_offhands()) >= 10, true);
-chk4('等级推荐', summoner_offhand_for_lv(150, 'common'), '引魂旧匣');
-chk4('等级推荐史诗', summoner_offhand_for_lv(500, 'epic'), '寒霜·契匣');
-chk4('等级推荐传说', summoner_offhand_for_lv(800, 'legend'), '幽冥·招魂匣');
+chk4('等级推荐基底', summoner_offhand_for_lv(150), '引魂旧匣');
+chk4('低等级无传说', summoner_offhand_for_lv(150, true), null);
+chk4('高等级传说', summoner_offhand_for_lv(800, true), '幽冥·招魂匣');
+chk4('传说基底标记', summoner_offhands()['幽冥·招魂匣']['legend'], true);
+chk4('普通基底标记', summoner_offhands()['裹魂契匣']['legend'], false);
+chk4('契匣表无q字段', isset(summoner_offhands()['寒霜·契匣']['q']), false);
 chk4('识别契匣', summoner_is_box('寒霜·契匣'), true);
 chk4('识别普通', summoner_is_box('大骨棒'), false);
 // 伪造穿戴测试

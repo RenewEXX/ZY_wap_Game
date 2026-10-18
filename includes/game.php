@@ -4215,7 +4215,8 @@ function roll_ch3_drop(int $uid, string $mid, int $elite = 0): string
     return (string) $a;
 }
 
-// 召唤师契匣独立掉落：按击杀怪等级给对应档位的过渡/史诗匣，传说匣极稀有
+// 召唤师契匣独立掉落：按击杀怪等级给对应区间的基底，
+// 品质走全游戏同一套规则（普通基底在低劣~史诗随机，传说基底只出传说）
 function roll_summoner_box(int $uid, string $mid): string
 {
     if (job_id_of(user_by_id((int) $uid) ?? []) !== 'summoner') {
@@ -4226,28 +4227,23 @@ function roll_summoner_box(int $uid, string $mid): string
         return '';
     }
     $m = 1 + $lv * 0.02 + min(200, gear_stats($uid)['magic_find']) / 100;
-    $rate = $lv >= 700 ? 0.02 : 0.05;
-    if (mt_rand() / mt_getrandmax() > $rate * $m) {
+    if (mt_rand() / mt_getrandmax() > 0.05 * $m) {
         return '';
     }
-    // 越级越高越容易出史诗/传说
-    $r = mt_rand(1, 100);
-    $grade = 'common';
-    if ($lv >= 380 && $r <= 12) {
-        $grade = 'epic';
+    $legend = summoner_offhand_for_lv($lv, true);
+    // 传说基底极稀有，且只有高等级区间才有
+    $legendRate = $lv >= 700 ? 0.02 : 0.004;
+    if ($legend !== null && mt_rand() / mt_getrandmax() < $legendRate) {
+        return make_equip($uid, 'offhand', $legend, 4, $lv);
     }
-    if ($lv >= 650 && $r <= 3) {
-        $grade = 'legend';
-    }
-    $name = summoner_offhand_for_lv($lv, $grade);
-    if ($name === null) {
+    $base = summoner_offhand_for_lv($lv);
+    if ($base === null) {
         return '';
     }
-    $cfg = summoner_offhands()[$name] ?? null;
-    if ($cfg === null) {
-        return '';
-    }
-    return make_equip((int) $uid, 'offhand', $name, (int) $cfg['q'], $lv);
+    // 普通基底：低劣~史诗随机，沿用 roll_drop 的档位概率
+    $r = mt_rand() / mt_getrandmax();
+    $q = $r < 0.10 ? 3 : ($r < 0.35 ? 2 : ($r < 0.70 ? 1 : 0));
+    return make_equip($uid, 'offhand', $base, $q, $lv);
 }
 
 function player_resist(array $u, string $el): float
@@ -6480,10 +6476,9 @@ function battle_round(array &$u, array &$b, string $mode): array
                 $gear3 = [31 => ['weapon', '傀儡短剑', 150], 32 => ['body', '傀儡皮甲', 180], 33 => ['weapon', '傀儡长弓', 210], 34 => ['body', '傀儡铠甲', 240], 35 => ['back', '傀儡斗篷', 270]][$cur] ?? null;
                 // 召唤师：第三章起按等级发一只契匣（过渡副手，带开场召唤）
                 if (job_id_of($u) === 'summoner' && in_array($cur, [31, 35, 37], true)) {
-                    $boxName = summoner_offhand_for_lv(max(1, (int) $u['lv']), 'common');
-                    $cfgBox = summoner_offhands()[$boxName] ?? null;
-                    if ($cfgBox !== null) {
-                        $gear3 = ['offhand', $boxName, (int) $cfgBox['q'], max(1, (int) $u['lv'])];
+                    $boxName = summoner_offhand_for_lv(max(1, (int) $u['lv']));
+                    if ($boxName !== null) {
+                        $gear3 = ['offhand', $boxName, 3, max(1, (int) $u['lv'])];
                     }
                 }
                 if ($gear3 !== null) {

@@ -2380,8 +2380,9 @@ function affix_catalog(): array
     };
     return [
         'atk' => ['name' => '物攻', 'slots' => ['weapon', 'gloves', 'ring', 'necklace'], 'data' => $r([[2, 5], [5, 10], [10, 18], [18, 30], [30, 50]], 100)],
-        'matk' => ['name' => '法攻', 'slots' => ['weapon', 'offhand', 'necklace', 'ring'], 'data' => $r([[2, 5], [5, 10], [10, 18], [18, 30], [30, 50]], 90)],
+        'matk' => ['name' => '法攻', 'slots' => ['weapon', 'offhand', 'gloves', 'necklace', 'ring'], 'data' => $r([[2, 5], [5, 10], [10, 18], [18, 30], [30, 50]], 90)],
         'atk_pct' => ['name' => '物攻%', 'slots' => ['weapon'], 'data' => $r([[1, 2], [2, 4], [4, 6], [6, 9], [8, 12]], 80, 'offense_pct', 1)],
+        'matk_pct' => ['name' => '法攻%', 'slots' => ['weapon', 'offhand'], 'data' => $r([[1, 2], [2, 4], [4, 6], [6, 9], [8, 12]], 70, 'offense_pct', 1)],
         'bagcap' => ['name' => '背包容量', 'slots' => ['belt'], 'data' => $r([[2, 4], [3, 6], [4, 8], [5, 10], [6, 12]], 100)],
         'crit' => ['name' => '暴击率', 'slots' => ['weapon', 'head', 'gloves', 'ring', 'necklace'], 'data' => $r([[0.1, 0.3], [0.3, 0.6], [0.6, 1.0], [1.0, 1.5], [1.5, 2.0]], 100, 'crit', 1)],
         'critdmg' => ['name' => '暴击伤害', 'slots' => ['weapon', 'head', 'gloves', 'ring', 'necklace'], 'data' => $r([[1, 3], [3, 6], [6, 10], [10, 15], [15, 20]], 100, 'critdmg', 1)],
@@ -2504,7 +2505,7 @@ function legend_lore(string $shortName): string
 
 function affix_fmt(string $k, float $v, ?string $tier = null): string
 {
-    $percent = ['atk_pct', 'crit', 'critdmg', 'speed', 'lifesteal', 'penetration', 'skill_damage', 'execute', 'damage_reduction', 'resist', 'regen', 'cooldown', 'hit', 'exp_gain', 'dodge', 'move_speed', 'control_resist', 'slow_resist', 'gold_gain', 'magic_find', 'res_light', 'res_dark', 'res_fire', 'res_wind', 'res_ice', 'res_thunder', 'allres'];
+    $percent = ['atk_pct', 'matk_pct', 'crit', 'critdmg', 'speed', 'lifesteal', 'penetration', 'skill_damage', 'execute', 'damage_reduction', 'resist', 'regen', 'cooldown', 'hit', 'exp_gain', 'dodge', 'move_speed', 'control_resist', 'slow_resist', 'gold_gain', 'magic_find', 'res_light', 'res_dark', 'res_fire', 'res_wind', 'res_ice', 'res_thunder', 'allres'];
     $value = in_array($k, $percent, true) ? rtrim(rtrim(number_format($v, 1, '.', ''), '0'), '.') . '%' : (string) (int) round($v);
     return ($tier ? $tier . ' ' : '') . affix_label($k) . '+' . $value;
 }
@@ -2974,6 +2975,36 @@ function equip_primary(string $slot, string $offKind = ''): string
     return ['weapon' => 'atk', 'body' => 'def', 'head' => 'def', 'legs' => 'def', 'gloves' => 'crit', 'shoes' => 'dodge', 'back' => 'dodge', 'necklace' => 'energy', 'belt' => 'bagcap'][$slot] ?? '';
 }
 
+// 武器/法器属于哪一路伤害：法系（杖/魂契器）只出法攻词条，物理系只出物攻词条
+function equip_damage_type(string $slot, string $base, string $offKind = ''): string
+{
+    if ($slot === 'weapon') {
+        return in_array(weapon_sub((string) $base), ['staff', 'relic'], true) ? 'magic' : 'phys';
+    }
+    if ($slot === 'offhand') {
+        return $offKind === 'shield' ? 'phys' : 'magic';
+    }
+    // 防具与首饰全职业通用，不做偏向
+    return 'any';
+}
+
+// 副词条池：按伤害路数剔掉用不上的攻击词条，避免法系刷出物攻、物理刷出法攻
+function equip_sub_pool(string $slot, string $base, string $primary, string $legendId = '', string $offKind = ''): array
+{
+    $pool = array_values(array_filter(
+        slot_pools()[$slot] ?? ['atk', 'def', 'hp'],
+        fn($id) => $id !== $primary && $id !== $legendId
+    ));
+    $type = equip_damage_type($slot, $base, $offKind);
+    if ($type === 'magic') {
+        // 法系武器/法器：物攻与物攻%完全无用，且不能和主词条重复算
+        $pool = array_values(array_filter($pool, fn($id) => !in_array($id, ['atk', 'atk_pct'], true)));
+    } elseif ($type === 'phys') {
+        $pool = array_values(array_filter($pool, fn($id) => !in_array($id, ['matk', 'matk_pct'], true)));
+    }
+    return array_values(array_unique($pool));
+}
+
 function equip_reqs(int $itemLevel, int $q): array
 {
     $lv = max(1, (int) $itemLevel);
@@ -3096,10 +3127,7 @@ function make_equip(int $uid, string $slot, string $base, int $q, int $itemLevel
     }
     $legendId = (string) ($legend['extra']['k'] ?? '');
     $legendGroup = $legendId !== '' ? (string) (affix_catalog()[$legendId]['data']['group'] ?? '') : '';
-    $pool = array_values(array_filter(slot_pools()[$slot] ?? ['atk', 'def', 'hp'], fn($id) => $id !== $primary && $id !== $legendId));
-    if ($slot === 'weapon' && in_array(weapon_sub((string) $base), ['staff', 'relic'], true)) {
-        $pool = array_values(array_map(fn($id) => $id === 'atk' ? 'matk' : $id, $pool));
-    }
+    $pool = equip_sub_pool($slot, (string) $base, $primary, $legendId, $offKind);
     if ($pool === []) {
         $pool = [$primary !== '' ? $primary : 'atk'];
     }
@@ -4318,7 +4346,7 @@ function gear_stats(int $uid): array
         return $cache[$uid];
     }
     unset($GLOBALS['_gear_bust']);
-    $keys = ['atk', 'matk', 'def', 'mdef', 'hp', 'truedmg', 'crit', 'critdmg', 'dodge', 'lifesteal', 'atk_pct', 'speed', 'element', 'penetration', 'skill_damage', 'execute', 'damage_reduction', 'resist', 'thorns', 'regen', 'energy', 'cooldown', 'hit', 'exp_gain', 'move_speed', 'control_resist', 'slow_resist', 'all_attr', 'gold_gain', 'magic_find', 'summon_power', 'res_light', 'res_dark', 'res_fire', 'res_wind', 'res_ice', 'res_thunder', 'allres', 'bagcap'];
+    $keys = ['atk', 'matk', 'def', 'mdef', 'hp', 'truedmg', 'crit', 'critdmg', 'dodge', 'lifesteal', 'atk_pct', 'matk_pct', 'speed', 'element', 'penetration', 'skill_damage', 'execute', 'damage_reduction', 'resist', 'thorns', 'regen', 'energy', 'cooldown', 'hit', 'exp_gain', 'move_speed', 'control_resist', 'slow_resist', 'all_attr', 'gold_gain', 'magic_find', 'summon_power', 'res_light', 'res_dark', 'res_fire', 'res_wind', 'res_ice', 'res_thunder', 'allres', 'bagcap'];
     $s = array_fill_keys($keys, 0.0);
     $st = db()->prepare('SELECT * FROM equips WHERE uid=? AND pos="wear"');
     $st->execute([$uid]);
@@ -5164,7 +5192,10 @@ function player_patk(array $u): int
         return 0;
     }
     $str = (int) ($u['str'] ?? 0);
-    $base = (int) $u['atk'] + $str + (int) gear_stats((int) ($u['id'] ?? 0))['atk'];
+    $gsP = gear_stats((int) ($u['id'] ?? 0));
+    $base = (int) $u['atk'] + $str + (int) $gsP['atk'];
+    // 物攻%
+    $base += (int) ($base * (float) $gsP['atk_pct'] / 100);
     // 转生：基础属性 × 转生次数 × 10%
     if (function_exists('rs_stat_mult')) {
         $base = (int) round($base * rs_stat_mult((int) ($u['id'] ?? 0)));
@@ -5188,7 +5219,10 @@ function player_matk(array $u): int
     $m = $base + (int) ($u['int'] ?? 0) + (int) gear_stats((int) ($u['id'] ?? 0))['matk'];
     if ($job !== '' && in_array($job, ['mage', 'priest', 'summoner'], true)) {
         $gs = gear_stats((int) ($u['id'] ?? 0));
+        // 物攻/物攻% 也计入法攻（法系不点力量，装备上的物攻是法系唯一的固定攻来源）
         $m += (int) $gs['atk'] + (int) ($m * (float) $gs['atk_pct'] / 100);
+        // 法攻%：法系专属百分比，只吃 matk_pct
+        $m += (int) ($m * (float) $gs['matk_pct'] / 100);
     }
     // 转生：基础属性 × 转生次数 × 10%
     if (function_exists('rs_stat_mult') && $m > 0) {

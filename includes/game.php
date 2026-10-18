@@ -3337,6 +3337,15 @@ function learn_skill(int $uid, string $sid): void
     db()->exec('UPDATE skills SET active=1 WHERE uid=' . (int) $uid . ' AND skill="' . $sid . '"');
 }
 
+// 罪技白名单：五个职业各一个（w9/m9/h9/p9/s9）。统一入口，避免各处漏改。
+// 罪值 < SIN_SKILL_NEED 时不能选用/激活，active_skill 会强制切走。
+function sin_skills(): array
+{
+    return ['w9', 'm9', 'h9', 'p9', 's9'];
+}
+
+const SIN_SKILL_NEED = 100;
+
 function active_skill(int $uid, string $job): ?array
 {
     $set = job_skillset($job);
@@ -3344,9 +3353,9 @@ function active_skill(int $uid, string $job): ?array
     foreach (my_skills($uid) as $s) {
         $mine[$s['skill']] = $s;
     }
-    // 罪值掉下100：强制切掉罪技能
-    $sinSkills = ['w9', 'm9', 'h9', 'p9'];
-    if (sin_of((int) $uid) < 100) {
+    // 罪值掉下门槛：强制切掉罪技能
+    $sinSkills = sin_skills();
+    if (sin_of((int) $uid) < SIN_SKILL_NEED) {
         $needFix = false;
         foreach ($mine as $sid => $s) {
             if (in_array($sid, $sinSkills, true) && !empty($s['active'])) {
@@ -3372,12 +3381,12 @@ function active_skill(int $uid, string $job): ?array
             return $s + (skill_catalog()[$sid] ?? []);
         }
     }
-    $sinLow = sin_of((int) $uid) < 100;
+    $sinLow = sin_of((int) $uid) < SIN_SKILL_NEED;
     foreach (array_reverse($set) as $sid) {
         if (!isset($mine[$sid])) {
             continue;
         }
-        if ($sinLow && in_array($sid, ['w9', 'm9', 'h9', 'p9'], true)) {
+        if ($sinLow && in_array($sid, sin_skills(), true)) {
             continue;
         }
         return $mine[$sid] + (skill_catalog()[$sid] ?? []);
@@ -3396,8 +3405,8 @@ function set_active_skill(int $uid, string $sid): string
     if (!$st->fetch()) {
         return '你还没学会这个技能。';
     }
-    if (in_array($sid, ['w9', 'm9', 'h9', 'p9'], true) && sin_of((int) $uid) < 100) {
-        return '罪技能需要罪值≥100（当前' . sin_of((int) $uid) . '），先去杀怪积攒罪值。';
+    if (in_array($sid, sin_skills(), true) && sin_of((int) $uid) < SIN_SKILL_NEED) {
+        return '罪技能需要罪值≥' . SIN_SKILL_NEED . '（当前' . sin_of((int) $uid) . '），先去杀怪积攒罪值。';
     }
     db()->exec('UPDATE skills SET active=0 WHERE uid=' . (int) $uid);
     db()->prepare('UPDATE skills SET active=1 WHERE uid=? AND skill=?')->execute([$uid, $sid]);
@@ -3437,8 +3446,8 @@ function use_skill_book(int $uid, string $book): string
     }
     $sid = $books[$book]['skill'];
     $cat = skill_catalog()[$sid];
-    if (in_array($sid, ['w9', 'm9', 'h9', 'p9'], true) && sin_of((int) $uid) < 100) {
-        return '罪技能书需要罪值≥100才能领悟（当前' . sin_of((int) $uid) . '）。';
+    if (in_array($sid, sin_skills(), true) && sin_of((int) $uid) < SIN_SKILL_NEED) {
+        return '罪技能书需要罪值≥' . SIN_SKILL_NEED . '才能领悟（当前' . sin_of((int) $uid) . '）。';
     }
     $u = user_by_id($uid);
     if (!$u || job_id_of($u) !== $cat['job']) {
@@ -5887,8 +5896,8 @@ function battle_round(array &$u, array &$b, string $mode): array
                     $logHeal .= hunter_dot_add($b, $dotKey, $add, $pd, $sLv >= 20);
                 }
             } elseif ($sk['kind'] === 'sin') {
-                // 罪技能：罪≥100才能放（战斗中罪掉下去则本轮按普攻算）
-                if (sin_of((int) ($u['id'] ?? 0)) < 100) {
+                // 罪技能：罪≥门槛才能放（战斗中罪掉下去则本轮按普攻算）
+                if (sin_of((int) ($u['id'] ?? 0)) < SIN_SKILL_NEED) {
                     $pd = max(1, player_patk($u) + random_int(0, 3) - monster_pdef($b));
                     $logHeal .= '(罪值不足，罪技能失效)';
                 } else {
@@ -8480,6 +8489,10 @@ function rb2_passive_catalog(): array
 
         'holybishop' => ['name' => '圣光灌注', 'desc' => '治疗+15%'],
 
+        'necro' => ['name' => '亡者军团', 'desc' => '召唤上限+2（2→4）；召唤兽死亡时爆炸，对周围造成范围暗影伤害'],
+
+        'plague' => ['name' => '灵魂腐蚀', 'desc' => '解锁献祭流召唤兽【噬魂夜宴】(s6)与【永夜契约】(s8)：以自身生命换取强力召唤物'],
+
     ];
 
 }
@@ -8496,8 +8509,8 @@ function rebirth2_passive_desc(string $rb2): string
         'assassin' => '影遁：闪避+8%',
         'shadowbishop' => '鲜血契约：吸血+3%',
         'holybishop' => '圣光灌注：治疗+15%',
-        'necro' => '亡者军团：可同时召唤多只深渊生物，召唤物死亡时爆炸对周围造成范围伤害',
-        'plague' => '灵魂腐蚀：攻击附带强烈腐蚀，敌人每回合掉血，部分伤害转化为自身生命值',
+        'necro' => '亡者军团：召唤上限+2（2→4）；召唤兽死亡时爆炸，对周围造成范围暗影伤害',
+        'plague' => '灵魂腐蚀：解锁献祭流召唤兽【噬魂夜宴】(s6)与【永夜契约】(s8)，以自身生命换取强力召唤物',
     ][$rb2] ?? '';
 }
 

@@ -2386,6 +2386,7 @@ function affix_catalog(): array
         'bagcap' => ['name' => '背包容量', 'slots' => ['belt'], 'data' => $r([[2, 4], [3, 6], [4, 8], [5, 10], [6, 12]], 100)],
         'crit' => ['name' => '暴击率', 'slots' => ['weapon', 'head', 'gloves', 'ring', 'necklace'], 'data' => $r([[0.1, 0.3], [0.3, 0.6], [0.6, 1.0], [1.0, 1.5], [1.5, 2.0]], 100, 'crit', 1)],
         'critdmg' => ['name' => '暴击伤害', 'slots' => ['weapon', 'head', 'gloves', 'ring', 'necklace'], 'data' => $r([[1, 3], [3, 6], [6, 10], [10, 15], [15, 20]], 100, 'critdmg', 1)],
+        'precision' => ['name' => '精准', 'slots' => ['weapon', 'gloves', 'head', 'ring'], 'data' => $r([[1, 2], [2, 4], [4, 7], [7, 10], [10, 15]], 60, '', 1)],
         'speed' => ['name' => '攻速', 'slots' => ['weapon', 'gloves'], 'data' => $r([[1, 2], [2, 4], [4, 6], [6, 8], [7, 10]], 90, 'speed', 1)],
         'element' => ['name' => '元素伤害', 'slots' => ['weapon', 'offhand', 'ring'], 'data' => $r([[2, 4], [4, 8], [8, 13], [13, 19], [15, 25]], 70)],
         'lifesteal' => ['name' => '生命偷取', 'slots' => ['weapon', 'ring'], 'data' => $r([[0.2, 0.5], [0.5, 0.9], [0.9, 1.4], [1.4, 2.0], [2, 3]], 50, 'lifesteal', 1)],
@@ -4346,7 +4347,7 @@ function gear_stats(int $uid): array
         return $cache[$uid];
     }
     unset($GLOBALS['_gear_bust']);
-    $keys = ['atk', 'matk', 'def', 'mdef', 'hp', 'truedmg', 'crit', 'critdmg', 'dodge', 'lifesteal', 'atk_pct', 'matk_pct', 'speed', 'element', 'penetration', 'skill_damage', 'execute', 'damage_reduction', 'resist', 'thorns', 'regen', 'energy', 'cooldown', 'hit', 'exp_gain', 'move_speed', 'control_resist', 'slow_resist', 'all_attr', 'gold_gain', 'magic_find', 'summon_power', 'res_light', 'res_dark', 'res_fire', 'res_wind', 'res_ice', 'res_thunder', 'allres', 'bagcap'];
+    $keys = ['atk', 'matk', 'def', 'mdef', 'hp', 'truedmg', 'crit', 'critdmg', 'dodge', 'lifesteal', 'atk_pct', 'matk_pct', 'precision', 'speed', 'element', 'penetration', 'skill_damage', 'execute', 'damage_reduction', 'resist', 'thorns', 'regen', 'energy', 'cooldown', 'hit', 'exp_gain', 'move_speed', 'control_resist', 'slow_resist', 'all_attr', 'gold_gain', 'magic_find', 'summon_power', 'res_light', 'res_dark', 'res_fire', 'res_wind', 'res_ice', 'res_thunder', 'allres', 'bagcap'];
     $s = array_fill_keys($keys, 0.0);
     $st = db()->prepare('SELECT * FROM equips WHERE uid=? AND pos="wear"');
     $st->execute([$uid]);
@@ -5596,6 +5597,41 @@ function monster_mdef(array $m): int
     return (int) ((int) ($m['atk'] ?? 0) * 0.15);
 }
 
+// ===== 伤害浮动管线 =====
+// 一次伤害 = 基础 × 均匀浮动 × 档位(重击/完美一击) × 暴击。
+// 浮动 / 档位 / 暴击 三段各自独立掷骰，所以「完美一击」与「暴击」可以同时触发，
+// 战报会显示「完美一击!+暴击!」。精准(precision)只收窄均匀浮动（±18% 起步，
+// 每点精准 -0.5%，最低 ±4%），不影响档位概率与暴击率——精准高＝伤害稳，
+// 但该来的尖峰和暴击照样来。
+function dmg_variance_half(float $precision): float
+{
+    return max(0.04, min(0.18, 0.18 - $precision * 0.005));
+}
+
+// 返回 [最终伤害, 战报标记]；标记可能为 ''、'重击!'、'完美一击!'、'暴击!'、'完美一击!+暴击!' 等
+function dmg_pipeline(int $base, float $critRate = 0.0, float $critDmg = 0.0, float $precision = 0.0): array
+{
+    if ($base <= 0) {
+        return [0, ''];
+    }
+    $bps = (int) round(dmg_variance_half($precision) * 10000);
+    $factor = 1 + mt_rand(-$bps, $bps) / 10000; // 均匀浮动
+    $tag = '';
+    $grade = mt_rand(1, 10000);
+    if ($grade <= 200) {           // 完美一击 2%
+        $factor *= mt_rand(180, 220) / 100;
+        $tag = '完美一击!';
+    } elseif ($grade <= 1000) {    // 重击 8%
+        $factor *= mt_rand(130, 150) / 100;
+        $tag = '重击!';
+    }
+    if ($critRate > 0 && mt_rand(1, 10000) / 100 <= $critRate) { // 暴击独立骰，最后乘
+        $factor *= 1 + $critDmg / 100;
+        $tag = $tag === '' ? '暴击!' : $tag . '+暴击!';
+    }
+    return [max(1, (int) round($base * $factor)), $tag];
+}
+
 function dmg_to_monster(array $u, array $m = []): int
 {
     // 法师牧师普攻转元素（法师火、牧师光），不再造成物理伤害
@@ -5607,22 +5643,19 @@ function dmg_to_monster(array $u, array $m = []): int
         $GLOBALS['_melee_el_tag'] = $elTag;
         return $d;
     }
-    // 普攻是物理的：物攻-怪物业防
+    // 普攻是物理的：物攻-怪物业防。装备暴击统一在战斗收尾管线判定，这里不再算。
     $d = max(1, player_patk($u) + random_int(0, 3) - monster_pdef($m));
-    $gs = gear_stats((int) ($u['id'] ?? 0));
-    $rb2c = cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '';
-    if ($gs['crit'] + ($rb2c === 'ranger' ? 8 : 0) > 0 && mt_rand(1, 10000) / 100 <= $gs['crit'] + ($rb2c === 'ranger' ? 8 : 0)) {
-        $d = (int) ($d * (1 + $gs['critdmg'] / 100));
-    }
     return $d;
 }
 
-function dmg_to_player(array $u, array $m): int
+// 怪物打玩家：同样走浮动管线（档位重击/完美一击）。返回 [伤害, 标记]。
+// 怪没有装备暴击（critRate=0），精准用玩家的——玩家堆精准也提高承伤稳定性。
+function dmg_to_player(array $u, array $m): array
 {
     $gs = gear_stats((int) ($u['id'] ?? 0));
     $rb2d = cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '';
     if ($gs['dodge'] + ($rb2d === 'assassin' ? 8 : 0) > 0 && mt_rand(1, 10000) / 100 <= $gs['dodge'] + ($rb2d === 'assassin' ? 8 : 0)) {
-        return 0;
+        return [0, '闪避'];
     }
     // 怪物伤害拆两段：物理段吃物防，法术段吃法防
     $phys = max(0, monster_patk($m) + random_int(0, 2) - player_pdef($u));
@@ -5633,7 +5666,8 @@ function dmg_to_player(array $u, array $m): int
         $pres = (float) ($gs['res_' . $mel] ?? 0) + enchant_el_res((int) ($u['id'] ?? 0), $mel);
         $mag = (int) ($mag * (1 - min(80, max(0, $pres)) / 100));
     }
-    return max(1, $phys + $mag);
+    [$md, $tag] = dmg_pipeline(max(1, $phys + $mag), 0.0, 0.0, (float) ($gs['precision'] ?? 0));
+    return [$md, $tag];
 }
 
 // 技能全额转属性：伤害整体吃克制与抗性
@@ -6075,6 +6109,17 @@ function battle_round(array &$u, array &$b, string $mode): array
     if (!empty($b['m_guard']) && $pd > 0) {
         [$pd, $guardTag] = monster_guard_cut($b, (int) $pd);
         $logHeal .= $guardTag;
+    }
+    // ===== 玩家伤害收尾管线：浮动 → 档位(重击/完美一击) → 暴击（最后乘）=====
+    // 放在所有技能/被动倍率算完之后、扣怪血之前；暴击统一在这里判定，
+    // 所以物理/法系/召唤/技能全都一致吃暴击（此前物理技能会覆盖掉普攻的暴击）。
+    if ($pd > 0) {
+        $gsV = gear_stats((int) ($u['id'] ?? 0));
+        $rb2cV = (string) (cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '');
+        [$pd, $vTag] = dmg_pipeline($pd, $gsV['crit'] + ($rb2cV === 'ranger' ? 8 : 0), $gsV['critdmg'], (float) ($gsV['precision'] ?? 0));
+        if ($vTag !== '') {
+            $logHeal .= '(' . $vTag . ')';
+        }
     }
     $b['hp'] = (int) $b['hp'] - $pd;
     if (!empty($GLOBALS['_melee_el_tag'])) {
@@ -6724,8 +6769,16 @@ function battle_round(array &$u, array &$b, string $mode): array
         }
     }
     $md = 0;
+    $monTags = [];
     for ($i = 0; $i < $alive; $i++) {
-        $md += dmg_to_player($u, $b);
+        [$oneD, $oneTag] = dmg_to_player($u, $b);
+        $md += (int) $oneD;
+        if ($oneTag !== '' && $oneTag !== '闪避') {
+            $monTags[] = $b['name'] . $oneTag;
+        }
+    }
+    if ($monTags !== []) {
+        $log .= implode('', $monTags);
     }
     if ($echoWeak) {
         $md = (int) ($md * 0.6);

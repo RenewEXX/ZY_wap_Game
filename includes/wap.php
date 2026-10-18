@@ -7,7 +7,8 @@ function h(string $s): string
 }
 
 // 一整轮战报是挤在一行的纯文本（你出手+括号标记+怪出手+后续状态），
-// 这里只做渲染层排版：按句号/叹号断句，归类着色，伤害数字单独高亮。
+// 这里只做渲染层排版：按句号/叹号断句，归类着色，伤害数字单独高亮，
+// 并把【完美一击!】【暴击!】【重击!】这类档位标记染成醒目色。
 // 存储的 history 保持纯文本不变，所以老战报也受益。
 function battle_log_html(string $line): string
 {
@@ -40,6 +41,10 @@ function battle_log_html(string $line): string
         }
         // 伤害/回复数字单独高亮（你掉979点 / 造成123点 / 冲击45点 / 回复447）
         $p = preg_replace('/(掉|造成|冲击|再掉|回复)(\d+)点/u', '$1<b style="color:#ffd24a">$2</b>点', $p) ?? $p;
+        // 档位标记染色：完美一击(亮金) / 重击(橙) / 暴击(亮红)。可叠加：完美一击!+暴击!
+        $p = preg_replace('/完美一击/', '<b style="color:#ffe14d">完美一击</b>', $p) ?? $p;
+        $p = preg_replace('/重击/', '<b style="color:#ff9a3c">重击</b>', $p) ?? $p;
+        $p = preg_replace('/暴击/', '<b style="color:#ff5c5c">暴击</b>', $p) ?? $p;
         $out .= '<div style="' . $style . 'line-height:1.55">' . $p . '</div>';
     }
     return $out;

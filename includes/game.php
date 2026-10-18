@@ -6071,6 +6071,11 @@ function battle_round(array &$u, array &$b, string $mode): array
     if ($rb2 === 'berserker' && (int) $u['hp'] < (int) $u['maxhp'] / 2 && $pd > 0) { $pd = (int) ($pd * 1.15); $logHeal .= '(狂怒)'; }
     
         if ($rb2 === 'wintermage' && in_array($skEl, ['ice', 'thunder'], true) && $pd > 0 && mt_rand(1, 100) <= 12) { $b['stun'] = 1; $logHeal .= '(麻痹)'; }
+    // 怪架盾期间你的伤害被砍
+    if (!empty($b['m_guard']) && $pd > 0) {
+        [$pd, $guardTag] = monster_guard_cut($b, (int) $pd);
+        $logHeal .= $guardTag;
+    }
     $b['hp'] = (int) $b['hp'] - $pd;
     if (!empty($GLOBALS['_melee_el_tag'])) {
         // 技能已自带属性tag时不再重复追加（只保留技能那个）
@@ -6197,6 +6202,7 @@ function battle_round(array &$u, array &$b, string $mode): array
             $b['left'] = (int) $b['left'] - 1;
             $b['hp'] = (int) $b['maxhp'];
             hunter_dot_clear($b); // 换下一只：上一只身上的DOT层清空
+            monster_skill_clear($b); // 换下一只：怪DOT与架盾一起清
             $dp = roll_drop((int) $u['id'], (string) ($b['id'] ?? ''), (int) ($b['elite'] ?? 0));
             if ($dp !== '') {
                 $b['drops'][] = $dp;
@@ -6731,6 +6737,12 @@ function battle_round(array &$u, array &$b, string $mode): array
     if (!empty($b['eye_weak'])) {
         $md = (int) ($md * 0.9);
     }
+    // 怪物出手：先结算你身上的怪DOT，再看放普攻还是专属技能，战报里写清楚
+    $skRes = monster_skill_turn($u, $b, (int) $md);
+    $md = (int) $skRes['md'];
+    $log .= $skRes['log'];
+    // 怪放了专属技能后，旧的本系属性冲击不再重复追加（技能里已结算过抗性）
+    $meldSkipShock = (string) ($skRes['skill'] ?? '') !== '';
     if (!empty($b['stun'])) {
         $md = 0;
         $b['stun'] = 0;
@@ -6747,7 +6759,7 @@ function battle_round(array &$u, array &$b, string $mode): array
         $log .= $b['name'] . '被破甲，攻击受挫。';
     }
     $meld = monster_element((string) ($b['id'] ?? ''));
-    if ($meld !== '' && $md > 0) {
+    if (!$meldSkipShock && $meld !== '' && $md > 0) {
         $eres = player_resist($u, $meld);
         $emd = max(0, (int) ((int) ($b['atk'] ?? 0) * 0.3 * (1 - $eres / 100)));
         if ($emd > 0) {
@@ -6833,7 +6845,7 @@ function background_battle(array &$u): void
     }
     $script = basename((string) ($_SERVER['SCRIPT_NAME'] ?? ''));
     $a = (string) ($_GET['a'] ?? '');
-    if ($script === 'fight.php' && ($a === 'tick' || $a === 'start' || $a === 'hit' || $a === 'skill')) {
+    if ($script === 'fight.php' && in_array($a, ['tick', 'start', 'hit', 'skill', 'drink'], true)) {
         return;
     }
     $b = $_SESSION['battle'];

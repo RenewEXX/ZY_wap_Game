@@ -15,6 +15,7 @@ require_once __DIR__ . '/dragons.php';
 require_once __DIR__ . '/dragon_wb.php';
 require_once __DIR__ . '/summoner_gear.php';
 require_once __DIR__ . '/hunter_dot.php';
+require_once __DIR__ . '/monster_skills.php';
 require_once __DIR__ . '/arena.php';
 require_once __DIR__ . '/rebirth.php';
 

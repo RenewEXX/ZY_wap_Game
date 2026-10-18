@@ -6,6 +6,45 @@ function h(string $s): string
     return htmlspecialchars($s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
+// 一整轮战报是挤在一行的纯文本（你出手+括号标记+怪出手+后续状态），
+// 这里只做渲染层排版：按句号/叹号断句，归类着色，伤害数字单独高亮。
+// 存储的 history 保持纯文本不变，所以老战报也受益。
+function battle_log_html(string $line): string
+{
+    $line = trim($line);
+    if ($line === '') {
+        return '';
+    }
+    $safe = h($line);
+    $parts = preg_split('/(?<=[。！])/u', $safe, -1, PREG_SPLIT_NO_EMPTY);
+    $out = '';
+    foreach ((array) $parts as $p) {
+        $p = trim($p);
+        if ($p === '') {
+            continue;
+        }
+        // 分类：我方出手、敌方出手/我方受击、系统提示，其他
+        $style = 'color:#9aa;';
+        if (str_contains($p, '喝下') || str_contains($p, '你放出') || str_contains($p, '你劈出')
+            || str_contains($p, '你挥出') || str_contains($p, '你打出') || str_contains($p, '你结果了')) {
+            $style = 'color:#8f8;';
+        } elseif (str_contains($p, '使出【') || str_contains($p, '属性冲击') || str_contains($p, '召唤了')
+            || str_contains($p, '你掉') || str_contains($p, '向你') || str_contains($p, '紧接着又补')
+            || str_contains($p, '吞噬了你的生命') || str_contains($p, '持续掉血')) {
+            $style = 'color:#f88;';
+        } elseif (str_contains($p, '闪避') || str_contains($p, '眩晕') || str_contains($p, '冻结')
+            || str_contains($p, '迟缓') || str_contains($p, '受挫') || str_contains($p, '没这种药')
+            || str_contains($p, '没有【') || str_contains($p, '围殴') || str_contains($p, '架起防御')
+            || str_contains($p, '动弹不得')) {
+            $style = 'color:#fa6;';
+        }
+        // 伤害/回复数字单独高亮（你掉979点 / 造成123点 / 冲击45点 / 回复447）
+        $p = preg_replace('/(掉|造成|冲击|再掉|回复)(\d+)点/u', '$1<b style="color:#ffd24a">$2</b>点', $p) ?? $p;
+        $out .= '<div style="' . $style . 'line-height:1.55">' . $p . '</div>';
+    }
+    return $out;
+}
+
 function wap_start(string $title): void
 {
     echo '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">';

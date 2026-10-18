@@ -129,8 +129,8 @@ if ($a === 'hit') {
         exit;
     }
 
-    // 龙王反击：招式全部为自身属性伤害
-    $move = drg_boss_move((string) $d['el']);
+    // 龙王反击：每条龙有自己的招牌技能，全部为自身属性伤害
+    $move = drg_boss_move($mid);
     $md = max(1, (int) (dmg_to_player($u, $boss) * $move['mult']));
     $u['hp'] = max(0, (int) $u['hp'] - $md);
     $log .= $d['short'] . '反手【' . $move['name'] . '】（' . element_name((string) $move['el']) . '），你掉' . $md . '点。';

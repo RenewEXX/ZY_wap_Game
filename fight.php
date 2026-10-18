@@ -206,7 +206,7 @@ if ($a === 'hit' || $a === 'skill' || $a === 'tick') {
                 'bhp' => (int) $bb['hp'], 'bmax' => (int) $bb['maxhp'],
                 'bname' => (string) $bb['name'],
                 'left' => (int) ($bb['left'] ?? 1), 'num' => (int) ($bb['num'] ?? 1),
-                'hist' => array_slice((array) ($bb['history'] ?? []), -6),
+                'histhtml' => array_map('battle_log_html', array_slice((array) ($bb['history'] ?? []), -6)),
                 'pet' => (function () use ($u) { $ap = active_pet((int) ($u['id'] ?? 0)); if (!$ap) { return ''; } $st = pet_stats($ap); return pet_species()[$ap['species']]['name'] . ' ' . min((int) $ap['hp'], $st['maxhp']) . '/' . $st['maxhp']; })(),
             ]);
             exit;
@@ -547,9 +547,35 @@ if ($a === 'silence') {
 if ($a === 'drink') {
     $pm = (string) ($_GET['m'] ?? 'hp_pct10');
     $msg = drink_pct_potion($u, $pm);
+    $u = user_by_id((int) ($u['id'] ?? 0)) ?: $u;
     $b['log'] = $msg;
+    // 战斗页渲染的是 history 数组（不是 log），喝药消息必须进 history，否则看着像没喝
+    if (!isset($b['history']) || !is_array($b['history'])) {
+        $b['history'] = [];
+    }
+    $b['history'][] = $msg;
+    $b['history'] = array_slice($b['history'], -20);
     $b['last'] = time();
     $_SESSION['battle'] = $b;
+    $isAjaxDrink = isset($_GET['ajax']) || (($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'fetch');
+    if ($isAjaxDrink) {
+        header('Content-Type: application/json; charset=utf-8');
+        $bb = $_SESSION['battle'];
+        $ap = active_pet((int) ($u['id'] ?? 0));
+        echo json_encode([
+            'done' => false,
+            'log' => $msg,
+            'uhp' => (int) $u['hp'], 'umax' => (int) $u['maxhp'],
+            'ump' => (int) ($u['mp'] ?? 0), 'umaxmp' => (int) ($u['maxmp'] ?? 0),
+            'bhp' => (int) $bb['hp'], 'bmax' => (int) $bb['maxhp'],
+            'bname' => (string) $bb['name'],
+            'left' => (int) ($bb['left'] ?? 1), 'num' => (int) ($bb['num'] ?? 1),
+            'histhtml' => array_map('battle_log_html', array_slice((array) ($bb['history'] ?? []), -6)),
+            'mats' => array_intersect_key(mats_of((int) ($u['id'] ?? 0)), array_flip(array_keys(pct_potions()))),
+            'pet' => $ap ? (pet_species()[$ap['species']]['name'] . ' ' . min((int) $ap['hp'], pet_stats($ap)['maxhp']) . '/' . pet_stats($ap)['maxhp']) : '',
+        ]);
+        exit;
+    }
     header('Location: fight.php');
     exit;
 }
@@ -580,16 +606,60 @@ echo '<div class="muted">自动战斗中：每1秒默认放[' . h(job_of($u)['sk
 echo '<div class="hr">--------</div>';
 echo '<div id="blog">';
 foreach (array_slice($history, -6) as $h) {
-    echo h($h) . '<br>';
+    echo battle_log_html((string) $h) . '<div class="hr" style="margin:4px 0;opacity:.6">--------</div>';
 }
 echo '</div>';
 echo '<div class="hr">--------</div>';
+// 战斗中手动喝药
+$pmatsDrink = mats_of((int) $u['id']);
+$drinkBtns = [];
+foreach (pct_potions() as $pmid => $pt) {
+    $have = (int) ($pmatsDrink[$pmid] ?? 0);
+    if ($have <= 0) {
+        continue;
+    }
+    $drinkBtns[] = '<button type="button" class="drinkBtn" data-mid="' . h($pmid) . '">喝' . h($pt['name']) . '(+' . $pt['pct'] . '%' . ($pt['stat'] === 'mp' ? '蓝' : '血') . '×<span id="pm_' . h($pmid) . '">' . $have . '</span>)</button>';
+}
+if ($drinkBtns !== []) {
+    echo '<div class="muted" id="drinkBar">' . implode(' ', $drinkBtns) . '</div>';
+} else {
+    echo '<div class="muted">没带药。<a href="shop.php">黑市</a>或背包里买。</div>';
+}
 echo '<button id="pauseBtn" type="button">暂停</button> ';
 echo '<a href="fight.php?a=run">撤</a>';
 nav_line();
 echo '<script>
 let paused=false;
 document.getElementById("pauseBtn").onclick=()=>{paused=!paused;document.getElementById("pauseBtn").innerText=paused?"继续":"暂停";};
+// 轮与轮之间用细分隔线隔开，内容已经是服务端排版好的 HTML，直接 innerHTML
+function renderHist(arr){return arr.join("<div class=\"hr\" style=\"margin:4px 0;opacity:.6\">--------</div>");}
+document.querySelectorAll(".drinkBtn").forEach(function(btn){
+  btn.onclick=async()=>{
+    const mid=btn.getAttribute("data-mid");
+    btn.disabled=true;
+    try{
+      const r=await fetch("fight.php?a=drink&m="+encodeURIComponent(mid)+"&ajax=1",{headers:{"X-Requested-With":"fetch"},credentials:"same-origin"});
+      const d=await r.json();
+      if(!d.done){
+        document.getElementById("uhp").innerText="我"+d.uhp+"/"+d.umax;
+        if(d.ump!==undefined){ const me=document.getElementById("ump"); if(me) me.innerText="魔力 "+d.ump+"/"+d.umaxmp; }
+        if(d.histhtml&&d.histhtml.length){
+          document.getElementById("blog").innerHTML=renderHist(d.histhtml);
+        }
+        if(d.mats){
+          for(const k in d.mats){
+            const el=document.getElementById("pm_"+k);
+            if(el) el.innerText=d.mats[k];
+            if((+d.mats[k])<=0){
+              document.querySelectorAll(".drinkBtn[data-mid=\""+k+"\"]").forEach(function(x){x.disabled=true;});
+            }
+          }
+        }
+      }
+    }catch(e){}
+    btn.disabled=false;
+  };
+});
 // 每2秒打一轮并同步刷新血量+战报（同一tick，无延迟）
 setInterval(async ()=>{
   if(paused||document.hidden) return;
@@ -603,7 +673,7 @@ setInterval(async ()=>{
     document.getElementById("bhp").innerText="敌生命"+d.bhp+"/"+d.bmax;
     if(d.num>1){ const bl=document.getElementById("bleft"); if(bl) bl.innerText="剩余 "+d.left+"/"+d.num+"只，存活怪每回合一起打你！"; }
     const box=document.getElementById("blog");
-    if(d.hist&&d.hist.length){box.innerHTML=d.hist.map(function(x){return String(x).replace(/</g,"&lt;")}).join("<br>");}else{box.innerHTML=(box.innerHTML+"<br>"+String(d.log).replace(/</g,"&lt;")).split("<br>").slice(-3).join("<br>");}
+    if(d.histhtml&&d.histhtml.length){box.innerHTML=renderHist(d.histhtml);}else{box.innerHTML=(box.innerHTML+"<br>"+String(d.log).replace(/</g,"&lt;")).split("<br>").slice(-3).join("<br>");}
     window.scrollTo(0,document.body.scrollHeight);
   }catch(e){}
 },2000);

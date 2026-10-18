@@ -227,42 +227,67 @@ function drg_enter(array &$u, string $mid): string
 }
 
 // ---------- 龙王出手（全部为对应属性伤害）----------
-function drg_boss_move(string $el): array
+// 龙王招式：每条龙都有自己的一套招牌技能，不再是按元素共用的模板。
+// 每条龙 3-4 招，含专属名号与特殊效果；多伊尔用老的多用途结构（含灼烧）。
+function drg_boss_move(string $mid_or_el): array
 {
-    $table = [
-        'fire' => [
-            ['name' => '龙爪撕裂', 'mult' => 1.0, 'burn' => 0],
+    // 用 mid 精确匹配；兼容旧调用（直接传元素）时回落到元素表
+    $byMid = [
+        'doyle' => [
+            ['name' => '龙爪撕裂', 'mult' => 1.0],
             ['name' => '烬焰吐息', 'mult' => 1.5, 'burn' => 3],
-            ['name' => '灰烬风暴', 'mult' => 0.8, 'burn' => 0],
+            ['name' => '灰烬风暴', 'mult' => 0.8],
+            ['name' => '南炎柱·焚世', 'mult' => 2.2, 'burn' => 2],
         ],
-        'wind' => [
-            ['name' => '罡风撕裂', 'mult' => 1.0, 'burn' => 0],
-            ['name' => '苍岚斩', 'mult' => 1.4, 'burn' => 0],
-            ['name' => '天穹风刃', 'mult' => 0.8, 'burn' => 0],
+        'aetherine' => [
+            ['name' => '罡风撕裂', 'mult' => 1.0],
+            ['name' => '苍岚斩', 'mult' => 1.5],
+            ['name' => '天穹风刃', 'mult' => 0.9],
+            ['name' => '西风柱·万刃归寂', 'mult' => 2.2],
         ],
-        'ice' => [
-            ['name' => '冰棱贯穿', 'mult' => 1.0, 'burn' => 0],
-            ['name' => '永冻吐息', 'mult' => 1.5, 'burn' => 0],
-            ['name' => '哀歌回响', 'mult' => 0.8, 'burn' => 0],
+        'ysolde' => [
+            ['name' => '冰棱贯穿', 'mult' => 1.0],
+            ['name' => '永冻吐息', 'mult' => 1.5],
+            ['name' => '哀歌回响', 'mult' => 0.9],
+            ['name' => '北寒柱·千古冰封', 'mult' => 2.2],
         ],
-        'thunder' => [
-            ['name' => '雷霆轰击', 'mult' => 1.0, 'burn' => 0],
-            ['name' => '天谴之鞭', 'mult' => 1.6, 'burn' => 0],
-            ['name' => '碎星爆闪', 'mult' => 0.8, 'burn' => 0],
+        'rex' => [
+            ['name' => '雷霆轰击', 'mult' => 1.0],
+            ['name' => '天谴之鞭', 'mult' => 1.6],
+            ['name' => '碎星爆闪', 'mult' => 0.9],
+            ['name' => '东雷柱·九霄落雷', 'mult' => 2.3],
         ],
-        'dark' => [
-            ['name' => '暗影腐蚀', 'mult' => 1.0, 'burn' => 0],
-            ['name' => '噬界之爪', 'mult' => 1.5, 'burn' => 0],
-            ['name' => '腐朽蔓延', 'mult' => 0.8, 'burn' => 0],
+        'nidhogg' => [
+            ['name' => '暗影腐蚀', 'mult' => 1.0],
+            ['name' => '噬界之爪', 'mult' => 1.5],
+            ['name' => '腐朽蔓延', 'mult' => 0.9],
+            ['name' => '深渊柱·万鬼归渊', 'mult' => 2.2],
         ],
-        'light' => [
-            ['name' => '圣光贯穿', 'mult' => 1.0, 'burn' => 0],
-            ['name' => '裁决之光', 'mult' => 1.5, 'burn' => 0],
-            ['name' => '天罚降世', 'mult' => 0.8, 'burn' => 0],
+        'aurelian' => [
+            ['name' => '圣光贯穿', 'mult' => 1.0],
+            ['name' => '裁决之光', 'mult' => 1.5],
+            ['name' => '天罚降世', 'mult' => 0.9],
+            ['name' => '中央柱·净世圣裁', 'mult' => 2.2],
         ],
-    ][$el] ?? [['name' => '龙爪', 'mult' => 1.0, 'burn' => 0]];
+    ];
+    $elTable = [
+        'fire' => [['name' => '龙爪撕裂', 'mult' => 1.0, 'burn' => 0], ['name' => '烬焰吐息', 'mult' => 1.5, 'burn' => 3], ['name' => '灰烬风暴', 'mult' => 0.8, 'burn' => 0]],
+        'wind' => [['name' => '罡风撕裂', 'mult' => 1.0], ['name' => '苍岚斩', 'mult' => 1.4], ['name' => '天穹风刃', 'mult' => 0.8]],
+        'ice' => [['name' => '冰棱贯穿', 'mult' => 1.0], ['name' => '永冻吐息', 'mult' => 1.5], ['name' => '哀歌回响', 'mult' => 0.8]],
+        'thunder' => [['name' => '雷霆轰击', 'mult' => 1.0], ['name' => '天谴之鞭', 'mult' => 1.6], ['name' => '碎星爆闪', 'mult' => 0.8]],
+        'dark' => [['name' => '暗影腐蚀', 'mult' => 1.0], ['name' => '噬界之爪', 'mult' => 1.5], ['name' => '腐朽蔓延', 'mult' => 0.8]],
+        'light' => [['name' => '圣光贯穿', 'mult' => 1.0], ['name' => '裁决之光', 'mult' => 1.5], ['name' => '天罚降世', 'mult' => 0.8]],
+    ];
+    $dd = dragon($mid_or_el);
+    if ($dd !== []) {
+        $table = $byMid[$mid_or_el] ?? ($elTable[(string) $dd['el']] ?? [['name' => '龙爪', 'mult' => 1.0]]);
+        $mv = $table[array_rand($table)];
+        $mv['el'] = (string) $dd['el'];
+        return $mv;
+    }
+    $table = $elTable[$mid_or_el] ?? [['name' => '龙爪', 'mult' => 1.0]];
     $mv = $table[array_rand($table)];
-    $mv['el'] = $el;
+    $mv['el'] = $mid_or_el;
     return $mv;
 }
 

@@ -21,12 +21,13 @@ function hunter_dot_cap(string $key, int $tier): int
 }
 
 // 挂 DOT 层。$srcDmg 是本次技能打出的伤害，作为固定值 DOT 的基准。
-function hunter_dot_add(array &$b, string $key, int $add, int $srcDmg, bool $lv20 = false): string
+// $tier 传技能熟练档位，决定层数上限（10档上限+2）；不传则按基础上限。
+function hunter_dot_add(array &$b, string $key, int $add, int $srcDmg, bool $lv20 = false, int $tier = 0): string
 {
     if ($key === '' || $add <= 0) {
         return '';
     }
-    $cap = hunter_dot_cap($key, 0);
+    $cap = hunter_dot_cap($key, $tier);
     $stacks = (int) ($b['dot_' . $key] ?? 0);
     $newStacks = min($cap, $stacks + $add);
     if ($newStacks <= 0) {
@@ -71,8 +72,8 @@ function hunter_dot_poison_pct(int $bMaxhp, int $stacks, bool $lv20): int
     return max(1, (int) ($bMaxhp * $per * $stacks / 100));
 }
 
-// 结算一轮所有 DOT，返回掉血和日志
-function hunter_dot_tick(array &$b): array
+// 结算一轮所有 DOT，返回掉血和日志。$mult 为职业向DOT加成（游侠+35%）。
+function hunter_dot_tick(array &$b, float $mult = 1.0): array
 {
     $dmg = 0;
     $log = '';
@@ -100,6 +101,7 @@ function hunter_dot_tick(array &$b): array
             }
             $tag = $key === 'bleed' ? '出血' : '焦灼';
         }
+        $hit = (int) round($hit * $mult);
         $hit = max(1, $hit);
         $dmg += $hit;
         $log .= $tag . '×' . $stacks . '，' . $name . '掉' . $hit . '点。';

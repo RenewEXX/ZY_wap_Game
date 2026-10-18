@@ -70,7 +70,11 @@ echo '<form method="post">';
 echo '<input type="hidden" name="zone" value="' . h($zone) . '">';
 echo '角色名<br><input name="cname" maxlength="12" value="' . h((string) ($_POST['cname'] ?? '')) . '" required><br>';
 foreach (jobs() as $jid => $j) {
-    echo '<input type="radio" name="job" value="' . h($jid) . '"' . ($jid === 'warrior' ? ' checked' : '') . '>' . h($j['name']) . '(HP' . $j['hp'] . ' ATK' . $j['atk'] . ')<br>';
+    $flavor = job_flavor($jid);
+    echo '<input type="radio" name="job" value="' . h($jid) . '"' . ($jid === 'warrior' ? ' checked' : '') . '><b>' . h($j['name']) . '</b>（HP' . $j['hp'] . ' ATK' . $j['atk'] . ' DEF' . $j['def'] . ' MP' . $j['mp'] . '）<br>';
+    echo '<span class="muted">' . h($flavor['bg']) . '</span><br>';
+    echo '<span class="muted">特色：' . h($flavor['feat']) . '</span><br>';
+    echo '<br>';
 }
 echo '<input type="submit" value="创建并进入">';
 echo '</form>';

@@ -4,12 +4,40 @@ declare(strict_types=1);
 function jobs(): array
 {
     return [
-        'warrior' => ['name' => '战士', 'hp' => 62, 'mp' => 20, 'atk' => 7, 'def' => 5, 'skill' => '重斩', 'weapon' => 'axe', 'armor' => 'cloth', 'desc' => '物理近战，血多甲厚。技能重斩：150%+物理伤害，断岳斩附魔火伤。只能用斧剑锤，盾牌专精'],
+        'warrior' => ['name' => '战士', 'hp' => 62, 'mp' => 20, 'atk' => 7, 'def' => 5, 'skill' => '铁壁格挡', 'weapon' => 'axe', 'armor' => 'cloth', 'desc' => '物理近战，血多甲厚。防战堆双防、挨打按防御反击；狂战本场损血越多攻击越高。只能用斧剑锤，盾牌专精'],
         'mage' => ['name' => '法师', 'hp' => 42, 'mp' => 55, 'atk' => 11, 'def' => 1, 'skill' => '火球术', 'weapon' => 'staff', 'armor' => 'cloth', 'desc' => '纯法术炮台，伤害看智慧+法攻。火球/狂雷/寒霜全是法伤。只能用法杖法器，力量对法师无效'],
-        'hunter' => ['name' => '猎手', 'hp' => 50, 'mp' => 30, 'atk' => 8, 'def' => 3, 'skill' => '双连射', 'weapon' => 'bow', 'armor' => 'cloth', 'desc' => '物理连射+爆炸箭（火伤）。只能用弓弩匕首'],
+        'hunter' => ['name' => '猎手', 'hp' => 50, 'mp' => 30, 'atk' => 8, 'def' => 3, 'skill' => '双连射', 'weapon' => 'bow', 'armor' => 'cloth', 'desc' => '游侠走群攻持续伤害磨死全场；刺客走单体超高爆发+高闪避。只能用弓弩匕首'],
         'priest' => ['name' => '牧师', 'hp' => 54, 'mp' => 45, 'atk' => 6, 'def' => 3, 'skill' => '治疗术', 'weapon' => 'mace', 'armor' => 'cloth', 'desc' => '治疗看法攻，神圣伤害也是法伤。能用锤杖盾'],
         'summoner' => ['name' => '召唤师', 'short' => '召', 'hp' => 40, 'mp' => 50, 'atk' => 5, 'def' => 2, 'skill' => '深渊契约', 'weapon' => 'relic', 'armor' => 'cloth', 'desc' => '法系/召唤/持续伤害。不信神，不靠元素，把自己当容器与深渊游魂签订契约。战斗中可即时召唤深渊小鬼，召唤兽替你承伤也替你输出。本体是五职业里最脆的：血量成长全场最低，强度全在召唤兽身上——你倒了它们就散。主手限魂契器（魂灯/契杖/骨杖），副手限深渊契匣'],
     ];
+}
+
+// 职业背景与特色：给创建角色页选职业时看
+function job_flavor(string $job): array
+{
+    $f = [
+        'warrior' => [
+            'bg' => '灰雾村的最后一批守夜人。曾在矿道塌方那天背着三个人爬出来，从此认定一件事：站着别倒下，比打死谁都重要。',
+            'feat' => '两个方向。防战：物防法防都堆，挨打时按防御等比例反击，越硬越疼；狂战：本场掉的血越多攻击越高（按数值算，不是按百分比），越痛越强。',
+        ],
+        'mage' => [
+            'bg' => '白石镇图书馆的抄书员。抄了十年禁书，发现每页边角都写着同一句话，就此学会跟元素说话。',
+            'feat' => '纯法术输出，伤害吃法攻与智慧。控制手段最多：麻痹让对手停手，冻结削对手的攻击，元素亲和让所有元素伤再高12%。',
+        ],
+        'hunter' => [
+            'bg' => '走私队出身，箭术是跟猎人学的，毒是跟沼泽里的采药人学的。规矩只有一条：不追不属于自己的猎物。',
+            'feat' => '两个方向。游侠：所有技能都往目标身上叠持续伤害，靠磨死全场；刺客：放弃群攻换单体超高爆发，靠高闪避让对手根本打不到你。',
+        ],
+        'priest' => [
+            'bg' => '本该在圣殿安安稳稳念经，却总在不该待的地方。牧师执照是补发的，因为原来的那位已经替他们死在了裂隙里。',
+            'feat' => '唯一能把伤害变成治疗的职业：先奶人，打出去的暗伤有四到八成直接转成自身生命，站桩输出也养不活自己。',
+        ],
+        'summoner' => [
+            'bg' => '不信神，不靠元素，把自己当容器，跟深渊游魂签下契约。他很清楚这笔交易的代价——你倒了，它们就散。',
+            'feat' => '本体五职业里最脆，血量成长全场最低，强度全在召唤兽身上。召唤兽替你输出也替你承伤，契匣开场自动开匣，魂契5件后每只死时都会爆炸。',
+        ],
+    ];
+    return $f[$job] ?? ['bg' => '', 'feat' => ''];
 }
 
 function job_of(array $u): array
@@ -3221,39 +3249,40 @@ function quest_mats(): array
 function skill_catalog(): array
 {
     return [
-        'w1' => ['name' => '重斩', 'job' => 'warrior', 'mp' => 8, 'kind' => 'phys', 'mult' => 1.6, 'el' => '', 't10' => '伤害+25%', 'lv20' => '狂怒：伤害+15%'],
-        'w2' => ['name' => '断岳斩', 'job' => 'warrior', 'mp' => 18, 'kind' => 'phys', 'mult' => 2.2, 'el' => 'fire', 't10' => '本次暴击率+20%', 'lv20' => '伤害+15%，附魔火伤'],
+        // 战士：防战（吃双防、挨打按防御等比反击）/ 狂战（本场损血数值越多家伤越高）两个方向
+        'w1' => ['name' => '铁壁格挡', 'job' => 'warrior', 'mp' => 8, 'kind' => 'phys', 'mult' => 1.2, 'el' => '', 'tank' => 1, 't10' => '反击伤害+30%', 'lv20' => '反击伤害再+30%，你减伤+10%'],
+        'w2' => ['name' => '怒斩', 'job' => 'warrior', 'mp' => 18, 'kind' => 'phys', 'mult' => 1.9, 'el' => 'fire', 'rage' => 1, 't10' => '狂战加成翻倍', 'lv20' => '伤害+15%，附魔火伤'],
         'm1' => ['name' => '火球术', 'job' => 'mage', 'mp' => 12, 'kind' => 'magic', 'mult' => 0, 'el' => 'fire', 't10' => '伤害+30%', 'lv20' => '伤害+15%'],
         'm2' => ['name' => '狂雷术', 'job' => 'mage', 'mp' => 22, 'kind' => 'magic', 'mult' => 0, 'el' => 'thunder', 't10' => '12%麻痹：敌停一轮', 'lv20' => '伤害+15%'],
         'h1' => ['name' => '双连射', 'job' => 'hunter', 'mp' => 10, 'kind' => 'multi2', 'mult' => 1.4, 'el' => '', 'dot' => 'bleed', 't10' => '出血层数+1，可叠3层', 'lv20' => '每层出血伤害+25%'],
         'h2' => ['name' => '爆裂箭', 'job' => 'hunter', 'mp' => 20, 'kind' => 'multi2', 'mult' => 1.7, 'el' => 'fire', 'dot' => 'burn', 't10' => '焦灼改为溅射（伤害灌进队列）', 'lv20' => '焦灼伤害+40%'],
         'p1' => ['name' => '圣光弹', 'job' => 'priest', 'mp' => 10, 'kind' => 'heal', 'mult' => 0.7, 'heal' => 25, 'el' => 'light', 't10' => '治疗+15', 'lv20' => '治疗+20%，伤害+15%'],
         'p2' => ['name' => '圣光庇佑', 'job' => 'priest', 'mp' => 20, 'kind' => 'heal', 'mult' => 1.0, 'heal' => 45, 'el' => 'light', 't10' => '治疗+25', 'lv20' => '治疗+20%，伤害+15%'],
-        'w3' => ['name' => '裂地猛击', 'job' => 'warrior', 'mp' => 30, 'kind' => 'phys', 'mult' => 3.0, 'el' => 'thunder', 't10' => '5%眩晕敌人1轮', 'lv20' => '伤害+15%'],
+        'w3' => ['name' => '龟裂践踏', 'job' => 'warrior', 'mp' => 30, 'kind' => 'phys', 'mult' => 2.2, 'el' => 'thunder', 'tank' => 1, 't10' => '敌人攻击-15%持续3轮', 'lv20' => '伤害+15%，反击伤害+25%'],
         'm3' => ['name' => '寒霜新星', 'job' => 'mage', 'mp' => 32, 'kind' => 'magic', 'mult' => 0, 'el' => 'ice', 't10' => '5%冻结：敌攻-15%持续3轮', 'lv20' => '伤害+15%'],
         'h3' => ['name' => '淬毒箭', 'job' => 'hunter', 'mp' => 30, 'kind' => 'multi2', 'mult' => 1.8, 'el' => 'dark', 'dot' => 'poison', 't10' => '剧毒层数+1，可叠3层', 'lv20' => '剧毒每层+2%最大生命'],
         'p3' => ['name' => '神圣审判', 'job' => 'priest', 'mp' => 30, 'kind' => 'heal', 'mult' => 1.2, 'heal' => 60, 'el' => 'light', 't10' => '恢复10点魔力', 'lv20' => '治疗+20%，伤害+15%'],
-        'w4' => ['name' => '烬灭斩', 'job' => 'warrior', 'mp' => 40, 'kind' => 'phys', 'mult' => 3.6, 'el' => 'fire', 't10' => '本次暴击率+25%', 'lv20' => '伤害+15%，附魔火伤'],
+        'w4' => ['name' => '燃血狂斩', 'job' => 'warrior', 'mp' => 40, 'kind' => 'phys', 'mult' => 2.6, 'el' => 'fire', 'rage' => 1, 't10' => '本次暴击率+25%', 'lv20' => '伤害+15%，附魔火伤'],
         'm4' => ['name' => '冰河葬', 'job' => 'mage', 'mp' => 42, 'kind' => 'magic', 'mult' => 0, 'el' => 'ice', 't10' => '伤害+30%', 'lv20' => '伤害+15%，10%冻结'],
         'h4' => ['name' => '猎龙箭', 'job' => 'hunter', 'mp' => 40, 'kind' => 'multi2', 'mult' => 2.4, 'el' => 'dark', 'dot' => 'bleed', 't10' => '龙裔杀手：对龙类伤害+50%', 'lv20' => '出血全部转化为真实伤害'],
         'p4' => ['name' => '熔心圣歌', 'job' => 'priest', 'mp' => 40, 'kind' => 'heal', 'mult' => 1.5, 'heal' => 90, 'el' => 'light', 't10' => '治疗+30', 'lv20' => '治疗+20%，伤害+15%'],
-        'w5' => ['name' => '烈焰旋风', 'job' => 'warrior', 'mp' => 50, 'kind' => 'aoe', 'mult' => 2.4, 'el' => 'fire', 't10' => '溅射+10%', 'lv20' => '伤害+15%'],
-        'w6' => ['name' => '撼地重击', 'job' => 'warrior', 'mp' => 50, 'kind' => 'aoe', 'mult' => 2.2, 'el' => 'thunder', 't10' => '10%眩晕', 'lv20' => '伤害+15%'],
+        'w5' => ['name' => '烈焰旋风', 'job' => 'warrior', 'mp' => 50, 'kind' => 'aoe', 'mult' => 2.0, 'el' => 'fire', 'rage' => 1, 't10' => '溅射+10%', 'lv20' => '伤害+15%'],
+        'w6' => ['name' => '撼地重击', 'job' => 'warrior', 'mp' => 50, 'kind' => 'aoe', 'mult' => 1.8, 'el' => 'thunder', 'tank' => 1, 't10' => '10%眩晕', 'lv20' => '伤害+15%，减攻25%'],
         'm5' => ['name' => '暴风雪', 'job' => 'mage', 'mp' => 55, 'kind' => 'aoe', 'mult' => 0, 'el' => 'ice', 't10' => '伤害+30%，10%冻结', 'lv20' => '伤害+15%'],
         'm6' => ['name' => '燎原烈焰', 'job' => 'mage', 'mp' => 55, 'kind' => 'aoe', 'mult' => 0, 'el' => 'fire', 't10' => '伤害+30%', 'lv20' => '伤害+15%'],
-        'h5' => ['name' => '万箭齐发', 'job' => 'hunter', 'mp' => 50, 'kind' => 'aoe', 'mult' => 2.2, 'el' => 'wind', 'dot' => 'bleed', 't10' => '全场叠2层出血', 'lv20' => '溅射率翻倍（100%）'],
-        'h6' => ['name' => '影杀阵', 'job' => 'hunter', 'mp' => 50, 'kind' => 'aoe', 'mult' => 2.3, 'el' => 'dark', 'dot' => 'poison', 't10' => '群攻每命中一只叠1层剧毒', 'lv20' => '斩杀线提高到40%'],
+        'h5' => ['name' => '万箭齐发', 'job' => 'hunter', 'mp' => 50, 'kind' => 'aoe', 'mult' => 2.2, 'el' => 'wind', 'dot' => 'bleed', 'ranger' => 1, 't10' => '全场叠2层出血', 'lv20' => '溅射率翻倍（100%）'],
+        'h6' => ['name' => '影杀', 'job' => 'hunter', 'mp' => 50, 'kind' => 'step', 'mult' => 4.2, 'el' => 'dark', 'assassin' => 1, 't10' => '单体伤害+60%', 'lv20' => '斩杀线提高到40%'],
         'p5' => ['name' => '暗影新星', 'job' => 'priest', 'mp' => 55, 'kind' => 'aoe', 'mult' => 1.8, 'el' => 'dark', 't10' => '伤害+30%', 'lv20' => '伤害转奶40%'],
         'p6' => ['name' => '圣光普照', 'job' => 'priest', 'mp' => 55, 'kind' => 'aoe', 'mult' => 1.2, 'heal' => 120, 'el' => 'light', 't10' => '治疗+40', 'lv20' => '治疗+20%，队友70%'],
-        'w7' => ['name' => '血怒狂斩', 'job' => 'warrior', 'mp' => 55, 'kind' => 'aoe', 'mult' => 2.6, 'el' => 'dark', 't10' => '吸血+15%，溅射+10%', 'lv20' => '伤害+15%'],
-        'w8' => ['name' => '壁垒雷狱', 'job' => 'warrior', 'mp' => 55, 'kind' => 'aoe', 'mult' => 2.0, 'el' => 'thunder', 't10' => '敌攻-20%持续3轮', 'lv20' => '伤害+15%，减攻25%'],
+        'w7' => ['name' => '血怒狂斩', 'job' => 'warrior', 'mp' => 55, 'kind' => 'aoe', 'mult' => 2.2, 'el' => 'dark', 'rage' => 1, 't10' => '狂战加成翻倍，吸血+15%', 'lv20' => '伤害+15%，溅射+10%'],
+        'w8' => ['name' => '壁垒雷狱', 'job' => 'warrior', 'mp' => 55, 'kind' => 'aoe', 'mult' => 1.6, 'el' => 'thunder', 'tank' => 1, 't10' => '敌攻-20%持续3轮', 'lv20' => '伤害+15%，减攻25%，反击伤害+30%'],
         'm7' => ['name' => '雷暴术', 'job' => 'mage', 'mp' => 60, 'kind' => 'aoe', 'mult' => 0, 'el' => 'thunder', 't10' => '25%麻痹', 'lv20' => '伤害+15%，麻痹30%'],
         'm8' => ['name' => '风火燎原', 'job' => 'mage', 'mp' => 60, 'kind' => 'aoe', 'mult' => 0, 'el' => 'wind', 't10' => '伤害+30%', 'lv20' => '伤害+15%，溅射+10%'],
-        'h7' => ['name' => '穿云箭雨', 'job' => 'hunter', 'mp' => 55, 'kind' => 'aoe', 'mult' => 2.2, 'el' => 'wind', 'dot' => 'bleed', 't10' => '焦灼全场（无视抗性的持续灼烧）', 'lv20' => '焦灼每层伤害+50%'],
-        'h8' => ['name' => '夜幕影杀', 'job' => 'hunter', 'mp' => 55, 'kind' => 'aoe', 'mult' => 2.4, 'el' => 'dark', 'dot' => 'poison', 't10' => '剧毒层数翻倍（直接6层）', 'lv20' => '斩杀线提高到60%'],
+        'h7' => ['name' => '穿云箭雨', 'job' => 'hunter', 'mp' => 55, 'kind' => 'aoe', 'mult' => 2.2, 'el' => 'wind', 'dot' => 'bleed', 'ranger' => 1, 't10' => '焦灼全场（无视抗性的持续灼烧）', 'lv20' => '焦灼每层伤害+50%'],
+        'h8' => ['name' => '夜幕绞杀', 'job' => 'hunter', 'mp' => 55, 'kind' => 'step', 'mult' => 6.5, 'el' => 'dark', 'assassin' => 1, 't10' => '本次必暴击', 'lv20' => '斩杀线提高到60%'],
         'p7' => ['name' => '噬魂新星', 'job' => 'priest', 'mp' => 60, 'kind' => 'aoe', 'mult' => 2.0, 'el' => 'dark', 't10' => '伤害+30%', 'lv20' => '伤害转奶60%'],
         'p8' => ['name' => '圣光审判', 'job' => 'priest', 'mp' => 60, 'kind' => 'aoe', 'mult' => 1.0, 'heal' => 150, 'el' => 'light', 't10' => '治疗+50', 'lv20' => '治疗+20%，队友80%'],
-        'w9' => ['name' => '血狱狂斩', 'job' => 'warrior', 'mp' => 45, 'kind' => 'sin', 'mult' => 4.5, 'el' => 'dark', 't10' => '斩杀线40%', 'lv20' => '伤害+15%，斩杀线50%'],
+        'w9' => ['name' => '血狱狂斩', 'job' => 'warrior', 'mp' => 45, 'kind' => 'sin', 'mult' => 3.6, 'el' => 'dark', 'rage' => 1, 't10' => '斩杀线40%', 'lv20' => '伤害+15%，斩杀线50%'],
         'm9' => ['name' => '魂蚀天雷', 'job' => 'mage', 'mp' => 50, 'kind' => 'sin', 'mult' => 4.2, 'el' => 'thunder', 't10' => '35%麻痹', 'lv20' => '伤害+15%，麻痹40%'],
         'h9' => ['name' => '弑神连珠', 'job' => 'hunter', 'mp' => 45, 'kind' => 'sin', 'mult' => 3.0, 'el' => 'dark', 'dot' => 'bleed', 't10' => '引爆目标身上全部DOT层数（每层转成一次额外伤害）', 'lv20' => '引爆伤害+50%'],        // 召唤师：召唤/腐蚀/献祭
         's1' => ['name' => '深渊契约', 'job' => 'summoner', 'mp' => 10, 'kind' => 'summon', 'mult' => 1.2, 'el' => 'dark', 't10' => '召唤1只深渊小鬼', 'lv20' => '小鬼存活+1轮'],
@@ -3277,8 +3306,8 @@ function job_skillset(string $job): array
 function skill_books(): array
 {
     return [
-        'book_w1' => ['skill' => 'w1', 'name' => '重斩秘籍'],
-        'book_w2' => ['skill' => 'w2', 'name' => '断岳斩秘籍'],
+        'book_w1' => ['skill' => 'w1', 'name' => '铁壁秘籍'],
+        'book_w2' => ['skill' => 'w2', 'name' => '怒斩秘籍'],
         'book_m1' => ['skill' => 'm1', 'name' => '火球术秘籍'],
         'book_m2' => ['skill' => 'm2', 'name' => '狂雷术秘籍'],
         'book_h1' => ['skill' => 'h1', 'name' => '双连射秘籍'],
@@ -5711,8 +5740,7 @@ function player_dmg_pipeline(array $u, int $base): array
         return [0, ''];
     }
     $gs = gear_stats((int) ($u['id'] ?? 0));
-    $rb2 = (string) (cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '');
-    return dmg_pipeline($base, $gs['crit'] + ($rb2 === 'ranger' ? 8 : 0), $gs['critdmg'], (float) ($gs['precision'] ?? 0));
+    return dmg_pipeline($base, $gs['crit'], $gs['critdmg'], (float) ($gs['precision'] ?? 0));
 }
 
 function dmg_to_monster(array $u, array $m = []): int
@@ -5736,8 +5764,8 @@ function dmg_to_monster(array $u, array $m = []): int
 function dmg_to_player(array $u, array $m): array
 {
     $gs = gear_stats((int) ($u['id'] ?? 0));
-    $rb2d = cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '';
-    if ($gs['dodge'] + ($rb2d === 'assassin' ? 8 : 0) > 0 && mt_rand(1, 10000) / 100 <= $gs['dodge'] + ($rb2d === 'assassin' ? 8 : 0)) {
+    $dodge = $gs['dodge'] + hunter_assassin_dodge((int) ($u['id'] ?? 0));
+    if ($dodge > 0 && mt_rand(1, 10000) / 100 <= $dodge) {
         return [0, '闪避'];
     }
     // 怪物伤害拆两段：物理段吃物防，法术段吃法防
@@ -5778,6 +5806,7 @@ function battle_round(array &$u, array &$b, string $mode): array
     $logNoMp = '';
     $profMsg = '';
     $skEl = '';
+    $forceCrit = false;   // 夜幕绞杀10级必暴；普攻/无技能回合为 false
     if ($mode !== 'hit') {
         $job = job_id_of($u);
         $sk = active_skill((int) ($u['id'] ?? 0), $job);
@@ -5814,6 +5843,23 @@ function battle_round(array &$u, array &$b, string $mode): array
             if ($sk['kind'] === 'phys') {
                 // 物理技：物攻×倍率后过怪物业防；带元素 rider 的再加一段法伤（过半法防）
                 $pd = max(1, (int) ((player_patk($u) + random_int(0, 3)) * (float) $sk['mult'] * $pow) - monster_pdef($b));
+                // 战士方向标签：tank=吃双防，rage=吃本场损血数值
+                if (!empty($sk['tank'])) {
+                    $pd += warr_tank_bonus($u);
+                    $logHeal .= '(铁壁+' . warr_tank_bonus($u) . ')';
+                }
+                if (!empty($sk['rage'])) {
+                    $rm = warr_rage_mult($b, (int) ($u['id'] ?? 0));
+                    $pd = (int) round($pd * $rm);
+                    if ($sTier >= 10) {
+                        // 10级：狂战加成翻倍（用平方近似）
+                        $pd = (int) round($pd * (2 * $rm - 1));
+                    }
+                    $rt = warr_rage_text($b, (int) ($u['id'] ?? 0));
+                    if ($rt !== '') {
+                        $logHeal .= $rt;
+                    }
+                }
                 if ($skEl !== '') {
                     $pd += max(0, (int) (player_matk($u) * 0.4) - (int) (monster_mdef($b) / 2));
                     [$pd, $elTag] = apply_el_convert($u, $b, $pd, $skEl);
@@ -5893,7 +5939,35 @@ function battle_round(array &$u, array &$b, string $mode): array
                     $add = $sTier >= 10 ? 2 : 1;
                     if ($sid === 'h3' && $sTier >= 10) { $add = 2; }
                     hunter_dot_bind_lv20($b, $sLv >= 20);
-                    $logHeal .= hunter_dot_add($b, $dotKey, $add, $pd, $sLv >= 20);
+                    $logHeal .= hunter_dot_add($b, $dotKey, $add, $pd, $sLv >= 20, $sTier);
+                }
+            } elseif ($sk['kind'] === 'step') {
+                // 刺客单体爆发：极高倍率打单一目标，不溅射。2觉·影刺客再叠60%。
+                $pd = max(1, (int) ((player_patk($u) + random_int(0, 3)) * (float) $sk['mult'] * $pow) - monster_pdef($b));
+                $ab = hunter_assassin_bonus($u);
+                if ($ab > 1.0) {
+                    $pd = (int) round($pd * $ab);
+                    $logHeal .= '(影遁+' . (int) (($ab - 1) * 100) . '%)';
+                }
+                if ($skEl !== '') {
+                    $pd += max(0, (int) (player_matk($u) * 0.5) - (int) (monster_mdef($b) / 2));
+                    [$pd, $elTag] = apply_el_convert($u, $b, $pd, $skEl);
+                    $logHeal .= $elTag;
+                    $b['fullEl'] = 1;
+                }
+                if ($sid === 'h8' && $sTier >= 10) {
+                    $pd = (int) ($pd * 1.35);
+                    $logHeal .= '(必暴)';
+                    $forceCrit = true;
+                }
+                if ($sLv >= 20) {
+                    $pd = (int) ($pd * 1.15);
+                }
+                // 斩杀：残血目标额外加成
+                $cutLine = $sLv >= 20 ? 0.6 : ($sTier >= 10 ? 0.4 : 0.3);
+                if ($sTier >= 10 && (int) $b['hp'] <= (int) ((int) $b['maxhp'] * $cutLine)) {
+                    $pd = (int) ($pd * 1.5);
+                    $logHeal .= '(影杀斩杀)';
                 }
             } elseif ($sk['kind'] === 'sin') {
                 // 罪技能：罪≥门槛才能放（战斗中罪掉下去则本轮按普攻算）
@@ -5903,9 +5977,15 @@ function battle_round(array &$u, array &$b, string $mode): array
                 } else {
                     $sinPow = $pow * 1.3;
                     if ($sid === 'w9') {
-                        // 战士·血狱狂斩：物4.5暗，斩杀（30%血以下+50%，t10线40%，lv20线50%）
+                        // 战士·血狱狂斩：物3.6暗，吃狂战损血加成，斩杀（30%血以下+50%，t10线40%，lv20线50%）
                         $pd = max(1, (int) ((player_patk($u) + random_int(0, 3)) * (float) $sk['mult'] * $sinPow) - monster_pdef($b));
                         $pd += max(0, (int) (player_matk($u) * 0.5) - (int) (monster_mdef($b) / 2));
+                        $rm9 = warr_rage_mult($b, (int) ($u['id'] ?? 0));
+                        $pd = (int) round($pd * ($sTier >= 10 ? (2 * $rm9 - 1) : $rm9));
+                        $rt9 = warr_rage_text($b, (int) ($u['id'] ?? 0));
+                        if ($rt9 !== '') {
+                            $logHeal .= $rt9;
+                        }
                         $cutLine = $sLv >= 20 ? 0.5 : ($sTier >= 10 ? 0.4 : 0.3);
                         if ((int) $b['hp'] <= (int) ((int) $b['maxhp'] * $cutLine)) {
                             $pd = (int) ($pd * 1.5);
@@ -6008,14 +6088,26 @@ function battle_round(array &$u, array &$b, string $mode): array
                 if ($sLv >= 20) {
                     $pd = (int) ($pd * 1.15);
                 }
-            }
             } elseif ($sk['kind'] === 'aoe') {
                 // 群攻：打当前+溅射队列（余波震死的只给经验金币，不掉落）
-                $aoePhys = in_array($sid, ['w5', 'w6', 'h5', 'h6', 'h7', 'h8'], true);
+                $aoePhys = in_array($sid, ['w5', 'w6', 'h5', 'h7'], true);
                 if ($aoePhys) {
                     $pd = max(1, (int) ((player_patk($u) + random_int(0, 3)) * (float) $sk['mult'] * $pow) - monster_pdef($b));
                 } else {
                     $pd = max(1, (int) ((player_matk($u) + random_int(4, 7)) * (float) $sk['mult'] * $pow) - (int) (monster_mdef($b) / 2));
+                }
+                // 战士群攻同样分两方向：w5/w7狂战吃损血，w6/w8防战吃双防
+                if (!empty($sk['tank'])) {
+                    $pd += warr_tank_bonus($u);
+                    $logHeal .= '(铁壁+' . warr_tank_bonus($u) . ')';
+                }
+                if (!empty($sk['rage'])) {
+                    $rm = warr_rage_mult($b, (int) ($u['id'] ?? 0));
+                    $pd = (int) round($pd * ($sTier >= 10 ? (2 * $rm - 1) : $rm));
+                    $rt = warr_rage_text($b, (int) ($u['id'] ?? 0));
+                    if ($rt !== '') {
+                        $logHeal .= $rt;
+                    }
                 }
                 if ($skEl !== '') {
                     [$pd, $elTag] = apply_el_convert($u, $b, $pd, $skEl);
@@ -6032,14 +6124,15 @@ function battle_round(array &$u, array &$b, string $mode): array
                     $b['stun'] = 1;
                     $logHeal .= '(眩晕)';
                 }
-                // 猎人群攻：往目标身上挂 DOT（h5/h7 出血、h6/h8 剧毒）
-                if (in_array($sid, ['h5', 'h6', 'h7', 'h8'], true)) {
+                // 游侠群攻铺 DOT（h5 万箭齐发 / h7 穿云箭雨）。h6/h8 已改为刺客单体，不再铺层。
+                if (in_array($sid, ['h5', 'h7'], true)) {
                     $dotKey = (string) ($sk['dot'] ?? '');
                     if ($sid === 'h5' && $sTier >= 10) { $dotKey = 'bleed'; }
                     if ($sid === 'h7' && $sTier >= 10) { $dotKey = 'burn'; }
-                    if ($sid === 'h8' && $sTier >= 10) { $dotKey = 'poison'; }
                     $add = $sTier >= 10 ? 2 : 1;
-                    if ($sid === 'h8' && $sTier >= 10) { $add = 6; }
+                    if (!empty($sk['ranger'])) {
+                        $add = hunter_ranger_stacks($sid, $sTier, $sLv >= 20);
+                    }
                     if ($dotKey !== '') {
                         hunter_dot_bind_lv20($b, $sLv >= 20);
                         $logHeal .= hunter_dot_add($b, $dotKey, $add, $pd, $sLv >= 20);
@@ -6048,11 +6141,6 @@ function battle_round(array &$u, array &$b, string $mode): array
                 if ($sid === 'h5' && $sTier >= 10 && mt_rand(1, 100) <= 25) {
                     $pd = (int) ($pd * ($sLv >= 20 ? 1.8 : 1.6));
                     $logHeal .= '(箭雨暴击)';
-                }
-                $exeLine = $sLv >= 20 ? 0.4 : 0.3;
-                if ($sid === 'h6' && (int) ($b['maxhp'] ?? 1) > 0 && (int) ($b['hp'] ?? 1) <= (int) ($b['maxhp'] ?? 1) * $exeLine) {
-                    $pd = (int) ($pd * 1.5);
-                    $logHeal .= '(影杀斩杀)';
                 }
                 if ($sid === 'm5' && $sTier >= 10 && mt_rand(1, 100) <= 10) {
                     $b['frost'] = 3;
@@ -6076,11 +6164,6 @@ function battle_round(array &$u, array &$b, string $mode): array
                 if ($sid === 'h7' && $sTier >= 10 && mt_rand(1, 100) <= 30) {
                     $pd = (int) ($pd * ($sLv >= 20 ? 1.8 : 1.6));
                     $logHeal .= '(穿云暴击)';
-                }
-                $exeLine8 = $sLv >= 20 ? 0.6 : 0.5;
-                if ($sid === 'h8' && (int) ($b['maxhp'] ?? 1) > 0 && (int) ($b['hp'] ?? 1) <= (int) ($b['maxhp'] ?? 1) * $exeLine8) {
-                    $pd = (int) ($pd * 1.5);
-                    $logHeal .= '(夜幕斩杀)';
                 }
                 if ($sid === 'h5' && $sLv >= 20) {
                     $b['splash'] = (int) (($b['splash'] ?? 0) + $pd * 0.5); // lv20：万箭齐发溅射翻倍
@@ -6161,6 +6244,7 @@ function battle_round(array &$u, array &$b, string $mode): array
                     $b['wgold'] = (int) ($b['wgold'] ?? 0) + monster_gold_reward((int) $b['gold']);
                     $logHeal .= '(余波震死一只！剩' . (int) $b['left'] . ')';
                 }
+            }
             $profMsg = add_skill_prof((int) ($u['id'] ?? 0), $sid);
         } else {
             $isSkill = true;
@@ -6199,7 +6283,9 @@ function battle_round(array &$u, array &$b, string $mode): array
     if ($pd > 0) {
         $gsV = gear_stats((int) ($u['id'] ?? 0));
         $rb2cV = (string) (cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '');
-        [$pd, $vTag] = dmg_pipeline($pd, $gsV['crit'] + ($rb2cV === 'ranger' ? 8 : 0), $gsV['critdmg'], (float) ($gsV['precision'] ?? 0));
+        // 游侠不再加暴击（改走DOT加成），刺客靠高闪避而非暴击
+        $critRate = $forceCrit ? 10000 : $gsV['crit'];
+        [$pd, $vTag] = dmg_pipeline($pd, $critRate, $gsV['critdmg'], (float) ($gsV['precision'] ?? 0));
         if ($vTag !== '') {
             $logHeal .= '(' . $vTag . ')';
         }
@@ -6276,9 +6362,9 @@ function battle_round(array &$u, array &$b, string $mode): array
     // 真实伤害（神魂/烬焰7件）：无视防御，闪避也躲不掉
     $trueDmg = (int) soul_truedmg((int) ($u['id'] ?? 0));
     if ($trueDmg > 0) { $b['hp'] = (int) $b['hp'] - $trueDmg; $logHeal .= '(真伤+' . $trueDmg . ')'; }
-    // 猎人DOT结算：出血/剧毒/焦灼每轮掉一层，层数越多越疼
+    // 猎人DOT结算：出血/剧毒/焦灼每轮掉一层，层数越多越疼（游侠2觉DOT+35%）
     if ((int) ($b['hp'] ?? 0) > 0 && hunter_dot_stacks($b) !== []) {
-        $dt = hunter_dot_tick($b);
+        $dt = hunter_dot_tick($b, hunter_dot_mult($u));
         if ($dt['dmg'] > 0) {
             $b['hp'] = (int) $b['hp'] - $dt['dmg'];
             $logHeal .= '(' . $dt['log'] . ')';
@@ -6924,6 +7010,38 @@ function battle_round(array &$u, array &$b, string $mode): array
         $logHeal .= $slog;
     }
     $u['hp'] = (int) $u['hp'] - $md;
+    // 战士·狂战/防战：累计本场损血作为狂战燃料（数值，非百分比），并按防御触发荆棘反击
+    if ($md > 0) {
+        warr_add_hp_lost($b, $md);
+        if (job_id_of($u) === 'warrior') {
+            // 铁壁反击是防战被动：只要你是战士，挨打就按（物防+法防）等比例反打。
+            // 把防战技能（tank）设为当前技能可再放大反击，狂战技能(rage)则不放大。
+            $thMult = 1.0;
+            $actSk = active_skill((int) ($u['id'] ?? 0), 'warrior');
+            if (!empty($actSk['tank'])) {
+                $thMult = ((int) ($actSk['tier'] ?? 0) >= 10 ? 1.3 : 1.0) * ((int) ($actSk['level'] ?? 0) >= 20 ? 1.3 : 1.0);
+            }
+            $thorns = warr_thorns($u, $thMult);
+            if ($thorns > 0) {
+                $tDmg = max(1, $thorns - monster_pdef($b));
+                $tDmg = max(1, $tDmg - (int) (monster_mdef($b) / 2));
+                [$tDmg, $tTag] = player_dmg_pipeline($u, $tDmg);
+                // 反击不负责补最后一刀：击杀与掉落统一由本回合玩家出手结算，
+                // 所以这里留至少1血，避免出现"0血怪还活着"的时序问题。
+                $tDmg = max(0, min($tDmg, (int) $b['hp'] - 1));
+                if ($tDmg > 0) {
+                    $b['hp'] = (int) $b['hp'] - $tDmg;
+                    // 战报主文本 $log 在本阶段已存在，直接追加（$logHeal 已在上半场并入 $log）
+                    $log .= '(铁壁反击' . $tDmg . '点' . ($tTag !== '' ? $tTag : '') . ')';
+                    warr_add_hp_lost($b, $tDmg);
+                }
+            }
+            $rageTxt = warr_rage_text($b, (int) ($u['id'] ?? 0));
+            if ($rageTxt !== '') {
+                $log .= $rageTxt;
+            }
+        }
+    }
     // 1觉被动（召唤师·魂契）：受击10%概率召唤深渊小鬼
     if ($md > 0) {
         $sp = summon_soulpact_trigger($u);
@@ -8473,17 +8591,17 @@ function rb2_passive_catalog(): array
 
     return [
 
-        'berserker' => ['name' => '狂怒', 'desc' => '生命低于50%时伤害+15%'],
+        'berserker' => ['name' => '狂怒', 'desc' => '生命低于50%时伤害+15%；狂战损血加成再+25%'],
 
-        'aegis' => ['name' => '铁壁', 'desc' => '受到伤害-8%'],
+        'aegis' => ['name' => '铁壁', 'desc' => '受到伤害-8%；铁壁反击伤害+35%'],
 
         'wintermage' => ['name' => '凛冬', 'desc' => '冰雷属性伤害+30%，攻击12%麻痹目标'],
 
         'wildfire' => ['name' => '燎原', 'desc' => '火风属性伤害+40%'],
 
-        'ranger' => ['name' => '百步穿杨', 'desc' => '暴击+8%'],
+        'ranger' => ['name' => '毒雨', 'desc' => '所有持续伤害(DOT)+35%；群攻铺层更快'],
 
-        'assassin' => ['name' => '影遁', 'desc' => '闪避+8%'],
+        'assassin' => ['name' => '影遁', 'desc' => '闪避+18%；刺客单体爆发伤害+60%'],
 
         'shadowbishop' => ['name' => '鲜血契约', 'desc' => '吸血+3%'],
 
@@ -8501,12 +8619,12 @@ function rb2_passive_catalog(): array
 function rebirth2_passive_desc(string $rb2): string
 {
     return [
-        'berserker' => '狂怒：生命低于50%时伤害+15%',
-        'aegis' => '铁壁：受到伤害-8%',
+        'berserker' => '狂怒：生命低于50%时伤害+15%；狂战损血加成再+25%',
+        'aegis' => '铁壁：受到伤害-8%；铁壁反击伤害+35%',
         'wintermage' => '凛冬：冰雷属性伤害+30%，攻击12%麻痹目标',
         'wildfire' => '燎原：火风属性伤害+40%',
-        'ranger' => '百步穿杨：暴击+8%',
-        'assassin' => '影遁：闪避+8%',
+        'ranger' => '毒雨：所有持续伤害(DOT)+35%；群攻铺层更快',
+        'assassin' => '影遁：闪避+18%；刺客单体爆发伤害+60%',
         'shadowbishop' => '鲜血契约：吸血+3%',
         'holybishop' => '圣光灌注：治疗+15%',
         'necro' => '亡者军团：召唤上限+2（2→4）；召唤兽死亡时爆炸，对周围造成范围暗影伤害',
@@ -8531,7 +8649,7 @@ function rebirth1_names(): array
 function rebirth1_passive_desc(string $job): string
 {
     return [
-        'warrior' => '浴血：生命每降低10%，攻击+4%（最多+32%，保底不亏）',
+        'warrior' => '浴血：生命每降低10%，攻击+4%（最多+32%，保底不亏）；防战技能额外+10%',
         'mage' => '元素亲和：元素伤害+12%',
         'hunter' => '鹰眼：暴击+8%，命中+8%，15%概率标记使目标易伤10%持续2轮',
         'priest' => '圣光庇护：每回合3%最大生命，受伤5%概率减伤40%',

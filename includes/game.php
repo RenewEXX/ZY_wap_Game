@@ -5694,6 +5694,18 @@ function dmg_pipeline(int $base, float $critRate = 0.0, float $critDmg = 0.0, fl
     return [max(1, (int) round($base * $factor)), $tag];
 }
 
+// 玩家侧收尾管线便捷封装：自动取该角色的暴击/暴伤/精准（含2觉游侠暴击加成）。
+// 主战斗、PK/巅峰/公会战、罪技PK、龙王殿共用同一套判定。
+function player_dmg_pipeline(array $u, int $base): array
+{
+    if ($base <= 0) {
+        return [0, ''];
+    }
+    $gs = gear_stats((int) ($u['id'] ?? 0));
+    $rb2 = (string) (cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '');
+    return dmg_pipeline($base, $gs['crit'] + ($rb2 === 'ranger' ? 8 : 0), $gs['critdmg'], (float) ($gs['precision'] ?? 0));
+}
+
 function dmg_to_monster(array $u, array $m = []): int
 {
     // 法师牧师普攻转元素（法师火、牧师光），不再造成物理伤害

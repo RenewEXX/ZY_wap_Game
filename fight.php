@@ -282,6 +282,8 @@ if ($a === 'sin_hit') {
         exit;
     }
     $pd = max(1, player_atk($u) + random_int(0, 3) - player_def($t));
+    // 浮动管线（罪技PK）：浮动 → 档位 → 暴击
+    [$pd, $pdTag] = player_dmg_pipeline($u, $pd);
     $t['hp'] = (int) $t['hp'] - $pd;
     if ((int) $t['hp'] <= 0) {
         // 罪值击杀：对方随机最多2件可交易装备/道具掉在原地（1分钟后消失）
@@ -299,6 +301,8 @@ if ($a === 'sin_hit') {
     }
     user_save($t);
     $md = max(1, player_atk($t) + random_int(0, 2) - player_def($u));
+    // 对方回敬也走浮动管线（用对方自己的暴击/精准）
+    [$md, $mdTag] = player_dmg_pipeline($t, $md);
     $u['hp'] = (int) $u['hp'] - $md;
     user_save($u);
     if ((int) $u['hp'] <= 0) {
@@ -309,7 +313,7 @@ if ($a === 'sin_hit') {
         header('Location: home.php');
         exit;
     }
-    flash_set('你砍' . $pd . '点，对方回敬' . $md . '点。');
+    flash_set('你砍' . $pd . '点' . ($pdTag !== '' ? '(' . $pdTag . ')' : '') . '，对方回敬' . $md . '点' . ($mdTag !== '' ? '(' . $mdTag . ')' : '') . '。');
     header('Location: fight.php?a=sinfight');
     exit;
 }
@@ -379,6 +383,8 @@ if ($a === 'pvp_hit') {
         exit;
     }
     $pd = max(1, player_atk($u) + random_int(0, 3) - player_def($t));
+    // 浮动管线：浮动 → 档位 → 暴击
+    [$pd, $pdTag] = player_dmg_pipeline($u, $pd);
     $t['hp'] = (int) $t['hp'] - $pd;
     if ((int) $t['hp'] <= 0) {
         $t['hp'] = 1;
@@ -393,6 +399,8 @@ if ($a === 'pvp_hit') {
     }
     user_save($t);
     $md = max(1, player_atk($t) + random_int(0, 2) - player_def($u));
+    // 对方回敬也走浮动管线（用对方自己的暴击/精准）
+    [$md, $mdTag] = player_dmg_pipeline($t, $md);
     $u['hp'] = (int) $u['hp'] - $md;
     user_save($u);
     if ((int) $u['hp'] <= 0) {
@@ -403,7 +411,7 @@ if ($a === 'pvp_hit') {
         header('Location: home.php');
         exit;
     }
-    flash_set('你砍' . $pd . '点，对方回敬' . $md . '点。');
+    flash_set('你砍' . $pd . '点' . ($pdTag !== '' ? '(' . $pdTag . ')' : '') . '，对方回敬' . $md . '点' . ($mdTag !== '' ? '(' . $mdTag . ')' : '') . '。');
     header('Location: fight.php?a=pvpfight');
     exit;
 }
@@ -472,6 +480,8 @@ if ($a === 'peak_hit') {
         exit;
     }
     $pd = max(1, player_atk($u) + random_int(0, 3) - player_def($t));
+    // 浮动管线：浮动 → 档位 → 暴击
+    [$pd, $pdTag] = player_dmg_pipeline($u, $pd);
     $t['hp'] = (int) $t['hp'] - $pd;
     if ((int) $t['hp'] <= 0) {
         $t['hp'] = 1;
@@ -486,6 +496,8 @@ if ($a === 'peak_hit') {
     }
     user_save($t);
     $md = max(1, player_atk($t) + random_int(0, 2) - player_def($u));
+    // 对方回敬也走浮动管线（用对方自己的暴击/精准）
+    [$md, $mdTag] = player_dmg_pipeline($t, $md);
     $u['hp'] = (int) $u['hp'] - $md;
     user_save($u);
     if ((int) $u['hp'] <= 0) {
@@ -498,7 +510,7 @@ if ($a === 'peak_hit') {
         header('Location: home.php');
         exit;
     }
-    flash_set('你砍' . $pd . '点，对方回敬' . $md . '点。');
+    flash_set('你砍' . $pd . '点' . ($pdTag !== '' ? '(' . $pdTag . ')' : '') . '，对方回敬' . $md . '点' . ($mdTag !== '' ? '(' . $mdTag . ')' : '') . '。');
     header('Location: fight.php?a=peakfight');
     exit;
 }

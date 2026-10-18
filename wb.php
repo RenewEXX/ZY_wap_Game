@@ -103,6 +103,12 @@ if ($a === 'hit') {
     $pd += soul_truedmg($uid);
     $pd = max(0, (int) $pd);
 
+    // 玩家伤害浮动管线：浮动 → 档位(重击/完美一击) → 暴击（龙王没有词条，用玩家自己的）
+    $wbTag = '';
+    if ($pd > 0) {
+        [$pd, $wbTag] = player_dmg_pipeline($u, $pd);
+    }
+
     // 龙王对自身属性完全免疫：用同属性打它 = 挠痒
     $immune = $atkEl !== '' && $atkEl === (string) $d['el'];
     $real = drg_damage_vs((string) $d['el'], $atkEl, $pd);
@@ -114,6 +120,9 @@ if ($a === 'hit') {
     $log = '你放出' . $skillName;
     if ($atkEl !== '') {
         $log .= '（' . element_name($atkEl) . '属性）';
+    }
+    if ($wbTag !== '') {
+        $log .= '(' . $wbTag . ')';
     }
     $log .= '，造成' . $real . '点。';
     if ($immune) {
@@ -131,9 +140,15 @@ if ($a === 'hit') {
 
     // 龙王反击：每条龙有自己的招牌技能，全部为自身属性伤害
     $move = drg_boss_move($mid);
-    $md = max(1, (int) (dmg_to_player($u, $boss) * $move['mult']));
+    // dmg_to_player 返回 [伤害, 标记]（含浮动管线），招牌倍率乘在伤害上
+    [$baseMd, $mdTag] = dmg_to_player($u, $boss);
+    $md = max(1, (int) ($baseMd * $move['mult']));
     $u['hp'] = max(0, (int) $u['hp'] - $md);
-    $log .= $d['short'] . '反手【' . $move['name'] . '】（' . element_name((string) $move['el']) . '），你掉' . $md . '点。';
+    $log .= $d['short'] . '反手【' . $move['name'] . '】（' . element_name((string) $move['el']) . '）';
+    if ($mdTag !== '' && $mdTag !== '闪避') {
+        $log .= $d['short'] . $mdTag;
+    }
+    $log .= '，你掉' . $md . '点。';
     if (!empty($move['burn'])) {
         $_SESSION['wb_burn'] = min(6, (int) ($_SESSION['wb_burn'] ?? 0) + (int) $move['burn']);
         $log .= '你烧起来了！';

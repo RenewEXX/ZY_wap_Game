@@ -32,6 +32,9 @@ chk4('普通基底标记', summoner_offhands()['裹魂契匣']['legend'], false)
 chk4('契匣表无q字段', isset(summoner_offhands()['寒霜·契匣']['q']), false);
 chk4('识别契匣', summoner_is_box('寒霜·契匣'), true);
 chk4('识别普通', summoner_is_box('大骨棒'), false);
+// 主手专属：魂契·深渊引魂灯是主手武器，不该出现在契匣(副手)表里，也不能触发开场召唤
+chk4('契匣表不含主手引魂灯', isset(summoner_offhands()['魂契·深渊引魂灯']), false);
+chk4('引魂灯不是契匣', summoner_is_box('魂契·深渊引魂灯'), false);
 // 伪造穿戴测试
 $u1 = user_by_id(1);
 if ($u1) {

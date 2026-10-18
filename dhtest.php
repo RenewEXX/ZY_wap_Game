@@ -40,13 +40,25 @@ chk('龙巢互不串门', dragon_of_lair('wb_light'), 'aurelian');
 chk('转生读龙王', is_bool(rs_requirements(1)['wb']), true);
 $cols = db()->query('PRAGMA table_info(wb_dmg)')->fetchAll();
 chk('排行表结构', in_array('mid', array_column($cols, 'name'), true), true);
-chk('门票怪掉落', in_array(monster_material('da_nightmare')[0], ['wb_ticket', 'dragon_core', 'soul_dark'], true), true);
-// 龙玉扣除
+chk('首领掉龙王精华', in_array(monster_material('da_nightmare')[0], ['dragon_core', 'soul_dark'], true), true);
+// 龙玉+龙魂扣除（先清零，做确定性的断言）
+foreach (dragon_elements() as $el) {
+    mat_set(1, 'jade_' . $el, 0);
+    mat_set(1, 'soul_' . $el, 0);
+}
 add_mat(1, 'jade_fire', 3);
 add_mat(1, 'jade_dark', 5);
-chk('龙玉总量', rs_jade_total(1) >= 8, true);
+add_mat(1, 'soul_fire', 4);
+chk('龙玉总量', rs_mat_total(1, 'jade_'), 8);
+chk('龙魂总量', rs_mat_total(1, 'soul_'), 4);
+chk('龙玉扣除', rs_mat_pay(1, 'jade_', 2), '');
+chk('龙魂扣除', rs_mat_pay(1, 'soul_', 3), '');
+chk('扣完龙玉', rs_mat_total(1, 'jade_'), 6);
+chk('扣完龙魂', rs_mat_total(1, 'soul_'), 1);
+chk('不够时报错', rs_mat_pay(1, 'soul_', 99) !== '', true);
 mat_set(1, 'jade_fire', 0);
 mat_set(1, 'jade_dark', 0);
+mat_set(1, 'soul_fire', 0);
 // 斩龙 → 一个月锁 + 公屏播报
 $before = (int) db()->query("SELECT COUNT(*) FROM chat_msgs WHERE username='六圣柱'")->fetchColumn();
 drg_kill(1, 'aetherine');

@@ -28,7 +28,7 @@ if ($a === 'leave') {
     exit;
 }
 
-// —— 入巢：扣龙鳞引（同一条龙每天一次）——
+// —— 入巢：无需门票，够等级直接进（鼓励全服车轮战）——
 if ($a === 'enter') {
     if ($d === []) {
         flash_set('没有这条龙。');
@@ -204,7 +204,7 @@ if ($d !== []) {
 // ================= 六圣柱总览 =================
 echo '<div class="t">六圣柱·六龙王</div>';
 echo '南炎（火）西风（风）北寒（冰）东雷（雷）深渊（暗）中央（光）——六柱撑住世界，六条龙各守一柱。<br>';
-echo '<span class="muted">每条龙独立血量、独立排行、独立掉落；被讨伐后沉睡一个月才会重新现世（各自独立计时）。龙鳞引每天每条龙各扣一张。</span><br>';
+echo '<span class="muted">每条龙独立血量、独立排行、独立掉落；被讨伐后沉睡一个月才会重新现世（各自独立计时）。不收门票——够等级就进，欢迎全服车轮战。</span><br>';
 echo '<div class="hr">--------</div>';
 if ($flash !== '') {
     echo '<div class="warn">' . h($flash) . '</div>';
@@ -224,11 +224,8 @@ foreach ($order as $dmId) {
         echo '<div class="warn">已被讨伐，' . h(drg_respawn_text($dmId)) . '后重新现世。</div>';
     } else {
         echo '<div class="hp">全服血量：' . $ds['pct'] . '%（' . number_format($ds['hp']) . '/' . number_format($ds['max']) . '）</div>';
-        echo '<span class="muted">免疫' . $el . '属性伤害｜进场需' . (int) dragon_min_lv($dmId) . '级+龙鳞引×1（今日已进场则免费再进）</span><br>';
-        echo '<a href="wb.php?d=' . h($dmId) . '&a=enter">用龙鳞引进' . h((string) $dd['lair_name']) . '</a><br>';
-        if (drg_enter_mark($uid, $dmId) === $day) {
-            echo '<a href="wb.php?d=' . h($dmId) . '">今日已进场，直接去</a><br>';
-        }
+        echo '<span class="muted">免疫' . $el . '属性伤害｜进场只需' . (int) dragon_min_lv($dmId) . '级（无门票，随时可来车轮）</span><br>';
+        echo '<a href="wb.php?d=' . h($dmId) . '&a=enter">进入' . h((string) $dd['lair_name']) . '</a><br>';
     }
     echo '我本次讨伐的伤害：' . number_format($mine) . '（' . $el . '）<br>';
     echo '门：<span class="muted">' . h((string) $dd['gate_name']) . '（' . h((string) $dd['gate']) . '）</span><br>';
@@ -236,6 +233,6 @@ foreach ($order as $dmId) {
 }
 echo '<div class="hr">--------</div>';
 echo '我的六柱总伤害：' . number_format($myDmgAll) . '<br>';
-echo '<span class="muted">六圣柱小怪不掉套装，只掉' . element_name('fire') . '—' . element_name('light') . '各色龙魂与龙王精华。套装与宠物蛋只从斩龙排行产出。龙玉是转生必需品（1转2个、2转4个、3转6个）。</span><br>';
+echo '<span class="muted">六圣柱小怪不掉套装，只掉' . element_name('fire') . '—' . element_name('light') . '各色龙魂与龙王精华。套装与宠物蛋只从斩龙排行产出。转生要龙魂龙玉（1转=龙玉2+龙魂3、2转=龙玉4+龙魂6、3转=龙玉6+龙魂9）。</span><br>';
 nav_line();
 wap_end(false);

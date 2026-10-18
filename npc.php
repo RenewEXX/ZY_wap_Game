@@ -941,8 +941,8 @@ if ($who === 'yzkeeper') {
 }
 if ($who === 'rspriest') {
     $rRq = rs_requirements((int) $u['id']);
-    echo '转生条件：999级 + 讨伐任意一条六圣柱龙王 + 任一神魂' . soul_max_lv() . '级 + 龙玉×' . (int) $rRq['jade_need'] . '。<br>';
-    echo '（1转2个龙玉、2转4个、3转6个；任意属性龙玉都算数。）<br>';
+    echo '转生条件：999级 + 讨伐任意一条六圣柱龙王 + 任一神魂' . soul_max_lv() . '级 + 龙玉×' . (int) $rRq['jade_need'] . ' + 龙魂×' . (int) $rRq['soul_need'] . '。<br>';
+    echo '（1转=龙玉2+龙魂3、2转=龙玉4+龙魂6、3转=龙玉6+龙魂9；龙魂龙玉任意属性都算数。）<br>';
     echo '当前：' . h(rs_require_text((int) $u['id'])) . '<br>';
     echo '<a href="npc.php?who=rspriest&choice=rite">举行转生仪式</a><br>';
 }

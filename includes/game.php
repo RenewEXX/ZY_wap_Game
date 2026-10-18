@@ -2810,7 +2810,8 @@ function monster_drops(string $mid): array
         'skeleton' => ['slot' => 'head', 'base' => '锈盔', 'rate' => 0.035, 'q' => [20, 50, 30, 0, 0]],
         'bat' => ['slot' => 'back', 'base' => '蝠翼披风', 'rate' => 0.035, 'q' => [20, 50, 30, 0, 0]],
         'ghoul' => ['slot' => 'weapon', 'base' => '食尸鬼之爪', 'rate' => 0.05, 'q' => [0, 30, 50, 20, 0]],
-        'cultist' => ['slot' => 'offhand', 'off' => 'magic', 'base' => '低语法器', 'rate' => 0.05, 'q' => [0, 30, 50, 20, 0]],
+        // 召唤师契匣（过渡副手，掉出来就能戴，各自带开场召唤）
+        'cultist' => ['slot' => 'offhand', 'off' => 'magic', 'base' => '引魂旧匣', 'rate' => 0.05, 'q' => [0, 100, 0, 0, 0]],
         'guard' => ['slot' => 'legs', 'base' => '祭坛护腿', 'rate' => 0.06, 'q' => [0, 20, 50, 30, 0]],
         'jailer' => ['slot' => 'body', 'base' => '狱卒重铠', 'rate' => 0.07, 'q' => [0, 0, 65, 35, 0]],
         'knight' => ['slot' => 'weapon', 'base' => '骑士残剑', 'rate' => 0.25, 'q' => [0, 0, 0, 70, 30], 'legendary' => ['base' => '堕落骑士大剑', 'extra' => ['k' => 'execute', 'v' => 5.0]]],
@@ -2941,6 +2942,7 @@ function monster_drops(string $mid): array
         'pz_master' => ['slot' => 'offhand', 'off' => 'magic', 'base' => '傀儡·大师之手', 'rate' => 0.3, 'q' => [0, 0, 20, 50, 30], 'legendary' => ['base' => '傀儡大师·提线', 'extra' => ['k' => 'skill_damage', 'v' => 6.0]]],
         'sen_priest' => ['slot' => 'offhand', 'off' => 'magic', 'base' => '荆棘·雾祭铃'],
         'sen_thorn' => ['slot' => 'body', 'base' => '荆棘·刺甲'],
+        'sen_guard' => ['slot' => 'legs', 'base' => '荆棘·守卫裙'],
         'sen_serpent' => ['slot' => 'ring', 'base' => '荆棘·蛇牙戒'],
         'sen_guard' => ['slot' => 'legs', 'base' => '荆棘·守卫裙'],
         'dark_slime' => ['slot' => 'belt', 'base' => '深渊缚带', 'rate' => 0.06, 'q' => [0, 40, 45, 15, 0]],
@@ -3016,6 +3018,8 @@ function equip_job_text(array $e): string
             $jobs = ['warrior', 'priest'];
         } elseif (str_contains($nm, '法器') || str_contains($nm, '法杖') || str_contains($nm, '提灯')) {
             $jobs = ['mage', 'priest'];
+        } elseif (str_contains($nm, '契匣') || str_contains($nm, '魂匣') || str_contains($nm, '灵幡') || summoner_is_box($nm)) {
+            $jobs = ['summoner'];
         } else {
             $jobs = ['warrior', 'mage', 'hunter', 'priest', 'summoner'];
         }
@@ -3037,6 +3041,7 @@ function equip_jobs_text(array $e): string
     if ($slot === 'offhand') {
         if (str_contains($nm, '盾')) { return '战士/牧师'; }
         if (str_contains($nm, '法器') || str_contains($nm, '法杖') || str_contains($nm, '提灯')) { return '法师/牧师'; }
+        if (str_contains($nm, '契匣') || str_contains($nm, '魂匣') || str_contains($nm, '灵幡') || summoner_is_box($nm)) { return '仅召唤师'; }
         return '全职业';
     }
     return '全职业（战法猎牧）';
@@ -3068,7 +3073,7 @@ function equip_can_wear(array $u, array $e): string
         }
         if ((str_contains($nm, '法器') || str_contains($nm, '法杖') || str_contains($nm, '提灯')) && !in_array($job, ['mage', 'priest'], true)) {
             return '拿不动：法器只有法师/牧师能用。';
-        }        if (str_contains($nm, '契匣') || str_contains($nm, '魂匣') || str_contains($nm, '灵幡')) {
+        }        if (str_contains($nm, '契匣') || str_contains($nm, '魂匣') || str_contains($nm, '灵幡') || summoner_is_box($nm)) {
             if ($job !== 'summoner') {
                 return '封不住：契匣只有召唤师能契。';
             }
@@ -3161,15 +3166,8 @@ function monster_material(string $mid): array
         return [];
     }
     $bosses = ['az_shrine_guard', 'gl_funeral_host', 'th_chain_dragon', 'da_nightmare', 'li_gold_herald'];
-    if (in_array($mid, $bosses, true)) {
-        // 区域首领是龙鳞引的主要来源——没有它进不了龙巢
-        $roll = mt_rand(1, 100);
-        if ($roll <= 40) {
-            return ['wb_ticket', '龙鳞引'];
-        }
-        if ($roll <= 55) {
-            return ['dragon_core', '龙王精华'];
-        }
+    if (in_array($mid, $bosses, true) && mt_rand(1, 100) <= 15) {
+        return ['dragon_core', '龙王精华'];
     }
     return [(string) $d['soul'], '龙魂·' . element_name((string) $d['el'])];
 }
@@ -3179,7 +3177,7 @@ function quest_mats(): array
     return ['blackcoin' => '不断下坠的黑币', 'aiden_badge' => '艾登·灰叶的铭牌', 'investigation_record' => '调查队记录', 'augustus_letter' => '镇长的信', 'dsw_ticket' => '黑暗沼泽副本入场券', 'dsw_item1' => '幽暗黏液', 'dsw_item2' => '沼泽之核', 'dsw_item3' => '腐泥之心', 'dsw_item4' => '王座徽记', 'abx_ticket' => '影蚀深渊入场券', 'abx_item1' => '蚀影尘', 'abx_item2' => '影蚀徽记', 'abx_item3' => '低语残章', 'abx_item4' => '王座蚀印', 'capital_badge' => '王都徽章', 'puppet_eye' => '傀儡之眼', 'ch3_proof' => '第三章通关证明', 'mx_ticket' => '银丝母巢入场券', 'mx_item1' => '黏丝束', 'mx_item2' => '茧壳碎片', 'mx_item3' => '织线梭', 'mx_item4' => '蛾翼磷粉', 'mx_item5' => '守望之瞳', 'mx_item6' => '育巢摇篮曲', 'farm_coin' => '农场币', 'seed_green' => '青菜种子', 'seed_radish' => '萝卜种子', 'seed_melon' => '南瓜种子', 'seed_tomato' => '番茄种子', 'seed_strawberry' => '草莓种子',
  'ice_badge' => '冰原徽章', 'frost_heart' => '霜王之心', 'ch4_proof' => '第四章通关证明', 'fr_ticket' => '冰渊副本入场券', 'fr_item1' => '渊底冰核', 'fr_item2' => '利维坦之牙',
  'forest_badge' => '森语徽章', 'south_flame_token' => '南炎信物', 'ch5_proof' => '第五章通关证明', 'rb2_proof' => '2觉证明', 'em_ticket' => '熔心副本入场券', 'pz_ticket' => '傀儡回廊入场券', 'tt_ticket' => '岩狱副本入场券', 'sen_ticket' => '雾森祭坛入场券', 'em_item1' => '熔核碎片', 'em_item2' => '熔心之血',
- 'soul_shard' => '神魂碎片', 'wb_ticket' => '龙鳞引（六圣柱龙王入场券）'];
+ 'soul_shard' => '神魂碎片'];
 }
 
 function skill_catalog(): array
@@ -3189,37 +3187,37 @@ function skill_catalog(): array
         'w2' => ['name' => '断岳斩', 'job' => 'warrior', 'mp' => 18, 'kind' => 'phys', 'mult' => 2.2, 'el' => 'fire', 't10' => '本次暴击率+20%', 'lv20' => '伤害+15%，附魔火伤'],
         'm1' => ['name' => '火球术', 'job' => 'mage', 'mp' => 12, 'kind' => 'magic', 'mult' => 0, 'el' => 'fire', 't10' => '伤害+30%', 'lv20' => '伤害+15%'],
         'm2' => ['name' => '狂雷术', 'job' => 'mage', 'mp' => 22, 'kind' => 'magic', 'mult' => 0, 'el' => 'thunder', 't10' => '12%麻痹：敌停一轮', 'lv20' => '伤害+15%'],
-        'h1' => ['name' => '双连射', 'job' => 'hunter', 'mp' => 10, 'kind' => 'multi2', 'mult' => 1.6, 'el' => '', 't10' => '追加第三箭', 'lv20' => '伤害+15%'],
-        'h2' => ['name' => '爆裂箭', 'job' => 'hunter', 'mp' => 20, 'kind' => 'multi2', 'mult' => 2.0, 'el' => 'fire', 't10' => '追加第三箭', 'lv20' => '伤害+15%，爆炸火伤'],
+        'h1' => ['name' => '双连射', 'job' => 'hunter', 'mp' => 10, 'kind' => 'multi2', 'mult' => 1.4, 'el' => '', 'dot' => 'bleed', 't10' => '出血层数+1，可叠3层', 'lv20' => '每层出血伤害+25%'],
+        'h2' => ['name' => '爆裂箭', 'job' => 'hunter', 'mp' => 20, 'kind' => 'multi2', 'mult' => 1.7, 'el' => 'fire', 'dot' => 'burn', 't10' => '焦灼改为溅射（伤害灌进队列）', 'lv20' => '焦灼伤害+40%'],
         'p1' => ['name' => '圣光弹', 'job' => 'priest', 'mp' => 10, 'kind' => 'heal', 'mult' => 0.7, 'heal' => 25, 'el' => 'light', 't10' => '治疗+15', 'lv20' => '治疗+20%，伤害+15%'],
         'p2' => ['name' => '圣光庇佑', 'job' => 'priest', 'mp' => 20, 'kind' => 'heal', 'mult' => 1.0, 'heal' => 45, 'el' => 'light', 't10' => '治疗+25', 'lv20' => '治疗+20%，伤害+15%'],
         'w3' => ['name' => '裂地猛击', 'job' => 'warrior', 'mp' => 30, 'kind' => 'phys', 'mult' => 3.0, 'el' => 'thunder', 't10' => '5%眩晕敌人1轮', 'lv20' => '伤害+15%'],
         'm3' => ['name' => '寒霜新星', 'job' => 'mage', 'mp' => 32, 'kind' => 'magic', 'mult' => 0, 'el' => 'ice', 't10' => '5%冻结：敌攻-15%持续3轮', 'lv20' => '伤害+15%'],
-        'h3' => ['name' => '淬毒箭', 'job' => 'hunter', 'mp' => 30, 'kind' => 'multi2', 'mult' => 2.0, 'el' => 'dark', 't10' => '剧毒：5%最大生命/轮持续3轮', 'lv20' => '伤害+15%'],
+        'h3' => ['name' => '淬毒箭', 'job' => 'hunter', 'mp' => 30, 'kind' => 'multi2', 'mult' => 1.8, 'el' => 'dark', 'dot' => 'poison', 't10' => '剧毒层数+1，可叠3层', 'lv20' => '剧毒每层+2%最大生命'],
         'p3' => ['name' => '神圣审判', 'job' => 'priest', 'mp' => 30, 'kind' => 'heal', 'mult' => 1.2, 'heal' => 60, 'el' => 'light', 't10' => '恢复10点魔力', 'lv20' => '治疗+20%，伤害+15%'],
         'w4' => ['name' => '烬灭斩', 'job' => 'warrior', 'mp' => 40, 'kind' => 'phys', 'mult' => 3.6, 'el' => 'fire', 't10' => '本次暴击率+25%', 'lv20' => '伤害+15%，附魔火伤'],
         'm4' => ['name' => '冰河葬', 'job' => 'mage', 'mp' => 42, 'kind' => 'magic', 'mult' => 0, 'el' => 'ice', 't10' => '伤害+30%', 'lv20' => '伤害+15%，10%冻结'],
-        'h4' => ['name' => '猎龙箭', 'job' => 'hunter', 'mp' => 40, 'kind' => 'multi2', 'mult' => 2.6, 'el' => 'dark', 't10' => '追加第三箭', 'lv20' => '伤害+15%，龙裔杀手'],
+        'h4' => ['name' => '猎龙箭', 'job' => 'hunter', 'mp' => 40, 'kind' => 'multi2', 'mult' => 2.4, 'el' => 'dark', 'dot' => 'bleed', 't10' => '龙裔杀手：对龙类伤害+50%', 'lv20' => '出血全部转化为真实伤害'],
         'p4' => ['name' => '熔心圣歌', 'job' => 'priest', 'mp' => 40, 'kind' => 'heal', 'mult' => 1.5, 'heal' => 90, 'el' => 'light', 't10' => '治疗+30', 'lv20' => '治疗+20%，伤害+15%'],
         'w5' => ['name' => '烈焰旋风', 'job' => 'warrior', 'mp' => 50, 'kind' => 'aoe', 'mult' => 2.4, 'el' => 'fire', 't10' => '溅射+10%', 'lv20' => '伤害+15%'],
         'w6' => ['name' => '撼地重击', 'job' => 'warrior', 'mp' => 50, 'kind' => 'aoe', 'mult' => 2.2, 'el' => 'thunder', 't10' => '10%眩晕', 'lv20' => '伤害+15%'],
         'm5' => ['name' => '暴风雪', 'job' => 'mage', 'mp' => 55, 'kind' => 'aoe', 'mult' => 0, 'el' => 'ice', 't10' => '伤害+30%，10%冻结', 'lv20' => '伤害+15%'],
         'm6' => ['name' => '燎原烈焰', 'job' => 'mage', 'mp' => 55, 'kind' => 'aoe', 'mult' => 0, 'el' => 'fire', 't10' => '伤害+30%', 'lv20' => '伤害+15%'],
-        'h5' => ['name' => '万箭齐发', 'job' => 'hunter', 'mp' => 50, 'kind' => 'aoe', 'mult' => 2.5, 'el' => 'wind', 't10' => '本次暴击率+25%，溅射+10%', 'lv20' => '伤害+15%，暴击伤害+20%'],
-        'h6' => ['name' => '影杀阵', 'job' => 'hunter', 'mp' => 50, 'kind' => 'aoe', 'mult' => 2.6, 'el' => 'dark', 't10' => '斩杀：目标血量低于30%时伤害+50%', 'lv20' => '伤害+15%，斩杀线提高到40%'],
+        'h5' => ['name' => '万箭齐发', 'job' => 'hunter', 'mp' => 50, 'kind' => 'aoe', 'mult' => 2.2, 'el' => 'wind', 'dot' => 'bleed', 't10' => '全场叠2层出血', 'lv20' => '溅射率翻倍（100%）'],
+        'h6' => ['name' => '影杀阵', 'job' => 'hunter', 'mp' => 50, 'kind' => 'aoe', 'mult' => 2.3, 'el' => 'dark', 'dot' => 'poison', 't10' => '群攻每命中一只叠1层剧毒', 'lv20' => '斩杀线提高到40%'],
         'p5' => ['name' => '暗影新星', 'job' => 'priest', 'mp' => 55, 'kind' => 'aoe', 'mult' => 1.8, 'el' => 'dark', 't10' => '伤害+30%', 'lv20' => '伤害转奶40%'],
         'p6' => ['name' => '圣光普照', 'job' => 'priest', 'mp' => 55, 'kind' => 'aoe', 'mult' => 1.2, 'heal' => 120, 'el' => 'light', 't10' => '治疗+40', 'lv20' => '治疗+20%，队友70%'],
         'w7' => ['name' => '血怒狂斩', 'job' => 'warrior', 'mp' => 55, 'kind' => 'aoe', 'mult' => 2.6, 'el' => 'dark', 't10' => '吸血+15%，溅射+10%', 'lv20' => '伤害+15%'],
         'w8' => ['name' => '壁垒雷狱', 'job' => 'warrior', 'mp' => 55, 'kind' => 'aoe', 'mult' => 2.0, 'el' => 'thunder', 't10' => '敌攻-20%持续3轮', 'lv20' => '伤害+15%，减攻25%'],
         'm7' => ['name' => '雷暴术', 'job' => 'mage', 'mp' => 60, 'kind' => 'aoe', 'mult' => 0, 'el' => 'thunder', 't10' => '25%麻痹', 'lv20' => '伤害+15%，麻痹30%'],
         'm8' => ['name' => '风火燎原', 'job' => 'mage', 'mp' => 60, 'kind' => 'aoe', 'mult' => 0, 'el' => 'wind', 't10' => '伤害+30%', 'lv20' => '伤害+15%，溅射+10%'],
-        'h7' => ['name' => '穿云箭雨', 'job' => 'hunter', 'mp' => 55, 'kind' => 'aoe', 'mult' => 2.6, 'el' => 'wind', 't10' => '本次暴击率+30%，溅射+10%', 'lv20' => '伤害+15%，暴击伤害+20%'],
-        'h8' => ['name' => '夜幕影杀', 'job' => 'hunter', 'mp' => 55, 'kind' => 'aoe', 'mult' => 2.8, 'el' => 'dark', 't10' => '斩杀：目标血量低于50%时伤害+50%', 'lv20' => '伤害+15%，斩杀线60%'],
+        'h7' => ['name' => '穿云箭雨', 'job' => 'hunter', 'mp' => 55, 'kind' => 'aoe', 'mult' => 2.2, 'el' => 'wind', 'dot' => 'bleed', 't10' => '焦灼全场（无视抗性的持续灼烧）', 'lv20' => '焦灼每层伤害+50%'],
+        'h8' => ['name' => '夜幕影杀', 'job' => 'hunter', 'mp' => 55, 'kind' => 'aoe', 'mult' => 2.4, 'el' => 'dark', 'dot' => 'poison', 't10' => '剧毒层数翻倍（直接6层）', 'lv20' => '斩杀线提高到60%'],
         'p7' => ['name' => '噬魂新星', 'job' => 'priest', 'mp' => 60, 'kind' => 'aoe', 'mult' => 2.0, 'el' => 'dark', 't10' => '伤害+30%', 'lv20' => '伤害转奶60%'],
         'p8' => ['name' => '圣光审判', 'job' => 'priest', 'mp' => 60, 'kind' => 'aoe', 'mult' => 1.0, 'heal' => 150, 'el' => 'light', 't10' => '治疗+50', 'lv20' => '治疗+20%，队友80%'],
         'w9' => ['name' => '血狱狂斩', 'job' => 'warrior', 'mp' => 45, 'kind' => 'sin', 'mult' => 4.5, 'el' => 'dark', 't10' => '斩杀线40%', 'lv20' => '伤害+15%，斩杀线50%'],
         'm9' => ['name' => '魂蚀天雷', 'job' => 'mage', 'mp' => 50, 'kind' => 'sin', 'mult' => 4.2, 'el' => 'thunder', 't10' => '35%麻痹', 'lv20' => '伤害+15%，麻痹40%'],
-        'h9' => ['name' => '弑神连珠', 'job' => 'hunter', 'mp' => 45, 'kind' => 'sin', 'mult' => 3.4, 'el' => 'dark', 't10' => '斩杀线40%', 'lv20' => '伤害+15%，斩杀线50%'],        // 召唤师：召唤/腐蚀/献祭
+        'h9' => ['name' => '弑神连珠', 'job' => 'hunter', 'mp' => 45, 'kind' => 'sin', 'mult' => 3.0, 'el' => 'dark', 'dot' => 'bleed', 't10' => '引爆目标身上全部DOT层数（每层转成一次额外伤害）', 'lv20' => '引爆伤害+50%'],        // 召唤师：召唤/腐蚀/献祭
         's1' => ['name' => '深渊契约', 'job' => 'summoner', 'mp' => 10, 'kind' => 'summon', 'mult' => 1.2, 'el' => 'dark', 't10' => '召唤1只深渊小鬼', 'lv20' => '小鬼存活+1轮'],
         's2' => ['name' => '招魂引', 'job' => 'summoner', 'mp' => 18, 'kind' => 'summon', 'mult' => 1.4, 'el' => 'dark', 't10' => '召唤1只骸骨守卫（需熟练10级），血厚能扛', 'lv20' => '守卫存活+1轮，伤害+15%'],
         's3' => ['name' => '血肉筑城', 'job' => 'summoner', 'mp' => 22, 'kind' => 'summon', 'mult' => 1.8, 'el' => 'dark', 't10' => '献祭20%生命召唤憎恶聚合体（需熟练10级），死时爆炸', 'lv20' => '聚合体存活+1轮，爆炸+30%'],
@@ -4217,6 +4215,41 @@ function roll_ch3_drop(int $uid, string $mid, int $elite = 0): string
     return (string) $a;
 }
 
+// 召唤师契匣独立掉落：按击杀怪等级给对应档位的过渡/史诗匣，传说匣极稀有
+function roll_summoner_box(int $uid, string $mid): string
+{
+    if (job_id_of(user_by_id((int) $uid) ?? []) !== 'summoner') {
+        return '';
+    }
+    $lv = monster_lv($mid);
+    if ($lv < 20) {
+        return '';
+    }
+    $m = 1 + $lv * 0.02 + min(200, gear_stats($uid)['magic_find']) / 100;
+    $rate = $lv >= 700 ? 0.02 : 0.05;
+    if (mt_rand() / mt_getrandmax() > $rate * $m) {
+        return '';
+    }
+    // 越级越高越容易出史诗/传说
+    $r = mt_rand(1, 100);
+    $grade = 'common';
+    if ($lv >= 380 && $r <= 12) {
+        $grade = 'epic';
+    }
+    if ($lv >= 650 && $r <= 3) {
+        $grade = 'legend';
+    }
+    $name = summoner_offhand_for_lv($lv, $grade);
+    if ($name === null) {
+        return '';
+    }
+    $cfg = summoner_offhands()[$name] ?? null;
+    if ($cfg === null) {
+        return '';
+    }
+    return make_equip((int) $uid, 'offhand', $name, (int) $cfg['q'], $lv);
+}
+
 function player_resist(array $u, string $el): float
 {
     $gs = gear_stats((int) ($u['id'] ?? 0));
@@ -4234,11 +4267,17 @@ function roll_drop(int $uid, string $mid, int $elite = 0): string
 {
     $ch3 = roll_ch3_drop($uid, $mid, $elite);
     if ($ch3 !== '' || isset(ch3_drops()[$mid])) {
+        // 召唤师：契匣掉率独立一轮（原 offhand 格已被改名，不和专属表冲突）
+        $sbox = roll_summoner_box($uid, $mid);
+        if ($sbox !== '') {
+            return $ch3 !== '' ? $ch3 . ' ' . $sbox : $sbox;
+        }
         return $ch3;
     }
     $t = monster_drops($mid);
     if ($t === []) {
-        return '';
+        // 六圣柱小怪不掉套装，但召唤师照样能摸出契匣
+        return roll_summoner_box($uid, $mid);
     }
     $mlv = monster_lv($mid);
     $m = 1 + $mlv * 0.03 + min(200, gear_stats($uid)['magic_find']) / 100;
@@ -4254,7 +4293,7 @@ function roll_drop(int $uid, string $mid, int $elite = 0): string
         }
     }
     if ($q < 0) {
-        return '';
+        return roll_summoner_box($uid, $mid);
     }
     if ($elite === 1) {
         $q = min(4, $q + 1);
@@ -4266,7 +4305,13 @@ function roll_drop(int $uid, string $mid, int $elite = 0): string
             return make_equip($uid, $t['slot'], $t['legendary']['base'], 4, monster_lv($mid), $t['legendary']);
         }
     }
-    return make_equip($uid, $t['slot'], $t['base'], $q, monster_lv($mid), null, (string) ($t['off'] ?? ''));
+    $eq = make_equip($uid, $t['slot'], $t['base'], $q, monster_lv($mid), null, (string) ($t['off'] ?? ''));
+    if ($eq === '') {
+        return roll_summoner_box($uid, $mid);
+    }
+    // 召唤师额外挂一次契匣判定（不占主掉落）
+    $sbox = roll_summoner_box($uid, $mid);
+    return $sbox !== '' ? $eq . ' ' . $sbox : $eq;
 }
 
 // 已穿装备属性总和（内存缓存一次）
@@ -4574,12 +4619,16 @@ function summon_cap(array $u): int
     if (equip_set_owned_count((int) ($u['id'] ?? 0), 'soulpact') >= 2) {
         $cap++;
     }
+    // 传说契匣：召唤上限+1
+    $cap += summoner_offhand_eff((int) ($u['id'] ?? 0))['cap'];
     return $cap;
 }
 
 function summon_power_bonus(array $u): float
 {
-    return (float) gear_stats((int) ($u['id'] ?? 0))['summon_power'];
+    $bonus = (float) gear_stats((int) ($u['id'] ?? 0))['summon_power'];
+    // 契匣：召唤兽伤害加成
+    return $bonus + summoner_offhand_eff((int) ($u['id'] ?? 0))['power'];
 }
 
 function summon_list(): array
@@ -4612,6 +4661,8 @@ function summon_spawn(string $kind, int $patk, int $php, array $u): array
     if (equip_set_owned_count((int) ($u['id'] ?? 0), 'soulpact') >= 5) {
         $turns += 2;
     }
+    // 契匣：传说匣再加存活轮数
+    $turns += summoner_offhand_eff((int) ($u['id'] ?? 0))['turns'];
     return [
         'kind' => $kind,
         'name' => $cfg['name'],
@@ -5664,7 +5715,8 @@ function battle_round(array &$u, array &$b, string $mode): array
                     $logHeal .= '(冰葬冻结)';
                 }
             } elseif ($sk['kind'] === 'multi2') {
-                // 猎手连射：物理段过物防；爆炸箭（h2火）/淬毒箭（h3暗）再加一段法伤，整体转属性
+                // 猎人连射：物理段过物防；带元素的技能再加一段法伤，整体转属性。
+                // 猎人职业特色核心：每个技能都往目标身上挂 DOT 层数。
                 $pd = max(1, (int) ((player_patk($u) + random_int(0, 3)) * (float) $sk['mult'] * $pow) - monster_pdef($b));
                 if ($skEl !== '') {
                     $pd += max(0, (int) (player_matk($u) * 0.5) - (int) (monster_mdef($b) / 2));
@@ -5678,13 +5730,17 @@ function battle_round(array &$u, array &$b, string $mode): array
                 if ($sLv >= 20) {
                     $pd = (int) ($pd * 1.15);
                 }
-                if ($sid === 'h3' && $sTier >= 10) {
-                    $b['poison'] = 3;
-                    $logHeal .= '(剧毒)';
-                }
                 if ($sid === 'h4' && in_array(($b['id'] ?? ''), ['cinder_dragonspawn', 'ash_wyrm', 'south_flame_guard', 'doyle', 'dragon'], true)) {
                     $pd = (int) ($pd * 1.5);
                     $logHeal .= '(龙裔杀手)';
+                }
+                // 猎人DOT：按技能表 dot 字段挂层
+                $dotKey = (string) ($sk['dot'] ?? '');
+                if ($dotKey !== '') {
+                    $add = $sTier >= 10 ? 2 : 1;
+                    if ($sid === 'h3' && $sTier >= 10) { $add = 2; }
+                    hunter_dot_bind_lv20($b, $sLv >= 20);
+                    $logHeal .= hunter_dot_add($b, $dotKey, $add, $pd, $sLv >= 20);
                 }
             } elseif ($sk['kind'] === 'sin') {
                 // 罪技能：罪≥100才能放（战斗中罪掉下去则本轮按普攻算）
@@ -5721,20 +5777,25 @@ function battle_round(array &$u, array &$b, string $mode): array
                         $logHeal .= $elTag;
                         $b['fullEl'] = 1;
                     } elseif ($sid === 'h9') {
-                        // 猎人·弑神连珠：物3.4双段暗，斩杀线同w9
+                        // 猎人·弑神连珠：物3.0双段暗，引燃目标身上全部DOT层数
                         $pd = max(1, (int) ((player_patk($u) + random_int(0, 3)) * (float) $sk['mult'] * $sinPow) - monster_pdef($b));
                         $pd = (int) ($pd * 0.7) + (int) ($pd * 0.7);
                         $pd += max(0, (int) (player_matk($u) * 0.5) - (int) (monster_mdef($b) / 2));
-                        $cutLine = $sLv >= 20 ? 0.5 : ($sTier >= 10 ? 0.4 : 0.3);
-                        if ((int) $b['hp'] <= (int) ((int) $b['maxhp'] * $cutLine)) {
-                            $pd = (int) ($pd * 1.5);
-                            $logHeal .= '(弑神斩杀)';
-                        }
                         if ($sTier >= 10) { $pd = (int) ($pd * 1.3); }
                         if ($sLv >= 20) { $pd = (int) ($pd * 1.15); }
                         [$pd, $elTag] = apply_el_convert($u, $b, $pd, $skEl);
                         $logHeal .= $elTag;
                         $b['fullEl'] = 1;
+                        // 引爆：每层DOT转成额外伤害（lv20 再+50%）
+                        $detMult = $sTier >= 10 ? 1.0 : 0.5;
+                        if ($sLv >= 20) { $detMult *= 1.5; }
+                        $det = hunter_dot_detonate($b, (int) $detMult, $sLv >= 20);
+                        if ($det['dmg'] > 0) {
+                            $pd += $det['dmg'];
+                            $logHeal .= '(' . $det['log'] . ')';
+                        } else {
+                            $logHeal .= '(目标身上没有DOT可引燃)';
+                        }
                     } elseif ($sid === 'p9') {
                         // 牧师·堕天圣裁：法3.0暗+奶200（转奶80%，lv20转100%）
                         $healSin = (int) ((int) $sk['heal'] * $pow) + (int) (player_matk($u) * 0.3);
@@ -5797,7 +5858,7 @@ function battle_round(array &$u, array &$b, string $mode): array
             }
             } elseif ($sk['kind'] === 'aoe') {
                 // 群攻：打当前+溅射队列（余波震死的只给经验金币，不掉落）
-                $aoePhys = in_array($sid, ['w5', 'w6', 'h5', 'h6'], true);
+                $aoePhys = in_array($sid, ['w5', 'w6', 'h5', 'h6', 'h7', 'h8'], true);
                 if ($aoePhys) {
                     $pd = max(1, (int) ((player_patk($u) + random_int(0, 3)) * (float) $sk['mult'] * $pow) - monster_pdef($b));
                 } else {
@@ -5817,15 +5878,29 @@ function battle_round(array &$u, array &$b, string $mode): array
                 if ($sid === 'w6' && $sTier >= 10 && mt_rand(1, 100) <= 10) {
                     $b['stun'] = 1;
                     $logHeal .= '(眩晕)';
-                    if ($sid === 'h5' && $sTier >= 10 && mt_rand(1, 100) <= 25) {
-                        $pd = (int) ($pd * ($sLv >= 20 ? 1.8 : 1.6));
-                        $logHeal .= '(箭雨暴击)';
+                }
+                // 猎人群攻：往目标身上挂 DOT（h5/h7 出血、h6/h8 剧毒）
+                if (in_array($sid, ['h5', 'h6', 'h7', 'h8'], true)) {
+                    $dotKey = (string) ($sk['dot'] ?? '');
+                    if ($sid === 'h5' && $sTier >= 10) { $dotKey = 'bleed'; }
+                    if ($sid === 'h7' && $sTier >= 10) { $dotKey = 'burn'; }
+                    if ($sid === 'h8' && $sTier >= 10) { $dotKey = 'poison'; }
+                    $add = $sTier >= 10 ? 2 : 1;
+                    if ($sid === 'h8' && $sTier >= 10) { $add = 6; }
+                    if ($dotKey !== '') {
+                        hunter_dot_bind_lv20($b, $sLv >= 20);
+                        $logHeal .= hunter_dot_add($b, $dotKey, $add, $pd, $sLv >= 20);
                     }
-                    $exeLine = $sLv >= 20 ? 0.4 : 0.3;
-                    if ($sid === 'h6' && (int) ($b['maxhp'] ?? 1) > 0 && (int) ($b['hp'] ?? 1) <= (int) ($b['maxhp'] ?? 1) * $exeLine) {
-                        $pd = (int) ($pd * 1.5);
-                        $logHeal .= '(影杀斩杀)';
-                    }
+                }
+                if ($sid === 'h5' && $sTier >= 10 && mt_rand(1, 100) <= 25) {
+                    $pd = (int) ($pd * ($sLv >= 20 ? 1.8 : 1.6));
+                    $logHeal .= '(箭雨暴击)';
+                }
+                $exeLine = $sLv >= 20 ? 0.4 : 0.3;
+                if ($sid === 'h6' && (int) ($b['maxhp'] ?? 1) > 0 && (int) ($b['hp'] ?? 1) <= (int) ($b['maxhp'] ?? 1) * $exeLine) {
+                    $pd = (int) ($pd * 1.5);
+                    $logHeal .= '(影杀斩杀)';
+                }
                 if ($sid === 'm5' && $sTier >= 10 && mt_rand(1, 100) <= 10) {
                     $b['frost'] = 3;
                     $logHeal .= '(暴雪冻结)';
@@ -5853,6 +5928,10 @@ function battle_round(array &$u, array &$b, string $mode): array
                 if ($sid === 'h8' && (int) ($b['maxhp'] ?? 1) > 0 && (int) ($b['hp'] ?? 1) <= (int) ($b['maxhp'] ?? 1) * $exeLine8) {
                     $pd = (int) ($pd * 1.5);
                     $logHeal .= '(夜幕斩杀)';
+                }
+                if ($sid === 'h5' && $sLv >= 20) {
+                    $b['splash'] = (int) (($b['splash'] ?? 0) + $pd * 0.5); // lv20：万箭齐发溅射翻倍
+                    $logHeal .= '(箭雨漫溢)';
                 }
                 // 召唤师·群魂爆裂：引爆回血（爆炸伤害由 summon_bomb 另算）
                 if ($sid === 's7') {
@@ -5888,7 +5967,6 @@ function battle_round(array &$u, array &$b, string $mode): array
                             }
                         }
                     }
-                }
                 }
                 // 暗影主教：伤害转奶
                 if ($sid === 'p5') {
@@ -6010,6 +6088,14 @@ function battle_round(array &$u, array &$b, string $mode): array
                 }
         if ($blockMsg !== '') { $logHeal .= $blockMsg; }
     }
+    // 契匣开场召唤：戴着专属副手的召唤师，每场战斗白嫖一只（不耗蓝不占回合）
+    if ($mode !== 'hit' && empty($b['opened']) && job_id_of($u) === 'summoner') {
+        $b['opened'] = 1;
+        $openMsg = summoner_open_message($u);
+        if ($openMsg !== '') {
+            $logHeal .= $openMsg;
+        }
+    }
     // 召唤兽自动攻击
     if ($mode !== 'hit' && summon_list() !== []) {
         $st2 = summon_turn($b);
@@ -6021,6 +6107,14 @@ function battle_round(array &$u, array &$b, string $mode): array
     // 真实伤害（神魂/烬焰7件）：无视防御，闪避也躲不掉
     $trueDmg = (int) soul_truedmg((int) ($u['id'] ?? 0));
     if ($trueDmg > 0) { $b['hp'] = (int) $b['hp'] - $trueDmg; $logHeal .= '(真伤+' . $trueDmg . ')'; }
+    // 猎人DOT结算：出血/剧毒/焦灼每轮掉一层，层数越多越疼
+    if ((int) ($b['hp'] ?? 0) > 0 && hunter_dot_stacks($b) !== []) {
+        $dt = hunter_dot_tick($b);
+        if ($dt['dmg'] > 0) {
+            $b['hp'] = (int) $b['hp'] - $dt['dmg'];
+            $logHeal .= '(' . $dt['log'] . ')';
+        }
+    }
     // 1觉·猎手标记：目标易伤10%（剩余轮数在受伤时结算）
     if ($pd > 0 && !empty($b['mark']) && ($b['hp'] ?? 1) > 0) { $pd = (int)($pd * 1.1); $b['hp'] = (int)$b['hp'] - (int)($pd * 0.1); $b['mark'] = (int)$b['mark'] - 1; $logHeal .= '(易伤)'; }
     $verb = $skillName === '拳击' ? '你挥出一拳，造成' : ($isSkill ? '你放出' . $skillName . '，造成' : '你劈出');
@@ -6041,9 +6135,9 @@ function battle_round(array &$u, array &$b, string $mode): array
         $log .= $petMsg;
     }
     if (!empty($b['poison']) && (int) $b['hp'] > 0) {
-            $pct = isset($b['poison_pct']) ? (float) $b['poison_pct'] : 5;
-            $ptag = isset($b['poison_pct']) ? '腐蚀发作' : '剧毒发作';
-            $pt = max(1, (int) ((int) ($b['maxhp'] ?? 1) * $pct / 100));
+        $pct = isset($b['poison_pct']) ? (float) $b['poison_pct'] : 5;
+        $ptag = isset($b['poison_pct']) ? '腐蚀发作' : '剧毒发作';
+        $pt = max(1, (int) ((int) ($b['maxhp'] ?? 1) * $pct / 100));
         $b['hp'] = (int) $b['hp'] - $pt;
         $b['poison'] = (int) $b['poison'] - 1;
         $log .= $ptag . '，' . $b['name'] . '掉' . $pt . '点生命。';
@@ -6066,6 +6160,7 @@ function battle_round(array &$u, array &$b, string $mode): array
             $b['wgold'] = (int) ($b['wgold'] ?? 0) + monster_gold_reward((int) $b['gold']);
             $b['left'] = (int) $b['left'] - 1;
             $b['hp'] = (int) $b['maxhp'];
+            hunter_dot_clear($b); // 换下一只：上一只身上的DOT层清空
             $dp = roll_drop((int) $u['id'], (string) ($b['id'] ?? ''), (int) ($b['elite'] ?? 0));
             if ($dp !== '') {
                 $b['drops'][] = $dp;
@@ -6383,6 +6478,14 @@ function battle_round(array &$u, array &$b, string $mode): array
                 $txt .= quest_potion_gift((int) $u['id'], 3);
                 $u['gold'] = (int) $u['gold'] + [30 => 2000, 31 => 3000, 32 => 4000, 33 => 5000, 34 => 6000, 35 => 7000, 36 => 8000, 37 => 10000][$cur];
                 $gear3 = [31 => ['weapon', '傀儡短剑', 150], 32 => ['body', '傀儡皮甲', 180], 33 => ['weapon', '傀儡长弓', 210], 34 => ['body', '傀儡铠甲', 240], 35 => ['back', '傀儡斗篷', 270]][$cur] ?? null;
+                // 召唤师：第三章起按等级发一只契匣（过渡副手，带开场召唤）
+                if (job_id_of($u) === 'summoner' && in_array($cur, [31, 35, 37], true)) {
+                    $boxName = summoner_offhand_for_lv(max(1, (int) $u['lv']), 'common');
+                    $cfgBox = summoner_offhands()[$boxName] ?? null;
+                    if ($cfgBox !== null) {
+                        $gear3 = ['offhand', $boxName, (int) $cfgBox['q'], max(1, (int) $u['lv'])];
+                    }
+                }
                 if ($gear3 !== null) {
                     $gn3 = make_equip((int) $u['id'], $gear3[0], $gear3[1], 2, $gear3[2]);
                     if ($gn3 !== '') {
@@ -6504,7 +6607,6 @@ function battle_round(array &$u, array &$b, string $mode): array
                     add_mat((int) $u['id'], 'ch5_proof', 1);
                     add_mat((int) $u['id'], 'qingzui_dan', 1);
                     add_mat((int) $u['id'], 'soul_shard', 10);
-                    add_mat((int) $u['id'], 'wb_ticket', 1);
                     $sk4 = ['warrior' => 'w4', 'mage' => 'm4', 'hunter' => 'h4', 'priest' => 'p4', 'summoner' => 's4'][job_id_of($u)] ?? '';
                     if ($sk4 !== '') {
                         add_mat((int) $u['id'], 'book_' . $sk4, 1);
@@ -6514,7 +6616,7 @@ function battle_round(array &$u, array &$b, string $mode): array
                     if ($gn5b !== '') {
                         $txt .= '。获得【' . $gn5b . '】！';
                     }
-                    $txt .= '。第五章·雾森火山完成！巨龙没有醒，你活下来了。获得【南炎信物】+四阶技能书+烬焰套装1件+神魂碎片×10+龙鳞引×1！世界BOSS每天刷新，去火山之心找熔火守望者！';
+                    $txt .= '。第五章·雾森火山完成！巨龙没有醒，你活下来了。获得【南炎信物】+四阶技能书+烬焰套装1件+神魂碎片×10！六圣柱的龙王不要门票，够等级就能进去车轮战。';
                 } else {
                     $txt .= '。本环完成，进下一环！';
                 }
@@ -6611,6 +6713,14 @@ function battle_round(array &$u, array &$b, string $mode): array
             $md = (int) ($md * 1.1);
         }
     if ((cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '') === 'aegis') { $md = (int) ($md * 0.92); }
+    }
+    // 契匣【幽冥·招魂匣】：召唤兽在场时它替你挡刀，你减伤
+    if (job_id_of($u) === 'summoner' && summon_list() !== []) {
+        $ohGuard = min(60.0, summoner_offhand_eff((int) ($u['id'] ?? 0))['guard']);
+        if ($ohGuard > 0) {
+            $md = (int) ($md * (1 - $ohGuard / 100));
+            $logHeal .= '(匣庇护-' . (int) $ohGuard . '%)';
+        }
     }
     // 召唤兽优先承伤
     [$md, $slog] = summon_absorb($md);

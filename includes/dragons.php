@@ -161,11 +161,10 @@ function dragon_elements(): array
     return ['fire', 'wind', 'ice', 'thunder', 'dark', 'light'];
 }
 
-// 材料名：龙魂（六元素）/ 龙玉（六元素）/ 通用龙鳞引
+// 材料名：龙魂（六元素）/ 龙玉（六元素）/ 通用龙王精华
 function dragon_mats(): array
 {
     $m = [
-        'wb_ticket' => '龙鳞引（龙王入场券）',
         'dragon_core' => '龙王精华',
     ];
     foreach (dragons() as $d) {
@@ -187,6 +186,7 @@ function dragon_of_el(string $el): array
     return [];
 }
 
+// 灵魂持有量（任意属性的龙魂都算数，先扣存量最少的）
 function dragon_souls_held(int $uid): array
 {
     $out = [];
@@ -197,6 +197,11 @@ function dragon_souls_held(int $uid): array
         }
     }
     return $out;
+}
+
+function dragon_souls_total(int $uid): int
+{
+    return array_sum(array_values(dragon_souls_held($uid)));
 }
 
 function dragon_jades_held(int $uid): array
@@ -359,7 +364,7 @@ function dragon_gate_maps(): array
     return ['volcano_heart', 'sky_ramp', 'frost_deep', 'storm_wall', 'abyss_deep', 'sky_city_ruin'];
 }
 
-// 龙巢本身不出现在传送列表（要走龙鳞引进场）
+// 龙巢本身不出现在传送列表（要等级达标才能进场）
 function dragon_lair_maps(): array
 {
     return ['wb_arena', 'wb_wind', 'wb_ice', 'wb_thunder', 'wb_dark', 'wb_light'];

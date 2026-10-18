@@ -212,13 +212,7 @@ function drg_status(string $mid): array
     ];
 }
 
-// 每天每条龙只能进一次：材料键记当日
-function drg_enter_mark(int $uid, string $mid): int
-{
-    return (int) (mats_of($uid)['wb_in_' . $mid] ?? 0);
-}
-
-// 进场校验：等级 + 龙鳞引（当日同一只龙只扣一次）
+// 进场校验：等级门槛即可。龙王属性已经够变态，不再收门票，鼓励全服车轮战。
 function drg_enter(array &$u, string $mid): string
 {
     $d = dragon($mid);
@@ -229,14 +223,6 @@ function drg_enter(array &$u, string $mid): string
     if ((int) $u['lv'] < dragon_min_lv($mid)) {
         return $d['name'] . '懒得理' . (int) $u['lv'] . '级的你——' . dragon_min_lv($mid) . '级再来。';
     }
-    if (drg_enter_mark($uid, $mid) === wb_day()) {
-        return '';
-    }
-    if ((int) (mats_of($uid)['wb_ticket'] ?? 0) <= 0) {
-        return '没有【龙鳞引】，进不去' . $d['lair_name'] . '。完成第五章给1张，六圣柱的区域首领也会掉。';
-    }
-    add_mat($uid, 'wb_ticket', -1);
-    mat_set($uid, 'wb_in_' . $mid, wb_day());
     return '';
 }
 

@@ -113,7 +113,7 @@ function locations(): array
             'exits' => ['gate' => '罪渊入口'],
             'monsters' => [],
         ],
-    ] + ch1_locations() + dsw_locations() + ch2_locations() + abx_locations() + ch3_locations() + mx_locations() + farm_locations() + ice_locations() + fr_locations() + fo_locations() + em_locations() + wb_locations() + pz_locations() + sen_locations() + wild3_locations() + frostburg_locations() + greenheart_locations() + wild45_locations() + as_locations() + vx_locations() + gr_locations() + ry_locations() + god_locations() + gf_locations();
+    ] + ch1_locations() + dsw_locations() + ch2_locations() + abx_locations() + ch3_locations() + mx_locations() + farm_locations() + ice_locations() + fr_locations() + fo_locations() + em_locations() + dragon_locations() + pz_locations() + sen_locations() + wild3_locations() + frostburg_locations() + greenheart_locations() + wild45_locations() + as_locations() + vx_locations() + gr_locations() + ry_locations() + god_locations() + gf_locations();
 }
 
 function loc(string $id): array
@@ -355,7 +355,7 @@ function monsters(): array
         'ry_shaper' => ['name' => '岩狱塑岩者', 'hp' => 4600000, 'atk' => 9000, 'exp' => 9500000, 'gold' => 4500000],
         'ry_warder' => ['name' => '岩狱狱卒', 'hp' => 5000000, 'atk' => 9500, 'exp' => 10400000, 'gold' => 4900000],
         'ry_titan' => ['name' => '岩狱泰坦·土龙岳柱', 'hp' => 9000000, 'atk' => 11000, 'exp' => 20000000, 'gold' => 9500000],
-    ];
+    ] + dragon_monsters();
 }
 
 function items(): array
@@ -1520,7 +1520,7 @@ function pet_species(): array
         'thunder_bird' => ['name' => '雷鸟', 'quality' => 'rare', 'growth' => 1.35, 'atk' => 12, 'def' => 4, 'hp' => 55, 'spd' => 24, 'crit' => 8, 'cd' => 165, 'active' => '落雷', 'mult' => 1.6, 'passive' => '雷速：出手更快', 'source' => '宠物蛋'],
         'abyss_witch' => ['name' => '魔女阿比希尔', 'quality' => 'legend', 'growth' => 2.4, 'atk' => 38, 'def' => 12, 'hp' => 120, 'spd' => 20, 'crit' => 12, 'cd' => 175, 'active' => '魔女低语', 'mult' => 1.7, 'passive' => '月之庇佑：低语偷取敌人5%生命', 'source' => '限时（11月11日前）'],
         'earth_dragon' => ['name' => '土龙岳柱幼体', 'quality' => 'legend', 'growth' => 2.1, 'atk' => 16, 'def' => 24, 'hp' => 380, 'spd' => 10, 'crit' => 5, 'cd' => 190, 'active' => '岳柱镇压', 'mult' => 1.2, 'passive' => '磐岩：承伤-25%', 'source' => '土龙岳柱掉落'],
-    ];
+    ] + dragon_pets();
 }
 
 function pet_quality_name(string $q): string
@@ -1544,7 +1544,12 @@ function pet_eggs(): array
         'witch_egg' => ['species' => 'abyss_witch', 'name' => '魔女之茧（限时）'],
         'frost_egg' => ['species' => 'frost_wolf_pup', 'name' => '霜狼幼崽蛋'],
         'earth_dragon_egg' => ['species' => 'earth_dragon', 'name' => '土龙岳柱之蛋'],
-        'fire_dragon_egg' => ['species' => 'fire_dragon', 'name' => '传奇火龙宠物蛋'],
+        'fire_dragon_egg' => ['species' => 'fire_drake', 'name' => '传奇火龙宠物蛋'],
+        'wind_dragon_egg' => ['species' => 'sky_serpent', 'name' => '传奇风龙宠物蛋'],
+        'ice_dragon_egg' => ['species' => 'frost_maiden', 'name' => '传奇冰龙宠物蛋'],
+        'thunder_dragon_egg' => ['species' => 'storm_tyrant', 'name' => '传奇雷龙宠物蛋'],
+        'dark_dragon_egg' => ['species' => 'void_dragon', 'name' => '传奇暗龙宠物蛋'],
+        'light_dragon_egg' => ['species' => 'seraph_dragon', 'name' => '传奇光龙宠物蛋'],
         'egg_unknown' => ['species' => '', 'name' => '未知宠物蛋'],
     ];
 }
@@ -2633,6 +2638,22 @@ function equip_set_id(string $shortName): string
     if (str_starts_with($shortName, '岩狱·')) {
         return 'rockjail';
     }
+    // —— 六龙王专属套装（按前缀）——
+    if (str_starts_with($shortName, '苍岚·')) {
+        return 'azure';
+    }
+    if (str_starts_with($shortName, '永冻·')) {
+        return 'glacier';
+    }
+    if (str_starts_with($shortName, '天谴·')) {
+        return 'thunder';
+    }
+    if (str_starts_with($shortName, '终焉·')) {
+        return 'ruin';
+    }
+    if (str_starts_with($shortName, '圣裁·')) {
+        return 'judgment';
+    }
     return '';
 }
 
@@ -2672,6 +2693,11 @@ function equip_set_pieces(string $set): array
     if ($set === 'god') {
         return ['神铸·裁决', '神铸·雷霆', '神铸·苍穹', '神铸·铁律', '神铸·圣盾', '神铸·天罚', '神铸·曙光', '神铸·圣冠', '神铸·羽甲', '神铸·天裤', '神铸·云腰', '神铸·踏云靴', '神铸·执掌手套', '神铸·天翼披风', '神铸·星辰戒', '神铸·神谕链', '神铸·圣灯'];
     }
+    // 六龙王专属套装
+    $dp = function_exists('dragon_set_pieces') ? dragon_set_pieces($set) : [];
+    if ($dp !== []) {
+        return $dp;
+    }
     return [];
 }
 
@@ -2683,6 +2709,15 @@ function equip_set_owned_count(int $uid, string $set): int
         $st = db()->prepare('SELECT COUNT(*) FROM equips WHERE uid=? AND pos="wear" AND name LIKE ?');
         $st->execute([(int) $uid, $mark]);
         return min($cap, (int) $st->fetchColumn());
+    }
+    // 六龙王专属套装：按前缀计数
+    if (function_exists('dragon_set_pieces') && dragon_set_pieces($set) !== []) {
+        $prefix = ['azure' => '苍岚·', 'glacier' => '永冻·', 'thunder' => '天谴·', 'ruin' => '终焉·', 'judgment' => '圣裁·'][$set] ?? '';
+        if ($prefix !== '') {
+            $st = db()->prepare('SELECT COUNT(*) FROM equips WHERE uid=? AND pos="wear" AND name LIKE ?');
+            $st->execute([(int) $uid, '%' . $prefix . '%']);
+            return min(7, (int) $st->fetchColumn());
+        }
     }
     $n = 0;
     $st = db()->prepare('SELECT name FROM equips WHERE uid=? AND pos="wear"');
@@ -2739,12 +2774,21 @@ function equip_set_bonus_text(string $set, int $owned): string
     if ($set === 'rockjail') {
         return '【岩狱套装】已穿' . $owned . '/10：3件血+3000，5件减伤+8%，7件血+8000减伤+12%，10件血+20000减伤+20%、磐岩（承伤再-5%）。';
     }
+    // 六龙王专属套装
+    if (function_exists('dragon_set_bonus') && dragon_set_bonus($set, $owned) !== '') {
+        return dragon_set_bonus($set, $owned);
+    }
     return '';
 }
 
 // 怪物专属掉落：小怪掉率低且多为低劣
 function monster_drops(string $mid): array
 {
+    // 六圣柱小怪：不掉龙王套装（套装只由斩龙排行产出），只走 monster_material 掉龙魂/龙王精华
+    $dm = dragon_monster($mid);
+    if ($dm !== []) {
+        return [];
+    }
     return [
         'rat' => ['slot' => 'gloves', 'base' => '破布手套', 'rate' => 0.01, 'q' => [100, 0, 0, 0, 0]],
         'rat_pack' => ['slot' => 'gloves', 'base' => '腐骨护手'],
@@ -3101,9 +3145,33 @@ function make_equip(int $uid, string $slot, string $base, int $q, int $itemLevel
 function monster_material(string $mid): array
 {
     // 只有副本信物怪和矿工铭牌任务掉材料，其他怪一律不掉（卖钱+装备就够了）
-    return [
+    $fixed = [
         'runaway_miner' => ['mine_badge', '矿工铭牌'],
     ][$mid] ?? [];
+    if ($fixed !== []) {
+        return $fixed;
+    }
+    // 六圣柱小怪：区域首领掉龙王精华，其余掉本属性龙魂（套装只由斩龙产出）
+    $dm = dragon_monster($mid);
+    if ($dm === []) {
+        return [];
+    }
+    $d = dragon_of_el((string) $dm['el']);
+    if ($d === []) {
+        return [];
+    }
+    $bosses = ['az_shrine_guard', 'gl_funeral_host', 'th_chain_dragon', 'da_nightmare', 'li_gold_herald'];
+    if (in_array($mid, $bosses, true)) {
+        // 区域首领是龙鳞引的主要来源——没有它进不了龙巢
+        $roll = mt_rand(1, 100);
+        if ($roll <= 40) {
+            return ['wb_ticket', '龙鳞引'];
+        }
+        if ($roll <= 55) {
+            return ['dragon_core', '龙王精华'];
+        }
+    }
+    return [(string) $d['soul'], '龙魂·' . element_name((string) $d['el'])];
 }
 
 function quest_mats(): array
@@ -3111,7 +3179,7 @@ function quest_mats(): array
     return ['blackcoin' => '不断下坠的黑币', 'aiden_badge' => '艾登·灰叶的铭牌', 'investigation_record' => '调查队记录', 'augustus_letter' => '镇长的信', 'dsw_ticket' => '黑暗沼泽副本入场券', 'dsw_item1' => '幽暗黏液', 'dsw_item2' => '沼泽之核', 'dsw_item3' => '腐泥之心', 'dsw_item4' => '王座徽记', 'abx_ticket' => '影蚀深渊入场券', 'abx_item1' => '蚀影尘', 'abx_item2' => '影蚀徽记', 'abx_item3' => '低语残章', 'abx_item4' => '王座蚀印', 'capital_badge' => '王都徽章', 'puppet_eye' => '傀儡之眼', 'ch3_proof' => '第三章通关证明', 'mx_ticket' => '银丝母巢入场券', 'mx_item1' => '黏丝束', 'mx_item2' => '茧壳碎片', 'mx_item3' => '织线梭', 'mx_item4' => '蛾翼磷粉', 'mx_item5' => '守望之瞳', 'mx_item6' => '育巢摇篮曲', 'farm_coin' => '农场币', 'seed_green' => '青菜种子', 'seed_radish' => '萝卜种子', 'seed_melon' => '南瓜种子', 'seed_tomato' => '番茄种子', 'seed_strawberry' => '草莓种子',
  'ice_badge' => '冰原徽章', 'frost_heart' => '霜王之心', 'ch4_proof' => '第四章通关证明', 'fr_ticket' => '冰渊副本入场券', 'fr_item1' => '渊底冰核', 'fr_item2' => '利维坦之牙',
  'forest_badge' => '森语徽章', 'south_flame_token' => '南炎信物', 'ch5_proof' => '第五章通关证明', 'rb2_proof' => '2觉证明', 'em_ticket' => '熔心副本入场券', 'pz_ticket' => '傀儡回廊入场券', 'tt_ticket' => '岩狱副本入场券', 'sen_ticket' => '雾森祭坛入场券', 'em_item1' => '熔核碎片', 'em_item2' => '熔心之血',
- 'soul_shard' => '神魂碎片', 'wb_ticket' => '龙鳞引（世界BOSS入场券）'];
+ 'soul_shard' => '神魂碎片', 'wb_ticket' => '龙鳞引（六圣柱龙王入场券）'];
 }
 
 function skill_catalog(): array
@@ -3526,6 +3594,11 @@ function mat_name(string $id): string
     if (isset(pet_eggs()[$id])) {
         return pet_eggs()[$id]['name'];
     }
+    // 六龙王材料：龙魂/龙玉/龙王精华
+    $dm = dragon_mats();
+    if (isset($dm[$id])) {
+        return $dm[$id];
+    }
     if ($id === 'pet_revive_potion') {
         return '宠物复活药';
     }
@@ -3721,7 +3794,11 @@ function monster_element(string $mid): string
         'cinder_crawler' => 'fire', 'cinder_stalker' => 'dark', 'cinder_warden' => 'fire', 'cinder_horror' => 'dark', 'ash_titan' => 'fire',
         'doyle' => 'fire',
     ];
-    return $m[$mid] ?? '';
+    if (isset($m[$mid])) {
+        return $m[$mid];
+    }
+    // 六圣柱专属小怪：前缀即属性
+    return (string) (dragon_monster($mid)['el'] ?? '');
 }
 
 function monster_resist(string $mid, string $el): float
@@ -4298,6 +4375,54 @@ function gear_stats(int $uid): array
     if ($rock >= 5) { $s['damage_reduction'] += 8; }
     if ($rock >= 7) { $s['hp'] += 8000; $s['damage_reduction'] += 12; }
     if ($rock >= 10) { $s['hp'] += 20000; $s['damage_reduction'] += 20; }
+    // —— 六龙王专属套装（西风·北寒·东雷·深渊·中央）——
+    $dlv = max(1, (int) (db()->query('SELECT lv FROM users WHERE id=' . (int) $uid)->fetchColumn() ?: 1));
+    $drgSets = ['azure' => '苍岚·', 'glacier' => '永冻·', 'thunder' => '天谴·', 'ruin' => '终焉·', 'judgment' => '圣裁·'];
+    $dcnt = [];
+    foreach ($worn as $wn) {
+        foreach ($drgSets as $sid => $pfx) {
+            if (str_starts_with($wn, $pfx)) {
+                $dcnt[$sid] = ($dcnt[$sid] ?? 0) + 1;
+            }
+        }
+    }
+    if (($dcnt['azure'] ?? 0) > 0) {
+        $n = $dcnt['azure'];
+        $s['dodge'] += $n;
+        $s['move_speed'] += $n;
+        if ($n >= 3) { $s['element'] += 80; }
+        if ($n >= 5) { $s['crit'] += 8; $s['skill_damage'] += 18; $s['move_speed'] += 5; }
+        if ($n >= 7) { $s['all_attr'] += $dlv * 6; $s['element'] += 120; }
+    }
+    if (($dcnt['glacier'] ?? 0) > 0) {
+        $n = $dcnt['glacier'];
+        $s['res_ice'] += $n * 8;
+        $s['control_resist'] += $n * 3;
+        if ($n >= 3) { $s['damage_reduction'] += 10; $s['mdef'] += 150; }
+        if ($n >= 5) { $s['hp'] += $dlv * 80; }
+        if ($n >= 7) { $s['damage_reduction'] += 12; $s['slow_resist'] += 30; }
+    }
+    if (($dcnt['thunder'] ?? 0) > 0) {
+        $n = $dcnt['thunder'];
+        $s['element'] += $n * 10;
+        if ($n >= 3) { $s['penetration'] += 80; $s['element'] += 100; }
+        if ($n >= 5) { $s['skill_damage'] += 22; }
+        if ($n >= 7) { $s['damage_reduction'] += 15; $s['element'] += 300; }
+    }
+    if (($dcnt['ruin'] ?? 0) > 0) {
+        $n = $dcnt['ruin'];
+        $s['lifesteal'] += $n * 2;
+        if ($n >= 3) { $s['truedmg'] += $dlv * 25; }
+        if ($n >= 5) { $s['all_attr'] += $dlv * 5; $s['lifesteal'] += 8; }
+        if ($n >= 7) { $s['truedmg'] += $dlv * 60; $s['damage_reduction'] += 18; }
+    }
+    if (($dcnt['judgment'] ?? 0) > 0) {
+        $n = $dcnt['judgment'];
+        $s['element'] += $n * 10;
+        if ($n >= 3) { $s['skill_damage'] += 18; }
+        if ($n >= 5) { $s['truedmg'] += $dlv * 40; $s['damage_reduction'] += 12; }
+        if ($n >= 7) { $s['truedmg'] += $dlv * 80; $s['skill_damage'] += 30; $s['all_attr'] += $dlv * 8; }
+    }
     $gy = 0;
     foreach ($worn as $wn) {
         if (str_starts_with($wn, '罪渊·')) { $gy++; }
@@ -4642,139 +4767,12 @@ function soul_upgrade(int $uid, int $eid): string
     mat_set($uid, 'soul_lv_' . $eid, $lv + 1);
     return '神魂升到' . ($lv + 1) . '级！真伤+' . soul_truedmg($uid) . '（穿戴中）。';
 }
-// ---- 世界BOSS·烬焰领主（每天凌晨刷新，死了当天不再刷，全服磨血） ----
-function wb_max_hp(): int
-{
-    return 30000000;
-}
-
+// ---- 世界BOSS（六圣柱·六沙王）读写入口，实现见 includes/dragon_wb.php ----
 function wb_day(): int
 {
     return (int) date('Ymd');
 }
 
-function wb_hp_now(): int
-{
-    return (int) (db()->query("SELECT num FROM sys_kv WHERE k='wb_hp'")->fetchColumn() ?: 0);
-}
-
-function wb_tick(): void
-{
-    $today = wb_day();
-    $d = (int) (db()->query("SELECT num FROM sys_kv WHERE k='wb_day'")->fetchColumn() ?: 0);
-    if ($d !== $today) {
-        db()->prepare("INSERT OR REPLACE INTO sys_kv (k, num) VALUES ('wb_day', ?)")->execute([$today]);
-        db()->prepare("INSERT OR REPLACE INTO sys_kv (k, num) VALUES ('wb_hp', ?)")->execute([wb_max_hp()]);
-        db()->prepare("INSERT OR REPLACE INTO sys_kv (k, num) VALUES ('wb_done', 0)")->execute();
-        db()->exec("DELETE FROM wb_dmg WHERE day!='" . $today . "'");
-    }
-}
-
-function wb_my_dmg(int $uid, int $day = 0): int
-{
-    if ($day === 0) {
-        $day = wb_day();
-    }
-    $st = db()->prepare('SELECT dmg FROM wb_dmg WHERE uid=? AND day=?');
-    $st->execute([(int) $uid, $day]);
-    return (int) ($st->fetchColumn() ?: 0);
-}
-
-function wb_rank(int $day = 0): array
-{
-    if ($day === 0) {
-        $day = wb_day();
-    }
-    $st = db()->prepare('SELECT uid, name, dmg FROM wb_dmg WHERE day=? ORDER BY dmg DESC LIMIT 20');
-    $st->execute([$day]);
-    return $st->fetchAll();
-}
-
-function wb_add_dmg(int $uid, string $name, int $dmg): void
-{
-    $day = wb_day();
-    $st = db()->prepare('SELECT dmg FROM wb_dmg WHERE uid=? AND day=?');
-    $st->execute([(int) $uid, $day]);
-    if ($st->fetchColumn() === false) {
-        db()->prepare('INSERT INTO wb_dmg (uid, name, day, dmg) VALUES (?, ?, ?, ?)')->execute([(int) $uid, (string) $name, $day, max(0, $dmg)]);
-    } else {
-        db()->prepare('UPDATE wb_dmg SET dmg=dmg+?, name=? WHERE uid=? AND day=?')->execute([max(0, $dmg), (string) $name, (int) $uid, $day]);
-    }
-}
-
-// BOSS技能模拟（按全服累计出手轮转）：爪击/烬焰吐息/龙威
-function wb_boss_move(int $hits): array
-{
-    $r = mt_rand(1, 100);
-    if ($r <= 65) {
-        return ['name' => '龙爪撕裂', 'mult' => 1.0, 'burn' => 0];
-    }
-    if ($r <= 88) {
-        return ['name' => '烬焰吐息', 'mult' => 1.5, 'burn' => 3];
-    }
-    return ['name' => '龙威碾压', 'mult' => 0.8, 'burn' => 0];
-}
-
-function wb_rewards(): void
-{
-    $day = wb_day();
-    $rank = wb_rank($day);
-    if ($rank === []) {
-        return;
-    }
-    $emberPieces = ['烬焰·龙裔刃', '烬焰·熔盾', '烬焰·守卫铠', '烬焰·祭司冠', '烬焰·熔核锤', '烬焰·灰烬戒', '烬焰·余火链'];
-    $slots = ['烬焰·龙裔刃' => 'weapon', '烬焰·熔盾' => 'offhand', '烬焰·守卫铠' => 'body', '烬焰·祭司冠' => 'head', '烬焰·熔核锤' => 'weapon', '烬焰·灰烬戒' => 'ring', '烬焰·余火链' => 'necklace'];
-    foreach ($rank as $i => $row) {
-        $uid = (int) $row['uid'];
-        $place = $i + 1;
-        if ($place === 1) {
-            add_mat($uid, 'fire_dragon_egg', 1);
-            $pc = $emberPieces[array_rand($emberPieces)];
-            make_equip($uid, $slots[$pc], $pc, 4, 700);
-            $u = user_by_id($uid);
-            if ($u) {
-                $u['diamonds'] = (int) ($u['diamonds'] ?? 0) + 100;
-                $u['gold'] = (int) ($u['gold'] ?? 0) + 5000000;
-                user_save($u);
-            }
-            add_mat($uid, 'soul_shard', 30);
-            send_mail($uid, '世界BOSS', 'wb', '斩龙首功', '你对多伊尔造成全服第一的伤害！传奇火龙宠物蛋×1、烬焰套装随机1件、100魔钻、500银、神魂碎片×30！', []);
-        } elseif ($place <= 3) {
-            $pc = $emberPieces[array_rand($emberPieces)];
-            make_equip($uid, $slots[$pc], $pc, 3, 680);
-            $u = user_by_id($uid);
-            if ($u) {
-                $u['diamonds'] = (int) ($u['diamonds'] ?? 0) + 50;
-                $u['gold'] = (int) ($u['gold'] ?? 0) + 2000000;
-                user_save($u);
-            }
-            add_mat($uid, 'soul_shard', 20);
-            send_mail($uid, '世界BOSS', 'wb', '斩龙前三', '第' . $place . '名！烬焰套装随机1件、50魔钻、200银、神魂碎片×20！', []);
-        } elseif ($place <= 10) {
-            $u = user_by_id($uid);
-            if ($u) {
-                $u['diamonds'] = (int) ($u['diamonds'] ?? 0) + 20;
-                $u['gold'] = (int) ($u['gold'] ?? 0) + 800000;
-                user_save($u);
-            }
-            add_mat($uid, 'soul_shard', 10);
-            if (mt_rand(1, 100) <= 30) {
-                $pc = $emberPieces[array_rand($emberPieces)];
-                make_equip($uid, $slots[$pc], $pc, 2, 650);
-            }
-            send_mail($uid, '世界BOSS', 'wb', '斩龙有功', '第' . $place . '名！20魔钻、80银、神魂碎片×10（30%概率再掉烬焰件）！', []);
-        } else {
-            $u = user_by_id($uid);
-            if ($u) {
-                $u['diamonds'] = (int) ($u['diamonds'] ?? 0) + 5;
-                user_save($u);
-            }
-            add_mat($uid, 'soul_shard', 3);
-            send_mail($uid, '世界BOSS', 'wb', '见龙有份', '参与奖：5魔钻、神魂碎片×3！', []);
-        }
-    }
-    db()->prepare("INSERT OR REPLACE INTO sys_kv (k, num) VALUES ('wb_done', 1)")->execute();
-}
 // 悬赏板：每日3单，按日期轮换，杀够数领钱领药
 function bounty_list(): array
 {
@@ -5223,7 +5221,12 @@ function monster_lv(string $mid): int
         'ry_crawler' => 720, 'ry_guard' => 760, 'ry_shaper' => 800, 'ry_warder' => 850, 'ry_titan' => 900,
         'doyle' => 999,
     ];
-    return $lv[$mid] ?? 1;
+    if (isset($lv[$mid])) {
+        return $lv[$mid];
+    }
+    // 六圣柱专属小怪
+    $dm = dragon_monster($mid);
+    return (int) ($dm['lv'] ?? 1);
 }
 
 // 经验按怪物等级锚定升级需求：同级怪约(10+人物等级)只升一级，越级加成封顶20%
@@ -6762,6 +6765,7 @@ function map_regions(): array
         '巅峰战场' => ['peak1', 'peak2', 'peak3'],
         '冰原·凛冬' => ['ice_gate', 'ice_trail', 'ice_village', 'frozen_lake', 'snow_field', 'glacier_pass', 'aurora_vale', 'ice_cave', 'wyrm_tunnel', 'blizzard_peak', 'glacier_heart', 'frost_throne', 'buf34a', 'buf34b'],
         '雾森·火山' => ['fo_gate', 'mist_edge', 'deep_woods', 'thorn_maze', 'boa_swamp', 'ape_hollow', 'sage_grove', 'ash_wastes', 'ember_foothill', 'lava_river', 'cult_altar', 'magma_core', 'flame_temple', 'ruin_gate', 'volcano_heart', 'buf35a', 'buf35b'],
+        '六圣柱' => ['sky_ramp', 'sky_isles', 'wind_shrine', 'frost_deep', 'lost_kingdom', 'storm_wall', 'thunder_pool', 'abyss_deep', 'forbidden_origin', 'sky_city_ruin', 'holy_stair'],
     ];
 }
 
@@ -6895,6 +6899,25 @@ function teleport_min_lv(string $loc): int
     }
     if ($loc === 'warfield') {
         return 30;
+    }
+    // 六圣柱：按每片区域的小怪等级放行
+    if (in_array($loc, ['sky_ramp', 'sky_isles', 'wind_shrine'], true)) {
+        return 555;
+    }
+    if (in_array($loc, ['frost_deep', 'lost_kingdom'], true)) {
+        return 595;
+    }
+    if (in_array($loc, ['storm_wall', 'thunder_pool'], true)) {
+        return 635;
+    }
+    if (in_array($loc, ['abyss_deep', 'forbidden_origin'], true)) {
+        return 685;
+    }
+    if (in_array($loc, ['sky_city_ruin', 'holy_stair'], true)) {
+        return 755;
+    }
+    if (in_array($loc, dragon_lair_maps(), true)) {
+        return dragon_min_lv(dragon_of_lair($loc));
     }
     $mx = 0;
     foreach (loc($loc)['monsters'] ?? [] as $mid) {
@@ -7415,12 +7438,6 @@ function tt_maps(): array
     return ['tt_gate', 'tt_trail', 'tt_vein', 'tt_core'];
 }
 
-function wb_locations(): array
-{
-    $m = [];
-    $m['wb_arena'] = ['name' => '龙巢·南炎柱', 'desc' => '热浪扑面。多伊尔盘在柱子上，睁一只眼闭一只眼。全服的人都在这磨它。', 'exits' => ['volcano_heart' => '火山之心'], 'monsters' => []];
-    return $m;
-}
 function pz_locations(): array
 {
     $m = [];

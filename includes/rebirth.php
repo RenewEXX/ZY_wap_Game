@@ -53,22 +53,64 @@ function rs_gold_mult(int $uid): float
     return 1 + rs_count($uid) * 0.3;
 }
 
-// 转生资格：999级 + 今日世界BOSS击杀 + 神魂满级
+// 转生消耗的龙玉：1转2个 / 2转4个 / 3转6个
+function rs_jade_cost(int $turn): int
+{
+    return max(0, $turn) * 2;
+}
+
+function rs_jade_next(int $uid): int
+{
+    return rs_jade_cost(rs_count($uid) + 1);
+}
+
+// 任意属性的龙玉都算数，从最少的那条龙开始扣
+function rs_jade_total(int $uid): int
+{
+    return array_sum(array_values(dragon_jades_held($uid)));
+}
+
+function rs_jade_pay(int $uid, int $need): string
+{
+    if ($need <= 0) {
+        return '';
+    }
+    $held = dragon_jades_held($uid);
+    arsort($held); // 先扣存量最少的属性，尽量保留成套的高阶龙玉
+    foreach ($held as $el => $n) {
+        if ($need <= 0) {
+            break;
+        }
+        $take = min((int) $n, $need);
+        mat_set($uid, 'jade_' . $el, (int) $n - $take);
+        $need -= $take;
+    }
+    return $need > 0 ? '龙玉不足（还差' . $need . '个）' : '';
+}
+
+// 转生资格：999级 + 已斩龙（当前周期）+ 神魂满级 + 足额龙玉
 function rs_requirements(int $uid): array
 {
     $u = user_by_id($uid);
     $lvOk = $u && (int) $u['lv'] >= lv_cap();
     $rsN = rs_count($uid);
-    // 世界BOSS：当日已击杀（wb_done=1）或已刷新过（隔日重置）
-    $wbDone = (int) (db()->query("SELECT num FROM sys_kv WHERE k='wb_done'")->fetchColumn() ?: 0);
-    $wbDay = (int) (db()->query("SELECT num FROM sys_kv WHERE k='wb_day'")->fetchColumn() ?: 0);
-    $wbHp = (int) (db()->query("SELECT num FROM sys_kv WHERE k='wb_hp'")->fetchColumn() ?: 0);
-    $wbKill = ($wbDay === wb_day() && ($wbDone === 1 || $wbHp <= 0)) || $wbDay !== wb_day();
+    // 世界BOSS：六圣柱中已有龙王被讨伐（每条龙一个月复生一次，不按天刷新）
+    $wbKill = false;
+    foreach (array_keys(dragons()) as $dmId) {
+        if (drg_done($dmId) === 1 || drg_hp_now($dmId) <= 0) {
+            $wbKill = true;
+            break;
+        }
+    }
     $soulOk = rs_soul_maxed($uid);
+    $jadeNeed = rs_jade_cost($rsN + 1);
     return [
         'lv' => $lvOk,
         'wb' => $wbKill,
         'soul' => $soulOk,
+        'jade' => $rsN >= rs_max() ? true : rs_jade_total($uid) >= $jadeNeed,
+        'jade_need' => $jadeNeed,
+        'jade_have' => rs_jade_total($uid),
         'max' => $rsN >= rs_max(),
     ];
 }
@@ -100,10 +142,13 @@ function rs_require_text(int $uid): string
         $t[] = '达到999级';
     }
     if (!$r['wb']) {
-        $t[] = '击杀当日世界BOSS';
+        $t[] = '讨伐任意一条六圣柱龙王';
     }
     if (!$r['soul']) {
         $t[] = '任一神魂强化到' . soul_max_lv() . '级';
+    }
+    if (!$r['jade']) {
+        $t[] = '龙玉×' . $r['jade_need'] . '（任意属性，当前' . $r['jade_have'] . '个）';
     }
     return $t === [] ? '条件齐备，随时可以转生。' : '还差：' . implode('、', $t);
 }
@@ -111,7 +156,7 @@ function rs_require_text(int $uid): string
 function rs_can_rebirth(int $uid): bool
 {
     $r = rs_requirements($uid);
-    return $r['lv'] && $r['wb'] && $r['soul'] && !$r['max'];
+    return $r['lv'] && $r['wb'] && $r['soul'] && $r['jade'] && !$r['max'];
 }
 
 // 执行转生
@@ -126,6 +171,13 @@ function rs_perform(int $uid): string
         return '找不到你的角色。';
     }
     $n = rs_count($uid) + 1;
+    $jadeCost = rs_jade_cost($n);
+    if ($jadeCost > 0) {
+        $err = rs_jade_pay($uid, $jadeCost);
+        if ($err !== '') {
+            return '源罪未满：' . $err;
+        }
+    }
     $job = job_id_of($u);
     $base = jobs()[$job] ?? jobs()['warrior'];
     // 等级清零、属性与属性点回初始值
@@ -139,7 +191,7 @@ function rs_perform(int $uid): string
     user_save($u);
     db()->prepare('INSERT INTO chat_msgs (uid, username, channel, target, text, created_at) VALUES (0, ?, "world", 0, ?, ?)')
         ->execute(['转生', '【转生】' . $u['username'] . ' 的神魂已觉醒，化为' . $n . '转！', time()]);
-    return '【转生】你的神魂已觉醒。' . $n . '转 —— 等级归零，一切基础属性+' . ($n * 10) . '%，每级成长翻倍，经验+50%、掉落+20%、金币+30%，源罪点数+1。';
+    return '【转生】你的神魂已觉醒。' . $n . '转 —— 等级归零，一切基础属性+' . ($n * 10) . '%，每级成长翻倍，经验+50%、掉落+20%、金币+30%，源罪点数+1，消耗龙玉×' . $jadeCost . '。';
 }
 
 // ============ 源罪技能树（消耗源罪点数）============

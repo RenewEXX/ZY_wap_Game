@@ -24,7 +24,7 @@ if ($view === 'tree') {
     echo '<a href="#srcsin">↓ 跳到技能树</a><br>';
 }
 echo '你的转生：' . ($myRs > 0 ? $myRs . '转' : '未转生') . '　源罪点数：' . src_sin_point((int) $u['id']) . '<br>';
-echo '<div class="hr">--------</div>转生条件：999级 + 当日世界BOSS + 神魂X级。当前：' . h(rs_require_text((int) $u['id'])) . '<br>';
+echo '<div class="hr">--------</div>转生条件：999级 + 讨伐任意一条六圣柱龙王 + 神魂' . soul_max_lv() . '级 + 龙玉×' . rs_jade_next((int) $u['id']) . '（1转2个、2转4个、3转6个）。当前：' . h(rs_require_text((int) $u['id'])) . '<br>';
 
 // 转生加成
 if ($myRs > 0) {

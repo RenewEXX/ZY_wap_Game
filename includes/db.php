@@ -556,6 +556,24 @@ function db_init(): void
             PRIMARY KEY (uid, day)
         )'
     );
+    // 六龙王：每条龙一份伤害排行，wb_dmg 增加 mid 列并把主键改成 (uid, day, mid)
+    try {
+        $cols = db()->query("PRAGMA table_info(wb_dmg)")->fetchAll();
+        $hasMid = false;
+        foreach ($cols as $c) {
+            if ((string) ($c['name'] ?? '') === 'mid') {
+                $hasMid = true;
+            }
+        }
+        if (!$hasMid) {
+            db()->exec('CREATE TABLE IF NOT EXISTS wb_dmg2 (uid INTEGER NOT NULL, name TEXT NOT NULL DEFAULT "", day INTEGER NOT NULL DEFAULT 0, dmg INTEGER NOT NULL DEFAULT 0, mid TEXT NOT NULL DEFAULT "doyle", PRIMARY KEY (uid, day, mid))');
+            db()->exec('INSERT OR REPLACE INTO wb_dmg2 (uid, name, day, dmg, mid) SELECT uid, name, day, dmg, "doyle" FROM wb_dmg');
+            db()->exec('DROP TABLE wb_dmg');
+            db()->exec('ALTER TABLE wb_dmg2 RENAME TO wb_dmg');
+        }
+        db()->exec('CREATE INDEX IF NOT EXISTS idx_wb_dmg_rank ON wb_dmg (day, mid, dmg)');
+    } catch (Throwable $e) {
+    }
 }
 
 function user_by_id(int $id): ?array

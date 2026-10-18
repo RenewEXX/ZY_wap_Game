@@ -852,7 +852,7 @@ if ($who === 'watcher') {
     if ((int) $u['quest'] === 75 && empty(cflags((int) $u['id'])['doyle_met'])) {
         echo '<a href="npc.php?who=watcher&choice=meet">屏住呼吸，留下名字（见巨龙，不战斗）</a><br>';
     }
-    echo '<a href="wb.php">世界BOSS·烬焰领主（每天刷新，全服磨血）</a><br>';
+    echo '<a href="wb.php">六圣柱·六龙王（每条龙一个月现世一次，全服磨血，各龙独立掉落）</a><br>';
 }
 if ($who === 'soulmaster') {
     echo '当前真伤加成：' . soul_truedmg((int) $u['id']) . '<br>';
@@ -940,7 +940,9 @@ if ($who === 'yzkeeper') {
     echo '<span class="muted">单BOSS；击杀后70%概率获得【寂灭】/【噬渊】套装或源罪渊传说。</span><br>';
 }
 if ($who === 'rspriest') {
-    echo '转生条件：999级 + 当日世界BOSS + 任一神魂X级。<br>';
+    $rRq = rs_requirements((int) $u['id']);
+    echo '转生条件：999级 + 讨伐任意一条六圣柱龙王 + 任一神魂' . soul_max_lv() . '级 + 龙玉×' . (int) $rRq['jade_need'] . '。<br>';
+    echo '（1转2个龙玉、2转4个、3转6个；任意属性龙玉都算数。）<br>';
     echo '当前：' . h(rs_require_text((int) $u['id'])) . '<br>';
     echo '<a href="npc.php?who=rspriest&choice=rite">举行转生仪式</a><br>';
 }

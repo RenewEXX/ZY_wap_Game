@@ -11,6 +11,8 @@ define('DATA_DIR', ROOT . DIRECTORY_SEPARATOR . 'data');
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/wap.php';
 require_once __DIR__ . '/game.php';
+require_once __DIR__ . '/dragons.php';
+require_once __DIR__ . '/dragon_wb.php';
 require_once __DIR__ . '/arena.php';
 require_once __DIR__ . '/rebirth.php';
 

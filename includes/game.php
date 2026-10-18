@@ -8,7 +8,7 @@ function jobs(): array
         'mage' => ['name' => '法师', 'hp' => 42, 'mp' => 55, 'atk' => 11, 'def' => 1, 'skill' => '火球术', 'weapon' => 'staff', 'armor' => 'cloth', 'desc' => '纯法术炮台，伤害看智慧+法攻。火球/狂雷/寒霜全是法伤。只能用法杖法器，力量对法师无效'],
         'hunter' => ['name' => '猎手', 'hp' => 50, 'mp' => 30, 'atk' => 8, 'def' => 3, 'skill' => '双连射', 'weapon' => 'bow', 'armor' => 'cloth', 'desc' => '物理连射+爆炸箭（火伤）。只能用弓弩匕首'],
         'priest' => ['name' => '牧师', 'hp' => 54, 'mp' => 45, 'atk' => 6, 'def' => 3, 'skill' => '治疗术', 'weapon' => 'mace', 'armor' => 'cloth', 'desc' => '治疗看法攻，神圣伤害也是法伤。能用锤杖盾'],
-        'summoner' => ['name' => '召唤师', 'short' => '召', 'hp' => 48, 'mp' => 52, 'atk' => 9, 'def' => 2, 'skill' => '深渊契约', 'weapon' => 'relic', 'armor' => 'cloth', 'desc' => '法系/召唤/持续伤害。不信神，不靠元素，把自己当容器与深渊游魂签订契约。战斗中可即时召唤深渊小鬼，召唤兽替你承伤也替你输出。主手限魂契器（魂灯/契杖/骨杖），副手限深渊契匣'],
+        'summoner' => ['name' => '召唤师', 'short' => '召', 'hp' => 40, 'mp' => 50, 'atk' => 5, 'def' => 2, 'skill' => '深渊契约', 'weapon' => 'relic', 'armor' => 'cloth', 'desc' => '法系/召唤/持续伤害。不信神，不靠元素，把自己当容器与深渊游魂签订契约。战斗中可即时召唤深渊小鬼，召唤兽替你承伤也替你输出。本体是五职业里最脆的：血量成长全场最低，强度全在召唤兽身上——你倒了它们就散。主手限魂契器（魂灯/契杖/骨杖），副手限深渊契匣'],
     ];
 }
 
@@ -5378,13 +5378,19 @@ function gain_exp(array &$u, int $exp): string
         $g = $rsN > 0 ? 2 : 1;
         $u['maxhp'] = (int) $u['maxhp'] + 10 * $g;
         $u['maxmp'] = (int) ($u['maxmp'] ?? 0) + 5 * $g;
-        // 升级成长按职业：战士猎手长物攻，法师牧师长智慧（法攻）+灵力（魔力）
+        // 升级成长按职业：战士猎手长物攻，法师牧师召唤师长智慧（法攻）+灵力（魔力）
+        // 召唤师：每级只涨6血（全职业最低，法师牧师也是10），法攻成长与法师牧师同步——
+        // 召唤兽伤害吃的就是法攻，砍智慧等于连兽一起砍，所以薄血是主要短板，
+        // 强度设计上要求召唤兽替你挡刀（summon_absorb），本体不该硬扛。
         if (in_array(job_id_of($u), ['mage', 'priest', 'summoner'], true)) {
             $u['int'] = (int) ($u['int'] ?? 0) + $g;
             $u['spi'] = (int) ($u['spi'] ?? 0) + $g;
             $u['maxmp'] = (int) ($u['maxmp'] ?? 0) + 5 * $g;
         } else {
             $u['atk'] = (int) $u['atk'] + $g;
+        }
+        if (job_id_of($u) === 'summoner') {
+            $u['maxhp'] = (int) $u['maxhp'] - 10 * $g + 6 * $g;
         }
         $u['def'] = (int) $u['def'] + $g;
         $u['hp'] = (int) $u['maxhp'];
@@ -6470,6 +6476,19 @@ function battle_round(array &$u, array &$b, string $mode): array
                     $up = job_skillset(job_id_of($u))[1];
                     add_mat((int) $u['id'], 'book_' . $up, 1);
                     $txt .= '。第一章完成！获得进阶技能书【' . (skill_books()['book_' . $up]['name'] ?? '') . '】，去背包学习！';
+                    // 召唤师：额外送一只最破的契匣，让玩家立刻体验「开场自动召唤」
+                    if (job_id_of($u) === 'summoner') {
+                        $gnBox = make_equip((int) $u['id'], 'offhand', '残魂灯匣', 0, max(1, (int) $u['lv']));
+                        if ($gnBox !== '') {
+                            $stBox = db()->prepare('SELECT id FROM equips WHERE uid=? AND slot="offhand" ORDER BY id DESC LIMIT 1');
+                            $stBox->execute([(int) $u['id']]);
+                            $boxId = (int) ($stBox->fetchColumn() ?: 0);
+                            if ($boxId > 0) {
+                                db()->prepare('UPDATE equips SET pos="wear" WHERE id=?')->execute([$boxId]);
+                            }
+                            $txt .= '。你把深渊契匣扣在腰上——【' . $gnBox . '】已戴上，战斗一开始匣门就会自己打开。';
+                        }
+                    }
                 } else {
                     $txt .= '。本环完成，进下一环！';
                 }

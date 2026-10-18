@@ -84,6 +84,22 @@ function db_init(): void
         db()->exec("UPDATE users SET account=username WHERE account=''");
     } catch (Throwable $e) {
     }
+    // 召唤师成长曲线下调（血量每级+6，全职业最低）后，把已有召唤师的存量血量
+    // 一次性对齐到新曲线：减去 (等级-1) × 4，并按体质点数保留该有的加成。
+    // 用 mat_set 打一次性标记，避免每次启动重复扣。
+    try {
+        $rows = db()->query("SELECT id, lv, maxhp, hp FROM users WHERE job='summoner'")->fetchAll();
+        foreach ($rows as $r) {
+            if ((int) mats_of((int) $r['id'])['rs_summ_hp'] === 1) {
+                continue;
+            }
+            $cut = max(0, ((int) $r['lv'] - 1) * 4);
+            $newMax = max(1, (int) $r['maxhp'] - $cut);
+            db()->prepare('UPDATE users SET maxhp=?, hp=? WHERE id=?')->execute([$newMax, min((int) $r['hp'], $newMax), (int) $r['id']]);
+            mat_set((int) $r['id'], 'rs_summ_hp', 1);
+        }
+    } catch (Throwable $e) {
+    }
     foreach (['zone'] as $tcol) {
         foreach (['chat_msgs', 'auctions', 'guilds', 'parties', 'horse_races'] as $tbl) {
             try {

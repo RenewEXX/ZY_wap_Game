@@ -1,4 +1,5 @@
 <?php
+define('DH_TEST_MODE', true);
 require 'includes/bootstrap.php';
 // 新号出生满血 + 罪值生命上限变动时血量跟随
 $ok = 0; $bad = 0;

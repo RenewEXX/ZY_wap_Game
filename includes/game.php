@@ -3360,6 +3360,15 @@ function skill_books(): array
         'book_m9' => ['skill' => 'm9', 'name' => '魂蚀秘籍'],
         'book_h9' => ['skill' => 'h9', 'name' => '弑神秘籍'],
         'book_p9' => ['skill' => 'p9', 'name' => '堕天秘籍'],
+        // 召唤师：s1~s8 的技能书（此前只有 s9，导致召唤师拿到的书学不了、也显示不出名字）
+        'book_s1' => ['skill' => 's1', 'name' => '深渊契约秘籍'],
+        'book_s2' => ['skill' => 's2', 'name' => '招魂引秘籍'],
+        'book_s3' => ['skill' => 's3', 'name' => '血肉筑城秘籍'],
+        'book_s4' => ['skill' => 's4', 'name' => '小鬼潮秘籍'],
+        'book_s5' => ['skill' => 's5', 'name' => '死灵之拥秘籍'],
+        'book_s6' => ['skill' => 's6', 'name' => '噬魂夜宴秘籍'],
+        'book_s7' => ['skill' => 's7', 'name' => '群魂爆裂秘籍'],
+        'book_s8' => ['skill' => 's8', 'name' => '永夜契约秘籍'],
         'book_s9' => ['skill' => 's9', 'name' => '深渊主宰秘籍'],
     ];
 }
@@ -3500,7 +3509,7 @@ function use_skill_book(int $uid, string $book): string
     if (!$u || job_id_of($u) !== $cat['job']) {
         return '职业不符，只有' . job_of(['job' => $cat['job']])['name'] . '能用。';
     }
-    $needRb2 = ['w5' => 'berserker', 'w6' => 'aegis', 'm5' => 'wintermage', 'm6' => 'wildfire', 'h5' => 'ranger', 'h6' => 'assassin', 'p5' => 'shadowbishop', 'p6' => 'holybishop', 'w7' => 'berserker', 'w8' => 'aegis', 'm7' => 'wintermage', 'm8' => 'wildfire', 'h7' => 'ranger', 'h8' => 'assassin', 'p7' => 'shadowbishop', 'p8' => 'holybishop'][$sid] ?? '';
+    $needRb2 = ['w5' => 'berserker', 'w6' => 'aegis', 'm5' => 'wintermage', 'm6' => 'wildfire', 'h5' => 'ranger', 'h6' => 'assassin', 'p5' => 'shadowbishop', 'p6' => 'holybishop', 'w7' => 'berserker', 'w8' => 'aegis', 'm7' => 'wintermage', 'm8' => 'wildfire', 'h7' => 'ranger', 'h8' => 'assassin', 'p7' => 'shadowbishop', 'p8' => 'holybishop', 's5' => 'necro', 's6' => 'plague', 's7' => 'necro', 's8' => 'plague'][$sid] ?? '';
     if ($needRb2 !== '' && (cflags($uid)['rb2_job'] ?? '') !== $needRb2) {
         return '这是2觉【' . rebirth2_name($needRb2) . '】的群攻秘籍，先599级2觉再学。';
     }
@@ -3545,7 +3554,12 @@ function roll_skillbook(int $uid, string $mid): string
     if ($rate <= 0 || mt_rand() / mt_getrandmax() > $rate) {
         return '';
     }
-    $books = array_values(array_filter(array_keys(skill_books()), fn($k) => !str_ends_with($k, '_w3') && !str_ends_with($k, '_m3') && !str_ends_with($k, '_h3') && !str_ends_with($k, '_p3')));
+    // 三级书（w3/m3/h3/p3/s3）有专属来源（1觉/二章/深渊副本），不进这个池；
+    // 其余各职业的书都在池里，和召唤师的 s1/s2/s4~s9 对齐。
+    $books = array_values(array_filter(
+        array_keys(skill_books()),
+        fn($k) => !str_ends_with($k, '_w3') && !str_ends_with($k, '_m3') && !str_ends_with($k, '_h3') && !str_ends_with($k, '_p3') && !str_ends_with($k, '_s3')
+    ));
     $b = $books[array_rand($books)];
     add_mat($uid, $b, 1);
     return skill_books()[$b]['name'];
@@ -6723,6 +6737,17 @@ function battle_round(array &$u, array &$b, string $mode): array
                 $msg .= '。咕噜让路，送你本命武器+黑币！桥通了，去白石镇吧';
                 $bb = make_equip((int) $u['id'], 'weapon', (['warrior' => '大骨棒', 'mage' => '雾纹法杖', 'hunter' => '断弦短弓', 'priest' => '燕麦木槌', 'summoner' => '深渊引魂灯'][job_id_of($u)] ?? '大骨棒'), 1);
                 $msg .= '。【' . $bb . '】已放进背包，去穿上吧';
+                // 召唤师：本命装备是副手契匣（带开场自动召唤），主手那盏引魂灯不带召唤能力，
+                // 所以这里额外发一只最破的契匣并直接戴上，保证召唤师从新手期就能用上召唤。
+                if (job_id_of($u) === 'summoner') {
+                    $gnBox = make_equip((int) $u['id'], 'offhand', '残魂灯匣', 0, max(1, (int) $u['lv']));
+                    if ($gnBox !== '') {
+                        $boxId = summoner_wear_box((int) $u['id']);
+                        if ($boxId > 0) {
+                            $msg .= '。【' . $gnBox . '】已戴上，战斗一开始匣门就会自己打开。';
+                        }
+                    }
+                }
                 add_mat((int) $u['id'], 'blackcoin', 1);
                 $msg .= '。获得任务物品【不断下坠的黑币】';
             }
@@ -6779,17 +6804,16 @@ function battle_round(array &$u, array &$b, string $mode): array
                     $up = job_skillset(job_id_of($u))[1];
                     add_mat((int) $u['id'], 'book_' . $up, 1);
                     $txt .= '。第一章完成！获得进阶技能书【' . (skill_books()['book_' . $up]['name'] ?? '') . '】，去背包学习！';
-                    // 召唤师：额外送一只最破的契匣，让玩家立刻体验「开场自动召唤」
+                    // 召唤师：咕噜那关已经送过最破的契匣了，这里改成送高一档的（引魂旧匣），
+                    // 免得发两只一模一样的。玩家等级不够就跳过。
                     if (job_id_of($u) === 'summoner') {
-                        $gnBox = make_equip((int) $u['id'], 'offhand', '残魂灯匣', 0, max(1, (int) $u['lv']));
-                        if ($gnBox !== '') {
-                            $stBox = db()->prepare('SELECT id FROM equips WHERE uid=? AND slot="offhand" ORDER BY id DESC LIMIT 1');
-                            $stBox->execute([(int) $u['id']]);
-                            $boxId = (int) ($stBox->fetchColumn() ?: 0);
-                            if ($boxId > 0) {
-                                db()->prepare('UPDATE equips SET pos="wear" WHERE id=?')->execute([$boxId]);
+                        $boxBase = '引魂旧匣';
+                        $boxLv = (int) (summoner_offhands()[$boxBase]['lv'] ?? 999);
+                        if ((int) $u['lv'] >= $boxLv) {
+                            $gnBox = make_equip((int) $u['id'], 'offhand', $boxBase, 1, max(1, (int) $u['lv']));
+                            if ($gnBox !== '' && summoner_wear_box((int) $u['id']) > 0) {
+                                $txt .= '。你把【' . $gnBox . '】扣在腰上，匣门比上一只更沉了。';
                             }
-                            $txt .= '。你把深渊契匣扣在腰上——【' . $gnBox . '】已戴上，战斗一开始匣门就会自己打开。';
                         }
                     }
                 } else {
@@ -7795,16 +7819,16 @@ function roll_aoe_book(int $uid, string $mid): string
     $pool = [];
     $rate = 0;
     if (in_array($mid, ['cinder_crawler', 'cinder_stalker', 'cinder_warden', 'cinder_horror'], true)) {
-        $pool = ['book_w5', 'book_w6', 'book_m5', 'book_m6', 'book_h5', 'book_h6', 'book_p5', 'book_p6'];
+        $pool = ['book_w5', 'book_w6', 'book_m5', 'book_m6', 'book_h5', 'book_h6', 'book_p5', 'book_p6', 'book_s5', 'book_s6'];
         $rate = 0.02;
     } elseif ($mid === 'ash_titan') {
-        $pool = ['book_w5', 'book_w6', 'book_m5', 'book_m6', 'book_h5', 'book_h6', 'book_p5', 'book_p6'];
+        $pool = ['book_w5', 'book_w6', 'book_m5', 'book_m6', 'book_h5', 'book_h6', 'book_p5', 'book_p6', 'book_s5', 'book_s6'];
         $rate = 0.4;
     } elseif (in_array($mid, ['vx_spawn', 'vx_stalker', 'vx_mage', 'vx_knight', 'vx_herald'], true)) {
-        $pool = ['book_w7', 'book_w8', 'book_m7', 'book_m8', 'book_h7', 'book_h8', 'book_p7', 'book_p8'];
+        $pool = ['book_w7', 'book_w8', 'book_m7', 'book_m8', 'book_h7', 'book_h8', 'book_p7', 'book_p8', 'book_s7', 'book_s8'];
         $rate = 0.02;
     } elseif ($mid === 'vx_tyrant') {
-        $pool = ['book_w7', 'book_w8', 'book_m7', 'book_m8', 'book_h7', 'book_h8', 'book_p7', 'book_p8'];
+        $pool = ['book_w7', 'book_w8', 'book_m7', 'book_m8', 'book_h7', 'book_h8', 'book_p7', 'book_p8', 'book_s7', 'book_s8'];
         $rate = 0.4;
     }
     if ($rate <= 0 || mt_rand() / mt_getrandmax() > $rate) {

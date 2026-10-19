@@ -4,3 +4,7 @@ Thumbs.db
 # 运行期数据（账号存档、击杀缓存），不入版本库
 data/*
 !data/.gitkeep
+
+# 测试专用库（dhtest*.php 专用，与玩家存档隔离）
+data_test/*
+!data_test/.gitkeep

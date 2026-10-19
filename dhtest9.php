@@ -1,16 +1,18 @@
 <?php
+define('DH_TEST_MODE', true);
 require 'includes/bootstrap.php';
 $ok = 0; $bad = 0;
 function ck9(string $l, $got, $want) { global $ok,$bad; if ($got === $want) { $ok++; } else { $bad++; echo "FAIL $l: got=",var_export($got,true)," want=",var_export($want,true),"\n"; } }
 
 // —— 回归：dmg_to_player 返回数组，wb.php 不再 TypeError ——
-ck9('dmg_to_player 返回数组', is_array(dmg_to_player(user_by_id(5), monsters()['knight'])), true);
-[$d, $tg] = dmg_to_player(user_by_id(5), monsters()['knight']);
+$u9 = user_by_id(5) ?: user_by_id((int) (user_create('tst9' . mt_rand(1000, 9999), 'x', 'warrior', 'z1', true, 'tmp')));
+ck9('dmg_to_player 返回数组', is_array(dmg_to_player($u9, monsters()['knight'])), true);
+[$d, $tg] = dmg_to_player($u9, monsters()['knight']);
 ck9('龙王反击乘法不再报错', is_int(max(1, (int) ($d * 2.3))), true);
 ck9('伤害≥1', $d >= 1, true);
 
 // —— player_dmg_pipeline 封装 ——
-$u = user_by_id(5);
+$u = $u9;
 ck9('封装返回数组', count(player_dmg_pipeline($u, 1000)) === 2, true);
 ck9('base<=0 短路', player_dmg_pipeline($u, 0), [0, '']);
 // 精准收窄生效

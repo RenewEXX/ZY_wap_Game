@@ -161,8 +161,15 @@ function db_init(): void
     } catch (Throwable $e) {
     }
     db()->exec('CREATE INDEX IF NOT EXISTS idx_equips_uid ON equips (uid)');
-    db()->exec('CREATE INDEX IF NOT EXISTS idx_mats_uid ON mats (uid)');
-    db()->exec('CREATE INDEX IF NOT EXISTS idx_spawns_loc ON map_spawns (loc)');
+    // mats/map_spawns 的表体在后面才建，索引要容错（新库首次初始化时表还不存在）
+    try {
+        db()->exec('CREATE INDEX IF NOT EXISTS idx_mats_uid ON mats (uid)');
+    } catch (Throwable $e) {
+    }
+    try {
+        db()->exec('CREATE INDEX IF NOT EXISTS idx_spawns_loc ON map_spawns (loc)');
+    } catch (Throwable $e) {
+    }
     if (function_exists('backfill_rank_stats')) {
         backfill_rank_stats();
     }

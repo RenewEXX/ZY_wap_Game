@@ -6,7 +6,12 @@ session_start();
 header('Content-Type: text/html; charset=utf-8');
 
 define('ROOT', dirname(__DIR__));
-define('DATA_DIR', ROOT . DIRECTORY_SEPARATOR . 'data');
+// 测试脚本（dhtest*.php）走独立库，绝不碰玩家的真实存档
+if (defined('DH_TEST_MODE') && DH_TEST_MODE) {
+    define('DATA_DIR', ROOT . DIRECTORY_SEPARATOR . 'data_test');
+} else {
+    define('DATA_DIR', ROOT . DIRECTORY_SEPARATOR . 'data');
+}
 
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/wap.php';

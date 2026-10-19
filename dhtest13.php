@@ -1,4 +1,5 @@
 <?php
+define('DH_TEST_MODE', true);
 require 'includes/bootstrap.php';
 $ok = 0; $bad = 0;
 function ckS(string $l, $got, $want) { global $ok,$bad; if ($got === $want) { $ok++; } else { $bad++; echo "FAIL $l: got=",var_export($got,true)," want=",var_export($want,true),"\n"; } }

@@ -1,4 +1,5 @@
 <?php
+define('DH_TEST_MODE', true);
 require 'includes/bootstrap.php';
 // 宠物图鉴：命名/来源统一 + 火龙去重 + 龙王幼体化
 $ok = 0; $bad = 0;

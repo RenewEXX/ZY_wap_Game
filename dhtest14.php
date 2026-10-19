@@ -1,4 +1,5 @@
 <?php
+define('DH_TEST_MODE', true);
 require 'includes/bootstrap.php';
 // 召唤师·死灵传说装备：定义/穿戴识别/触发效果
 $ok = 0; $bad = 0;

@@ -66,6 +66,21 @@ function summoner_offhand_worn(int $uid): array
     return $best;
 }
 
+// 把背包里最新的契匣穿上（副手栏只认一只），返回装备id
+function summoner_wear_box(int $uid): int
+{
+    $uid = (int) $uid;
+    // 副手栏已有别的先卸下来
+    db()->exec('UPDATE equips SET pos="" WHERE uid=' . $uid . ' AND slot="offhand" AND pos="wear"');
+    $st = db()->prepare('SELECT id FROM equips WHERE uid=? AND slot="offhand" AND pos="" ORDER BY id DESC LIMIT 1');
+    $st->execute([$uid]);
+    $eid = (int) ($st->fetchColumn() ?: 0);
+    if ($eid > 0) {
+        db()->prepare('UPDATE equips SET pos="wear" WHERE id=?')->execute([$eid]);
+    }
+    return $eid;
+}
+
 // 战斗开场：契匣自动召唤（只招一次）
 function summoner_open_message(array &$u): string
 {

@@ -4,6 +4,11 @@ require __DIR__ . '/includes/bootstrap.php';
 
 $u = require_login();
 sin_sync_hp((int) $u['id']);
+// 残鳞兜底：不在战斗中却残留了最大生命削减，恢复它
+if (job_id_of($u) === 'summoner' && empty($_SESSION['battle']) && (int) (cflags((int) $u['id'])['rs_base'] ?? 0) > 0) {
+    summoner_legend_rescale_clear($u);
+    $u = user_by_id((int) $u['id']);
+}
 $a = (string) ($_GET['a'] ?? '');
 $mid = (string) ($_GET['m'] ?? '');
 $allm = monsters();
@@ -229,6 +234,7 @@ if ($a === 'run') {
     unset($_SESSION['battle']);
     unset($_SESSION['pvp']);
     unset($_SESSION['ambush']);
+    summoner_legend_rescale_clear($u);
     flash_set('你撤了。没人笑话你，因为笑话你的多半已经死了。');
     header('Location: home.php');
     exit;

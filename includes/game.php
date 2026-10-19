@@ -2287,6 +2287,10 @@ function weapon_sub(string $base): string
             return 'relic';
         }
     }
+    // 召唤师死灵传说主手（灵魂荆棘）：魂契器，只有召唤师能拿
+    if (str_contains($base, '灵魂荆棘')) {
+        return 'relic';
+    }
     $sn = equip_shortname($base);
     $sinMap = ['罪渊·傲慢' => 'staff', '罪渊·嫉妒' => 'axe', '罪渊·暴怒' => 'bow', '罪渊·懒惰' => 'mace', '罪渊·贪婪' => 'shield', '罪渊·暴食' => 'blade', '罪渊·色欲' => 'staff'];
     if (isset($sinMap[$sn])) {
@@ -2530,12 +2534,23 @@ function legend_lore(string $shortName): string
         '食人魔战裙' => '咕噜死前还在笑。它说这条战裙是它从一百个输家身上剥下来的。<br>穿上它的人，听见的笑声比敌人多。',
         '堕落骑士大剑' => '莫尔堕落那天，剑先替他哭了。剑身上的锈，是他没流出来的泪。<br>拿起它，就替他把没打完的那一仗打完。',
         '雷恩回响戒' => '雷恩把名字刻在戒指内侧，字很小，怕深渊听见。<br>戴上它，第三层有人叫你名字时，你会先想起他。',
+        '灵魂荆棘' => '荆棘从契约的裂缝里长出来，缠住你召出的每一道影子。<br>影子替你撕开敌人的灵魂时，荆棘也在你手心里扎根。',
+        '嘶鸣' => '戴上它，你听不见自己说话，只听见召唤物在尖叫。<br>它们从此不再闪避，每一击都咬在同一个地方。',
+        '尼德霍格的残鳞' => '黑龙蜕下的最后一片鳞，还带着它自己的心跳。<br>你把它缝在身上——容器越空，里面装的东西就越凶。',
+        '死灵之拥的腐朽头冠' => '生者戴王冠，死者戴这个。<br>你的召唤物倒下时，头冠会替它们把最后一口气炸出去。',
+        '玛门的契约之眼' => '玛门不做亏本买卖。它借你一只眼，看得见别人身上的裂缝。<br>代价是：你得替它把契约盯紧。',
+        '深渊统御之印' => '深渊认印不认人。越多东西从印里爬出来，它们就越不听你的。',
+        '血契骨戒' => '骨戒里锁着一份血契：它替你养兵，你替它喂血。<br>急的时候，它会先咬断最弱的那只，再把血还给你。',
     ];
     return $lore[$shortName] ?? '深渊里捞出来的东西，每一件都记得主人的名字。<br>它现在记得你的了。';
 }
 
 function affix_fmt(string $k, float $v, ?string $tier = null): string
 {
+    // 召唤师死灵传说：行为型效果，显示说明文字，不显示数值
+    if (str_starts_with($k, 'slegend_')) {
+        return summoner_legend_intro_by_key($k);
+    }
     $percent = ['atk_pct', 'matk_pct', 'crit', 'critdmg', 'speed', 'lifesteal', 'penetration', 'skill_damage', 'execute', 'damage_reduction', 'resist', 'regen', 'cooldown', 'hit', 'exp_gain', 'dodge', 'move_speed', 'control_resist', 'slow_resist', 'gold_gain', 'magic_find', 'res_light', 'res_dark', 'res_fire', 'res_wind', 'res_ice', 'res_thunder', 'allres'];
     $value = in_array($k, $percent, true) ? rtrim(rtrim(number_format($v, 1, '.', ''), '0'), '.') . '%' : (string) (int) round($v);
     return ($tier ? $tier . ' ' : '') . affix_label($k) . '+' . $value;
@@ -4737,6 +4752,10 @@ function summon_cap(array $u): int
     }
     // 传说契匣：召唤上限+1
     $cap += summoner_offhand_eff((int) ($u['id'] ?? 0))['cap'];
+    // 死灵传说·深渊统御之印：召唤上限+1
+    if (isset(summoner_legend_worn((int) ($u['id'] ?? 0))['slegend_abyssseal'])) {
+        $cap++;
+    }
     return $cap;
 }
 
@@ -4744,7 +4763,10 @@ function summon_power_bonus(array $u): float
 {
     $bonus = (float) gear_stats((int) ($u['id'] ?? 0))['summon_power'];
     // 契匣：召唤兽伤害加成
-    return $bonus + summoner_offhand_eff((int) ($u['id'] ?? 0))['power'];
+    $bonus += summoner_offhand_eff((int) ($u['id'] ?? 0))['power'];
+    // 死灵传说·尼德霍格的残鳞：每层召唤兽伤害+20%
+    $bonus += 20.0 * summoner_legend_rescale_stacks((int) ($u['id'] ?? 0));
+    return $bonus;
 }
 
 // 召唤兽生命加成（%）：装备 summon_hp + 契匣 hp 效果
@@ -4800,18 +4822,18 @@ function summon_spawn(string $kind, int $patk, int $php, array $u): array
 }
 
 // 尝试召唤（受上限约束）
-function summon_add(string $kind, array $u, int $bonusTurns = 0): string
+function summon_add(string $kind, array &$u, int $bonusTurns = 0): string
 {
     $list = summon_list();
     $cap = summon_cap($u);
     if (count($list) >= $cap) {
         $list = array_slice($list, 0, $cap - 1);
     }
-    $petHp = 0;
-    $pm = db()->prepare("SELECT COUNT(*) FROM pets WHERE uid=? AND hp>?");
-    $pm->execute([(int) $u['id'], 0]);
-    if ((int) $pm->fetchColumn() > 0) {
-        $petHp = (int) (user_by_id((int) $u['id'])['maxhp'] ?? 0);
+    // 尼德霍格的残鳞：召唤即叠层（先叠层再算召唤物，吃团队增益）
+    $rescaleMsg = '';
+    if (isset(summoner_legend_worn((int) ($u['id'] ?? 0))['slegend_rescale'])) {
+        $rescaleMsg = summoner_legend_rescale_add((int) ($u['id'] ?? 0));
+        summoner_legend_rescale_apply($u);
     }
     $s = summon_spawn($kind, player_matk($u), (int) $u['maxhp'], $u);
     if ($bonusTurns > 0) {
@@ -4819,7 +4841,7 @@ function summon_add(string $kind, array $u, int $bonusTurns = 0): string
     }
     $list[] = $s;
     summon_save($list);
-    return $s['name'] . '应召而来（存活' . $s['turns'] . '回合）！';
+    return $s['name'] . '应召而来（存活' . $s['turns'] . '回合）！' . $rescaleMsg;
 }
 
 // 1觉被动【魂契】：受击10%概率自动召唤小鬼
@@ -4837,20 +4859,50 @@ function summon_soulpact_trigger(array $u): string
     return summon_add('imp', $u);
 }
 
-// 召唤兽行动：自动攻击 + 回合衰减
-function summon_turn(array $b): array
+// 召唤兽行动：自动攻击 + 回合衰减（含死灵传说触发效果）
+function summon_turn(array &$b): array
 {
     $list = summon_list();
     if ($list === []) {
         return ['dmg' => 0, 'log' => '', 'left' => []];
     }
+    $uid = (int) ($_SESSION['uid'] ?? 0);
+    $u = user_by_id($uid);
+    $worn = summoner_legend_worn($uid);
+    $hiss = isset($worn['slegend_hiss']);          // 嘶鸣：召唤物必定暴击
+    $thorn = $worn['slegend_soulthorn'] ?? null;   // 灵魂荆棘：附带真实伤害
+    $frenzy = isset($worn['slegend_abyssseal']) && count($list) >= 4; // 深渊统御之印：≥4只狂乱
+    $critMult = $u ? summoner_legend_crit_mult($u) : 1.5;
     $dmg = 0;
     $log = '';
     $left = [];
     foreach ($list as $s) {
         $hit = max(1, (int) ($s['atk'] * random_int(85, 115) / 100));
+        $isCrit = false;
+        if ($hiss) {
+            $isCrit = true;
+            $hit = (int) round($hit * $critMult);
+        }
+        if ($frenzy) {
+            // 狂乱：伤害+20%，10%概率破防重击（召唤物本就不吃防御，改判额外50%）
+            $hit = (int) round($hit * 1.2);
+            if (mt_rand(1, 100) <= 10) {
+                $hit = (int) round($hit * 1.5);
+            }
+        }
+        $trueTag = '';
+        if ($thorn !== null) {
+            $pct = $isCrit ? 30 : 15; // 灵魂荆棘：15%，暴击翻倍30%
+            $td = max(1, (int) round($hit * $pct / 100));
+            $hit += $td;
+            $trueTag = '（灵魂撕裂真伤' . $td . '）';
+        }
         $dmg += $hit;
-        $log .= $s['name'] . '扑上去，造成' . $hit . '点暗影伤害。';
+        $log .= $s['name'] . '扑上去，造成' . $hit . '点暗影伤害' . ($isCrit ? '（暴击）' : '') . $trueTag . '。';
+        if (isset($worn['slegend_mammoneye']) && mt_rand(1, 100) <= 5) {
+            $b['stun'] = max((int) ($b['stun'] ?? 0), 2); // 玛门契约之眼：5%麻痹2回合
+            $log .= '（玛门之眼·麻痹）';
+        }
         $s['turns']--;
         if ($s['turns'] > 0) {
             $left[] = $s;
@@ -4863,12 +4915,13 @@ function summon_turn(array $b): array
 }
 
 // 召唤兽承伤：优先由召唤兽吃伤害
-function summon_absorb(int $md): array
+function summon_absorb(int $md, array &$b): array
 {
     $list = summon_list();
     if ($list === [] || $md <= 0) {
         return [$md, ''];
     }
+    $uid = (int) ($_SESSION['uid'] ?? 0);
     $first = $list[0];
     $abs = min($md, (int) $first['hp']);
     $first['hp'] -= $abs;
@@ -4880,6 +4933,10 @@ function summon_absorb(int $md): array
             $log .= '尸骸炸开，溅出' . $first['atk'] . '点暗影伤害。';
         }
         $list = array_slice($list, 1);
+        $expl = summoner_legend_summon_death($b, $first, $uid);
+        if ($expl !== '') {
+            $log .= $expl;
+        }
     } else {
         $list[0] = $first;
     }
@@ -5245,6 +5302,8 @@ function _gear_uncache(int $uid): void
     // gear_stats 用 static 缓存，同请求内穿脱后需重算：用反射外的办法——直接清表级标记
     // 简单实现：再次查询覆盖（见 gear_stats 的引用 Trick 不可行，故此处用全局变量中转）
     $GLOBALS['_gear_bust'] = $uid;
+    // 召唤师死灵传说穿戴缓存同样需要失效
+    $GLOBALS['_legend_gen'] = (int) ($GLOBALS['_legend_gen'] ?? 0) + 1;
 }
 
 function take_off_equip(int $uid, int $eid): string
@@ -5437,6 +5496,7 @@ function exp_gain_for(array $u, string $mid, int $elite = 0): int
 
 function death_penalty(array &$u, float $mult = 1.0): string
 {
+    summoner_legend_rescale_clear($u); // 残鳞：倒下时恢复原始最大生命
     $gloss = (int) ((int) $u['gold'] * 0.3 * $mult);
     $u['gold'] = max(0, (int) $u['gold'] - $gloss);
     $eloss = (int) (exp_need((int) $u['lv']) * 0.3 * $mult);
@@ -5797,6 +5857,10 @@ function apply_el_convert(array $u, array $b, int $pd, string $el): array
 
 function battle_round(array &$u, array &$b, string $mode): array
 {
+    // 尼德霍格的残鳞：每轮按层数重算最大生命（战斗中被 user_save 落库）
+    if (job_id_of($u) === 'summoner') {
+        summoner_legend_rescale_apply($u);
+    }
     $pd = dmg_to_monster($u, $b);
     if ($mode !== 'hit') { unset($GLOBALS['_melee_el_tag']); }
     $b['elTagged'] = 0;
@@ -6359,6 +6423,13 @@ function battle_round(array &$u, array &$b, string $mode): array
             $logHeal .= $st2['log'];
         }
     }
+    // 血契骨戒：你20%的行动触发献祭（吞噬最低血召唤物，回50%最大生命并重新召唤）
+    if (job_id_of($u) === 'summoner') {
+        $bpMsg = summoner_legend_bloodpact($u, $b);
+        if ($bpMsg !== '') {
+            $logHeal .= $bpMsg;
+        }
+    }
     // 真实伤害（神魂/烬焰7件）：无视防御，闪避也躲不掉
     $trueDmg = (int) soul_truedmg((int) ($u['id'] ?? 0));
     if ($trueDmg > 0) { $b['hp'] = (int) $b['hp'] - $trueDmg; $logHeal .= '(真伤+' . $trueDmg . ')'; }
@@ -6661,6 +6732,15 @@ function battle_round(array &$u, array &$b, string $mode): array
         }
         user_save($u);
         unset($_SESSION['battle']);
+        // 召唤师死灵传说掉落（现有终局BOSS）
+        $lgMsg = summoner_legend_kill_drop((int) $u['id'], (string) ($b['id'] ?? ''));
+        if ($lgMsg !== '') {
+            $msg .= '。' . $lgMsg;
+        }
+        // 残鳞：战斗结束恢复原始最大生命
+        if (job_id_of($u) === 'summoner') {
+            summoner_legend_rescale_clear($u);
+        }
         $txt = ($num > 1 ? '共杀' . $num . '只' : '') . $b['name'] . '散了。' . $msg . '，钱+' . fmt_money($g) . $petLvMsg;
         if (!empty($b['drops'])) {
             $txt .= '。掉落' . h('【' . implode('】【', $b['drops']) . '】') . '(背包查看)';
@@ -6967,7 +7047,7 @@ function battle_round(array &$u, array &$b, string $mode): array
     $meldSkipShock = (string) ($skRes['skill'] ?? '') !== '';
     if (!empty($b['stun'])) {
         $md = 0;
-        $b['stun'] = 0;
+        $b['stun'] = max(0, (int) $b['stun'] - 1);
         $log .= $b['name'] . '被眩晕，动弹不得。';
     }
     if (!empty($b['frost'])) {
@@ -7005,7 +7085,7 @@ function battle_round(array &$u, array &$b, string $mode): array
         }
     }
     // 召唤兽优先承伤
-    [$md, $slog] = summon_absorb($md);
+    [$md, $slog] = summon_absorb($md, $b);
     if ($slog !== '') {
         $logHeal .= $slog;
     }

@@ -67,7 +67,7 @@ function summoner_offhand_worn(int $uid): array
 }
 
 // 战斗开场：契匣自动召唤（只招一次）
-function summoner_open_message(array $u): string
+function summoner_open_message(array &$u): string
 {
     if (job_id_of($u) !== 'summoner') {
         return '';

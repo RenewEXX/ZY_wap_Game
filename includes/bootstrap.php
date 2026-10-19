@@ -14,6 +14,7 @@ require_once __DIR__ . '/game.php';
 require_once __DIR__ . '/dragons.php';
 require_once __DIR__ . '/dragon_wb.php';
 require_once __DIR__ . '/summoner_gear.php';
+require_once __DIR__ . '/summoner_legend.php';
 require_once __DIR__ . '/hunter_dot.php';
 require_once __DIR__ . '/warrior_hunter.php';
 require_once __DIR__ . '/monster_skills.php';

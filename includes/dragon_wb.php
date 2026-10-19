@@ -328,7 +328,7 @@ function drg_rewards(string $mid): void
                 user_save($u);
             }
             add_mat($uid, 'soul_shard', 30);
-            send_mail($uid, '世界BOSS·' . $d['name'], 'wb', '斩龙首功', '你对' . $d['name'] . '造成全服第一的伤害！传奇' . $d['short'] . '蛋×1、' . $d['set_name'] . '随机1件、' . $elName . '龙魂×1、龙玉×1、100魔钻、500银、神魂碎片×30！', []);
+            send_mail($uid, '世界BOSS·' . $d['name'], 'wb', '斩龙首功', '你对' . $d['name'] . '造成全服第一的伤害！' . (string) (pet_eggs()[$d['egg']]['name'] ?? ('传奇' . $d['short'] . '宠物蛋')) . '×1、' . $d['set_name'] . '随机1件、' . $elName . '龙魂×1、龙玉×1、100魔钻、500银、神魂碎片×30！', []);
         } elseif ($place <= 3) {
             $pc = $pieces[array_rand($pieces)];
             make_equip($uid, $slots[$pc] ?? 'weapon', $pc, 3, 680);

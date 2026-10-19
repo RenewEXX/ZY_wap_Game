@@ -167,10 +167,12 @@ function dragon_mats(): array
     $m = [
         'dragon_core' => '龙王精华',
     ];
+    $eggs = function_exists('pet_eggs') ? pet_eggs() : [];
     foreach (dragons() as $d) {
         $m[$d['soul']] = '龙魂·' . element_name($d['el']);
         $m[$d['jade']] = '龙玉·' . element_name($d['el']);
-        $m[$d['egg']] = '传奇' . $d['short'] . '宠物蛋';
+        // 蛋名统一由 pet_eggs() 提供，避免两处各写一份对不上
+        $m[$d['egg']] = (string) ($eggs[$d['egg']]['name'] ?? ('传奇' . $d['short'] . '宠物蛋'));
     }
     return $m;
 }
@@ -242,15 +244,16 @@ function dragon_set_bonus(string $set, int $owned): string
 }
 
 // ---------- 专属宠物 ----------
+// 命名统一为「XX幼体」：龙王世界BOSS首功掉落，孵化即得。
 function dragon_pets(): array
 {
     return [
-        'fire_drake' => ['name' => '炎龙雏', 'quality' => 'legend', 'growth' => 1.9, 'atk' => 190, 'def' => 120, 'hp' => 3200, 'spd' => 14, 'crit' => 12, 'cd' => 140, 'active' => '烬焰吐息', 'mult' => 3.2, 'passive' => '烬焰：火元素伤害+30%', 'source' => '火龙多伊尔'],
-        'sky_serpent' => ['name' => '苍岚灵蛇', 'quality' => 'legend', 'growth' => 1.95, 'atk' => 205, 'def' => 108, 'hp' => 3000, 'spd' => 24, 'crit' => 15, 'cd' => 130, 'active' => '疾风穿击', 'mult' => 3.4, 'passive' => '凌风：闪避+12%、移动速度+15%', 'source' => '风龙艾瑟琳'],
-        'frost_maiden' => ['name' => '霜歌女妖', 'quality' => 'legend', 'growth' => 2.0, 'atk' => 218, 'def' => 145, 'hp' => 3600, 'spd' => 13, 'crit' => 11, 'cd' => 135, 'active' => '永冻哀歌', 'mult' => 3.5, 'passive' => '哀歌：冰抗+40%、受致命伤时冻结敌人', 'source' => '冰龙伊索尔德'],
-        'storm_tyrant' => ['name' => '风暴暴君', 'quality' => 'legend', 'growth' => 2.1, 'atk' => 240, 'def' => 118, 'hp' => 3300, 'spd' => 18, 'crit' => 18, 'cd' => 128, 'active' => '碎星连雷', 'mult' => 3.8, 'passive' => '天谴：雷元素伤害+40%、麻痹抗性+50%', 'source' => '雷龙雷克斯'],
-        'void_dragon' => ['name' => '虚空噬龙', 'quality' => 'legend', 'growth' => 2.15, 'atk' => 268, 'def' => 132, 'hp' => 3800, 'spd' => 15, 'crit' => 14, 'cd' => 132, 'active' => '噬界黑洞', 'mult' => 3.9, 'passive' => '噬界：吸血+15%、暗伤+35%', 'source' => '暗龙尼德霍格'],
-        'seraph_dragon' => ['name' => '炽天使龙', 'quality' => 'legend', 'growth' => 2.3, 'atk' => 295, 'def' => 175, 'hp' => 4200, 'spd' => 16, 'crit' => 16, 'cd' => 120, 'active' => '圣辉裁决', 'mult' => 4.2, 'passive' => '圣裁：全元素伤害+25%、减伤+10%', 'source' => '光龙奥瑞利安'],
+        'fire_drake' => ['name' => '火龙多伊尔幼体', 'quality' => 'legend', 'growth' => 1.9, 'atk' => 190, 'def' => 120, 'hp' => 3200, 'spd' => 14, 'crit' => 12, 'cd' => 140, 'active' => '烬焰吐息', 'mult' => 3.2, 'passive' => '龙威：攻击+20%，承伤-10%', 'source' => '世界BOSS掉落'],
+        'sky_serpent' => ['name' => '风龙艾瑟琳幼体', 'quality' => 'legend', 'growth' => 1.95, 'atk' => 205, 'def' => 108, 'hp' => 3000, 'spd' => 24, 'crit' => 15, 'cd' => 130, 'active' => '疾风穿击', 'mult' => 3.4, 'passive' => '凌风：闪避+12%、移动速度+15%', 'source' => '世界BOSS掉落'],
+        'frost_maiden' => ['name' => '冰龙伊索尔德幼体', 'quality' => 'legend', 'growth' => 2.0, 'atk' => 218, 'def' => 145, 'hp' => 3600, 'spd' => 13, 'crit' => 11, 'cd' => 135, 'active' => '永冻哀歌', 'mult' => 3.5, 'passive' => '哀歌：冰抗+40%、受致命伤时冻结敌人', 'source' => '世界BOSS掉落'],
+        'storm_tyrant' => ['name' => '雷龙雷克斯幼体', 'quality' => 'legend', 'growth' => 2.1, 'atk' => 240, 'def' => 118, 'hp' => 3300, 'spd' => 18, 'crit' => 18, 'cd' => 128, 'active' => '碎星连雷', 'mult' => 3.8, 'passive' => '天谴：雷元素伤害+40%、麻痹抗性+50%', 'source' => '世界BOSS掉落'],
+        'void_dragon' => ['name' => '暗龙尼德霍格幼体', 'quality' => 'legend', 'growth' => 2.15, 'atk' => 268, 'def' => 132, 'hp' => 3800, 'spd' => 15, 'crit' => 14, 'cd' => 132, 'active' => '噬界黑洞', 'mult' => 3.9, 'passive' => '噬界：吸血+15%、暗伤+35%', 'source' => '世界BOSS掉落'],
+        'seraph_dragon' => ['name' => '光龙奥瑞利安幼体', 'quality' => 'legend', 'growth' => 2.3, 'atk' => 295, 'def' => 175, 'hp' => 4200, 'spd' => 16, 'crit' => 16, 'cd' => 120, 'active' => '圣辉裁决', 'mult' => 4.2, 'passive' => '圣裁：全元素伤害+25%、减伤+10%', 'source' => '世界BOSS掉落'],
     ];
 }
 

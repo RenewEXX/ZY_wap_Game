@@ -1540,14 +1540,13 @@ function pet_species(): array
         'dragon' => ['name' => '幼龙', 'quality' => 'epic', 'growth' => 1.6, 'atk' => 16, 'def' => 8, 'hp' => 90, 'spd' => 14, 'crit' => 8, 'cd' => 180, 'active' => '火焰吐息', 'mult' => 1.3, 'passive' => '龙鳞：防御+15%', 'source' => '商城砸蛋'],
         'shadow_cat' => ['name' => '影猫', 'quality' => 'rare', 'growth' => 1.3, 'atk' => 10, 'def' => 5, 'hp' => 50, 'spd' => 18, 'crit' => 5, 'cd' => 150, 'active' => '暗影突袭', 'mult' => 1.5, 'passive' => '敏捷：速度+10%', 'source' => '雷恩掉落'],
         'abaddon_spawn' => ['name' => '蚀影幼体', 'quality' => 'epic', 'growth' => 1.6, 'atk' => 14, 'def' => 7, 'hp' => 80, 'spd' => 16, 'crit' => 6, 'cd' => 170, 'active' => '蚀影冲击', 'mult' => 1.4, 'passive' => '君王血脉：攻击+10%', 'source' => '阿巴顿掉落'],
-        'frost_wolf_pup' => ['name' => '霜狼幼崽', 'quality' => 'epic', 'growth' => 1.7, 'atk' => 20, 'def' => 12, 'hp' => 120, 'spd' => 20, 'crit' => 8, 'cd' => 150, 'active' => '寒霜扑咬', 'mult' => 1.5, 'passive' => '霜甲：承伤-12%', 'source' => '凛冬之王掉落'],
-        'fire_dragon' => ['name' => '火龙多伊尔幼体', 'quality' => 'legend', 'growth' => 2.3, 'atk' => 36, 'def' => 18, 'hp' => 220, 'spd' => 18, 'crit' => 12, 'cd' => 170, 'active' => '烬焰吐息', 'mult' => 1.8, 'passive' => '龙威：攻击+20%，承伤-10%', 'source' => '世界BOSS掉落'],
+        'frost_wolf_pup' => ['name' => '霜狼幼崽', 'quality' => 'epic', 'growth' => 1.7, 'atk' => 20, 'def' => 12, 'hp' => 120, 'spd' => 20, 'crit' => 8, 'cd' => 150, 'active' => '寒霜扑咬', 'mult' => 1.5, 'passive' => '霜甲：承伤-12%', 'source' => '冰原章节奖励/商城砸蛋'],
         'puppet_doll' => ['name' => '傀儡人偶', 'quality' => 'epic', 'growth' => 1.6, 'atk' => 12, 'def' => 8, 'hp' => 70, 'spd' => 12, 'crit' => 6, 'cd' => 160, 'active' => '提线绞杀', 'mult' => 1.4, 'passive' => '丝甲：承伤-10%', 'source' => '牵线者掉落'],
-        'ember_pup' => ['name' => '火绒犬', 'quality' => 'good', 'growth' => 1.1, 'atk' => 8, 'def' => 6, 'hp' => 70, 'spd' => 12, 'crit' => 4, 'cd' => 155, 'active' => '火绒扑咬', 'mult' => 1.3, 'passive' => '暖绒：主人火抗+5%', 'source' => '宠物蛋'],
-        'mist_fox' => ['name' => '雾狐', 'quality' => 'rare', 'growth' => 1.35, 'atk' => 11, 'def' => 5, 'hp' => 60, 'spd' => 22, 'crit' => 7, 'cd' => 160, 'active' => '雾隐突袭', 'mult' => 1.5, 'passive' => '雾隐：闪避+3%', 'source' => '宠物蛋'],
-        'thunder_bird' => ['name' => '雷鸟', 'quality' => 'rare', 'growth' => 1.35, 'atk' => 12, 'def' => 4, 'hp' => 55, 'spd' => 24, 'crit' => 8, 'cd' => 165, 'active' => '落雷', 'mult' => 1.6, 'passive' => '雷速：出手更快', 'source' => '宠物蛋'],
-        'abyss_witch' => ['name' => '魔女阿比希尔', 'quality' => 'legend', 'growth' => 2.4, 'atk' => 38, 'def' => 12, 'hp' => 120, 'spd' => 20, 'crit' => 12, 'cd' => 175, 'active' => '魔女低语', 'mult' => 1.7, 'passive' => '月之庇佑：低语偷取敌人5%生命', 'source' => '限时（11月11日前）'],
-        'earth_dragon' => ['name' => '土龙岳柱幼体', 'quality' => 'legend', 'growth' => 2.1, 'atk' => 16, 'def' => 24, 'hp' => 380, 'spd' => 10, 'crit' => 5, 'cd' => 190, 'active' => '岳柱镇压', 'mult' => 1.2, 'passive' => '磐岩：承伤-25%', 'source' => '土龙岳柱掉落'],
+        'ember_pup' => ['name' => '火绒犬', 'quality' => 'good', 'growth' => 1.1, 'atk' => 8, 'def' => 6, 'hp' => 70, 'spd' => 12, 'crit' => 4, 'cd' => 155, 'active' => '火绒扑咬', 'mult' => 1.3, 'passive' => '暖绒：主人火抗+5%', 'source' => '商城砸蛋'],
+        'mist_fox' => ['name' => '雾狐', 'quality' => 'rare', 'growth' => 1.35, 'atk' => 11, 'def' => 5, 'hp' => 60, 'spd' => 22, 'crit' => 7, 'cd' => 160, 'active' => '雾隐突袭', 'mult' => 1.5, 'passive' => '雾隐：闪避+3%', 'source' => '商城砸蛋'],
+        'thunder_bird' => ['name' => '雷鸟', 'quality' => 'rare', 'growth' => 1.35, 'atk' => 12, 'def' => 4, 'hp' => 55, 'spd' => 24, 'crit' => 8, 'cd' => 165, 'active' => '落雷', 'mult' => 1.6, 'passive' => '雷速：出手更快', 'source' => '商城砸蛋'],
+        'abyss_witch' => ['name' => '魔女阿比希尔', 'quality' => 'legend', 'growth' => 2.4, 'atk' => 38, 'def' => 12, 'hp' => 120, 'spd' => 20, 'crit' => 12, 'cd' => 175, 'active' => '魔女低语', 'mult' => 1.7, 'passive' => '月之庇佑：低语偷取敌人5%生命', 'source' => '限时活动掉落'],
+        'earth_dragon' => ['name' => '土龙岳柱幼体', 'quality' => 'legend', 'growth' => 2.1, 'atk' => 16, 'def' => 24, 'hp' => 380, 'spd' => 10, 'crit' => 5, 'cd' => 190, 'active' => '岳柱镇压', 'mult' => 1.2, 'passive' => '磐岩：承伤-25%', 'source' => '岩狱泰坦掉落'],
     ] + dragon_pets();
 }
 
@@ -1571,13 +1570,14 @@ function pet_eggs(): array
         'egg_bird' => ['species' => 'thunder_bird', 'name' => '雷鸟蛋'],
         'witch_egg' => ['species' => 'abyss_witch', 'name' => '魔女之茧（限时）'],
         'frost_egg' => ['species' => 'frost_wolf_pup', 'name' => '霜狼幼崽蛋'],
-        'earth_dragon_egg' => ['species' => 'earth_dragon', 'name' => '土龙岳柱之蛋'],
-        'fire_dragon_egg' => ['species' => 'fire_drake', 'name' => '传奇火龙宠物蛋'],
-        'wind_dragon_egg' => ['species' => 'sky_serpent', 'name' => '传奇风龙宠物蛋'],
-        'ice_dragon_egg' => ['species' => 'frost_maiden', 'name' => '传奇冰龙宠物蛋'],
-        'thunder_dragon_egg' => ['species' => 'storm_tyrant', 'name' => '传奇雷龙宠物蛋'],
-        'dark_dragon_egg' => ['species' => 'void_dragon', 'name' => '传奇暗龙宠物蛋'],
-        'light_dragon_egg' => ['species' => 'seraph_dragon', 'name' => '传奇光龙宠物蛋'],
+        'earth_dragon_egg' => ['species' => 'earth_dragon', 'name' => '土龙岳柱幼体蛋'],
+        // 六龙王世界BOSS幼体蛋：名字跟 pets 里的「XX幼体」对齐
+        'fire_dragon_egg' => ['species' => 'fire_drake', 'name' => '火龙多伊尔幼体蛋'],
+        'wind_dragon_egg' => ['species' => 'sky_serpent', 'name' => '风龙艾瑟琳幼体蛋'],
+        'ice_dragon_egg' => ['species' => 'frost_maiden', 'name' => '冰龙伊索尔德幼体蛋'],
+        'thunder_dragon_egg' => ['species' => 'storm_tyrant', 'name' => '雷龙雷克斯幼体蛋'],
+        'dark_dragon_egg' => ['species' => 'void_dragon', 'name' => '暗龙尼德霍格幼体蛋'],
+        'light_dragon_egg' => ['species' => 'seraph_dragon', 'name' => '光龙奥瑞利安幼体蛋'],
         'egg_unknown' => ['species' => '', 'name' => '未知宠物蛋'],
     ];
 }
@@ -1629,9 +1629,9 @@ function pet_stats(array $p): array
         $s['atk'] = (int) ($s['atk'] * 1.3);
         $s['maxhp'] = (int) ($s['maxhp'] * 0.7);
     }
-    if ($p['species'] === 'fire_dragon') {
+    // 火龙多伊尔幼体：龙威 攻击+20%、承伤-10%（承伤在 pet_hurt 里算）
+    if ($p['species'] === 'fire_drake') {
         $s['atk'] = (int) ($s['atk'] * 1.2);
-        $s['maxhp'] = (int) ($s['maxhp'] * 1.2);
     }
     if ($p['species'] === 'earth_dragon') {
         $s['atk'] = (int) ($s['atk'] * 0.5);
@@ -1777,6 +1777,9 @@ function pet_hurt(int $uid, int $md): string
     if ($p['species'] === 'earth_dragon') {
         $take = max(1, (int) ($take * 0.75));
     }
+    if ($p['species'] === 'fire_drake') {
+        $take = max(1, (int) ($take * 0.9)); // 龙威：承伤-10%
+    }
     if ($p['species'] === 'ghost' || $p['species'] === 'puppet_doll') {
         $take = max(1, (int) ($take * 0.9));
     }
@@ -1819,7 +1822,7 @@ function roll_pet_egg(int $uid, string $mid): string
     }
     if ($mid === 'ry_titan' && mt_rand(1, 100) <= 5) {
         add_mat($uid, 'earth_dragon_egg', 1);
-        return '土龙岳柱幼体蛋（3%）';
+        return '土龙岳柱幼体蛋（5%）';
     }
     return '';
 }
@@ -8858,8 +8861,10 @@ function sin_gain_array(array &$u, int $n = 1): void
     $have = (int) ($f['sin_hp'] ?? 0);
     $base = max(1, (int) $u['maxhp'] - $have);
     $want = $newI < 10 ? (int) floor($base * 0.2) : 0;
+    // 生命上限涨多少，当前血也补多少（上限下降时按新上限截断）
+    $oldMax = (int) $u['maxhp'];
     $u['maxhp'] = max(1, $base + $want);
-    $u['hp'] = max(1, min((int) $u['hp'], (int) $u['maxhp']));
+    $u['hp'] = max(1, min((int) $u['hp'] + ((int) $u['maxhp'] - $oldMax), (int) $u['maxhp']));
     $f['sin_f'] = $new;
     $f['sin'] = $newI;
     $f['sin_hp'] = $want;
@@ -8921,8 +8926,10 @@ function sin_sync_hp(int $uid): void
     if ($want === $have) {
         return;
     }
+    // 生命上限涨多少，当前血也补多少：否则新号出生/上限变动后会不满血
+    $oldMax = (int) $u['maxhp'];
     $u['maxhp'] = max(1, $base + $want);
-    $u['hp'] = max(1, min((int) $u['hp'], (int) $u['maxhp']));
+    $u['hp'] = max(1, min((int) $u['hp'] + ((int) $u['maxhp'] - $oldMax), (int) $u['maxhp']));
     user_save($u);
     cflag_set($uid, 'sin_hp', $want);
 }

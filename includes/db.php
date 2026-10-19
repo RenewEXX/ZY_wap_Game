@@ -555,6 +555,17 @@ function db_init(): void
         }
     } catch (Throwable $e) {
     }
+    // 一次性迁移：火龙多伊尔幼体去重。
+    // 旧表里 fire_dragon（火龙多伊尔幼体）和 fire_drake（炎龙雏）是同一只火龙，
+    // 世界BOSS蛋实际孵出的是 fire_drake。统一到 fire_drake，避免图鉴出现两条火龙。
+    try {
+        $done = (int) (db()->query("SELECT num FROM sys_kv WHERE k='mig_pet_fire'")->fetchColumn() ?: 0);
+        if ($done === 0) {
+            db()->exec("UPDATE pets SET species='fire_drake' WHERE species='fire_dragon'");
+            db()->prepare("INSERT OR REPLACE INTO sys_kv (k, num) VALUES ('mig_pet_fire', 1)")->execute();
+        }
+    } catch (Throwable $e) {
+    }
     db()->exec(
         'CREATE TABLE IF NOT EXISTS mats (
             uid INTEGER NOT NULL,

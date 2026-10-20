@@ -23,6 +23,129 @@ function db(): PDO
     return $pdo;
 }
 
+// ================= 自动备份 =================
+// 触发方式：请求落地时（db_init 末尾）检查距离上次备份是否超时。
+// PHP 没有常驻进程，靠"懒触发"实现定期备份；间隔到点后的第一个请求就会备一份。
+
+function db_backup_interval(): int
+{
+    return defined('DB_BACKUP_INTERVAL') ? (int) DB_BACKUP_INTERVAL : 6 * 3600;
+}
+
+function db_backup_keep(): int
+{
+    return defined('DB_BACKUP_KEEP') ? (int) DB_BACKUP_KEEP : 12;
+}
+
+function db_backup_dir(): string
+{
+    return DATA_DIR . DIRECTORY_SEPARATOR . 'backups';
+}
+
+// 按文件名升序（文件名含时间戳，字典序即时间序）
+function db_backup_files(): array
+{
+    $files = glob(db_backup_dir() . DIRECTORY_SEPARATOR . 'zuiyuan-*.sqlite');
+    if (!is_array($files)) {
+        return [];
+    }
+    sort($files);
+    return $files;
+}
+
+function db_backup_last_at(): int
+{
+    try {
+        return (int) (db()->query("SELECT num FROM sys_kv WHERE k='last_backup_at'")->fetchColumn() ?: 0);
+    } catch (Throwable $e) {
+        return 0;
+    }
+}
+
+function db_backup_due(): bool
+{
+    $last = db_backup_last_at();
+    return $last <= 0 || (time() - $last) >= db_backup_interval();
+}
+
+// 立即做一份备份，成功返回文件路径，失败返回 null
+function db_backup_now(): ?string
+{
+    $dir = db_backup_dir();
+    if (!is_dir($dir) && !@mkdir($dir, 0777, true) && !is_dir($dir)) {
+        return null;
+    }
+    // 文件名 = zuiyuan-<Ymd-His>-<序号6位>：
+    // 1) 同秒内靠序号保证唯一；2) 字典序 == 时间序（超量清理靠它排序淘汰最旧）
+    $base = 'zuiyuan-' . date('Ymd-His');
+    $file = '';
+    for ($n = 0; $n < 10000; $n++) {
+        $file = $dir . DIRECTORY_SEPARATOR . $base . '-' . sprintf('%06d', $n) . '.sqlite';
+        if (!file_exists($file)) {
+            break;
+        }
+        $file = '';
+    }
+    if ($file === '') {
+        return null;
+    }
+    // VACUUM INTO 生成事务一致的快照（含 WAL 里未 checkpoint 的内容），比直接 copy 安全得多
+    try {
+        db()->exec('VACUUM INTO ' . db()->quote($file));
+    } catch (Throwable $e) {
+        @unlink($file);
+        return null;
+    }
+    if (!is_file($file)) {
+        return null;
+    }
+    try {
+        db()->prepare("INSERT OR REPLACE INTO sys_kv (k, num) VALUES ('last_backup_at', ?)")->execute([time()]);
+    } catch (Throwable $e) {
+    }
+    // 只保留最近 N 份，超出的删掉
+    $files = db_backup_files();
+    $extra = count($files) - db_backup_keep();
+    if ($extra > 0) {
+        foreach (array_slice($files, 0, $extra) as $old) {
+            @unlink($old);
+        }
+    }
+    return $file;
+}
+
+function db_auto_backup(): void
+{
+    try {
+        if (!db_backup_due()) {
+            return;
+        }
+        $dir = db_backup_dir();
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0777, true);
+        }
+        $lock = @fopen($dir . DIRECTORY_SEPARATOR . '.backup.lock', 'c');
+        if ($lock === false) {
+            return;
+        }
+        try {
+            // 并发请求只放一个进来做备份
+            if (!flock($lock, LOCK_EX | LOCK_NB)) {
+                return;
+            }
+            // 拿到锁再复查一次，避免多个请求重复备份
+            if (db_backup_due()) {
+                db_backup_now();
+            }
+        } finally {
+            @flock($lock, LOCK_UN);
+            @fclose($lock);
+        }
+    } catch (Throwable $e) {
+        // 备份失败绝不能影响正常请求
+    }
+}
+
 function db_init(): void
 {
     db()->exec(
@@ -608,6 +731,8 @@ function db_init(): void
         db()->exec('CREATE INDEX IF NOT EXISTS idx_wb_dmg_rank ON wb_dmg (day, mid, dmg)');
     } catch (Throwable $e) {
     }
+    // 定期自动备份（到点才做，失败不影响请求）
+    db_auto_backup();
 }
 
 function user_by_id(int $id): ?array

@@ -4524,6 +4524,10 @@ function roll_drop(int $uid, string $mid, int $elite = 0): string
     if ($elite === 1) {
         $q = min(4, $q + 1);
     }
+    // 小怪封顶史诗(3)：只有BOSS才可能出传说(4)
+    if (!is_boss_mid($mid)) {
+        $q = min(3, $q);
+    }
     if ($q === 4) {
         if (!isset($t['legendary'])) {
             $q = 3;

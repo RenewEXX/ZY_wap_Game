@@ -159,8 +159,8 @@ function world_expansion_drops(): array
         'void_wisp' => ['slot' => 'shoes', 'base' => '虚空游步', 'rate' => 0.10, 'q' => [0, 20, 50, 30, 0]],
         'tide_hunter' => ['slot' => 'weapon', 'base' => '潮汐之矛', 'rate' => 0.10, 'q' => [0, 20, 50, 30, 0]],
         'drowned_one' => ['slot' => 'body', 'base' => '溺亡者之衣', 'rate' => 0.10, 'q' => [0, 20, 50, 30, 0]],
-        'coral_guard' => ['slot' => 'offhand', 'base' => '珊瑚护盾', 'rate' => 0.10, 'q' => [0, 20, 50, 30, 0]],
-        'siren_singer' => ['slot' => 'necklace', 'base' => '海妖歌链', 'rate' => 0.10, 'q' => [0, 20, 50, 30, 0]],
+        'coral_guard' => ['slot' => 'belt', 'base' => '珊瑚束腰', 'rate' => 0.10, 'q' => [0, 20, 50, 30, 0]],
+        'siren_singer' => ['slot' => 'legs', 'base' => '海妖歌裙', 'rate' => 0.10, 'q' => [0, 20, 50, 30, 0]],
         'deep_crab' => ['slot' => 'legs', 'base' => '深海蟹甲', 'rate' => 0.10, 'q' => [0, 20, 50, 30, 0]],
         // BOSS：只掉传说（q=4 → legendary）
         'thunder_regent' => ['slot' => 'gloves', 'base' => '雷核护手', 'rate' => 0.35, 'q' => [0, 0, 15, 45, 40], 'legendary' => ['base' => '雷霆君临·裂云护手', 'extra' => ['k' => 'skill_damage', 'v' => 6.0]]],

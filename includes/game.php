@@ -7759,6 +7759,16 @@ function teleport_min_lv(string $loc): int
     if (in_array($loc, dragon_lair_maps(), true)) {
         return dragon_min_lv(dragon_of_lair($loc));
     }
+    // 第二弹「根据地/基地」：无怪，按所属区域第一关（gate）的等级要求放行
+    if (function_exists('we2_base_ids') && in_array($loc, we2_base_ids(), true)) {
+        foreach (we2_regions() as $ids) {
+            if ((string) ($ids[0] ?? '') === $loc) {
+                $gate = (string) ($ids[1] ?? '');
+                return $gate !== '' ? teleport_min_lv($gate) : 1;
+            }
+        }
+        return 1;
+    }
     $mx = 0;
     foreach (loc($loc)['monsters'] ?? [] as $mid) {
         $mx = max($mx, monster_lv($mid));

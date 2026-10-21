@@ -30,6 +30,11 @@ foreach ($bases as $i => $bid) {
     // 6) 基地通向区域下一张图（第二张）
     $gate = $regionIds[1] ?? '';
     ck29("[$bid]通向下图", $gate !== '' && isset($all[$bid]['exits'][$gate]), $gate);
+    // 6b) 传送等级要求 = 区域第一关的等级要求，且>1
+    $lvBase = teleport_min_lv($bid);
+    $lvGate = $gate !== '' ? teleport_min_lv($gate) : 0;
+    ck29("[$bid]传送等级=gate", $lvBase === $lvGate, $lvBase . '/' . $lvGate);
+    ck29("[$bid]传送等级>1", $lvBase > 1, (string) $lvBase);
     // 7) 铁匠（强化）可用
     ck29("[$bid]配了铁匠", isset(blacksmiths()[$bid]), $bid);
 }

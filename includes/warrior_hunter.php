@@ -99,7 +99,12 @@ const RANGER_DOT_BONUS = 0.35;   // DOT 伤害 +35%
 function hunter_dot_mult(array $u): float
 {
     $rb2 = (string) (cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '');
-    return $rb2 === 'ranger' ? (1 + RANGER_DOT_BONUS) : 1.0;
+    $m = $rb2 === 'ranger' ? (1 + RANGER_DOT_BONUS) : 1.0;
+    // 遗神铸庭·转职传说：DOT 加成
+    if (function_exists('legend_relic_dot_mult')) {
+        $m *= legend_relic_dot_mult((int) ($u['id'] ?? 0));
+    }
+    return $m;
 }
 
 // 刺客：单体爆发加成 + 高闪避

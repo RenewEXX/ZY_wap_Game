@@ -6,7 +6,7 @@ $ok = 0; $bad = 0;
 function ck27(string $l, bool $c, string $d = '') { global $ok,$bad; if ($c) { $ok++; } else { $bad++; echo "FAIL $l $d\n"; } }
 
 $relics = legend_relics();
-ck27('传说relic数量=22', count($relics) === 22, (string) count($relics));
+ck27('传说relic数量=62', count($relics) === 62, (string) count($relics));
 
 // 1) 部位合法、key前缀、说明非空、职业合法
 $jobs = array_keys(jobs());
@@ -22,20 +22,38 @@ foreach ($relics as $name => $c) {
 
 // 2) 掉落表：boss存在且是BOSS、relic名存在、boss等级 >= relic需求等级(合理)
 $all = locations();
-foreach (legend_relic_drops() as $mid => $names) {
-    ck27("掉落BOSS[$mid]存在", isset(monsters()[$mid]), $mid);
-    ck27("掉落BOSS[$mid]是BOSS", is_boss_mid($mid), $mid);
-    foreach ($names as $n) {
-        ck27("掉落relic[$n]在表中", isset($relics[$n]), $n);
-        ck27("[$n]需求等级<=掉落BOSS等级", (int) $relics[$n]['lv'] <= monster_lv($mid), $relics[$n]['lv'] . '>' . monster_lv($mid));
+$bothDrops = [];
+foreach ([legend_relic_drops(), legend_relic_drops2()] as $map) {
+    foreach ($map as $mid => $names) {
+        foreach ($names as $n) {
+            $bothDrops[$n] = true;
+        }
+    }
+}
+foreach ([legend_relic_drops(), legend_relic_drops2()] as $map) {
+    foreach ($map as $mid => $names) {
+        ck27("掉落BOSS[$mid]存在", isset(monsters()[$mid]), $mid);
+        ck27("掉落BOSS[$mid]是BOSS", is_boss_mid($mid), $mid);
+        foreach ($names as $n) {
+            ck27("掉落relic[$n]在表中", isset($relics[$n]), $n);
+            ck27("[$n]需求等级<=掉落BOSS等级", (int) $relics[$n]['lv'] <= monster_lv($mid), $relics[$n]['lv'] . '>' . monster_lv($mid));
+        }
     }
 }
 // 每件relic都能从某个boss掉落（可获得）
-$droppable = [];
-foreach (legend_relic_drops() as $names) { foreach ($names as $n) { $droppable[$n] = true; } }
 foreach ($relics as $name => $c) {
-    ck27("relic[$name]有掉落来源", isset($droppable[$name]), '');
+    ck27("relic[$name]有掉落来源", isset($bothDrops[$name]), '');
 }
+// 第二接口 40 件都带 eff 且能被索引到
+$idx = legend_relic_eff_index();
+$effCount = 0;
+foreach ($relics as $name => $c) {
+    if (isset($c['eff'])) {
+        $effCount++;
+        ck27("[$name]eff被索引", isset($idx[$c['key']]), $c['key']);
+    }
+}
+ck27('第二接口eff件数=40', $effCount === 40, (string) $effCount);
 
 // 3) affix 显示（专属传说效果文字）
 $uid = user_create('w27' . mt_rand(1000, 9999), 'x', 'warrior', 'z1', true, 'tmp');
@@ -53,6 +71,18 @@ $after = gear_stats((int) $uid)['critdmg'];
 ck27('死斗者·暴伤+50生效', $after >= $before + 50, "$before->" . $after);
 $w = legend_relic_worn((int) $uid);
 ck27('legend_relic_worn读到lg_deathmatch', isset($w['lg_deathmatch']), json_encode(array_keys($w)));
+
+// 4b) 第二接口 eff 通用引擎：面板减伤 + 元素加成
+$uidG = user_create('w27g' . mt_rand(1000, 9999), 'x', 'warrior', 'z1', true, 'tmp');
+make_equip((int) $uidG, 'body', '壁垒', 4, 600, ['extra' => ['k' => 'lg_bulwark', 'v' => 1]]);
+make_equip((int) $uidG, 'weapon', '极寒', 4, 600, ['extra' => ['k' => 'lg_extreme', 'v' => 1]]);
+db()->prepare('UPDATE equips SET pos="wear" WHERE uid=?')->execute([(int) $uidG]);
+$GLOBALS['_gear_bust'] = $uidG;
+$GLOBALS['_legend_gen'] = (int) ($GLOBALS['_legend_gen'] ?? 0) + 1;
+$gsG = gear_stats((int) $uidG);
+ck27('eff:壁垒减伤8生效', (float) $gsG['damage_reduction'] >= 8, (string) $gsG['damage_reduction']);
+ck27('eff:极寒冰伤+25生效', abs(legend_relic_el_mult((int) $uidG, 'ice') - 1.25) < 0.001, (string) legend_relic_el_mult((int) $uidG, 'ice'));
+ck27('eff:legend_relic_effs非空', count(legend_relic_effs((int) $uidG)) === 2, (string) count(legend_relic_effs((int) $uidG)));
 
 // 5) 掉落：能真的出带lg词条的装备
 db()->exec('DELETE FROM equips WHERE uid=' . (int) $uid);
@@ -92,7 +122,7 @@ try {
 ck27('穿relic跑战斗不出错', $okBattle, '');
 
 // 清理
-foreach ([$uid] as $x) {
+foreach ([$uid, $uidG] as $x) {
     db()->exec('DELETE FROM users WHERE id=' . (int) $x);
     db()->exec('DELETE FROM equips WHERE uid=' . (int) $x);
     db()->exec('DELETE FROM mats WHERE uid=' . (int) $x);

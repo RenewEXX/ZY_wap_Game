@@ -4925,6 +4925,10 @@ function summon_cap(array $u): int
     if (isset(summoner_legend_worn((int) ($u['id'] ?? 0))['slegend_abyssseal'])) {
         $cap++;
     }
+    // 遗神铸庭·转职传说：召唤上限
+    if (function_exists('legend_relic_summon_cap')) {
+        $cap += legend_relic_summon_cap((int) ($u['id'] ?? 0));
+    }
     return $cap;
 }
 
@@ -4939,6 +4943,10 @@ function summon_power_bonus(array $u): float
     if (isset(legend_relic_worn((int) ($u['id'] ?? 0))['lg_othershore'])) {
         $bonus += 400.0;
     }
+    // 遗神铸庭·转职传说：召唤物伤害%
+    if (function_exists('legend_relic_summon_power')) {
+        $bonus += legend_relic_summon_power((int) ($u['id'] ?? 0));
+    }
     return $bonus;
 }
 
@@ -4950,6 +4958,10 @@ function summon_hp_bonus(array $u): float
     // 遗神铸庭·彼岸：召唤物生命×5
     if (isset(legend_relic_worn((int) ($u['id'] ?? 0))['lg_othershore'])) {
         $bonus += 400.0;
+    }
+    // 遗神铸庭·转职传说：召唤物生命%
+    if (function_exists('legend_relic_summon_hp')) {
+        $bonus += legend_relic_summon_hp((int) ($u['id'] ?? 0));
     }
     return $bonus;
 }
@@ -6075,6 +6087,10 @@ function apply_el_convert(array $u, array $b, int $pd, string $el): array
     $rb2e = cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '';
     if ($rb2e === 'wintermage' && in_array($el, ['ice', 'thunder'], true)) { $pd = (int) ($pd * 1.3); $tag .= '(凛冬)'; }
     if ($rb2e === 'wildfire' && in_array($el, ['fire', 'wind'], true)) { $pd = (int) ($pd * 1.4); $tag .= '(燎原)'; }
+    if (function_exists('legend_relic_el_mult')) {
+        $em = legend_relic_el_mult((int) ($u['id'] ?? 0), $el);
+        if ($em > 1.0) { $pd = (int) round($pd * $em); }
+    }
     return [$pd, $tag];
 }
 

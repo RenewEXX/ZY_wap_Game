@@ -23,6 +23,11 @@ $backRegion = (string) ($_GET['region'] ?? '');
 $backSuffix = $backRegion !== '' ? '?region=' . urlencode($backRegion) : '';
 if ($go !== '' && isset($all[$go])) {
     $cost = teleport_cost($cur, $go);
+    if (in_array($go, dragon_maps(), true)) {
+        flash_set('六圣柱只能徒步前往，无法直接传送。');
+        header('Location: teleport.php' . $backSuffix);
+        exit;
+    }
     if (in_array($go, dungeon_maps(), true)) {
         flash_set('副本只能找NPC进，不能传送。');
         header('Location: teleport.php' . $backSuffix);
@@ -94,7 +99,7 @@ if ($flash !== '') {
 $openRegion = $backRegion;
 foreach (teleport_region_order() as $region => $rMinLv) {
     $ids = map_regions()[$region] ?? [];
-    if ($region === '巅峰战场') {
+    if ($region === '巅峰战场' || $region === '六圣柱') {
         continue;
     }
     $cnt = 0;

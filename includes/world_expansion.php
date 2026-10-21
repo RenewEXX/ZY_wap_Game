@@ -73,6 +73,31 @@ function world_link_regions(array $all): array
             $all[$gw]['exits'][$hub] = (string) ($all[$hub]['name'] ?? $hub);
         }
     }
+    // 六圣柱：与主世界双向连通（可徒步进入，但传送页屏蔽）；挂在出口较少的枢纽上
+    $dragonGates = [
+        ['capital_gate', 'sky_ramp'],
+        ['ice_village', 'frost_deep'],
+        ['fo_gate', 'storm_wall'],
+        ['altar', 'abyss_deep'],
+    ];
+    foreach ($dragonGates as [$hub, $gate]) {
+        if (isset($all[$hub], $all[$gate])) {
+            $all[$hub]['exits'][$gate] = (string) ($all[$gate]['name'] ?? $gate);
+            $all[$gate]['exits'][$hub] = (string) ($all[$hub]['name'] ?? $hub);
+        }
+    }
+    // 六圣柱内部：原本多条单向路，补成双向，保证从任意入口能走到深处
+    $dm = dragon_maps();
+    foreach ($dm as $a) {
+        if (!isset($all[$a])) {
+            continue;
+        }
+        foreach (array_keys($all[$a]['exits']) as $b) {
+            if (in_array($b, $dm, true) && isset($all[$b])) {
+                $all[$b]['exits'][$a] = (string) ($all[$a]['name'] ?? $a);
+            }
+        }
+    }
     return $all;
 }
 

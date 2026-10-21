@@ -3195,6 +3195,19 @@ function make_equip(int $uid, string $slot, string $base, int $q, int $itemLevel
         $primary = 'summon_hp';
     }
     $legendId = (string) ($legend['extra']['k'] ?? '');
+    if ($q === 4 && $legendId === '' && $slot !== 'soul' && !str_contains((string) $base, '·')) {
+        // 传说装备必须带专属效果：没有专属词条的传说自动补一条
+        // （神魂、以及套装/神铸/罪渊/召唤专属等自带效果的不在此列）
+        $legendDefaults = [
+            'weapon' => ['truedmg', 60.0], 'body' => ['damage_reduction', 5.0], 'head' => ['mdef', 60.0],
+            'legs' => ['hp', 1500.0], 'gloves' => ['lifesteal', 2.0], 'shoes' => ['crit', 3.0],
+            'back' => ['hp', 1200.0], 'necklace' => ['hp', 1200.0], 'belt' => ['hp', 1200.0],
+            'ring' => ['crit', 3.0], 'offhand' => ['def', 40.0],
+        ];
+        [$legendDefK, $legendDefV] = $legendDefaults[$slot] ?? ['atk', 20.0];
+        $legend = ['extra' => ['k' => $legendDefK, 'v' => $legendDefV]];
+        $legendId = $legendDefK;
+    }
     $legendGroup = $legendId !== '' ? (string) (affix_catalog()[$legendId]['data']['group'] ?? '') : '';
     $pool = equip_sub_pool($slot, (string) $base, $primary, $legendId, $offKind);
     if ($pool === []) {
@@ -3242,6 +3255,56 @@ function make_equip(int $uid, string $slot, string $base, int $q, int $itemLevel
     $as = auto_sell_check((int) $uid, (int) $q);
     if ($as !== '') { return equip_shortname($name) . $as; }
     return $name;
+}
+
+// 一次性迁移：把玩家手里"没有专属效果的传说装备"补上专属词条
+function migrate_plain_legendaries(int $uid): void
+{
+    if ((int) (mats_of($uid)['legend_fixed'] ?? 0) > 0) {
+        return;
+    }
+    $defaults = [
+        'weapon' => ['truedmg', 60.0], 'body' => ['damage_reduction', 5.0], 'head' => ['mdef', 60.0],
+        'legs' => ['hp', 1500.0], 'gloves' => ['lifesteal', 2.0], 'shoes' => ['crit', 3.0],
+        'back' => ['hp', 1200.0], 'necklace' => ['hp', 1200.0], 'belt' => ['hp', 1200.0],
+        'ring' => ['crit', 3.0], 'offhand' => ['def', 40.0],
+    ];
+    $st = db()->prepare('SELECT id, slot, name, affixes FROM equips WHERE uid=? AND quality=4');
+    $st->execute([$uid]);
+    $rows = $st->fetchAll();
+    if ($rows) {
+        $upd = db()->prepare('UPDATE equips SET affixes=? WHERE id=?');
+        foreach ($rows as $r) {
+            $slot = (string) $r['slot'];
+            if ($slot === 'soul') {
+                continue;
+            }
+            // 名称形如「传说·基底」，去掉品质前缀后再判断是否为套装/特殊（含·）
+            $nm = (string) $r['name'];
+            $baseName = str_contains($nm, '·') ? explode('·', $nm, 2)[1] : $nm;
+            if (str_contains($baseName, '·')) {
+                continue;
+            }
+            $affixes = json_decode((string) $r['affixes'], true);
+            if (!is_array($affixes)) {
+                continue;
+            }
+            $hasLegend = false;
+            foreach ($affixes as $a) {
+                if (!empty($a['legend'])) {
+                    $hasLegend = true;
+                    break;
+                }
+            }
+            if ($hasLegend) {
+                continue;
+            }
+            [$dk, $dv] = $defaults[$slot] ?? ['atk', 20.0];
+            $affixes[] = ['id' => $dk, 'tier' => '特', 'v' => (float) $dv, 'legend' => true];
+            $upd->execute([json_encode($affixes, JSON_UNESCAPED_UNICODE), (int) $r['id']]);
+        }
+    }
+    mat_set($uid, 'legend_fixed', 1);
 }
 
 function monster_material(string $mid): array
@@ -7012,7 +7075,7 @@ function battle_round(array &$u, array &$b, string $mode): array
                     add_mat((int) $u['id'], 'god_proof', 1);
                     give_title((int) $u['id'], 'title_god');
                     $gw = ['warrior' => '神铸·雷霆', 'mage' => '神铸·裁决', 'hunter' => '神铸·苍穹', 'priest' => '神铸·铁律', 'summoner' => '神铸·幽契'][job_id_of($u)] ?? '神铸·天罚';
-                    $gn = make_equip((int) $u['id'], 'weapon', $gw, 4, max(1, (int) $u['lv']));
+                    $gn = make_equip((int) $u['id'], 'weapon', $gw, 4, max(1, (int) $u['lv']), ['extra' => ['k' => 'skill_damage', 'v' => 10.0]]);
                     $txt .= '。第八章·神界完成！堕天神帝陨落，你夺得【称号·神界主宰】' . ($gn !== '' ? '与【' . $gn . '】' : '') . '！';
                 } else {
                     $txt .= '。本轮完成，进下一环！';
@@ -9380,14 +9443,14 @@ function favor_weekly_tick(int $uid): string
 function ambush_npcs(): array
 {
     return [
-        'alice' => ['name' => '修女·爱丽丝', 'lv' => 30, 'hp' => 8000, 'atk' => 120, 'exp' => 3000, 'gold' => 1500, 'legend' => ['slot' => 'necklace', 'base' => '圣骸 rosary', 'rate' => 0.05, 'desc' => '传说项链：治疗+15%，减伤+5%']],
-        'vera' => ['name' => '守渊人·薇拉', 'lv' => 110, 'hp' => 60000, 'atk' => 420, 'exp' => 12000, 'gold' => 4000, 'legend' => ['slot' => 'weapon', 'base' => '守渊之誓', 'rate' => 0.05, 'desc' => '传说副手：法防+120，减伤+8%']],
-        'spider' => ['name' => '断线人·阿蛛', 'lv' => 380, 'hp' => 900000, 'atk' => 2800, 'exp' => 60000, 'gold' => 15000, 'legend' => ['slot' => 'weapon', 'base' => '断线剪', 'rate' => 0.05, 'desc' => '传说主手：暴击+10%，吸血+5%']],
-        'qingya' => ['name' => '森语者·青芽', 'lv' => 550, 'hp' => 1500000, 'atk' => 3800, 'exp' => 90000, 'gold' => 25000, 'legend' => ['slot' => 'body', 'base' => '青芽羽衣', 'rate' => 0.05, 'desc' => '传说上身：闪避+8%，生命+5000']],
-        'oldfish' => ['name' => '潜水人·老咸鱼', 'lv' => 400, 'hp' => 1000000, 'atk' => 3000, 'exp' => 70000, 'gold' => 18000, 'legend' => ['slot' => 'offhand', 'base' => '深渊钓竿', 'rate' => 0.05, 'desc' => '传说副手：物防+150，寻宝+10%']],
-        'oldash' => ['name' => '探火人·老灰', 'lv' => 600, 'hp' => 2000000, 'atk' => 4200, 'exp' => 110000, 'gold' => 30000, 'legend' => ['slot' => 'ring', 'base' => '灰烬之戒', 'rate' => 0.05, 'desc' => '传说戒指：火抗+30，攻击+6%']],
-        'voidwalker' => ['name' => '虚空行者', 'lv' => 680, 'hp' => 2800000, 'atk' => 4800, 'exp' => 150000, 'gold' => 40000, 'legend' => ['slot' => 'weapon', 'base' => '虚空裂刃', 'rate' => 0.08, 'desc' => '传说主手：物攻+12%，穿透+8%']],
-        'rockwarden' => ['name' => '岩狱守门人·磐石', 'lv' => 800, 'hp' => 4000000, 'atk' => 5600, 'exp' => 200000, 'gold' => 50000, 'legend' => ['slot' => 'body', 'base' => '磐石岳铠', 'rate' => 0.08, 'desc' => '传说上身：减伤+12%，生命+12000']],
+        'alice' => ['name' => '修女·爱丽丝', 'lv' => 30, 'hp' => 8000, 'atk' => 120, 'exp' => 3000, 'gold' => 1500, 'legend' => ['slot' => 'necklace', 'base' => '圣骸 rosary', 'rate' => 0.05, 'desc' => '传说项链：减伤+5%', 'extra' => ['k' => 'damage_reduction', 'v' => 5.0]]],
+        'vera' => ['name' => '守渊人·薇拉', 'lv' => 110, 'hp' => 60000, 'atk' => 420, 'exp' => 12000, 'gold' => 4000, 'legend' => ['slot' => 'weapon', 'base' => '守渊之誓', 'rate' => 0.05, 'desc' => '传说主手：减伤+8%', 'extra' => ['k' => 'damage_reduction', 'v' => 8.0]]],
+        'spider' => ['name' => '断线人·阿蛛', 'lv' => 380, 'hp' => 900000, 'atk' => 2800, 'exp' => 60000, 'gold' => 15000, 'legend' => ['slot' => 'weapon', 'base' => '断线剪', 'rate' => 0.05, 'desc' => '传说主手：吸血+5%', 'extra' => ['k' => 'lifesteal', 'v' => 5.0]]],
+        'qingya' => ['name' => '森语者·青芽', 'lv' => 550, 'hp' => 1500000, 'atk' => 3800, 'exp' => 90000, 'gold' => 25000, 'legend' => ['slot' => 'body', 'base' => '青芽羽衣', 'rate' => 0.05, 'desc' => '传说上身：闪避+5%', 'extra' => ['k' => 'dodge', 'v' => 5.0]]],
+        'oldfish' => ['name' => '潜水人·老咸鱼', 'lv' => 400, 'hp' => 1000000, 'atk' => 3000, 'exp' => 70000, 'gold' => 18000, 'legend' => ['slot' => 'offhand', 'base' => '深渊钓竿', 'rate' => 0.05, 'desc' => '传说副手：寻宝+10%', 'extra' => ['k' => 'magic_find', 'v' => 10.0]]],
+        'oldash' => ['name' => '探火人·老灰', 'lv' => 600, 'hp' => 2000000, 'atk' => 4200, 'exp' => 110000, 'gold' => 30000, 'legend' => ['slot' => 'ring', 'base' => '灰烬之戒', 'rate' => 0.05, 'desc' => '传说戒指：技能伤害+5%', 'extra' => ['k' => 'skill_damage', 'v' => 5.0]]],
+        'voidwalker' => ['name' => '虚空行者', 'lv' => 680, 'hp' => 2800000, 'atk' => 4800, 'exp' => 150000, 'gold' => 40000, 'legend' => ['slot' => 'weapon', 'base' => '虚空裂刃', 'rate' => 0.08, 'desc' => '传说主手：真实伤害+80', 'extra' => ['k' => 'truedmg', 'v' => 80.0]]],
+        'rockwarden' => ['name' => '岩狱守门人·磐石', 'lv' => 800, 'hp' => 4000000, 'atk' => 5600, 'exp' => 200000, 'gold' => 50000, 'legend' => ['slot' => 'body', 'base' => '磐石岳铠', 'rate' => 0.08, 'desc' => '传说上身：减伤+12%', 'extra' => ['k' => 'damage_reduction', 'v' => 12.0]]],
     ];
 }
 
@@ -9433,7 +9496,7 @@ function ambush_reward(int $uid, string $npc): string
     $loot = '';
     if (mt_rand(1, 1000) <= (int) round($cfg['legend']['rate'] * 1000)) {
         $lg = $cfg['legend'];
-        $sn = make_equip($uid, (string) $lg['slot'], (string) $lg['base'], 4, (int) $cfg['lv']);
+        $sn = make_equip($uid, (string) $lg['slot'], (string) $lg['base'], 4, (int) $cfg['lv'], $lg);
         $loot = '掉落传说【' . $sn . '】（' . $lg['desc'] . '）！';
     }
     // 罪开战时已+10，这里不再加

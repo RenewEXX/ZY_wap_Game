@@ -181,6 +181,7 @@ function require_login(): array
         user_save($u);
         flash_set('旧武器已换成背包装备：【' . implode('】【', $migrated) . '】，去穿上吧。');
     }
+    migrate_plain_legendaries((int) $u['id']);
     return $u;
 }
 

@@ -31,6 +31,7 @@ foreach ($set as $sid) {
     $isActive = $active && $active['skill'] === $sid;
     echo ($isActive ? '◀默认 ' : '<a href="skills.php?a=set&id=' . h($sid) . '">设为默认</a> ');
     echo $s['level'] . '级·' . $s['tier'] . '阶·熟练' . $s['prof'] . '/' . tier_prof_need(min(10, (int) $s['tier'] + 1)) . '<br>';
+    echo '<span style="color:#cfc">技能效果：' . h(skill_effect_desc($c)) . '</span><br>';
     $pw = skill_power($s);
     $pw1 = 1 + max(0, (int) ($s['tier'] ?? 1) - 1) * 0.05 + max(0, (int) ($s['level'] ?? 1)) * 0.04;
     $pwt = 1 + max(0, min(10, (int) ($s['tier'] ?? 1))) * 0.05 + max(0, (int) ($s['level'] ?? 1) - 1) * 0.04;

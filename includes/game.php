@@ -5303,10 +5303,11 @@ function blacksmiths(): array
         'smithy' => '布隆',
         'smith' => '丹恩·铜须',
     ];
-    // 第二弹区域的「根据地」也配一个铁匠（可用 smith.php 强化）
+    // 第二弹区域的「根据地」也配一个铁匠（可用 smith.php 强化），名字贴合各区域主题
     if (function_exists('we2_base_ids')) {
+        $bn = function_exists('we2_base_npcs') ? we2_base_npcs() : [];
         foreach (we2_base_ids() as $bid) {
-            $s[(string) $bid] = '营地铁匠';
+            $s[(string) $bid] = (string) ($bn[$bid]['smith'] ?? '营地铁匠');
         }
     }
     return $s;

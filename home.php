@@ -179,15 +179,16 @@ if (isset($smiths[$cur])) {
     $npcHere++;
     echo '<a href="smith.php">' . h($smiths[$cur]) . '(强化)</a> ';
 }
-// 根据地/基地：常用NPC（传送/补给/拍卖/任务/公会/休整）
-if (function_exists('we2_base_ids') && in_array($cur, we2_base_ids(), true)) {
+// 根据地/基地：常用NPC（贴合区域主题的名字；传送/补给/拍卖/任务/公会/休整）
+if (function_exists('we2_base_npcs') && isset(we2_base_npcs()[$cur])) {
+    $bn = we2_base_npcs()[$cur];
     $npcHere++;
-    echo '<a href="teleport.php">传送师·星门</a> ';
-    echo '<a href="mall.php">商栈·补给</a> ';
-    echo '<a href="auction.php">拍卖行</a> ';
-    echo '<a href="quest.php">任务告示板</a> ';
-    echo '<a href="guild.php">公会</a> ';
-    echo '<a href="home.php?a=rest_base">营地休整(回满血蓝)</a> ';
+    echo '<a href="teleport.php">' . h($bn['teleport']) . '</a> ';
+    echo '<a href="mall.php">' . h($bn['supply']) . '</a> ';
+    echo '<a href="auction.php">' . h($bn['auction']) . '</a> ';
+    echo '<a href="quest.php">' . h($bn['quest']) . '</a> ';
+    echo '<a href="guild.php">' . h($bn['guild']) . '</a> ';
+    echo '<a href="home.php?a=rest_base">' . h($bn['rest']) . '(回满血蓝)</a> ';
 }
 if ($npcHere === 0) {
     echo '<span class="muted">空无一人</span>';

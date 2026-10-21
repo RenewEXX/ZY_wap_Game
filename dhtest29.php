@@ -39,6 +39,23 @@ foreach ($bases as $i => $bid) {
     ck29("[$bid]配了铁匠", isset(blacksmiths()[$bid]), $bid);
 }
 
+// 7b) 每张根据地的 7 个常用NPC都有贴合主题的名字，铁匠名与 blacksmiths() 一致
+$bn = we2_base_npcs();
+ck29('基地NPC表数量=7', count($bn) === 7, (string) count($bn));
+$roles = ['smith','teleport','supply','auction','quest','guild','rest'];
+foreach ($bases as $bid) {
+    ck29("[$bid]有NPC配置", isset($bn[$bid]), $bid);
+    $set = [];
+    foreach ($roles as $r) {
+        $nm = (string) ($bn[$bid][$r] ?? '');
+        ck29("[$bid].$r 有名字", $nm !== '', $nm);
+        $set[$r] = $nm;
+    }
+    ck29("[$bid]铁匠名=blacksmiths", ($set['smith'] ?? '') === (string) (blacksmiths()[$bid] ?? ''), ($set['smith'] ?? '') . '/' . (blacksmiths()[$bid] ?? ''));
+    // 同一区域 7 个名字互不相同（更有辨识度）
+    ck29("[$bid]NPC名字互不相同", count(array_unique($set)) === 7, (string) count(array_unique($set)));
+}
+
 // 8) 玩家在基地时，从 hub 能走进来（可徒步到基地）
 $start = array_values($links)[0] ?? 'capital_gate';
 ck29('从hub可寻路到某基地', find_route($start, $bases[0]) !== [], $start . '->' . $bases[0]);

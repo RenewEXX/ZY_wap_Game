@@ -333,6 +333,48 @@ function we2_build(): array
 
 function we2_locations(): array { return we2_build()['loc']; }
 function we2_base_ids(): array { return we2_build()['bases']; }
+
+// 各根据地常用NPC的名字（贴合区域主题）：smith/teleport/supply/auction/quest/guild/rest
+function we2_base_npcs(): array
+{
+    return [
+        // 熔金工坊：齿轮、熔炉、机巧
+        'forge_camp' => [
+            'smith' => '锻魂匠·赤砧', 'teleport' => '轨引者·灰膛', 'supply' => '货郎·锈盒',
+            'auction' => '估价师·铜秤', 'quest' => '工头·急召', 'guild' => '工坊管事·铁律', 'rest' => '熄炉歇脚',
+        ],
+        // 青藤古林：藤蔓、自然、林木
+        'verd_camp' => [
+            'smith' => '缠枝匠·苔砧', 'teleport' => '引路人·萤径', 'supply' => '货郎·松果',
+            'auction' => '估价师·年轮', 'quest' => '林语者·传讯', 'guild' => '林务管事·长青', 'rest' => '苔藓歇脚',
+        ],
+        // 霜魄墓园：霜、墓、亡
+        'crypt_camp' => [
+            'smith' => '守墓匠·霜砧', 'teleport' => '引魂使·冷烛', 'supply' => '货郎·骨匣',
+            'auction' => '估价师·灰秤', 'quest' => '敲钟人·讣告', 'guild' => '墓园管事·缄默', 'rest' => '灵堂歇脚',
+        ],
+        // 星陨荒原：星、陨、光雷
+        'star_camp' => [
+            'smith' => '陨铁匠·星砧', 'teleport' => '引路人·星轨', 'supply' => '货郎·流萤',
+            'auction' => '估价师·星盘', 'quest' => '观星人·星诏', 'guild' => '荒原管事·司辰', 'rest' => '陨坑歇脚',
+        ],
+        // 渊海熔潮：火、熔海、暗
+        'magma_camp' => [
+            'smith' => '熔铸匠·黑砧', 'teleport' => '引路人·火潮', 'supply' => '货郎·油囊',
+            'auction' => '估价师·熔秤', 'quest' => '拜火长·神谕', 'guild' => '熔岸管事·灼印', 'rest' => '熔岸歇脚',
+        ],
+        // 时空回廊：时、奥术、雷
+        'chrono_camp' => [
+            'smith' => '织时匠·齿轮砧', 'teleport' => '引时人·钟摆', 'supply' => '货郎·沙漏',
+            'auction' => '估价师·停表', 'quest' => '报时者·时诏', 'guild' => '回廊管事·刻度', 'rest' => '停摆小憩',
+        ],
+        // 天外神墟：光、暗、圣
+        'divine_camp' => [
+            'smith' => '圣铸匠·金砧', 'teleport' => '引路人·云阶', 'supply' => '货郎·圣羽',
+            'auction' => '估价师·天秤', 'quest' => '神使·谕令', 'guild' => '神墟管事·戒律', 'rest' => '云榻小憩',
+        ],
+    ];
+}
 function we2_monsters(): array { return we2_build()['mon']; }
 function we2_lv(): array { return we2_build()['lv']; }
 function we2_element(): array { return we2_build()['el']; }

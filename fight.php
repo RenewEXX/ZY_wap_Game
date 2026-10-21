@@ -211,7 +211,7 @@ if ($a === 'hit' || $a === 'skill' || $a === 'tick') {
                 'bhp' => (int) $bb['hp'], 'bmax' => (int) $bb['maxhp'],
                 'bname' => (string) $bb['name'],
                 'left' => (int) ($bb['left'] ?? 1), 'num' => (int) ($bb['num'] ?? 1),
-                'histhtml' => array_map('battle_log_html', array_slice((array) ($bb['history'] ?? []), -6)),
+                'histhtml' => array_map('battle_log_html', array_slice((array) ($bb['history'] ?? []), -3)),
                 'pet' => (function () use ($u) { $ap = active_pet((int) ($u['id'] ?? 0)); if (!$ap) { return ''; } $st = pet_stats($ap); return pet_species()[$ap['species']]['name'] . ' ' . min((int) $ap['hp'], $st['maxhp']) . '/' . $st['maxhp']; })(),
                 'summons' => summon_status_list(),
             ]);
@@ -589,7 +589,7 @@ if ($a === 'drink') {
             'bhp' => (int) $bb['hp'], 'bmax' => (int) $bb['maxhp'],
             'bname' => (string) $bb['name'],
             'left' => (int) ($bb['left'] ?? 1), 'num' => (int) ($bb['num'] ?? 1),
-            'histhtml' => array_map('battle_log_html', array_slice((array) ($bb['history'] ?? []), -6)),
+            'histhtml' => array_map('battle_log_html', array_slice((array) ($bb['history'] ?? []), -3)),
             'mats' => array_intersect_key(mats_of((int) ($u['id'] ?? 0)), array_flip(array_keys(pct_potions()))),
             'pet' => $ap ? (pet_species()[$ap['species']]['name'] . ' ' . min((int) $ap['hp'], pet_stats($ap)['maxhp']) . '/' . pet_stats($ap)['maxhp']) : '',
             'summons' => summon_status_list(),
@@ -635,7 +635,7 @@ if (($b['id'] ?? '') === 'abyss_eye') {
 echo '<div class="muted">自动战斗中：每1秒默认放[' . h(job_of($u)['skill']) . ']，战报每2秒刷新。切到别的画面战斗也会在后台继续。</div>';
 echo '<div class="hr">--------</div>';
 echo '<div id="blog">';
-foreach (array_slice($history, -6) as $h) {
+foreach (array_slice($history, -3) as $h) {
     echo battle_log_html((string) $h) . '<div class="hr" style="margin:4px 0;opacity:.6">--------</div>';
 }
 echo '</div>';

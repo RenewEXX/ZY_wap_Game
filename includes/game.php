@@ -3325,6 +3325,57 @@ function job_skillset(string $job): array
     return ['warrior' => ['w1', 'w2', 'w3', 'w4', 'w5', 'w6', 'w7', 'w8', 'w9'], 'mage' => ['m1', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8', 'm9'], 'hunter' => ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'h7', 'h8', 'h9'], 'priest' => ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8', 'p9'], 'summoner' => ['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9']][$job] ?? ['w1', 'w2', 'w3', 'w4', 'w5', 'w6', 'w7', 'w8', 'w9'];
 }
 
+// 技能图鉴用：把技能的基础效果讲清楚（kind/威力/属性/流派/DOT）
+function skill_effect_desc(array $c): string
+{
+    $kind = (string) ($c['kind'] ?? '');
+    $mult = (float) ($c['mult'] ?? 0);
+    $pw = '';
+    if ($mult > 0) {
+        $pw = '威力×' . rtrim(rtrim(number_format($mult, 2, '.', ''), '0'), '.');
+    }
+    switch ($kind) {
+        case 'phys':
+            $s = '物理攻击' . ($pw !== '' ? '，' . $pw : '');
+            break;
+        case 'magic':
+            $s = '法术攻击（按法攻结算）';
+            break;
+        case 'multi2':
+            $s = '连续多段攻击' . ($pw !== '' ? '，' . $pw : '');
+            break;
+        case 'heal':
+            $s = '造成伤害并治疗自己' . (!empty($c['heal']) ? '（基础治疗+' . (int) $c['heal'] . '）' : '');
+            break;
+        case 'aoe':
+            $s = '群体范围攻击' . ($pw !== '' ? '，' . $pw : '');
+            break;
+        case 'summon':
+            $s = '召唤召唤兽助战（替你承伤与输出）';
+            break;
+        case 'sin':
+            $s = '罪技能（需罪值≥100才能放）' . ($pw !== '' ? '，' . $pw : '');
+            break;
+        default:
+            $s = '特殊效果';
+    }
+    $el = (string) ($c['el'] ?? '');
+    if ($el !== '') {
+        $s .= '，' . element_name($el) . '属性';
+    }
+    if (!empty($c['tank'])) {
+        $s .= '，防御向（挨打按防御反击）';
+    }
+    if (!empty($c['rage'])) {
+        $s .= '，狂战向（本场掉血越多伤害越高）';
+    }
+    if (!empty($c['dot'])) {
+        $dotName = ['bleed' => '出血', 'burn' => '焦灼', 'poison' => '剧毒'][$c['dot']] ?? '持续伤害';
+        $s .= '，附带' . $dotName;
+    }
+    return $s;
+}
+
 function skill_books(): array
 {
     return [
@@ -5497,6 +5548,16 @@ function monster_lv(string $mid): int
     // 六圣柱专属小怪
     $dm = dragon_monster($mid);
     return (int) ($dm['lv'] ?? 1);
+}
+
+// 地图上展示的怪物等级（仅用于显示，不影响战斗/经验结算）。
+// 回响·雷恩在剧情14后进入二阶段（血量2000/攻击85，明显变强），别再把它显示成一阶段的14级。
+function monster_shown_lv(string $mid, ?array $u = null): int
+{
+    if ($mid === 'echo_rayne' && $u !== null && (int) ($u['quest'] ?? 0) > 14) {
+        return 30;
+    }
+    return monster_lv($mid);
 }
 
 // 经验按怪物等级锚定升级需求：同级怪约(10+人物等级)只升一级，越级加成封顶20%
@@ -8902,8 +8963,11 @@ function sin_gain_array(array &$u, int $n = 1): void
     }
     $f = cflags($uid);
     $old = (float) ($f['sin_f'] ?? max(0, (int) ($f['sin'] ?? 0)));
-    $gain = $n === 1 ? 0.2 : $n;
-    $new = max(0.0, min(999.0, $old + $gain - 0.002));
+    // 获取速度总系数：当前为原始设计的 1%（打怪攒罪明显变慢）
+    $rate = 0.01;
+    $gain = ($n === 1 ? 0.2 : $n) * $rate;
+    // 衰减也同比缩放，保持"攒多久/掉多快"的手感比例不变
+    $new = max(0.0, min(999.0, $old + $gain - 0.002 * $rate));
     $newI = (int) floor($new + 1e-9);
     $have = (int) ($f['sin_hp'] ?? 0);
     $base = max(1, (int) $u['maxhp'] - $have);

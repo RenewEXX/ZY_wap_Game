@@ -17,7 +17,8 @@ foreach (my_skills((int) $u['id']) as $s) {
 
 wap_start('技能');
 echo h(job_of($u)['name']) . '技能　<span style="color:#6cf">魔力 ' . (int) ($u['mp'] ?? 0) . '/' . (int) ($u['maxmp'] ?? 0) . '</span><br>';
-echo '<span class="muted">用一次涨1熟练度，同职业技能书可升级（最高20级）。</span>';
+echo '<span class="muted">用一次涨1熟练度，同职业技能书可升级（最高20级）。</span><br>';
+echo '<a href="skills.php?codex=1">查看全职业技能图鉴 →</a><br>';
 echo '<div class="hr">--------</div>';
 foreach ($set as $sid) {
     $c = skill_catalog()[$sid];
@@ -67,6 +68,26 @@ foreach (skill_books() as $bid => $b) {
 }
 if (!$any) {
     echo '<span class="muted">空。食人魔/狱卒/莫尔/雷恩会掉技能书。</span>';
+}
+
+// —— 技能图鉴：按职业分栏，介绍每个技能的基础效果和成长 ——
+if ((string) ($_GET['codex'] ?? '') === '1') {
+    $cat = skill_catalog();
+    $jobOrder = ['warrior' => '战士', 'mage' => '法师', 'hunter' => '猎手', 'priest' => '牧师', 'summoner' => '召唤师'];
+    echo '<div class="hr">--------</div>';
+    echo '<b>技能图鉴</b><span class="muted">（全职业，含基础效果与10阶/20级成长）</span><br>';
+    echo '<a href="skills.php">← 收起图鉴</a><br>';
+    foreach ($jobOrder as $jid => $jname) {
+        echo '<div style="color:#6cf;margin-top:6px">【' . h($jname) . '】</div>';
+        foreach (job_skillset($jid) as $sid) {
+            $c = $cat[$sid] ?? null;
+            if ($c === null) {
+                continue;
+            }
+            echo '·<b>' . h($c['name']) . '</b>（耗蓝' . (int) $c['mp'] . '）<br>';
+            echo '<span class="muted">' . h(skill_effect_desc($c)) . '。10阶：' . h((string) ($c['t10'] ?? '')) . '；20级：' . h((string) ($c['lv20'] ?? '')) . '</span><br>';
+        }
+    }
 }
 nav_line();
 wap_end(false);

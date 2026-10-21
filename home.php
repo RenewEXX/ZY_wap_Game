@@ -281,23 +281,24 @@ if ($here['monsters'] !== []) {
     }
     foreach ($here['monsters'] as $mid) {
         $m = monsters()[$mid];
-        $diff = monster_lv($mid) - (int) ($u['lv'] ?? 1);
+        $shownLv = monster_shown_lv($mid, $u);
+        $diff = $shownLv - (int) ($u['lv'] ?? 1);
         $tag = $diff <= -4 ? '经验衰减' : ($diff > 0 ? '越级+' . (int) min(20, $diff * 5) . '%' : '');
         $isBoss = ($mid === boss_of_map($cur));
         $left = $spawns[$mid . '|0'] ?? 0;
         if ($left <= 0) {
-            echo '· ' . h($m['name']) . '[Lv' . monster_lv($mid) . ']' . ($isBoss ? '（BOSS剩' . gmdate('i:s', spawn_respawn_in($cur, $mid)) . '刷新）' : '（这种杀光了，剩' . gmdate('i:s', spawn_respawn_in($cur, $mid)) . '刷新，可打别的怪）') . '<br>';
+            echo '· ' . h($m['name']) . '[Lv' . $shownLv . ']' . ($isBoss ? '（BOSS剩' . gmdate('i:s', spawn_respawn_in($cur, $mid)) . '刷新）' : '（这种杀光了，剩' . gmdate('i:s', spawn_respawn_in($cur, $mid)) . '刷新，可打别的怪）') . '<br>';
             continue;
         }
         $gang = (!$isBoss && $left >= 6) ? ' / <a href="fight.php?a=start&m=' . h($mid) . '&n=6">群殴6只</a>' : '';
-        echo '· ' . h($m['name']) . '[Lv' . monster_lv($mid) . ($tag !== '' ? '·' . $tag : '') . ']剩' . $left . '只 <a href="fight.php?a=start&m=' . h($mid) . '">打1只</a>' . $gang . '<br>';
+        echo '· ' . h($m['name']) . '[Lv' . $shownLv . ($tag !== '' ? '·' . $tag : '') . ']剩' . $left . '只 <a href="fight.php?a=start&m=' . h($mid) . '">打1只</a>' . $gang . '<br>';
     }
     foreach ($spawns as $key => $num) {
         [$emid, $eel] = explode('|', $key);
         if ((int) $eel !== 1 || !isset(monsters()[$emid])) {
             continue;
         }
-        echo '·<b>' . h(monsters()[$emid]['name']) . '（精英）</b>[Lv' . monster_lv($emid) . ']剩' . $num . '只（经验×3，掉率更高） <a href="fight.php?a=start&m=' . h($emid) . '&elite=1">挑战</a><br>';
+        echo '·<b>' . h(monsters()[$emid]['name']) . '（精英）</b>[Lv' . monster_shown_lv($emid, $u) . ']剩' . $num . '只（经验×3，掉率更高） <a href="fight.php?a=start&m=' . h($emid) . '&elite=1">挑战</a><br>';
     }
     echo '<div class="hr">--------</div>';
 }

@@ -68,7 +68,7 @@ function job_id_of(array $u): string
 
 function locations(): array
 {
-    return [
+    return world_link_regions([
         'smithy' => [
             'name' => '灰雾村·铁匠铺',
             'desc' => '打铁声。老铁匠布隆：“醒了？你倒在村口，浑身是灰。雾在往上爬。”桌上有字条【别往下看】。',
@@ -141,7 +141,7 @@ function locations(): array
             'exits' => ['gate' => '罪渊入口'],
             'monsters' => [],
         ],
-    ] + ch1_locations() + dsw_locations() + ch2_locations() + abx_locations() + ch3_locations() + mx_locations() + farm_locations() + ice_locations() + fr_locations() + fo_locations() + em_locations() + dragon_locations() + pz_locations() + sen_locations() + wild3_locations() + frostburg_locations() + greenheart_locations() + wild45_locations() + as_locations() + vx_locations() + gr_locations() + ry_locations() + god_locations() + gf_locations();
+    ] + ch1_locations() + dsw_locations() + ch2_locations() + abx_locations() + ch3_locations() + mx_locations() + farm_locations() + ice_locations() + fr_locations() + fo_locations() + em_locations() + dragon_locations() + pz_locations() + sen_locations() + wild3_locations() + frostburg_locations() + greenheart_locations() + wild45_locations() + as_locations() + vx_locations() + gr_locations() + ry_locations() + god_locations() + gf_locations() + world_expansion_locations());
 }
 
 function loc(string $id): array
@@ -383,7 +383,7 @@ function monsters(): array
         'ry_shaper' => ['name' => '岩狱塑岩者', 'hp' => 4600000, 'atk' => 9000, 'exp' => 9500000, 'gold' => 4500000],
         'ry_warder' => ['name' => '岩狱狱卒', 'hp' => 5000000, 'atk' => 9500, 'exp' => 10400000, 'gold' => 4900000],
         'ry_titan' => ['name' => '岩狱泰坦·土龙岳柱', 'hp' => 9000000, 'atk' => 11000, 'exp' => 20000000, 'gold' => 9500000],
-    ] + dragon_monsters();
+    ] + dragon_monsters() + world_expansion_monsters();
 }
 
 function items(): array
@@ -1234,6 +1234,15 @@ function war_enemies(int $uid): array
 function boss_of_map(string $loc): string
 {
     static $m = ['boss' => 'knight', 'echo_room' => 'echo_rayne', 'rift' => 'abyss_eye', 'baltar' => 'dark_lily', 'dsw_throne' => 'swamp_king', 'abx_throne' => 'abaddon', 'theater' => 'string_puller', 'mx_heart' => 'silk_mother', 'frost_throne' => 'winter_king', 'fr_core' => 'fr_leviathan', 'volcano_heart' => 'ancient_ruin_golem', 'em_core' => 'em_heart', 'pz_core' => 'pz_master', 'sen_core' => 'sen_avatar', 'shadow_den' => 'shadow_claw', 'brass_chapel' => 'brass_bishop', 'wanderer_camp' => 'tundra_wanderer', 'ice_fall' => 'avalanche_titan', 'obsidian_field' => 'obsidian_colossus', 'as_core' => 'ash_titan', 'vx_core' => 'vx_tyrant', 'ry_core' => 'ry_titan', 'god_throne' => 'god_avatar', 'gf_core' => 'god_emperor', 'yz_core' => 'yz_boss'];
+    static $wnMerged = false;
+    if (!$wnMerged) {
+        foreach (world_expansion_boss_map() as $__wk => $__wv) {
+            if (!isset($m[$__wk])) {
+                $m[$__wk] = $__wv;
+            }
+        }
+        $wnMerged = true;
+    }
     return $m[$loc] ?? '';
 }
 
@@ -2839,7 +2848,7 @@ function monster_drops(string $mid): array
     if ($dm !== []) {
         return [];
     }
-    return [
+    return ([
         'rat' => ['slot' => 'gloves', 'base' => '破布手套', 'rate' => 0.01, 'q' => [100, 0, 0, 0, 0]],
         'rat_pack' => ['slot' => 'gloves', 'base' => '腐骨护手'],
         'slime' => ['slot' => 'shoes', 'base' => '黏液布鞋', 'rate' => 0.012, 'q' => [80, 20, 0, 0, 0]],
@@ -3009,7 +3018,7 @@ function monster_drops(string $mid): array
         'vx_knight' => ['slot' => 'body', 'base' => '烬焰·守卫铠'],
         'vx_herald' => ['slot' => 'necklace', 'base' => '烬焰·余火链'],
         'vx_tyrant' => ['slot' => 'ring', 'base' => '虚空暴君之戒', 'rate' => 0.3, 'q' => [0, 0, 20, 50, 30], 'legendary' => ['base' => '虚空暴君·终焉', 'extra' => ['k' => 'skill_damage', 'v' => 8.0]]],
-    ][$mid] ?? [];
+    ] + world_expansion_drops())[$mid] ?? [];
 }
 
 function equip_primary(string $slot, string $offKind = ''): string
@@ -3999,6 +4008,15 @@ function monster_element(string $mid): string
         'cinder_crawler' => 'fire', 'cinder_stalker' => 'dark', 'cinder_warden' => 'fire', 'cinder_horror' => 'dark', 'ash_titan' => 'fire',
         'doyle' => 'fire',
     ];
+    static $wnElMerged = false;
+    if (!$wnElMerged) {
+        foreach (world_expansion_element() as $__wk => $__wv) {
+            if (!isset($m[$__wk])) {
+                $m[$__wk] = $__wv;
+            }
+        }
+        $wnElMerged = true;
+    }
     if (isset($m[$mid])) {
         return $m[$mid];
     }
@@ -4264,7 +4282,7 @@ function ground_pickup(int $uid, int $gid): string
 function is_boss_mid(string $mid): bool
 {
     static $bosses = ['knight', 'echo_rayne', 'swamp_king', 'abaddon', 'abyss_eye', 'dark_lily', 'valentin', 'guardian', 'string_puller', 'silk_mother', 'winter_king', 'fr_leviathan', 'ancient_ruin_golem', 'em_heart', 'doyle', 'pz_master', 'sen_avatar', 'shadow_claw', 'brass_bishop', 'tundra_wanderer', 'avalanche_titan', 'obsidian_colossus', 'ash_titan'];
-    return in_array($mid, $bosses, true);
+    return in_array($mid, $bosses, true) || in_array($mid, world_expansion_bosses(), true);
 }
 
 function is_ch3_mid(string $mid): bool
@@ -4275,7 +4293,7 @@ function is_ch3_mid(string $mid): bool
 
 function scale_monster(array $m, string $mid, int $elite = 0): array
 {
-    if (is_ch3_mid($mid)) {
+    if (is_ch3_mid($mid) || world_identity_mid($mid)) {
         if ($elite === 1) {
             $m['hp'] = (int) ($m['hp'] * 1.6);
             $m['maxhp'] = (int) ($m['hp']);
@@ -4486,7 +4504,12 @@ function roll_drop(int $uid, string $mid, int $elite = 0): string
     $m = 1 + $mlv * 0.03 + min(200, gear_stats($uid)['magic_find']) / 100;
     // 转生：掉落率+20%
     if (function_exists('rs_drop_mult')) { $m *= rs_drop_mult($uid); }
-    $chances = [4 => 0.0002 * $m, 3 => 0.0007 * $m, 2 => 0.0025 * $m, 1 => 0.01 * $m, 0 => 0.04 * $m];
+    if (is_boss_mid($mid)) {
+        // BOSS：品质整体上移，传说装备掉率显著提高（传说只挂在BOSS掉落表上）
+        $chances = [4 => 0.004 * $m, 3 => 0.012 * $m, 2 => 0.03 * $m, 1 => 0.08 * $m, 0 => 0.16 * $m];
+    } else {
+        $chances = [4 => 0.0002 * $m, 3 => 0.0007 * $m, 2 => 0.0025 * $m, 1 => 0.01 * $m, 0 => 0.04 * $m];
+    }
     $roll = mt_rand() / mt_getrandmax();
     $q = -1;
     foreach ($chances as $qq => $ch) {
@@ -5542,6 +5565,15 @@ function monster_lv(string $mid): int
         'ry_crawler' => 720, 'ry_guard' => 760, 'ry_shaper' => 800, 'ry_warder' => 850, 'ry_titan' => 900,
         'doyle' => 999,
     ];
+    static $wnMerged = false;
+    if (!$wnMerged) {
+        foreach (world_expansion_lv() as $__wk => $__wv) {
+            if (!isset($lv[$__wk])) {
+                $lv[$__wk] = $__wv;
+            }
+        }
+        $wnMerged = true;
+    }
     if (isset($lv[$mid])) {
         return $lv[$mid];
     }
@@ -7381,7 +7413,7 @@ function map_regions(): array
         '冰原·凛冬' => ['ice_gate', 'ice_trail', 'ice_village', 'frozen_lake', 'snow_field', 'glacier_pass', 'aurora_vale', 'ice_cave', 'wyrm_tunnel', 'blizzard_peak', 'glacier_heart', 'frost_throne', 'buf34a', 'buf34b'],
         '雾森·火山' => ['fo_gate', 'mist_edge', 'deep_woods', 'thorn_maze', 'boa_swamp', 'ape_hollow', 'sage_grove', 'ash_wastes', 'ember_foothill', 'lava_river', 'cult_altar', 'magma_core', 'flame_temple', 'ruin_gate', 'volcano_heart', 'buf35a', 'buf35b'],
         '六圣柱' => ['sky_ramp', 'sky_isles', 'wind_shrine', 'frost_deep', 'lost_kingdom', 'storm_wall', 'thunder_pool', 'abyss_deep', 'forbidden_origin', 'sky_city_ruin', 'holy_stair'],
-    ];
+    ] + world_expansion_regions();
 }
 
 // 副本图：只能找NPC进，不参与传送

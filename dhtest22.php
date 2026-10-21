@@ -49,6 +49,12 @@ ckT('图鉴覆盖45个技能', $total === 45, (string) $total);
 ckT('无空描述', $emptyDesc === 0, (string) $emptyDesc);
 ckT('无未知类型(全部命中已知kind)', $defaultDesc === 0, (string) $defaultDesc);
 ckT('召唤技能描述含召唤', str_contains(skill_effect_desc($cat['s1']), '召唤'), skill_effect_desc($cat['s1']));
+// 分栏正确性：每个职业页只放本职业技能
+foreach ($jobs as $jid) {
+    foreach (job_skillset($jid) as $sid) {
+        ckT("技能[$sid]归属职业[$jid]正确", (string) ($cat[$sid]['job'] ?? '') === $jid, (string) ($cat[$sid]['job'] ?? ''));
+    }
+}
 
 // —— 4. 出生点确认（smithy = 灰雾村铁匠铺，是设计好的开场）——
 ckT('新号出生点在smithy铁匠铺', (string) ($u['loc'] ?? '') === 'smithy', (string) ($u['loc'] ?? ''));

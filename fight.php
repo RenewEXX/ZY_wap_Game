@@ -213,6 +213,7 @@ if ($a === 'hit' || $a === 'skill' || $a === 'tick') {
                 'left' => (int) ($bb['left'] ?? 1), 'num' => (int) ($bb['num'] ?? 1),
                 'histhtml' => array_map('battle_log_html', array_slice((array) ($bb['history'] ?? []), -6)),
                 'pet' => (function () use ($u) { $ap = active_pet((int) ($u['id'] ?? 0)); if (!$ap) { return ''; } $st = pet_stats($ap); return pet_species()[$ap['species']]['name'] . ' ' . min((int) $ap['hp'], $st['maxhp']) . '/' . $st['maxhp']; })(),
+                'summons' => summon_status_list(),
             ]);
             exit;
         }
@@ -591,6 +592,7 @@ if ($a === 'drink') {
             'histhtml' => array_map('battle_log_html', array_slice((array) ($bb['history'] ?? []), -6)),
             'mats' => array_intersect_key(mats_of((int) ($u['id'] ?? 0)), array_flip(array_keys(pct_potions()))),
             'pet' => $ap ? (pet_species()[$ap['species']]['name'] . ' ' . min((int) $ap['hp'], pet_stats($ap)['maxhp']) . '/' . pet_stats($ap)['maxhp']) : '',
+            'summons' => summon_status_list(),
         ]);
         exit;
     }
@@ -617,6 +619,16 @@ if ($fpet) {
 } else {
     echo '<div style="color:#9c9" id="ppet"></div>';
 }
+// 召唤物：像宠物一样显示血量状态
+$fsum = summon_status_list();
+echo '<div style="color:#c9f" id="psum">';
+foreach ($fsum as $si => $ss) {
+    if ($si > 0) {
+        echo '<br>';
+    }
+    echo h($ss['name']) . ' ' . $ss['hp'] . '/' . $ss['max'];
+}
+echo '</div>';
 if (($b['id'] ?? '') === 'abyss_eye') {
     echo '<div class="warn">深渊之眼呼唤你的名字：“回答我……” <a href="fight.php?a=answer">回答</a> <a href="fight.php?a=silence">沉默</a></div>';
 }
@@ -688,6 +700,7 @@ setInterval(async ()=>{
     document.getElementById("uhp").innerText="我"+d.uhp+"/"+d.umax;
     if(d.ump!==undefined){ const me=document.getElementById("ump"); if(me) me.innerText="魔力 "+d.ump+"/"+d.umaxmp; }
     if(d.pet!==undefined){ const pe=document.getElementById("ppet"); if(pe) pe.innerText=d.pet; }
+    if(d.summons!==undefined){ const se=document.getElementById("psum"); if(se) se.innerHTML=d.summons.map(function(s){return s.name+" "+s.hp+"/"+s.max;}).join("<br>"); }
     document.getElementById("bhp").innerText="敌生命"+d.bhp+"/"+d.bmax;
     if(d.num>1){ const bl=document.getElementById("bleft"); if(bl) bl.innerText="剩余 "+d.left+"/"+d.num+"只，存活怪每回合一起打你！"; }
     const box=document.getElementById("blog");

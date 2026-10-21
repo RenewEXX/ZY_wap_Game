@@ -2819,7 +2819,7 @@ function equip_set_bonus_text(string $set, int $owned): string
         return '【噬渊套装】已穿' . $owned . '/5（深渊吞噬者/万渊之腹甲/噬魂万手/无尽深渊裹腿/归墟沉没披风）——每件：吸血+2%；2件：攻+12%、吸血+6%；3件：真伤+等级×20；5件：全属性+等级×5、减伤+20%！深渊回赠你一口。';
     }
     if ($set === 'soulpact') {
-        return '【魂契套装】已穿' . $owned . '/5（万鬼招魂幡/深渊引魂灯/亡者契约冠/幽魂缚魂链/献祭者骨戒）——每件：召唤兽伤害+8%；2件：召唤上限+1、真伤+等级×10；3件：召唤兽攻击+等级×4；5件：召唤兽存活+2轮、召唤兽死亡必爆炸！容器越空，召唤越强。';
+        return '【魂契套装】已穿' . $owned . '/5（万鬼招魂幡/深渊引魂灯/亡者契约冠/幽魂缚魂链/献祭者骨戒）——每件：召唤兽伤害+8%；2件：召唤上限+1、真伤+等级×10；3件：召唤兽攻击+等级×4；5件：召唤兽生命+40%、召唤兽死亡必爆炸！容器越空，召唤越强。';
     }
     if ($set === 'rockjail') {
         return '【岩狱套装】已穿' . $owned . '/10：3件血+3000，5件减伤+8%，7件血+8000减伤+12%，10件血+20000减伤+20%、磐岩（承伤再-5%）。';
@@ -3307,12 +3307,12 @@ function skill_catalog(): array
         'w9' => ['name' => '血狱狂斩', 'job' => 'warrior', 'mp' => 45, 'kind' => 'sin', 'mult' => 3.6, 'el' => 'dark', 'rage' => 1, 't10' => '斩杀线40%', 'lv20' => '伤害+15%，斩杀线50%'],
         'm9' => ['name' => '魂蚀天雷', 'job' => 'mage', 'mp' => 50, 'kind' => 'sin', 'mult' => 4.2, 'el' => 'thunder', 't10' => '35%麻痹', 'lv20' => '伤害+15%，麻痹40%'],
         'h9' => ['name' => '弑神连珠', 'job' => 'hunter', 'mp' => 45, 'kind' => 'sin', 'mult' => 3.0, 'el' => 'dark', 'dot' => 'bleed', 't10' => '引爆目标身上全部DOT层数（每层转成一次额外伤害）', 'lv20' => '引爆伤害+50%'],        // 召唤师：召唤/腐蚀/献祭
-        's1' => ['name' => '深渊契约', 'job' => 'summoner', 'mp' => 10, 'kind' => 'summon', 'mult' => 1.2, 'el' => 'dark', 't10' => '召唤1只深渊小鬼', 'lv20' => '小鬼存活+1轮'],
-        's2' => ['name' => '招魂引', 'job' => 'summoner', 'mp' => 18, 'kind' => 'summon', 'mult' => 1.4, 'el' => 'dark', 't10' => '召唤1只骸骨守卫（需熟练10级），血厚能扛', 'lv20' => '守卫存活+1轮，伤害+15%'],
-        's3' => ['name' => '血肉筑城', 'job' => 'summoner', 'mp' => 22, 'kind' => 'summon', 'mult' => 1.8, 'el' => 'dark', 't10' => '献祭20%生命召唤憎恶聚合体（需熟练10级），死时爆炸', 'lv20' => '聚合体存活+1轮，爆炸+30%'],
+        's1' => ['name' => '深渊契约', 'job' => 'summoner', 'mp' => 10, 'kind' => 'summon', 'mult' => 1.2, 'el' => 'dark', 't10' => '召唤1只深渊小鬼', 'lv20' => '小鬼生命+15%'],
+        's2' => ['name' => '招魂引', 'job' => 'summoner', 'mp' => 18, 'kind' => 'summon', 'mult' => 1.4, 'el' => 'dark', 't10' => '召唤1只骸骨守卫（需熟练10级），血厚能扛', 'lv20' => '守卫生命+15%，伤害+15%'],
+        's3' => ['name' => '血肉筑城', 'job' => 'summoner', 'mp' => 22, 'kind' => 'summon', 'mult' => 1.8, 'el' => 'dark', 't10' => '献祭20%生命召唤憎恶聚合体（需熟练10级），死时爆炸', 'lv20' => '聚合体生命+15%，爆炸+30%'],
         's4' => ['name' => '小鬼潮', 'job' => 'summoner', 'mp' => 30, 'kind' => 'summon', 'mult' => 1.5, 'el' => 'dark', 't10' => '召唤2只深渊小鬼', 'lv20' => '召唤3只，小鬼伤害+15%'],
         's5' => ['name' => '死灵之拥', 'job' => 'summoner', 'mp' => 40, 'kind' => 'summon', 'mult' => 2.2, 'el' => 'dark', 't10' => '召唤2只深渊恶鬼（2觉专属），死时爆炸', 'lv20' => '同时召唤多只，爆炸范围+50%'],
-        's6' => ['name' => '噬魂夜宴', 'job' => 'summoner', 'mp' => 48, 'kind' => 'summon', 'mult' => 2.6, 'el' => 'dark', 't10' => '献祭30%生命召唤无面梦魇（2觉专属），最强', 'lv20' => '梦魇存活+1轮，伤害+25%'],
+        's6' => ['name' => '噬魂夜宴', 'job' => 'summoner', 'mp' => 48, 'kind' => 'summon', 'mult' => 2.6, 'el' => 'dark', 't10' => '献祭30%生命召唤无面梦魇（2觉专属），最强', 'lv20' => '梦魇生命+15%，伤害+25%'],
         's7' => ['name' => '群魂爆裂', 'job' => 'summoner', 'mp' => 52, 'kind' => 'aoe', 'mult' => 2.6, 'el' => 'dark', 't10' => '引爆全部召唤兽，范围伤害', 'lv20' => '引爆伤害+40%'],
         's8' => ['name' => '永夜契约', 'job' => 'summoner', 'mp' => 52, 'kind' => 'summon', 'mult' => 2.8, 'el' => 'dark', 't10' => '召唤1只憎恶+1只恶鬼（需熟练10级）', 'lv20' => '再多1只恶鬼，伤害+25%'],
         's9' => ['name' => '深渊主宰', 'job' => 'summoner', 'mp' => 45, 'kind' => 'sin', 'mult' => 3.4, 'el' => 'dark', 't10' => '献祭全部召唤兽，全部伤害转化生命', 'lv20' => '伤害+15%，转化率翻倍'],
@@ -4752,13 +4752,13 @@ function soul_lv(int $uid, int $eid): int
 function summon_units(): array
 {
     return [
-        'imp' => ['name' => '深渊小鬼', 'atk_mult' => 0.30, 'hp_mult' => 0.35, 'turns' => 3, 'bomb' => false],
-        'wraith' => ['name' => '深渊恶鬼', 'atk_mult' => 0.55, 'hp_mult' => 0.60, 'turns' => 4, 'bomb' => true],
-        'bone' => ['name' => '骸骨守卫', 'atk_mult' => 0.45, 'hp_mult' => 0.85, 'turns' => 4, 'bomb' => false],
+        'imp' => ['name' => '深渊小鬼', 'atk_mult' => 0.30, 'hp_mult' => 0.35, 'bomb' => false],
+        'wraith' => ['name' => '深渊恶鬼', 'atk_mult' => 0.55, 'hp_mult' => 0.60, 'bomb' => true],
+        'bone' => ['name' => '骸骨守卫', 'atk_mult' => 0.45, 'hp_mult' => 0.85, 'bomb' => false],
         // 四阶·憎恶聚合体：多只恶鬼缝合的攻城兽，死时爆炸
-        'abom' => ['name' => '憎恶聚合体', 'atk_mult' => 0.80, 'hp_mult' => 0.70, 'turns' => 4, 'bomb' => true],
+        'abom' => ['name' => '憎恶聚合体', 'atk_mult' => 0.80, 'hp_mult' => 0.70, 'bomb' => true],
         // 五阶·无面梦魇：深渊第五层的原住民，最强
-        'mare' => ['name' => '无面梦魇', 'atk_mult' => 1.10, 'hp_mult' => 0.80, 'turns' => 5, 'bomb' => true],
+        'mare' => ['name' => '无面梦魇', 'atk_mult' => 1.10, 'hp_mult' => 0.80, 'bomb' => true],
     ];
 }
 
@@ -4817,33 +4817,47 @@ function summon_clear(): void
     summon_save([]);
 }
 
-// 生成一只召唤兽
-function summon_spawn(string $kind, int $patk, int $php, array $u): array
+// 召唤兽状态（战斗界面显示用）：名字 + 当前血量/最大血量
+function summon_status_list(): array
+{
+    $out = [];
+    foreach (summon_list() as $s) {
+        $out[] = [
+            'name' => (string) ($s['name'] ?? '召唤兽'),
+            'hp' => max(0, (int) ($s['hp'] ?? 0)),
+            'max' => max(1, (int) ($s['maxhp'] ?? 1)),
+        ];
+    }
+    return $out;
+}
+
+// 生成一只召唤兽（无回合数，死亡后消失；原"存活±N轮"加成统一折算成生命%）
+function summon_spawn(string $kind, int $patk, int $php, array $u, float $bonusHpPct = 0): array
 {
     $cfg = summon_units()[$kind] ?? summon_units()['imp'];
     $sp = 1 + summon_power_bonus($u) / 100;
-    $turns = $cfg['turns'];
-    // 魂契5件：召唤兽存活+2轮
+    $hpPct = 0;
+    // 魂契5件：召唤兽生命+40%
     if (equip_set_owned_count((int) ($u['id'] ?? 0), 'soulpact') >= 5) {
-        $turns += 2;
+        $hpPct += 40;
     }
-    // 契匣：传说匣再加存活轮数
-    $turns += summoner_offhand_eff((int) ($u['id'] ?? 0))['turns'];
-    // 召唤兽生命：基础生命 × 召唤兽生命%(装备 summon_hp + 契匣 hp)
-    $shp = $php * $cfg['hp_mult'] * (1 + summon_hp_bonus($u) / 100);
+    // 契匣：原"存活+轮数"折成生命（每轮=+20%）
+    $hpPct += summoner_offhand_eff((int) ($u['id'] ?? 0))['turns'] * 20;
+    $hpPct += $bonusHpPct;
+    // 召唤兽生命：基础生命 × 召唤兽生命%(装备 summon_hp + 契匣 hp + 折算)
+    $shp = $php * $cfg['hp_mult'] * (1 + (summon_hp_bonus($u) + $hpPct) / 100);
     return [
         'kind' => $kind,
         'name' => $cfg['name'],
         'hp' => max(1, (int) $shp),
         'maxhp' => max(1, (int) $shp),
         'atk' => max(1, (int) ($patk * $cfg['atk_mult'] * $sp)),
-        'turns' => $turns,
         'bomb' => $cfg['bomb'] || equip_set_owned_count((int) ($u['id'] ?? 0), 'soulpact') >= 5,
     ];
 }
 
-// 尝试召唤（受上限约束）
-function summon_add(string $kind, array &$u, int $bonusTurns = 0): string
+// 尝试召唤（受上限约束）。$bonusHpPct：把旧技能里的"存活+1轮"折算成生命（每轮=+15%）
+function summon_add(string $kind, array &$u, int $bonusHpPct = 0): string
 {
     $list = summon_list();
     $cap = summon_cap($u);
@@ -4856,13 +4870,10 @@ function summon_add(string $kind, array &$u, int $bonusTurns = 0): string
         $rescaleMsg = summoner_legend_rescale_add((int) ($u['id'] ?? 0));
         summoner_legend_rescale_apply($u);
     }
-    $s = summon_spawn($kind, player_matk($u), (int) $u['maxhp'], $u);
-    if ($bonusTurns > 0) {
-        $s['turns'] += $bonusTurns;
-    }
+    $s = summon_spawn($kind, player_matk($u), (int) $u['maxhp'], $u, (float) $bonusHpPct * 15.0);
     $list[] = $s;
     summon_save($list);
-    return $s['name'] . '应召而来（存活' . $s['turns'] . '回合）！' . $rescaleMsg;
+    return $s['name'] . '应召而来（生命' . $s['maxhp'] . '）！' . $rescaleMsg;
 }
 
 // 1觉被动【魂契】：受击10%概率自动召唤小鬼
@@ -4880,7 +4891,7 @@ function summon_soulpact_trigger(array $u): string
     return summon_add('imp', $u);
 }
 
-// 召唤兽行动：自动攻击 + 回合衰减（含死灵传说触发效果）
+// 召唤兽行动：自动攻击（无回合上限，死亡才消失，死亡由 summon_absorb 结算）
 function summon_turn(array &$b): array
 {
     $list = summon_list();
@@ -4896,7 +4907,6 @@ function summon_turn(array &$b): array
     $critMult = $u ? summoner_legend_crit_mult($u) : 1.5;
     $dmg = 0;
     $log = '';
-    $left = [];
     foreach ($list as $s) {
         $hit = max(1, (int) ($s['atk'] * random_int(85, 115) / 100));
         $isCrit = false;
@@ -4924,18 +4934,12 @@ function summon_turn(array &$b): array
             $b['stun'] = max((int) ($b['stun'] ?? 0), 2); // 玛门契约之眼：5%麻痹2回合
             $log .= '（玛门之眼·麻痹）';
         }
-        $s['turns']--;
-        if ($s['turns'] > 0) {
-            $left[] = $s;
-        } else {
-            $log .= $s['name'] . '化作黑雾散去。';
-        }
     }
-    summon_save($left);
-    return ['dmg' => $dmg, 'log' => $log, 'left' => $left];
+    // 召唤物不随回合消散，存活列表原样保留，只有被打死才在 summon_absorb 里移除
+    return ['dmg' => $dmg, 'log' => $log, 'left' => $list];
 }
 
-// 召唤兽承伤：优先由召唤兽吃伤害
+// 召唤兽承伤：优先由召唤兽吃伤害（战报写清怪物打的是召唤物还是你）
 function summon_absorb(int $md, array &$b): array
 {
     $list = summon_list();
@@ -4947,11 +4951,14 @@ function summon_absorb(int $md, array &$b): array
     $abs = min($md, (int) $first['hp']);
     $first['hp'] -= $abs;
     $rest = $md - $abs;
-    $log = $first['name'] . '替你挡下' . $abs . '点伤害。';
+    $hpAfter = max(0, (int) $first['hp']);
+    $log = '怪物扑向【' . $first['name'] . '】，它挨了' . $abs . '点（' . $hpAfter . '/' . (int) $first['maxhp'] . '）';
     if ($first['hp'] <= 0) {
-        $log .= $first['name'] . '被打散了。';
+        $log .= '，被打散了！';
         if (!empty($first['bomb'])) {
-            $log .= '尸骸炸开，溅出' . $first['atk'] . '点暗影伤害。';
+            $boom = max(1, (int) $first['atk']);
+            $b['hp'] = max(0, (int) ($b['hp'] ?? 0) - $boom);
+            $log .= '尸骸炸开，溅出' . $boom . '点暗影伤害。';
         }
         $list = array_slice($list, 1);
         $expl = summoner_legend_summon_death($b, $first, $uid);
@@ -4959,6 +4966,7 @@ function summon_absorb(int $md, array &$b): array
             $log .= $expl;
         }
     } else {
+        $log .= '。';
         $list[0] = $first;
     }
     summon_save($list);
@@ -7112,15 +7120,26 @@ function battle_round(array &$u, array &$b, string $mode): array
         $ohGuard = min(60.0, summoner_offhand_eff((int) ($u['id'] ?? 0))['guard']);
         if ($ohGuard > 0) {
             $md = (int) ($md * (1 - $ohGuard / 100));
-            $logHeal .= '(匣庇护-' . (int) $ohGuard . '%)';
+            $log .= '(匣庇护-' . (int) $ohGuard . '%)';
         }
     }
-    // 召唤兽优先承伤
+    // 召唤兽优先承伤（战报直接进 $log：$logHeal 在上半场已并入过，这半场的消息必须另接）
+    $hadSummon = summon_list() !== [];
     [$md, $slog] = summon_absorb($md, $b);
     if ($slog !== '') {
-        $logHeal .= $slog;
+        $log .= $slog;
     }
     $u['hp'] = (int) $u['hp'] - $md;
+    if ($md > 0) {
+        // 写清这一下到底打在你身上还是召唤物身上
+        if ($hadSummon) {
+            $log .= '剩下' . $md . '点打在你身上（你' . max(0, (int) $u['hp']) . '/' . (int) $u['maxhp'] . '）。';
+        } else {
+            $log .= $b['name'] . '打在你身上' . $md . '点（你' . max(0, (int) $u['hp']) . '/' . (int) $u['maxhp'] . '）。';
+        }
+    } elseif ($hadSummon) {
+        $log .= '召唤物替你挡下了全部伤害。';
+    }
     // 战士·狂战/防战：累计本场损血作为狂战燃料（数值，非百分比），并按防御触发荆棘反击
     if ($md > 0) {
         warr_add_hp_lost($b, $md);
@@ -7157,7 +7176,7 @@ function battle_round(array &$u, array &$b, string $mode): array
     if ($md > 0) {
         $sp = summon_soulpact_trigger($u);
         if ($sp !== '') {
-            $logHeal .= $sp;
+            $log .= $sp;
         }
     }
     // 1觉被动（牧师）：5%减伤40%，每轮回3%
@@ -8764,7 +8783,7 @@ function rebirth1_passive_desc(string $job): string
         'mage' => '元素亲和：元素伤害+12%',
         'hunter' => '鹰眼：暴击+8%，命中+8%，15%概率标记使目标易伤10%持续2轮',
         'priest' => '圣光庇护：每回合3%最大生命，受伤5%概率减伤40%',
-        'summoner' => '魂契：每当你或你的宠物受到伤害，10%概率召唤一只深渊小鬼助战。小鬼存活3回合，自动攻击敌人造成30%攻击力的暗影伤害，并替你承伤。',
+        'summoner' => '魂契：每当你或你的宠物受到伤害，10%概率召唤一只深渊小鬼助战。小鬼自动攻击敌人造成30%攻击力的暗影伤害，并替你承伤（不占回合，只有被打死才会消失）。',
     ][$job] ?? '';
 }
 

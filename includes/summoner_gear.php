@@ -15,13 +15,13 @@ function summoner_offhands(): array
     // name => [lv: 穿戴等级, summon: 开场召唤的单位, eff: 特殊效果, legend: 是否传说基底, intro]
     return [
         // —— 新手区 ——
-        '残魂灯匣' => ['lv' => 1, 'summon' => 'imp', 'eff' => [], 'legend' => false, 'intro' => '新手契匣：开场召唤1只深渊小鬼。'],
+        '残魂灯匣' => ['lv' => 1, 'summon' => 'imp', 'eff' => [], 'legend' => false, 'intro' => '开场召唤1只深渊小鬼。'],
         '引魂旧匣' => ['lv' => 50, 'summon' => 'imp', 'eff' => [], 'legend' => false, 'intro' => '开场召唤1只深渊小鬼。'],
-        '缚魂小匣' => ['lv' => 100, 'summon' => 'imp', 'eff' => ['turns' => 1], 'legend' => false, 'intro' => '开场召唤1只深渊小鬼（多活1轮）。'],
+        '缚魂小匣' => ['lv' => 100, 'summon' => 'imp', 'eff' => ['turns' => 1], 'legend' => false, 'intro' => '开场召唤1只深渊小鬼（召唤兽生命+20%）。'],
         // —— 中段 ——
-        '招魂匣' => ['lv' => 200, 'summon' => 'imp', 'eff' => ['turns' => 1], 'legend' => false, 'intro' => '开场召唤1只深渊小鬼（多活1轮）。'],
+        '招魂匣' => ['lv' => 200, 'summon' => 'imp', 'eff' => ['turns' => 1], 'legend' => false, 'intro' => '开场召唤1只深渊小鬼（召唤兽生命+20%）。'],
         '引魂匣' => ['lv' => 300, 'summon' => 'bone', 'eff' => [], 'legend' => false, 'intro' => '开场召唤1只骸骨守卫，血厚能扛。'],
-        '骨契匣' => ['lv' => 360, 'summon' => 'bone', 'eff' => ['turns' => 1], 'legend' => false, 'intro' => '开场召唤1只骸骨守卫（多活1轮）。'],
+        '骨契匣' => ['lv' => 360, 'summon' => 'bone', 'eff' => ['turns' => 1], 'legend' => false, 'intro' => '开场召唤1只骸骨守卫（召唤兽生命+20%）。'],
         '雾森契匣' => ['lv' => 420, 'summon' => 'bone', 'eff' => ['power' => 15], 'legend' => false, 'intro' => '开场召唤1只骸骨守卫（召唤兽伤害+15%）。'],
         // —— 高段 ——
         '寒霜·契匣' => ['lv' => 460, 'summon' => 'bone', 'eff' => ['power' => 20], 'legend' => false, 'intro' => '开场召唤1只骸骨守卫（召唤兽伤害+20%）。'],
@@ -29,20 +29,34 @@ function summoner_offhands(): array
         '剧场·提线匣' => ['lv' => 600, 'summon' => 'abom', 'eff' => ['power' => 25], 'legend' => false, 'intro' => '开场召唤1只憎恶聚合体（死时爆炸，召唤兽伤害+25%）。'],
         '烬焰·契匣' => ['lv' => 635, 'summon' => 'abom', 'eff' => ['power' => 25], 'legend' => false, 'intro' => '开场召唤1只憎恶聚合体（死时爆炸，召唤兽伤害+25%）。'],
         // —— 毕业：传说基底（只出传说，带额外特殊效果）——
-        '召唤师·深渊契匣' => ['lv' => 700, 'summon' => 'abom', 'eff' => ['turns' => 2, 'power' => 30, 'hp' => 40, 'cap' => 1], 'legend' => true, 'intro' => '开场召唤1只憎恶聚合体；召唤上限+1；召唤兽存活+2轮；召唤兽伤害+30%；召唤兽生命+40%。'],
-        '幽冥·招魂匣' => ['lv' => 800, 'summon' => 'mare', 'eff' => ['turns' => 2, 'power' => 50, 'hp' => 80, 'guard' => 15], 'legend' => true, 'intro' => '开场召唤1只无面梦魇（最强）；召唤兽存活+2轮；召唤兽伤害+50%；召唤兽生命+80%；有召唤兽在场时你减伤+15%。'],
+        '召唤师·深渊契匣' => ['lv' => 700, 'summon' => 'abom', 'eff' => ['turns' => 2, 'power' => 30, 'hp' => 40, 'cap' => 1], 'legend' => true, 'intro' => '开场召唤1只憎恶聚合体；召唤上限+1；召唤兽生命+80%；召唤兽伤害+30%。'],
+        '幽冥·招魂匣' => ['lv' => 800, 'summon' => 'mare', 'eff' => ['turns' => 2, 'power' => 50, 'hp' => 80, 'guard' => 15], 'legend' => true, 'intro' => '开场召唤1只无面梦魇（最强）；召唤兽生命+120%；召唤兽伤害+50%；有召唤兽在场时你减伤+15%。'],
     ];
 }
 
 function summoner_is_box(string $name): bool
 {
+    return summoner_offhand_find($name) !== [];
+}
+
+// 契匣名匹配：装备全名去掉品质前缀后应与表里的基底名完全一致。
+// 早期用"互相包含"匹配会串味（穿普通【招魂匣】会命中传说【幽冥·招魂匣】），这里改成精确优先。
+function summoner_offhand_find(string $name): array
+{
     $short = equip_shortname($name);
-    foreach (array_keys(summoner_offhands()) as $key) {
-        if ($short === $key || str_contains($name, $key) || str_contains($key, $short)) {
-            return true;
+    $table = summoner_offhands();
+    // 1) 精确匹配基底名
+    if (isset($table[$short])) {
+        return ['name' => $short, 'cfg' => $table[$short]];
+    }
+    // 2) 兜底：全名里包含某个基底名（取穿戴等级最高的那个）
+    $best = [];
+    foreach ($table as $k => $cfg) {
+        if (str_contains($name, $k) && ((int) $cfg['lv'] > (int) ($best['cfg']['lv'] ?? -1))) {
+            $best = ['name' => $k, 'cfg' => $cfg];
         }
     }
-    return false;
+    return $best;
 }
 
 // 当前穿戴的契匣（只认 offhand 栏；同一栏位取穿戴等级更高的那个）
@@ -51,16 +65,14 @@ function summoner_offhand_worn(int $uid): array
     $st = db()->prepare('SELECT name FROM equips WHERE uid=? AND slot="offhand" AND pos="wear" LIMIT 2');
     $st->execute([$uid]);
     $rows = $st->fetchAll();
-    $table = summoner_offhands();
     $best = [];
     foreach ($rows as $r) {
-        $short = equip_shortname((string) $r['name']);
-        foreach ($table as $key => $cfg) {
-            if ($short === $key || str_contains((string) $r['name'], $key) || str_contains($key, $short)) {
-                if ($best === [] || (int) $cfg['lv'] > (int) ($best['cfg']['lv'] ?? -1)) {
-                    $best = ['name' => $key, 'cfg' => $cfg];
-                }
-            }
+        $hit = summoner_offhand_find((string) $r['name']);
+        if ($hit === []) {
+            continue;
+        }
+        if ($best === [] || (int) $hit['cfg']['lv'] > (int) ($best['cfg']['lv'] ?? -1)) {
+            $best = $hit;
         }
     }
     return $best;
@@ -92,8 +104,30 @@ function summoner_open_message(array &$u): string
         return '';
     }
     $cfg = $worn['cfg'];
-    $turns = 0 + (int) ($cfg['eff']['turns'] ?? 0);
-    return '【' . $worn['name'] . '】匣门自开——' . summon_add((string) $cfg['summon'], $u, $turns);
+    // 契匣的"存活轮数"加成已折算进召唤兽生命，这里不再重复给
+    return '【' . $worn['name'] . '】匣门自开——' . summon_add((string) $cfg['summon'], $u, 0);
+}
+
+// 契匣装备详情页用的召唤物介绍（名字/血量/攻击/死亡爆炸/不随回合消散）
+function summoner_offhand_intro_html(string $name): string
+{
+    $short = equip_shortname($name);
+    $hit = summoner_offhand_find($name);
+    if ($hit === []) {
+        return '';
+    }
+    $cfg = $hit['cfg'];
+    $unit = summon_units()[(string) $cfg['summon']] ?? null;
+    $out = '<span class="muted">匣中养着一只' . h((string) ($unit['name'] ?? '召唤兽')) . '：' . h((string) ($cfg['intro'] ?? '')) . '</span><br>';
+    if ($unit !== null) {
+        $traits = ['生命×' . $unit['hp_mult'], '攻击×' . $unit['atk_mult']];
+        if (!empty($unit['bomb'])) {
+            $traits[] = '死亡时爆炸';
+        }
+        $out .= '<span style="color:#c9f">召唤物【' . h($unit['name']) . '】（' . h(implode('，', $traits)) . '）</span><br>';
+    }
+    $out .= '<span class="muted">召唤物不占回合、永不自动消散，只有被打死才会消失。</span>';
+    return $out;
 }
 
 // 契匣特殊效果汇总（给 summon_* 系列读取）

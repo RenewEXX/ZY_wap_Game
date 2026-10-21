@@ -45,6 +45,13 @@ $aff = json_decode((string) $e['affixes'], true);
 if (is_array($aff)) {
     echo equip_affix_html($aff, $elv);
 }
+// 召唤师契匣：把匣中养着的召唤物介绍写清楚
+if ((string) ($e['slot'] ?? '') === 'offhand') {
+    $ohIntro = summoner_offhand_intro_html((string) $e['name']);
+    if ($ohIntro !== '') {
+        echo $ohIntro . '<br>';
+    }
+}
 if ((int) ($e['quality'] ?? 0) === 4) {
     echo '<span style="color:#fc3"><b>◆传奇◆</b></span><br><span class="muted">' . legend_lore(equip_shortname((string) $e['name'])) . '</span><br>';
 }

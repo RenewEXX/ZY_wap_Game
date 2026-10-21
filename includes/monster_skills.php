@@ -349,7 +349,7 @@ function monster_skill_turn(array &$u, array &$b, int $base): array
         if ($dturns > 0) {
             $dotDmg = max(1, (int) ((int) $u['maxhp'] * (float) ($b['mdot']['pct'] ?? 2) / 100));
             $b['mdot']['turns'] = $dturns - 1;
-            $log .= (string) ($b['mdot']['name'] ?? '余毒') . '发作，你掉' . $dotDmg . '点生命。';
+            $log .= (string) ($b['mdot']['name'] ?? '余毒') . '发作，造成' . $dotDmg . '点伤害。';
             if ((int) $b['mdot']['turns'] <= 0) {
                 unset($b['mdot']);
             }
@@ -365,7 +365,7 @@ function monster_skill_turn(array &$u, array &$b, int $base): array
         if ($md <= 0) {
             $log .= $mname . '向你' . monster_generic_move($mid) . '，你闪开了。';
         } else {
-            $log .= $mname . '向你' . monster_generic_move($mid) . '，你掉' . $md . '点生命。';
+            $log .= $mname . '向你' . monster_generic_move($mid) . '。';
         }
         return ['md' => $md + $dotDmg, 'log' => $log, 'rushed' => false, 'skill' => ''];
     }
@@ -382,7 +382,7 @@ function monster_skill_turn(array &$u, array &$b, int $base): array
         if ($md <= 0) {
             $log .= $mname . '使出【' . (string) ($cfg['atk'] ?? '攻击') . '】，你闪开了。';
         } else {
-            $log .= $mname . '使出【' . (string) ($cfg['atk'] ?? '攻击') . '】，你掉' . $md . '点生命。';
+            $log .= $mname . '使出【' . (string) ($cfg['atk'] ?? '攻击') . '】。';
         }
         return ['md' => $md + $dotDmg, 'log' => $log, 'rushed' => false, 'skill' => ''];
     }
@@ -403,7 +403,7 @@ function monster_skill_turn(array &$u, array &$b, int $base): array
     } else {
         $log .= $mname . '使出【' . $sname . '】！';
     }
-    $log .= '你掉' . $md . '点生命。';
+    $log .= '造成' . $md . '点伤害。';
 
     // 吸血
     if (!empty($picked['drain'])) {
@@ -433,7 +433,7 @@ function monster_skill_turn(array &$u, array &$b, int $base): array
     if (!empty($picked['rush'])) {
         $second = max(0, (int) ($base * 0.5));
         $md += $second;
-        $log .= '还没完——' . $mname . '紧接着又补了一下，你再掉' . $second . '点生命。';
+        $log .= '还没完——' . $mname . '紧接着又补了一下，又造成' . $second . '点伤害。';
         $rushed = true;
     }
     // DOT 在技能倍率之外单独叠加

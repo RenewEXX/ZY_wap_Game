@@ -3136,7 +3136,7 @@ function equip_jobs_text(array $e): string
         if (str_contains($nm, '契匣') || str_contains($nm, '魂匣') || str_contains($nm, '灵幡') || summoner_is_box($nm)) { return '仅召唤师'; }
         return '全职业';
     }
-    return '全职业（战法猎牧）';
+    return '全职业（战法猎牧召）';
 }
 
 function equip_can_wear(array $u, array $e): string

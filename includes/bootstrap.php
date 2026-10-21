@@ -19,6 +19,7 @@ require_once __DIR__ . '/game.php';
 require_once __DIR__ . '/world_expansion.php';
 require_once __DIR__ . '/world_expansion2.php';
 require_once __DIR__ . '/legend_relics.php';
+require_once __DIR__ . '/legend_story.php';
 require_once __DIR__ . '/dragons.php';
 require_once __DIR__ . '/dragon_wb.php';
 require_once __DIR__ . '/summoner_gear.php';

@@ -2554,7 +2554,16 @@ function legend_lore(string $shortName): string
         '深渊统御之印' => '深渊认印不认人。越多东西从印里爬出来，它们就越不听你的。',
         '血契骨戒' => '骨戒里锁着一份血契：它替你养兵，你替它喂血。<br>急的时候，它会先咬断最弱的那只，再把血还给你。',
     ];
-    return $lore[$shortName] ?? '深渊里捞出来的东西，每一件都记得主人的名字。<br>它现在记得你的了。';
+    if (isset($lore[$shortName])) {
+        return $lore[$shortName];
+    }
+    if (function_exists('legend_story_map')) {
+        $extra = legend_story_map();
+        if (isset($extra[$shortName])) {
+            return $extra[$shortName];
+        }
+    }
+    return '深渊里捞出来的东西，每一件都记得主人的名字。<br>它现在记得你的了。';
 }
 
 function affix_fmt(string $k, float $v, ?string $tier = null): string

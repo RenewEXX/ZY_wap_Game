@@ -41,7 +41,7 @@ function sunken_locations(): array
 // 所有新增区域地图（供 locations() 合并）
 function world_expansion_locations(): array
 {
-    return sky_locations() + sunken_locations();
+    return sky_locations() + sunken_locations() + we2_locations();
 }
 
 // 新区域在地图/传送里的归组
@@ -50,7 +50,7 @@ function world_expansion_regions(): array
     return [
         '天空岛·浮空列岛' => ['sky_ferry', 'sky_cloud_path', 'sky_thunder_nest', 'sky_storm_core', 'sky_wind_temple', 'sky_gale_shrine', 'sky_void_stair', 'sky_throne'],
         '沉没圣所·海渊' => ['sunk_shore', 'sunk_gallery', 'sunk_altar', 'sunk_queen', 'sunk_trench', 'sunk_lair'],
-    ];
+    ] + we2_regions();
 }
 
 // 把新区域接进主世界地图图（双向连线，保证 find_route / 走路 / 传送都能到）
@@ -65,6 +65,13 @@ function world_link_regions(array $all): array
     if (isset($all['silver_sq'], $all['sunk_shore'])) {
         $all['silver_sq']['exits']['sunk_shore'] = '沉没圣所·海岸';
         $all['sunk_shore']['exits']['silver_sq'] = '白银广场';
+    }
+    // 第二弹 7 区域：各自 gateway ↔ hub 双向连线
+    foreach (we2_links() as $gw => $hub) {
+        if (isset($all[$gw], $all[$hub])) {
+            $all[$hub]['exits'][$gw] = (string) ($all[$gw]['name'] ?? $gw);
+            $all[$gw]['exits'][$hub] = (string) ($all[$hub]['name'] ?? $hub);
+        }
     }
     return $all;
 }
@@ -92,7 +99,7 @@ function world_expansion_monsters(): array
         'deep_crab' => ['name' => '深海巨蟹', 'hp' => 25000, 'atk' => 340, 'exp' => 40000, 'gold' => 8500],
         'siren_queen' => ['name' => '海妖女王', 'hp' => 55000, 'atk' => 520, 'exp' => 110000, 'gold' => 24000],
         'abyss_whale' => ['name' => '深渊鲸主', 'hp' => 112000, 'atk' => 730, 'exp' => 230000, 'gold' => 46000],
-    ];
+    ] + we2_monsters();
 }
 
 // 怪物等级（身份缩放，直接对应 band）
@@ -104,7 +111,7 @@ function world_expansion_lv(): array
         'thunder_regent' => 155, 'wind_matriarch' => 170, 'sky_sovereign' => 195,
         'tide_hunter' => 90, 'drowned_one' => 90, 'coral_guard' => 105,
         'siren_singer' => 120, 'deep_crab' => 140, 'siren_queen' => 125, 'abyss_whale' => 160,
-    ];
+    ] + we2_lv();
 }
 
 function world_expansion_element(): array
@@ -115,7 +122,7 @@ function world_expansion_element(): array
         'thunder_regent' => 'thunder', 'wind_matriarch' => 'wind', 'sky_sovereign' => 'light',
         'tide_hunter' => 'ice', 'drowned_one' => 'dark', 'coral_guard' => 'ice',
         'siren_singer' => 'dark', 'deep_crab' => 'ice', 'siren_queen' => 'dark', 'abyss_whale' => 'ice',
-    ];
+    ] + we2_element();
 }
 
 // 哪些地图是 BOSS 地图（含这只BOSS），供 boss_of_map / spawn 上限 / 传送用
@@ -127,12 +134,12 @@ function world_expansion_boss_map(): array
         'sky_throne' => 'sky_sovereign',
         'sunk_queen' => 'siren_queen',
         'sunk_lair' => 'abyss_whale',
-    ];
+    ] + we2_boss_map();
 }
 
 function world_expansion_bosses(): array
 {
-    return ['thunder_regent', 'wind_matriarch', 'sky_sovereign', 'siren_queen', 'abyss_whale'];
+    return array_merge(['thunder_regent', 'wind_matriarch', 'sky_sovereign', 'siren_queen', 'abyss_whale'], we2_bosses());
 }
 
 // identity 缩放：这些怪的 base 就是最终数值（同三章傀儡/母巢）
@@ -168,7 +175,7 @@ function world_expansion_drops(): array
         'sky_sovereign' => ['slot' => 'weapon', 'base' => '苍穹权杖', 'rate' => 0.40, 'q' => [0, 0, 10, 40, 50], 'legendary' => ['base' => '苍穹之主·天穹之刃', 'extra' => ['k' => 'skill_damage', 'v' => 8.0]]],
         'siren_queen' => ['slot' => 'head', 'base' => '海妖冠冕', 'rate' => 0.35, 'q' => [0, 0, 15, 45, 40], 'legendary' => ['base' => '海妖女王·溺歌之冠', 'extra' => ['k' => 'all_attr', 'v' => 30.0]]],
         'abyss_whale' => ['slot' => 'ring', 'base' => '鲸骨指环', 'rate' => 0.40, 'q' => [0, 0, 10, 40, 50], 'legendary' => ['base' => '深渊鲸主·吞海之戒', 'extra' => ['k' => 'lifesteal', 'v' => 2.0]]],
-    ];
+    ] + we2_drops();
 }
 
 // 怪物专属技能（并入 monster_skills()）：小怪各1招，BOSS 2~3招
@@ -215,6 +222,6 @@ function world_expansion_skills(): array
             ['name' => '吞海冲击', 'rate' => 16, 'mult' => 1.8, 'dot' => [3, 3]],
             ['name' => '鲸骨壁垒', 'rate' => 12, 'mult' => 0.5, 'guard' => 3],
         ]],
-    ];
+    ] + we2_skills();
 }
 

@@ -10,12 +10,13 @@ $mainSlots = ['weapon','offhand','body','head','legs','belt','gloves','shoes','b
 
 $drops = world_expansion_drops();
 $bosses = world_expansion_bosses();
+// 本测试只覆盖第一批（天空岛/沉没圣所）的12只小怪，第二批由 dhtest25 覆盖
+$orig12 = ['cloud_hawk','thunder_sprite','sky_sentinel','storm_caller','wind_golem','sky_priest','void_wisp','tide_hunter','drowned_one','coral_guard','siren_singer','deep_crab'];
 $normals = [];
-foreach ($drops as $mid => $d) {
-    if (in_array($mid, $bosses, true)) { continue; }
-    $normals[$mid] = $d;
+foreach ($orig12 as $mid) {
+    if (isset($drops[$mid])) { $normals[$mid] = $drops[$mid]; }
 }
-ck24('普通怪数量=12', count($normals) === 12, (string) count($normals));
+ck24('第一批普通怪数量=12', count($normals) === 12, (string) count($normals));
 
 // 1) 普通怪掉落覆盖所有主要部件
 $slots = [];

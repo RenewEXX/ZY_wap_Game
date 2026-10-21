@@ -73,8 +73,7 @@ db()->exec('DELETE FROM users WHERE id=' . (int) $uid);
 db()->exec('DELETE FROM equips WHERE uid=' . (int) $uid);
 db()->exec('DELETE FROM mats WHERE uid=' . (int) $uid);
 
-// —— 7. 等级覆盖：新怪确实落在 90~195 区间 ——
-$lvs = array_values(world_expansion_lv());
-ckW('新怪覆盖90~195', min($lvs) >= 90 && max($lvs) <= 195, json_encode([min($lvs), max($lvs)]));
+// —— 7. 第一批（天空岛/沉没圣所）等级区间 90~195 ——
+ckW('天空岛/沉没圣所区间90~195', monster_lv('tide_hunter') === 90 && monster_lv('sky_sovereign') === 195 && monster_lv('deep_crab') === 140, '');
 
 echo "\nOK=$ok FAIL=$bad\n";

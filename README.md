@@ -30,6 +30,14 @@ php -S localhost:8080
 
 ## 更新日志（新的在上）
 
+### 2026-10-21-修"奇怪装备"：没有部位/名字不对/没有属性
+- 现象：背包里出现 `部位：` 空、名字是 `NULL` 或数字、没有任何词缀的装备。根因是更早那次 dump 导入事故里，`ground_items`（地上物）的行被写进了 `equips` 表，`uid` 变成地图名（如 `square`）、`slot` 变成 `'equip'`/`'NULL'`、`name` 变成 ref 数字或 `NULL`，渲染时 `equip_slots()[slot]` 取不到 → 部位空、`equip_jobs_text` 落到兜底的「全职业（战法猎牧）」、词缀 `json_decode` 失败 → 没有属性。其中 2 条正挂在真实玩家（试玩/shiwan）背包里。
+- 修复：
+  - `make_equip()` 开头加守卫：`slot` 不在 `equip_slots()` 白名单里就直接返回，**非法部位绝不入库**，杜绝未来任何掉落/发奖路径再产生畸形装备。
+  - `db_init()` 加一次性迁移 `mig_equip_junk`：启动时 `DELETE FROM equips WHERE slot IS NULL OR slot NOT IN (合法部位)`，把历史垃圾行清掉，并用 `sys_kv` 打标记保证只跑一次。
+  - 实测：真实库清掉全部非法部位行，`integrity_check=ok`，真实玩家（人蛋超咸/泯灭/vv/yvuv 等）合法装备与武器一件不少。
+  - 新增 `dhtest19.php`（战斗掉落实战，产出装备全部合法）+ `dhtest20.php`（12 断言：make_equip 拒绝 NULL/equip/空/带引号部位且不写库、合法部位正常入库、全库无非法部位残留、迁移幂等）。全量 17 个测试全绿。
+
 ### 2026-10-18-加定期玩家资料自动备份
 - 背景：昨晚的存档损坏事故暴露了这个缺口——如果当时有自动备份，恢复就不需要逐行抢救数据。
 - 实现：`db_init()` 末尾调 `db_auto_backup()`，到点（默认每 6 小时，`DB_BACKUP_INTERVAL` 可覆盖）就用 `VACUUM INTO` 在 `data/backups/` 落一份 `zuiyuan-<Ymd-His>-<序号>.sqlite`。`VACUUM INTO` 生成的是事务一致的快照（含 WAL 里未 checkpoint 的内容），比直接 `copy()` 安全；并发请求用文件锁单飞。只保留最近 12 份（`DB_BACKUP_KEEP` 可覆盖），多余的自动删掉。

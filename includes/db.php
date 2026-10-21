@@ -731,6 +731,19 @@ function db_init(): void
         db()->exec('CREATE INDEX IF NOT EXISTS idx_wb_dmg_rank ON wb_dmg (day, mid, dmg)');
     } catch (Throwable $e) {
     }
+    // 一次性迁移：清掉历史导入事故遗留的垃圾装备（部位为 NULL/'equip'/数字名等非法值），
+    // 它们会在背包里显示成"没有部位、名字不对、没有属性"的奇怪装备。
+    try {
+        $done = (int) (db()->query("SELECT num FROM sys_kv WHERE k='mig_equip_junk'")->fetchColumn() ?: 0);
+        if ($done === 0) {
+            $validSlots = array_keys(equip_slots());
+            $ph = implode(',', array_fill(0, count($validSlots), '?'));
+            $st = db()->prepare("DELETE FROM equips WHERE slot IS NULL OR slot NOT IN ($ph)");
+            $st->execute($validSlots);
+            db()->prepare("INSERT OR REPLACE INTO sys_kv (k, num) VALUES ('mig_equip_junk', 1)")->execute();
+        }
+    } catch (Throwable $e) {
+    }
     // 定期自动备份（到点才做，失败不影响请求）
     db_auto_backup();
 }

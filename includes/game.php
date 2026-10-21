@@ -3164,6 +3164,10 @@ function equip_can_wear(array $u, array $e): string
 
 function make_equip(int $uid, string $slot, string $base, int $q, int $itemLevel = 1, ?array $legend = null, string $offKind = ''): string
 {
+    // 防御：非法部位一律不入库，避免产生"没有部位/名字不对/没有属性"的奇怪装备
+    if (!isset(equip_slots()[$slot])) {
+        return '';
+    }
     $toGround = bag_full((int) $uid);
     $req = equip_reqs(max(1, $itemLevel), $q);
     $isStr = in_array($slot, ['weapon', 'body', 'head', 'legs', 'gloves'], true);

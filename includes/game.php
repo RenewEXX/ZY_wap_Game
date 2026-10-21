@@ -2559,9 +2559,12 @@ function legend_lore(string $shortName): string
 
 function affix_fmt(string $k, float $v, ?string $tier = null): string
 {
-    // 召唤师死灵传说：行为型效果，显示说明文字，不显示数值
+    // 召唤师死灵传说 / 遗神铸庭传说：行为型效果，显示说明文字，不显示数值
     if (str_starts_with($k, 'slegend_')) {
         return summoner_legend_intro_by_key($k);
+    }
+    if (str_starts_with($k, 'lg_')) {
+        return legend_relic_intro_by_key($k);
     }
     $percent = ['atk_pct', 'matk_pct', 'crit', 'critdmg', 'speed', 'lifesteal', 'penetration', 'skill_damage', 'execute', 'damage_reduction', 'resist', 'regen', 'cooldown', 'hit', 'exp_gain', 'dodge', 'move_speed', 'control_resist', 'slow_resist', 'gold_gain', 'magic_find', 'res_light', 'res_dark', 'res_fire', 'res_wind', 'res_ice', 'res_thunder', 'allres'];
     $value = in_array($k, $percent, true) ? rtrim(rtrim(number_format($v, 1, '.', ''), '0'), '.') . '%' : (string) (int) round($v);
@@ -4856,6 +4859,10 @@ function gear_stats(int $uid): array
             $s['sin_dmg_pct'] = sin_of((int) $uid) * 0.5;
         }
     }
+    // 遗神铸庭传说（面板类无条件加成）
+    if (function_exists('legend_relic_gear_apply')) {
+        legend_relic_gear_apply((int) $uid, $s);
+    }
     $cache[$uid] = $s;
     return $s;
 }
@@ -4928,6 +4935,10 @@ function summon_power_bonus(array $u): float
     $bonus += summoner_offhand_eff((int) ($u['id'] ?? 0))['power'];
     // 死灵传说·尼德霍格的残鳞：每层召唤兽伤害+20%
     $bonus += 20.0 * summoner_legend_rescale_stacks((int) ($u['id'] ?? 0));
+    // 遗神铸庭·彼岸：召唤物伤害×5
+    if (isset(legend_relic_worn((int) ($u['id'] ?? 0))['lg_othershore'])) {
+        $bonus += 400.0;
+    }
     return $bonus;
 }
 
@@ -4935,7 +4946,12 @@ function summon_power_bonus(array $u): float
 function summon_hp_bonus(array $u): float
 {
     $bonus = (float) gear_stats((int) ($u['id'] ?? 0))['summon_hp'];
-    return $bonus + summoner_offhand_eff((int) ($u['id'] ?? 0))['hp'];
+    $bonus += summoner_offhand_eff((int) ($u['id'] ?? 0))['hp'];
+    // 遗神铸庭·彼岸：召唤物生命×5
+    if (isset(legend_relic_worn((int) ($u['id'] ?? 0))['lg_othershore'])) {
+        $bonus += 400.0;
+    }
+    return $bonus;
 }
 
 function summon_list(): array
@@ -5096,6 +5112,11 @@ function summon_absorb(int $md, array &$b): array
     $log = '怪物扑向【' . $first['name'] . '】，它挨了' . $abs . '点（' . $hpAfter . '/' . (int) $first['maxhp'] . '）';
     if ($first['hp'] <= 0) {
         $log .= '，被打散了！';
+        // 遗神铸庭·彼岸：任意召唤物阵亡 → 玩家当场死亡
+        if (isset(legend_relic_worn((int) $uid)['lg_othershore'])) {
+            $GLOBALS['_lg_osh_die'] = 1;
+            $log .= '【彼岸】它死了，你也要死！';
+        }
         if (!empty($first['bomb'])) {
             $boom = max(1, (int) $first['atk']);
             $b['hp'] = max(0, (int) ($b['hp'] ?? 0) - $boom);
@@ -5538,6 +5559,9 @@ function player_patk(array $u): int
             $base = (int) ($base * (1 + $steps * 0.04));
         }
     }
+    if (function_exists('legend_relic_atk_mult')) {
+        $base = (int) round($base * legend_relic_atk_mult($u));
+    }
     return $base;
 }
 
@@ -5573,6 +5597,9 @@ function player_pdef(array $u): int
     if (function_exists('rs_stat_mult')) {
         $v = (int) round($v * rs_stat_mult((int) ($u['id'] ?? 0)));
     }
+    if (function_exists('legend_relic_def_mult')) {
+        $v = (int) round($v * legend_relic_def_mult($u));
+    }
     return $v;
 }
 
@@ -5582,6 +5609,9 @@ function player_mdef(array $u): int
     $v = (int) ((int) $u['def'] / 2) + (int) ($u['agi'] ?? 0) + (int) gear_stats((int) ($u['id'] ?? 0))['mdef'];
     if (function_exists('rs_stat_mult')) {
         $v = (int) round($v * rs_stat_mult((int) ($u['id'] ?? 0)));
+    }
+    if (function_exists('legend_relic_def_mult')) {
+        $v = (int) round($v * legend_relic_def_mult($u));
     }
     return $v;
 }
@@ -6014,7 +6044,11 @@ function dmg_to_player(array $u, array $m): array
 {
     $gs = gear_stats((int) ($u['id'] ?? 0));
     $dodge = $gs['dodge'] + hunter_assassin_dodge((int) ($u['id'] ?? 0));
+    if (function_exists('legend_relic_bonus_dodge')) {
+        $dodge += legend_relic_bonus_dodge($u);
+    }
     if ($dodge > 0 && mt_rand(1, 10000) / 100 <= $dodge) {
+        $GLOBALS['_lg_dodged'] = 1; // 供夜幕判定"上次闪避"
         return [0, '闪避'];
     }
     // 怪物伤害拆两段：物理段吃物防，法术段吃法防
@@ -6530,20 +6564,36 @@ function battle_round(array &$u, array &$b, string $mode): array
         [$pd, $guardTag] = monster_guard_cut($b, (int) $pd);
         $logHeal .= $guardTag;
     }
+    // 涅槃狂暴：物攻翻倍（回合数递减），期间无法治疗
+    if (!empty($b['lg_berserk']) && (int) $b['lg_berserk'] > 0 && $pd > 0) {
+        $pd = (int) round($pd * 2);
+        $b['lg_berserk'] = (int) $b['lg_berserk'] - 1;
+    }
     // ===== 玩家伤害收尾管线：浮动 → 档位(重击/完美一击) → 暴击（最后乘）=====
     // 放在所有技能/被动倍率算完之后、扣怪血之前；暴击统一在这里判定，
     // 所以物理/法系/召唤/技能全都一致吃暴击（此前物理技能会覆盖掉普攻的暴击）。
+    $lgTruePct = 0.0;
+    $lgCritAdd = 0.0;
+    if ($pd > 0 && function_exists('legend_relic_outgoing')) {
+        [$pd, $lgCritAdd, $lgForce, $lgTruePct, $logHeal] = legend_relic_outgoing($u, $b, (int) $pd, $isSkill, $logHeal);
+        if (!empty($lgForce)) { $forceCrit = true; }
+    }
     if ($pd > 0) {
         $gsV = gear_stats((int) ($u['id'] ?? 0));
         $rb2cV = (string) (cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '');
         // 游侠不再加暴击（改走DOT加成），刺客靠高闪避而非暴击
-        $critRate = $forceCrit ? 10000 : $gsV['crit'];
+        $critRate = $forceCrit ? 10000 : ($gsV['crit'] + $lgCritAdd);
         [$pd, $vTag] = dmg_pipeline($pd, $critRate, $gsV['critdmg'], (float) ($gsV['precision'] ?? 0));
         if ($vTag !== '') {
             $logHeal .= '(' . $vTag . ')';
         }
     }
+    $__isCrit = isset($vTag) && strpos((string) $vTag, '暴击') !== false;
     $b['hp'] = (int) $b['hp'] - $pd;
+    // 命中后：影牙/破甲真伤附加、不死鸟暴击回血
+    if ($pd > 0 && function_exists('legend_relic_on_hit')) {
+        legend_relic_on_hit($u, $b, (int) $pd, $__isCrit, $lgTruePct, $logHeal);
+    }
     if (!empty($GLOBALS['_melee_el_tag'])) {
         // 技能已自带属性tag时不再重复追加（只保留技能那个）
         if (strpos($logHeal, '属性伤害') === false) {
@@ -6669,6 +6719,9 @@ function battle_round(array &$u, array &$b, string $mode): array
         }
     }
     if ((int) $b['hp'] <= 0) {
+        if (function_exists('legend_relic_on_kill')) {
+            legend_relic_on_kill($u, $b);
+        }
         $killed = (int) ($b['num'] ?? 1) - (int) ($b['left'] ?? 1) + 1;
         if ((int) ($b['left'] ?? 1) > 1) {
             $b['wexp'] = (int) ($b['wexp'] ?? 0) + exp_gain_for($u, (string) ($b['id'] ?? ''), (int) ($b['elite'] ?? 0));
@@ -6936,6 +6989,11 @@ function battle_round(array &$u, array &$b, string $mode): array
         $lgMsg = summoner_legend_kill_drop((int) $u['id'], (string) ($b['id'] ?? ''));
         if ($lgMsg !== '') {
             $msg .= '。' . $lgMsg;
+        }
+        // 遗神铸庭·传说遗物掉落
+        $lrMsg = legend_relic_kill_drop((int) $u['id'], (string) ($b['id'] ?? ''));
+        if ($lrMsg !== '') {
+            $msg .= '。' . $lrMsg;
         }
         // 残鳞：战斗结束恢复原始最大生命
         if (job_id_of($u) === 'summoner') {
@@ -7225,6 +7283,13 @@ function battle_round(array &$u, array &$b, string $mode): array
             $monTags[] = $b['name'] . $oneTag;
         }
     }
+    // 夜幕：本回合发生过闪避 → 下次出手转真伤
+    if (!empty($GLOBALS['_lg_dodged'])) {
+        unset($GLOBALS['_lg_dodged']);
+        if (isset(legend_relic_worn((int) ($u['id'] ?? 0))['lg_nightfall'])) {
+            $b['lg_nf_ready'] = 1;
+        }
+    }
     if ($monTags !== []) {
         $log .= implode('', $monTags);
     }
@@ -7289,7 +7354,24 @@ function battle_round(array &$u, array &$b, string $mode): array
     if ($slog !== '') {
         $log .= $slog;
     }
+    // 遗神铸庭·彼岸：任意召唤物阵亡 → 玩家当场死亡
+    if (!empty($GLOBALS['_lg_osh_die'])) {
+        unset($GLOBALS['_lg_osh_die']);
+        $u['hp'] = 0;
+        $log .= '【彼岸】召唤物阵亡，你随之坠亡！';
+    }
+    // 遗神铸庭·受击减伤/增伤（叹息之墙/磐石/死斗者）
+    if ($md > 0 && function_exists('legend_relic_incoming')) {
+        $md = legend_relic_incoming($u, $b, $md);
+    }
     $u['hp'] = (int) $u['hp'] - $md;
+    // 泰坦之肤：受击叠层（本次反击即可吃到）
+    if ($md > 0) {
+        $__w = legend_relic_worn((int) ($u['id'] ?? 0));
+        if (isset($__w['lg_taitan'])) {
+            $b['lg_taitan'] = min(10, (int) ($b['lg_taitan'] ?? 0) + 1);
+        }
+    }
     if ($md > 0) {
         // 写清这一下到底打在你身上还是召唤物身上
         if ($hadSummon) {
@@ -7312,6 +7394,13 @@ function battle_round(array &$u, array &$b, string $mode): array
                 $thMult = ((int) ($actSk['tier'] ?? 0) >= 10 ? 1.3 : 1.0) * ((int) ($actSk['level'] ?? 0) >= 20 ? 1.3 : 1.0);
             }
             $thorns = warr_thorns($u, $thMult);
+            if (function_exists('legend_relic_counter')) {
+                $__cl = '';
+                $thorns = legend_relic_counter($u, $b, (int) $thorns, $__cl);
+                if ($__cl !== '') {
+                    $log .= $__cl;
+                }
+            }
             if ($thorns > 0) {
                 $tDmg = max(1, $thorns - monster_pdef($b));
                 $tDmg = max(1, $tDmg - (int) (monster_mdef($b) / 2));
@@ -7324,6 +7413,13 @@ function battle_round(array &$u, array &$b, string $mode): array
                     // 战报主文本 $log 在本阶段已存在，直接追加（$logHeal 已在上半场并入 $log）
                     $log .= '(铁壁反击' . $tDmg . '点' . ($tTag !== '' ? $tTag : '') . ')';
                     warr_add_hp_lost($b, $tDmg);
+                    if (function_exists('legend_relic_counter_after')) {
+                        $__ca = '';
+                        legend_relic_counter_after($u, $b, (int) $tDmg, $__ca);
+                        if ($__ca !== '') {
+                            $log .= $__ca;
+                        }
+                    }
                 }
             }
             $rageTxt = warr_rage_text($b, (int) ($u['id'] ?? 0));
@@ -7354,6 +7450,13 @@ function battle_round(array &$u, array &$b, string $mode): array
         if ($petHurt !== '') { $log .= $petHurt; }
         $u['hp'] = (int) $u['hp'] + $md;
         $log .= '(怪物转头打了宠物)';
+    }
+    // 遗神铸庭·涅槃：致命伤害拦截（保命+狂暴）
+    if ((int) $u['hp'] <= 0 && function_exists('legend_relic_death_guard')) {
+        $__ng = '';
+        if (legend_relic_death_guard($u, $b, $__ng)) {
+            $log .= $__ng;
+        }
     }
     user_save($u);
     if ((int) $u['hp'] <= 0) {

@@ -265,10 +265,14 @@ function we2_build(): array
     $mobSlots = ['weapon', 'offhand', 'body', 'head', 'legs', 'belt', 'gloves', 'shoes'];
     $bossSlots = ['back', 'ring', 'necklace'];
     $loc = []; $mon = []; $lv = []; $el = []; $bossMap = []; $bosses = [];
-    $drops = []; $skills = []; $regions = []; $links = [];
+    $drops = []; $skills = []; $regions = []; $links = []; $baseIds = [];
 
-    foreach (we2_specs() as $R) {
+    foreach (we2_specs() as $rkey => $R) {
         $maps = $R['maps'];
+        // 每个区域最前面加一个「根据地/基地」：安全区，带常用NPC，是进图前的落脚点与撤退后路
+        $baseId = $rkey . '_camp';
+        array_unshift($maps, [$baseId, $R['name'] . '·根据地', '你的根据地：篝火、铁砧、补给一应俱全，是深入「' . $R['name'] . '」前最后的落脚点，也是撤下来的后路。', []]);
+        $baseIds[] = $baseId;
         $n = count($maps);
         $ids = [];
         foreach ($maps as $M) {
@@ -323,10 +327,12 @@ function we2_build(): array
     return $b = [
         'loc' => $loc, 'mon' => $mon, 'lv' => $lv, 'el' => $el, 'bossMap' => $bossMap,
         'bosses' => $bosses, 'drops' => $drops, 'skills' => $skills, 'regions' => $regions, 'links' => $links,
+        'bases' => $baseIds,
     ];
 }
 
 function we2_locations(): array { return we2_build()['loc']; }
+function we2_base_ids(): array { return we2_build()['bases']; }
 function we2_monsters(): array { return we2_build()['mon']; }
 function we2_lv(): array { return we2_build()['lv']; }
 function we2_element(): array { return we2_build()['el']; }

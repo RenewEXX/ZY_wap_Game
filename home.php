@@ -80,6 +80,15 @@ if ((string) ($_GET['a'] ?? '') === 'pickup') {
     header('Location: home.php');
     exit;
 }
+// 根据地休整：在基地地图上回满血蓝
+if ((string) ($_GET['a'] ?? '') === 'rest_base' && function_exists('we2_base_ids') && in_array((string) $u['loc'], we2_base_ids(), true)) {
+    $u['hp'] = (int) $u['maxhp'];
+    $u['mp'] = (int) ($u['maxmp'] ?? 0);
+    user_save($u);
+    flash_set('你在营地里休整了一会儿，血蓝已回满。');
+    header('Location: home.php');
+    exit;
+}
 $flash = flash_get();
 $here = loc((string) $u['loc']);
 $cur = (string) $u['loc'];
@@ -169,6 +178,16 @@ $smiths = blacksmiths();
 if (isset($smiths[$cur])) {
     $npcHere++;
     echo '<a href="smith.php">' . h($smiths[$cur]) . '(强化)</a> ';
+}
+// 根据地/基地：常用NPC（传送/补给/拍卖/任务/公会/休整）
+if (function_exists('we2_base_ids') && in_array($cur, we2_base_ids(), true)) {
+    $npcHere++;
+    echo '<a href="teleport.php">传送师·星门</a> ';
+    echo '<a href="mall.php">商栈·补给</a> ';
+    echo '<a href="auction.php">拍卖行</a> ';
+    echo '<a href="quest.php">任务告示板</a> ';
+    echo '<a href="guild.php">公会</a> ';
+    echo '<a href="home.php?a=rest_base">营地休整(回满血蓝)</a> ';
 }
 if ($npcHere === 0) {
     echo '<span class="muted">空无一人</span>';

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 define('DH_TEST_MODE', true);
 require 'includes/bootstrap.php';
 $ok = 0; $bad = 0;

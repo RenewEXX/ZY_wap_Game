@@ -77,7 +77,7 @@ foreach ($bossMap as $loc => $boss) {
 }
 
 // 6) 总量核对
-ck25('新增地图总数=84', $totalMaps === 84, (string) $totalMaps);
+ck25('新增地图总数=91(含7个根据地)', $totalMaps === 91, (string) $totalMaps);
 ck25('新增怪物总数=77', $totalCreatures === 77, (string) $totalCreatures);
 ck25('新增BOSS=21', count($bosses) === 21, (string) count($bosses));
 

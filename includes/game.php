@@ -5299,10 +5299,17 @@ function enhance_material_name(string $id): string
 // 各地区铁匠NPC：强化只能找他们
 function blacksmiths(): array
 {
-    return [
+    $s = [
         'smithy' => '布隆',
         'smith' => '丹恩·铜须',
     ];
+    // 第二弹区域的「根据地」也配一个铁匠（可用 smith.php 强化）
+    if (function_exists('we2_base_ids')) {
+        foreach (we2_base_ids() as $bid) {
+            $s[(string) $bid] = '营地铁匠';
+        }
+    }
+    return $s;
 }
 
 function enhance_per_level(int $lv): int

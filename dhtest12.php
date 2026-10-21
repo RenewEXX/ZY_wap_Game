@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 define('DH_TEST_MODE', true);
 require 'includes/bootstrap.php';
 // 真实跑几场战斗，确认防战反击/狂战掉血/DOT/刺客单体都在战报里出现

@@ -72,6 +72,11 @@ if ($a === 'drop') {
     if (!in_array($dtab, ['mat', 'book', 'func', 'potion', 'quest'], true)) {
         $dtab = 'mat';
     }
+    if (mat_hidden($did)) {
+        flash_set('这是系统记录，不能扔。');
+        header('Location: bag.php?tab=' . $dtab);
+        exit;
+    }
     $st = db()->prepare('SELECT num FROM mats WHERE uid=? AND mat=?');
     $st->execute([(int) $u['id'], $did]);
     $dn = (int) ($st->fetchColumn() ?: 0);

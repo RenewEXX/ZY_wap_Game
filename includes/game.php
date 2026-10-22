@@ -2078,7 +2078,7 @@ function mat_hidden(string $mid): bool
     if (str_ends_with($mid, '_enter') || str_ends_with($mid, '_stage')) {
         return true;
     }
-    return in_array($mid, ['offline_on', 'offline_time', 'seen_last', 'exp_card_until', 'bag_ext5_used', 'bag_ext10_used', 'dummy_total', 'tank_cd_hp', 'tank_cd_mp', 'peak_force', 'peak_duel_from', 'arena_day', 'arena_used', 'arena_bought', 'active_wid', 'active_week', 'priest_wid', 'fr_enter', 'fr_stage', 'em_enter', 'em_stage', 'pz_enter', 'pz_stage', 'sen_enter', 'sen_stage', 'vx_enter', 'wb_claimed'], true);
+    return in_array($mid, ['offline_on', 'offline_time', 'seen_last', 'exp_card_until', 'bag_ext5_used', 'bag_ext10_used', 'dummy_total', 'tank_cd_hp', 'tank_cd_mp', 'peak_force', 'peak_duel_from', 'arena_day', 'arena_used', 'arena_bought', 'active_wid', 'active_week', 'priest_wid', 'fr_enter', 'fr_stage', 'em_enter', 'em_stage', 'pz_enter', 'pz_stage', 'sen_enter', 'sen_stage', 'vx_enter', 'wb_claimed', 'legend_fixed', 'rs_summ_hp', 'rs_point', 'exp_card_mult', 'gy_month', 'yz_month'], true);
 }
 
 // 当前版本真正有用的锻造材料：强化石 + 属性石/晶石/珠/神石

@@ -7601,6 +7601,22 @@ function find_route(string $from, string $to): array
     return [];
 }
 
+// 传送费用：严格按距离（最短步数）收费，且越远单价越高（距离平方级）。
+// 近处几步几十铜，横穿整个世界(约30+步)要 1~2 金，让"路远=贵"真正体现出来。
+// 公式：20铜 × 步数 × (步数+1)。1步=40铜，5步=6银，10步=22银，20步=84银，34步≈2.38金。
+function teleport_cost(string $from, string $to): ?int
+{
+    if ($from === $to) {
+        return 0;
+    }
+    $path = find_route($from, $to);
+    if ($path === []) {
+        return null;
+    }
+    $steps = count($path) - 1;
+    return 20 * $steps * ($steps + 1);
+}
+
 function teleport_region_order(): array
 {
     $order = [];

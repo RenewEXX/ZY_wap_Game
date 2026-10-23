@@ -6,18 +6,6 @@ $u = require_login();
 $all = locations();
 $cur = (string) $u['loc'];
 
-function teleport_cost(string $from, string $to): ?int
-{
-    if ($from === $to) {
-        return 0;
-    }
-    $path = find_route($from, $to);
-    if ($path === []) {
-        return null;
-    }
-    return (count($path) - 1) * 15;
-}
-
 $go = (string) ($_GET['go'] ?? '');
 $backRegion = (string) ($_GET['region'] ?? '');
 $backSuffix = $backRegion !== '' ? '?region=' . urlencode($backRegion) : '';
@@ -90,7 +78,7 @@ if ($go !== '' && isset($all[$go])) {
 wap_start('传送');
 echo '你在哪：' . h($all[$cur]['name'] ?? $cur) . '<br>';
 echo '<span class="gold">' . h(fmt_money((int) $u['gold'])) . '</span><br>';
-echo '<span class="muted">按步数收费，每步15铜。任务【立即前往】免费，走路免费。</span>';
+echo '<span class="muted">按距离收费：越远越贵（约 20铜×步数×步数）。任务【立即前往】免费，走路免费。</span>';
 echo '<div class="hr">--------</div>';
 $flash = flash_get();
 if ($flash !== '') {

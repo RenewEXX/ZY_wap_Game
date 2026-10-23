@@ -3687,17 +3687,25 @@ function use_skill_book(int $uid, string $book): string
     return '【' . $cat['name'] . '】升至' . ((int) $s['level'] + 1) . '级！';
 }
 
+// 三级秘籍（各职业的第3本）有专属来源，不进普通掉落池，统一走深渊 boss 掉落。
+// 召唤师的 s3 此前漏在池外，导致【血肉筑城秘籍】哪都不掉，这里集中定义为一处来源。
+function tier3_skill_books(): array
+{
+    return ['book_w3', 'book_m3', 'book_h3', 'book_p3', 'book_s3'];
+}
+
 function roll_skillbook(int $uid, string $mid): string
 {
     $rate = ['dark_slime' => 0.005, 'swamp_slime' => 0.008, 'swamp_king' => 0.05][$mid] ?? 0;
     if ($rate <= 0 || mt_rand() / mt_getrandmax() > $rate) {
         return '';
     }
-    // 三级书（w3/m3/h3/p3/s3）有专属来源（1觉/二章/深渊副本），不进这个池；
-    // 其余各职业的书都在池里，和召唤师的 s1/s2/s4~s9 对齐。
+    // 三级书有专属来源（深渊 boss，见 roll_abx_skillbook），不进这个池；
+    // 其余各职业的书（含召唤师 s1/s2/s4~s9）都在池里。
+    $t3 = tier3_skill_books();
     $books = array_values(array_filter(
         array_keys(skill_books()),
-        fn($k) => !str_ends_with($k, '_w3') && !str_ends_with($k, '_m3') && !str_ends_with($k, '_h3') && !str_ends_with($k, '_p3') && !str_ends_with($k, '_s3')
+        fn($k) => !in_array($k, $t3, true)
     ));
     $b = $books[array_rand($books)];
     add_mat($uid, $b, 1);
@@ -3710,7 +3718,7 @@ function roll_abx_skillbook(int $uid, string $mid): string
     if ($rate <= 0 || mt_rand() / mt_getrandmax() > $rate) {
         return '';
     }
-    $books = ['book_w3', 'book_m3', 'book_h3', 'book_p3'];
+    $books = tier3_skill_books();
     $b = $books[array_rand($books)];
     add_mat($uid, $b, 1);
     return skill_books()[$b]['name'];

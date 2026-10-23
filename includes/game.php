@@ -5785,23 +5785,37 @@ function gain_exp(array &$u, int $exp): string
         $u['lv'] = (int) $u['lv'] + 1;
         // 转生后每级成长翻倍
         $g = $rsN > 0 ? 2 : 1;
-        $u['maxhp'] = (int) $u['maxhp'] + 10 * $g;
-        $u['maxmp'] = (int) ($u['maxmp'] ?? 0) + 5 * $g;
-        // 升级成长按职业：只有战士猎手自动长物攻。
-        // 法师/牧师/召唤师都不再自动加智慧/灵力/物攻——属性点每级 +3 存进潜力，
-        // 全部由玩家手动分配（不然升级会“莫名其妙”自己涨智慧、灵力，玩家又没点过）。
-        // 召唤兽/法术伤害吃法攻，想暴力就把潜力点自己投到智慧上，把选择权还给玩家。
-        // 法系与召唤仍保留同档魔力成长，召唤师额外是全场最低的 +6 血量成长。
+        // 升级成长按职业（*$g：转生后翻倍）。核心是每级给 3 点潜力由玩家自由分配，
+        // 这里的自动成长只是小幅“职业特长”，大方向仍靠玩家点力量/坚毅/体质/智慧/灵力。
+        // 物攻=力量(str) 魔攻=智慧(int) 物防兼法防=坚毅(agi)；生命=maxhp 魔力=maxmp。
         $jobUp = job_id_of($u);
-        if (in_array($jobUp, ['warrior', 'hunter'], true)) {
-            $u['atk'] = (int) $u['atk'] + $g;
-        } elseif (in_array($jobUp, ['mage', 'priest', 'summoner'], true)) {
-            $u['maxmp'] = (int) ($u['maxmp'] ?? 0) + 5 * $g;
+        $growth = '';
+        switch ($jobUp) {
+            case 'warrior': // 物防法防+1（坚毅），魔力+2
+                $u['agi'] = (int) ($u['agi'] ?? 0) + 1 * $g;
+                $u['maxmp'] = (int) ($u['maxmp'] ?? 0) + 2 * $g;
+                $growth = '物防法防+' . (1 * $g) . '，魔力+' . (2 * $g);
+                break;
+            case 'hunter': // 物攻+2（力量），魔力+2
+                $u['str'] = (int) ($u['str'] ?? 0) + 2 * $g;
+                $u['maxmp'] = (int) ($u['maxmp'] ?? 0) + 2 * $g;
+                $growth = '物攻+' . (2 * $g) . '，魔力+' . (2 * $g);
+                break;
+            case 'mage': // 魔攻+2（智慧），魔力+2
+                $u['int'] = (int) ($u['int'] ?? 0) + 2 * $g;
+                $u['maxmp'] = (int) ($u['maxmp'] ?? 0) + 2 * $g;
+                $growth = '魔攻+' . (2 * $g) . '，魔力+' . (2 * $g);
+                break;
+            case 'priest': // 生命+5
+                $u['maxhp'] = (int) $u['maxhp'] + 5 * $g;
+                $growth = '生命+' . (5 * $g);
+                break;
+            case 'summoner': // 生命+2，魔力+5
+                $u['maxhp'] = (int) $u['maxhp'] + 2 * $g;
+                $u['maxmp'] = (int) ($u['maxmp'] ?? 0) + 5 * $g;
+                $growth = '生命+' . (2 * $g) . '，魔力+' . (5 * $g);
+                break;
         }
-        if ($jobUp === 'summoner') {
-            $u['maxhp'] = (int) $u['maxhp'] - 10 * $g + 6 * $g;
-        }
-        $u['def'] = (int) $u['def'] + $g;
         $u['hp'] = (int) $u['maxhp'];
         $u['mp'] = (int) ($u['maxmp'] ?? 0);
         $u['s_pts'] = (int) ($u['s_pts'] ?? 0) + 3;
@@ -5815,7 +5829,7 @@ function gain_exp(array &$u, int $exp): string
                 $msg .= '，源罪点数+' . ($stage - $got);
             }
         }
-        $msg .= '！升级至' . lv_text((int) $u['id'], (int) $u['lv']) . '，伤势尽复，生命上限+' . (10 * $g) . '，魔力上限+' . (5 * $g) . '，得3属性点';
+        $msg .= '！升级至' . lv_text((int) $u['id'], (int) $u['lv']) . '，伤势尽复，' . $growth . '，得3属性点';
     }
     sin_gain_array($u, 0);
     return $msg;

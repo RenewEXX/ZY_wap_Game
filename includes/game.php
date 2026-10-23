@@ -3375,7 +3375,7 @@ function skill_catalog(): array
         'p2' => ['name' => '圣光庇佑', 'job' => 'priest', 'mp' => 20, 'kind' => 'heal', 'mult' => 1.0, 'heal' => 45, 'el' => 'light', 't10' => '治疗+25', 'lv20' => '治疗+20%，伤害+15%'],
         'w3' => ['name' => '龟裂践踏', 'job' => 'warrior', 'mp' => 30, 'kind' => 'phys', 'mult' => 2.2, 'el' => 'thunder', 'tank' => 1, 't10' => '敌人攻击-15%持续3轮', 'lv20' => '伤害+15%，反击伤害+25%'],
         'm3' => ['name' => '寒霜新星', 'job' => 'mage', 'mp' => 32, 'kind' => 'magic', 'mult' => 0, 'el' => 'ice', 't10' => '5%冻结：敌攻-15%持续3轮', 'lv20' => '伤害+15%'],
-        'h3' => ['name' => '淬毒箭', 'job' => 'hunter', 'mp' => 30, 'kind' => 'multi2', 'mult' => 1.8, 'el' => 'dark', 'dot' => 'poison', 't10' => '剧毒层数+1，可叠3层', 'lv20' => '剧毒每层+2%最大生命'],
+        'h3' => ['name' => '淬毒箭', 'job' => 'hunter', 'mp' => 30, 'kind' => 'multi2', 'mult' => 1.8, 'el' => 'dark', 'dot' => 'poison', 't10' => '剧毒层数+1，可叠3层', 'lv20' => '剧毒每层+1%最大生命'],
         'p3' => ['name' => '神圣审判', 'job' => 'priest', 'mp' => 30, 'kind' => 'heal', 'mult' => 1.2, 'heal' => 60, 'el' => 'light', 't10' => '恢复10点魔力', 'lv20' => '治疗+20%，伤害+15%'],
         'w4' => ['name' => '燃血狂斩', 'job' => 'warrior', 'mp' => 40, 'kind' => 'phys', 'mult' => 2.6, 'el' => 'fire', 'rage' => 1, 't10' => '本次暴击率+25%', 'lv20' => '伤害+15%，附魔火伤'],
         'm4' => ['name' => '冰河葬', 'job' => 'mage', 'mp' => 42, 'kind' => 'magic', 'mult' => 0, 'el' => 'ice', 't10' => '伤害+30%', 'lv20' => '伤害+15%，10%冻结'],
@@ -6707,8 +6707,8 @@ function battle_round(array &$u, array &$b, string $mode): array
         }
                 // 噬魂夜宴：梦魇登场附带灵魂腐蚀
                 if ($sid2 === 's6' && $blockMsg === '') {
-                    $b['poison'] = ($sLv2 >= 20 ? 4 : 3);
-                    $b['poison_pct'] = $sLv2 >= 20 ? 5 : 4;
+                    $b['poison'] = ($sLv2 >= 20 ? 3 : 2);
+                    $b['poison_pct'] = $sLv2 >= 20 ? 2 : 1.5;
                     $logHeal .= '(夜宴腐蚀)';
                 }
         if ($blockMsg !== '') { $logHeal .= $blockMsg; }

@@ -68,7 +68,8 @@ function hunter_dot_turns(string $key): int
 // 剧毒按目标最大生命百分比算，lv20 每层多 2%
 function hunter_dot_poison_pct(int $bMaxhp, int $stacks, bool $lv20): int
 {
-    $per = 3 + ($lv20 ? 2 : 0);
+    // 剧毒：按目标最大生命百分比，但已由 3%/层(20级5%) 平衡下调为 1%/层(20级2%)，避免对高血BOSS过强
+    $per = 1 + ($lv20 ? 1 : 0);
     return max(1, (int) ($bMaxhp * $per * $stacks / 100));
 }
 

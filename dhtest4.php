@@ -15,7 +15,7 @@ chk4('出血层数保持', (int) ($b['dot_bleed'] ?? 0), 3);
 chk4('出血轮数衰减', (int) ($b['dot_bleed_turns'] ?? 0), 3);
 $b2 = ['id' => 'goblin', 'name' => '毒怪', 'hp' => 20000, 'maxhp' => 20000];
 hunter_dot_add($b2, 'poison', 2, 0, false);
-chk4('剧毒百分比', hunter_dot_tick($b2)['dmg'], (int) (20000 * 0.03 * 2));
+chk4('剧毒百分比', hunter_dot_tick($b2)['dmg'], (int) (20000 * 0.01 * 2));
 $b3 = ['id' => 'goblin', 'name' => '引燃怪', 'hp' => 30000, 'maxhp' => 30000];
 hunter_dot_add($b3, 'bleed', 3, 2000, true);
 hunter_dot_add($b3, 'burn', 2, 2000, true);

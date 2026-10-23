@@ -5787,21 +5787,18 @@ function gain_exp(array &$u, int $exp): string
         $g = $rsN > 0 ? 2 : 1;
         $u['maxhp'] = (int) $u['maxhp'] + 10 * $g;
         $u['maxmp'] = (int) ($u['maxmp'] ?? 0) + 5 * $g;
-        // 升级成长按职业：战士猎手长物攻，法师牧师长智慧（法攻）+灵力（魔力）。
-        // 召唤师不自动加点：智慧/灵力/物攻全部由玩家用潜力点手动分配，只保留职业的
-        // 血量/魔力成长（否则升级会“莫名其妙”自己涨智慧、灵力，玩家又没点过）。
-        // 召唤兽伤害吃法攻，想暴力就把潜力点自己投到智慧上，把选择权还给玩家。
-        if (in_array(job_id_of($u), ['mage', 'priest'], true)) {
-            $u['int'] = (int) ($u['int'] ?? 0) + $g;
-            $u['spi'] = (int) ($u['spi'] ?? 0) + $g;
-            $u['maxmp'] = (int) ($u['maxmp'] ?? 0) + 5 * $g;
-        } elseif (job_id_of($u) === 'summoner') {
-            // 召唤师：不自动涨智慧/灵力/物攻，仅补足与法系同档的魔力成长
-            $u['maxmp'] = (int) ($u['maxmp'] ?? 0) + 5 * $g;
-        } else {
+        // 升级成长按职业：只有战士猎手自动长物攻。
+        // 法师/牧师/召唤师都不再自动加智慧/灵力/物攻——属性点每级 +3 存进潜力，
+        // 全部由玩家手动分配（不然升级会“莫名其妙”自己涨智慧、灵力，玩家又没点过）。
+        // 召唤兽/法术伤害吃法攻，想暴力就把潜力点自己投到智慧上，把选择权还给玩家。
+        // 法系与召唤仍保留同档魔力成长，召唤师额外是全场最低的 +6 血量成长。
+        $jobUp = job_id_of($u);
+        if (in_array($jobUp, ['warrior', 'hunter'], true)) {
             $u['atk'] = (int) $u['atk'] + $g;
+        } elseif (in_array($jobUp, ['mage', 'priest', 'summoner'], true)) {
+            $u['maxmp'] = (int) ($u['maxmp'] ?? 0) + 5 * $g;
         }
-        if (job_id_of($u) === 'summoner') {
+        if ($jobUp === 'summoner') {
             $u['maxhp'] = (int) $u['maxhp'] - 10 * $g + 6 * $g;
         }
         $u['def'] = (int) $u['def'] + $g;

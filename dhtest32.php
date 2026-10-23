@@ -1,7 +1,7 @@
 <?php
 define('DH_TEST_MODE', true);
 require 'includes/bootstrap.php';
-// 升级自动加点回归：召唤师不再自动加智慧/灵力/物攻，法师牧师仍自动，战士仍长物攻
+// 升级自动加点回归：召唤师/法师/牧师都不再自动加智慧/灵力/物攻（走潜力手动分配），战士仍长物攻
 $ok = 0; $bad = 0;
 function ck32(string $l, bool $c, string $d = '') { global $ok,$bad; if ($c) { $ok++; } else { $bad++; echo "FAIL $l $d\n"; } }
 
@@ -37,18 +37,19 @@ ck32('召唤师潜力点+3', (int) $after['s_pts'] === (int) $before['s_pts'] + 
 ck32('召唤师生命+6', (int) $after['maxhp'] === (int) $before['maxhp'] + 6, $before['maxhp'] . '->' . $after['maxhp']);
 ck32('召唤师魔力+10', (int) $after['maxmp'] === (int) $before['maxmp'] + 10, $before['maxmp'] . '->' . $after['maxmp']);
 
-// —— 法师：仍自动长智慧+灵力，不长物攻 ——
+// —— 法师：也不自动加智慧/灵力/物攻，属性点走潜力手动分配 ——
 $m = mk32('mage');
 $ids[] = (int) $m['id'];
-$m['lv'] = 1; $m['exp'] = 0; $m['int'] = 0; $m['spi'] = 0; $m['atk'] = 11; $m['maxhp'] = 42; $m['maxmp'] = 55;
+$m['lv'] = 1; $m['exp'] = 0; $m['int'] = 0; $m['spi'] = 0; $m['atk'] = 11; $m['maxhp'] = 42; $m['maxmp'] = 55; $m['s_pts'] = 0;
 user_save($m);
 $bm = user_by_id((int) $m['id']);
 gain_exp($m, exp_need(1));
 user_save($m);
 $am = user_by_id((int) $m['id']);
-ck32('法师智慧+1', (int) $am['int'] === (int) $bm['int'] + 1, $bm['int'] . '->' . $am['int']);
-ck32('法师灵力+1', (int) $am['spi'] === (int) $bm['spi'] + 1, $bm['spi'] . '->' . $am['spi']);
+ck32('法师不自动加智慧', (int) $am['int'] === (int) $bm['int'], $bm['int'] . '->' . $am['int']);
+ck32('法师不自动加灵力', (int) $am['spi'] === (int) $bm['spi'], $bm['spi'] . '->' . $am['spi']);
 ck32('法师不加物攻', (int) $am['atk'] === (int) $bm['atk'], $bm['atk'] . '->' . $am['atk']);
+ck32('法师潜力点+3', (int) $am['s_pts'] === (int) $bm['s_pts'] + 3, $bm['s_pts'] . '->' . $am['s_pts']);
 
 // —— 战士：长物攻 ——
 $w = mk32('warrior');

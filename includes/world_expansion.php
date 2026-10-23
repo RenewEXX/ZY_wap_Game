@@ -195,11 +195,11 @@ function world_expansion_drops(): array
         'siren_singer' => ['slot' => 'legs', 'base' => '海妖歌裙', 'rate' => 0.10, 'q' => [0, 20, 50, 30, 0]],
         'deep_crab' => ['slot' => 'legs', 'base' => '深海蟹甲', 'rate' => 0.10, 'q' => [0, 20, 50, 30, 0]],
         // BOSS：只掉传说（q=4 → legendary）
-        'thunder_regent' => ['slot' => 'gloves', 'base' => '雷核护手', 'rate' => 0.35, 'q' => [0, 0, 15, 45, 40], 'legendary' => ['base' => '雷霆君临·裂云护手', 'extra' => ['k' => 'skill_damage', 'v' => 6.0]]],
-        'wind_matriarch' => ['slot' => 'shoes', 'base' => '疾风之靴', 'rate' => 0.35, 'q' => [0, 0, 15, 45, 40], 'legendary' => ['base' => '风之母·追云之靴', 'extra' => ['k' => 'critdmg', 'v' => 3.0]]],
-        'sky_sovereign' => ['slot' => 'weapon', 'base' => '苍穹权杖', 'rate' => 0.40, 'q' => [0, 0, 10, 40, 50], 'legendary' => ['base' => '苍穹之主·天穹之刃', 'extra' => ['k' => 'skill_damage', 'v' => 8.0]]],
-        'siren_queen' => ['slot' => 'head', 'base' => '海妖冠冕', 'rate' => 0.35, 'q' => [0, 0, 15, 45, 40], 'legendary' => ['base' => '海妖女王·溺歌之冠', 'extra' => ['k' => 'all_attr', 'v' => 30.0]]],
-        'abyss_whale' => ['slot' => 'ring', 'base' => '鲸骨指环', 'rate' => 0.40, 'q' => [0, 0, 10, 40, 50], 'legendary' => ['base' => '深渊鲸主·吞海之戒', 'extra' => ['k' => 'lifesteal', 'v' => 2.0]]],
+        'thunder_regent' => ['slot' => 'gloves', 'base' => '雷核护手', 'rate' => 0.35, 'q' => [0, 0, 15, 45, 40], 'legendary' => ['base' => '雷霆君临·裂云护手', 'extra' => ['k' => 'lg_bl_thunder', 'v' => 1]]],
+        'wind_matriarch' => ['slot' => 'shoes', 'base' => '疾风之靴', 'rate' => 0.35, 'q' => [0, 0, 15, 45, 40], 'legendary' => ['base' => '风之母·追云之靴', 'extra' => ['k' => 'lg_bl_wind', 'v' => 1]]],
+        'sky_sovereign' => ['slot' => 'weapon', 'base' => '苍穹权杖', 'rate' => 0.40, 'q' => [0, 0, 10, 40, 50], 'legendary' => ['base' => '苍穹之主·天穹之刃', 'extra' => ['k' => 'lg_bl_sky', 'v' => 1]]],
+        'siren_queen' => ['slot' => 'head', 'base' => '海妖冠冕', 'rate' => 0.35, 'q' => [0, 0, 15, 45, 40], 'legendary' => ['base' => '海妖女王·溺歌之冠', 'extra' => ['k' => 'lg_bl_siren', 'v' => 1]]],
+        'abyss_whale' => ['slot' => 'ring', 'base' => '鲸骨指环', 'rate' => 0.40, 'q' => [0, 0, 10, 40, 50], 'legendary' => ['base' => '深渊鲸主·吞海之戒', 'extra' => ['k' => 'lg_bl_whale', 'v' => 1]]],
     ] + we2_drops();
 }
 

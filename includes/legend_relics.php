@@ -112,6 +112,35 @@ function legend_relics(): array
     ];
 }
 
+// BOSS 专属掉落传说·“行为型”传说特效（与遗物同一套引擎：靠 lg_* 词条判定穿戴，
+// 战斗钩子已统一处理 eff 字段；少数独特机制在对应钩子里按 key 特判）。
+// key => ['intro' => 说明, 'eff' => {与遗物相同的聚合字段}]
+function boss_legendary_effects(): array
+{
+    return [
+        'lg_bl_thunder' => [
+            'intro' => '雷属性伤害+25%；暴击时汲取风暴之力，回复6%最大生命。',
+            'eff' => ['el' => ['thunder' => 25], 'oncrit_heal' => 6],
+        ],
+        'lg_bl_wind' => [
+            'intro' => '闪避+10%；生命低于40%时，再额外闪避+20%。',
+            'eff' => ['dodge' => 10, 'lowhp_dodge' => [0.4, 20]],
+        ],
+        'lg_bl_sky' => [
+            'intro' => '对生命低于30%的目标，造成伤害额外+40%（斩尽残穹）。',
+            'eff' => [],
+        ],
+        'lg_bl_siren' => [
+            'intro' => '受到伤害时有30%概率以溺歌夺魄，令敌人下一回合无法行动。',
+            'eff' => [],
+        ],
+        'lg_bl_whale' => [
+            'intro' => '吸血+4%；每击杀一个敌人，回复10%最大生命（吞海）。',
+            'eff' => ['lifesteal' => 4, 'kill_heal' => 10],
+        ],
+    ];
+}
+
 // 掉落表：BOSS mid => [relic名...]
 function legend_relic_drops(): array
 {
@@ -167,6 +196,14 @@ function legend_relic_eff_index(): array
     foreach (legend_relics() as $cfg) {
         if (isset($cfg['eff']) && is_array($cfg['eff'])) {
             $idx[(string) $cfg['key']] = $cfg['eff'];
+        }
+    }
+    // BOSS 专属传说（行为型）也并入同一套 eff 聚合
+    if (function_exists('boss_legendary_effects')) {
+        foreach (boss_legendary_effects() as $key => $cfg) {
+            if (isset($cfg['eff']) && is_array($cfg['eff']) && $cfg['eff'] !== []) {
+                $idx[(string) $key] = $cfg['eff'];
+            }
         }
     }
     return $idx;
@@ -226,6 +263,12 @@ function legend_relic_intro_by_key(string $key): string
     foreach (legend_relics() as $cfg) {
         if ((string) $cfg['key'] === $key) {
             return (string) $cfg['intro'];
+        }
+    }
+    if (function_exists('boss_legendary_effects')) {
+        $boss = boss_legendary_effects();
+        if (isset($boss[$key])) {
+            return (string) $boss[$key]['intro'];
         }
     }
     return '';
@@ -474,6 +517,11 @@ function legend_relic_outgoing(array &$u, array &$b, int $pd, bool $isSkill, str
             }
         }
     }
+    // BOSS传说·苍穹之主【斩尽残穹】：对残血目标增伤
+    if (isset($w['lg_bl_sky']) && (int) ($b['maxhp'] ?? 0) > 0 && (int) ($b['hp'] ?? 0) < (int) $b['maxhp'] * 0.3) {
+        $pd = (int) round($pd * 1.4);
+        $log .= '(斩尽残穹)';
+    }
     return [$pd, $critAdd, $force, $truePct, $log];
 }
 
@@ -546,6 +594,10 @@ function legend_relic_incoming(array &$u, array &$b, int $md): int
                 $md = (int) ($md * (1 - (float) $e['lowhp_reduce'][1] / 100));
             }
         }
+    }
+    // BOSS传说·海妖女王【溺歌夺魄】：挨打时反制，概率令敌人下一回合无法行动
+    if (isset($w['lg_bl_siren']) && mt_rand(1, 100) <= 30) {
+        $b['stun'] = max((int) ($b['stun'] ?? 0), 1);
     }
     return max(0, $md);
 }

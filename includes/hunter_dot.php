@@ -73,15 +73,12 @@ function hunter_dot_poison_pct(int $bMaxhp, int $stacks, bool $lv20): int
     return max(1, (int) ($bMaxhp * $per * $stacks / 100));
 }
 
-// 剧毒/腐蚀的“硬上限”：按施法者强度封顶，防止任何超血 BOSS 被“按最大生命比例”无限带飞。
-// 返回单次结算的伤害天花板（0 表示不设限）。约等于数段技能伤害，随玩家成长而提升、与怪物血量无关。
-function hunter_dot_hard_cap(array $u): int
+// 剧毒/腐蚀的“硬上限”：单次结算最多削掉目标 8% 最大生命。
+// 用“目标血量百分比”封顶——对普通怪/BOSS 仍按比例打出大数字（不再像按施法者封顶那样被砍成小几万），
+// 但又保证任何超血目标每轮最多掉 8% 血，叠层/血量再大也不会被无限带飞。
+function hunter_dot_hard_cap(int $maxhp): int
 {
-    $pow = player_patk($u) + player_matk($u);
-    if ($pow <= 0) {
-        return 0;
-    }
-    return max(1, (int) ($pow * 3.0));
+    return max(1, (int) ($maxhp * 0.08));
 }
 
 // 结算一轮所有 DOT，返回掉血和日志。$mult 为职业向DOT加成（游侠+35%）。

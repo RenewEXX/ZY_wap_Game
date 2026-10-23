@@ -27,6 +27,7 @@ $dmgCapped = hunter_dot_tick($capHuge, 1.0, 50000)['dmg'];
 chk4('剧毒无上限时按比例很大', $dmgNoCap > 1000000, true);
 chk4('剧毒硬上限生效', $dmgCapped <= 50000, true);
 chk4('剧毒硬上限确实压低', $dmgCapped < $dmgNoCap, true);
+chk4('硬上限=目标8%最大生命', hunter_dot_hard_cap(1000000), 80000);
 $b3 = ['id' => 'goblin', 'name' => '引燃怪', 'hp' => 30000, 'maxhp' => 30000];
 hunter_dot_add($b3, 'bleed', 3, 2000, true);
 hunter_dot_add($b3, 'burn', 2, 2000, true);

@@ -6741,7 +6741,7 @@ function battle_round(array &$u, array &$b, string $mode): array
     if ($trueDmg > 0) { $b['hp'] = (int) $b['hp'] - $trueDmg; $logHeal .= '(真伤+' . $trueDmg . ')'; }
     // 猎人DOT结算：出血/剧毒/焦灼每轮掉一层，层数越多越疼（游侠2觉DOT+35%）
     if ((int) ($b['hp'] ?? 0) > 0 && hunter_dot_stacks($b) !== []) {
-        $dt = hunter_dot_tick($b, hunter_dot_mult($u), hunter_dot_hard_cap($u));
+        $dt = hunter_dot_tick($b, hunter_dot_mult($u), hunter_dot_hard_cap((int) ($b['maxhp'] ?? 1)));
         if ($dt['dmg'] > 0) {
             $b['hp'] = (int) $b['hp'] - $dt['dmg'];
             $logHeal .= '(' . $dt['log'] . ')';
@@ -6770,7 +6770,7 @@ function battle_round(array &$u, array &$b, string $mode): array
         $pct = isset($b['poison_pct']) ? (float) $b['poison_pct'] : 5;
         $ptag = isset($b['poison_pct']) ? '腐蚀发作' : '剧毒发作';
         $pt = max(1, (int) ((int) ($b['maxhp'] ?? 1) * $pct / 100));
-        $corCap = hunter_dot_hard_cap($u);
+        $corCap = hunter_dot_hard_cap((int) ($b['maxhp'] ?? 1));
         if ($corCap > 0) { $pt = min($pt, $corCap); }
         $b['hp'] = (int) $b['hp'] - $pt;
         $b['poison'] = (int) $b['poison'] - 1;

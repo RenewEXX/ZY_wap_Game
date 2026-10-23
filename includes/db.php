@@ -213,7 +213,7 @@ function db_init(): void
     try {
         $rows = db()->query("SELECT id, lv, maxhp, hp FROM users WHERE job='summoner'")->fetchAll();
         foreach ($rows as $r) {
-            if ((int) mats_of((int) $r['id'])['rs_summ_hp'] === 1) {
+            if ((int) (mats_of((int) $r['id'])['rs_summ_hp'] ?? 0) === 1) {
                 continue;
             }
             $cut = max(0, ((int) $r['lv'] - 1) * 4);

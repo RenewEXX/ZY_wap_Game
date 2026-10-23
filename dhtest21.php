@@ -63,6 +63,18 @@ $bb = $_SESSION['battle'];
 $r2 = battle_round($uu, $bb, 'hit');
 ckS('没有召唤物时战报写明打在你身上', str_contains($r2['log'], '打在你身上'), $r2['log']);
 
+// —— 5. 真实开局（battle 无 summons 键）跑一轮后，召唤物必须持久化到 session ——
+// 否则「实时战斗画面」永远拿不到召唤物，看不到剩余血量（本轮修复的回归点）
+$_SESSION['battle'] = ['id' => 'goblin', 'name' => '哥布林', 'hp' => 999999, 'maxhp' => 999999, 'atk' => 10, 'def' => 0, 'mdef' => 0, 'gold' => 1, 'exp' => 1, 'num' => 1, 'left' => 1, 'elite' => 0, 'wexp' => 0, 'wgold' => 0, 'drops' => []];
+unset($_SESSION['battle']['summons']);
+$uu = user_by_id((int) $uid);
+$bb = $_SESSION['battle'];
+$r5 = battle_round($uu, $bb, 'skill');
+$live = summon_status_list();
+ckS('开局无summons跑一轮后召唤物落库', $live !== [], json_encode($live));
+ckS('落库召唤物带血量显示字段', isset($live[0]['hp'], $live[0]['max']) && $live[0]['hp'] > 0 && $live[0]['max'] > 0, json_encode($live));
+ckS('session持久化数量一致', count($_SESSION['battle']['summons'] ?? []) === count($live), '');
+
 // 清理
 unset($_SESSION['battle'], $_SESSION['uid']);
 db()->exec('DELETE FROM pets WHERE uid=' . (int) $uid);

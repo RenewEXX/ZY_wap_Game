@@ -7514,6 +7514,12 @@ function battle_round(array &$u, array &$b, string $mode): array
     }
     $b['history'][] = $log;
     $b['history'] = array_slice($b['history'], -20);
+    // 召唤物存在 $_SESSION['battle']['summons']（summon_save 直接写 session）。
+    // $b 是本轮的局部副本，不含本轮新召唤/受击后的召唤物；若直接写回会把它们冲掉，
+    // 导致「实时战斗画面」永远看不到召唤物血量。这里先取回本轮最新召唤列表再落 session。
+    if (function_exists('summon_list')) {
+        $b['summons'] = summon_list();
+    }
     $_SESSION['battle'] = $b;
     return ['status' => 'fight', 'log' => $log];
 }

@@ -30,6 +30,11 @@ php -S localhost:8080
 
 ## 更新日志（新的在上）
 
+### 2026-10-27-修复实时战斗画面看不到召唤物血量
+- 根因：召唤物存在 `$_SESSION['battle']['summons']`（`summon_save()` 直接写 session），但 `battle_round()` 末尾用本轮局部副本 `$b` 回写 `$_SESSION['battle'] = $b`，把本轮新召唤/受击后的召唤物列表**冲掉**了。于是每轮召唤物都"瞬生瞬灭"，`summon_status_list()` 永远为空，实时战斗画面（#psum）自然看不到召唤物剩余血量。
+- 修复：`battle_round()` 回写 session 前先 `$b['summons'] = summon_list();`，把本轮最新的召唤物（含血量变化）保留下来。现在召唤物能跨轮存活，画面按宠物同款格式显示「名 当前/最大」并随 tick 刷新。
+- 测试：`dhtest21.php` 增加「真实开局（battle 无 summons 键）跑一轮后召唤物必须落库且带 hp/max」断言。全量 28 个测试全绿。
+
 ### 2026-10-27-修复系统标记泄漏到「旧物杂物」
 - `legend_fixed`（传说装备一次性迁移标记）、`rs_summ_hp`（召唤师血量曲线对齐标记）等属于**内部系统计数**，此前因无材料名而落进背包「旧物杂物（已绝版，可扔）」并显示原始 id。
 - `mat_hidden()` 追加隐藏 `legend_fixed / rs_summ_hp / rs_point / exp_card_mult / gy_month / yz_month`（都是内部标记/点数，不是可看可扔的道具）。

@@ -3383,16 +3383,16 @@ function skill_catalog(): array
         'p4' => ['name' => '熔心圣歌', 'job' => 'priest', 'mp' => 40, 'kind' => 'heal', 'mult' => 1.5, 'heal' => 90, 'el' => 'light', 't10' => '治疗+30', 'lv20' => '治疗+20%，伤害+15%'],
         'w5' => ['name' => '烈焰旋风', 'job' => 'warrior', 'mp' => 50, 'kind' => 'aoe', 'mult' => 2.0, 'el' => 'fire', 'rage' => 1, 't10' => '溅射+10%', 'lv20' => '伤害+15%'],
         'w6' => ['name' => '撼地重击', 'job' => 'warrior', 'mp' => 50, 'kind' => 'aoe', 'mult' => 1.8, 'el' => 'thunder', 'tank' => 1, 't10' => '10%眩晕', 'lv20' => '伤害+15%，减攻25%'],
-        'm5' => ['name' => '暴风雪', 'job' => 'mage', 'mp' => 55, 'kind' => 'aoe', 'mult' => 0, 'el' => 'ice', 't10' => '伤害+30%，10%冻结', 'lv20' => '伤害+15%'],
-        'm6' => ['name' => '燎原烈焰', 'job' => 'mage', 'mp' => 55, 'kind' => 'aoe', 'mult' => 0, 'el' => 'fire', 't10' => '伤害+30%', 'lv20' => '伤害+15%'],
+        'm5' => ['name' => '暴风雪', 'job' => 'mage', 'mp' => 55, 'kind' => 'aoe', 'mult' => 1.8, 'el' => 'ice', 't10' => '伤害+30%，10%冻结', 'lv20' => '伤害+15%'],
+        'm6' => ['name' => '燎原烈焰', 'job' => 'mage', 'mp' => 55, 'kind' => 'aoe', 'mult' => 1.8, 'el' => 'fire', 't10' => '伤害+30%', 'lv20' => '伤害+15%'],
         'h5' => ['name' => '万箭齐发', 'job' => 'hunter', 'mp' => 50, 'kind' => 'aoe', 'mult' => 2.2, 'el' => 'wind', 'dot' => 'bleed', 'ranger' => 1, 't10' => '全场叠2层出血', 'lv20' => '溅射率翻倍（100%）'],
         'h6' => ['name' => '影杀', 'job' => 'hunter', 'mp' => 50, 'kind' => 'step', 'mult' => 4.2, 'el' => 'dark', 'assassin' => 1, 't10' => '单体伤害+60%', 'lv20' => '斩杀线提高到40%'],
         'p5' => ['name' => '暗影新星', 'job' => 'priest', 'mp' => 55, 'kind' => 'aoe', 'mult' => 1.8, 'el' => 'dark', 't10' => '伤害+30%', 'lv20' => '伤害转奶40%'],
         'p6' => ['name' => '圣光普照', 'job' => 'priest', 'mp' => 55, 'kind' => 'aoe', 'mult' => 1.2, 'heal' => 120, 'el' => 'light', 't10' => '治疗+40', 'lv20' => '治疗+20%，队友70%'],
         'w7' => ['name' => '血怒狂斩', 'job' => 'warrior', 'mp' => 55, 'kind' => 'aoe', 'mult' => 2.2, 'el' => 'dark', 'rage' => 1, 't10' => '狂战加成翻倍，吸血+15%', 'lv20' => '伤害+15%，溅射+10%'],
         'w8' => ['name' => '壁垒雷狱', 'job' => 'warrior', 'mp' => 55, 'kind' => 'aoe', 'mult' => 1.6, 'el' => 'thunder', 'tank' => 1, 't10' => '敌攻-20%持续3轮', 'lv20' => '伤害+15%，减攻25%，反击伤害+30%'],
-        'm7' => ['name' => '雷暴术', 'job' => 'mage', 'mp' => 60, 'kind' => 'aoe', 'mult' => 0, 'el' => 'thunder', 't10' => '25%麻痹', 'lv20' => '伤害+15%，麻痹30%'],
-        'm8' => ['name' => '风火燎原', 'job' => 'mage', 'mp' => 60, 'kind' => 'aoe', 'mult' => 0, 'el' => 'wind', 't10' => '伤害+30%', 'lv20' => '伤害+15%，溅射+10%'],
+        'm7' => ['name' => '雷暴术', 'job' => 'mage', 'mp' => 60, 'kind' => 'aoe', 'mult' => 2.0, 'el' => 'thunder', 't10' => '25%麻痹', 'lv20' => '伤害+15%，麻痹30%'],
+        'm8' => ['name' => '风火燎原', 'job' => 'mage', 'mp' => 60, 'kind' => 'aoe', 'mult' => 2.0, 'el' => 'wind', 't10' => '伤害+30%', 'lv20' => '伤害+15%，溅射+10%'],
         'h7' => ['name' => '穿云箭雨', 'job' => 'hunter', 'mp' => 55, 'kind' => 'aoe', 'mult' => 2.2, 'el' => 'wind', 'dot' => 'bleed', 'ranger' => 1, 't10' => '焦灼全场（无视抗性的持续灼烧）', 'lv20' => '焦灼每层伤害+50%'],
         'h8' => ['name' => '夜幕绞杀', 'job' => 'hunter', 'mp' => 55, 'kind' => 'step', 'mult' => 6.5, 'el' => 'dark', 'assassin' => 1, 't10' => '本次必暴击', 'lv20' => '斩杀线提高到60%'],
         'p7' => ['name' => '噬魂新星', 'job' => 'priest', 'mp' => 60, 'kind' => 'aoe', 'mult' => 2.0, 'el' => 'dark', 't10' => '伤害+30%', 'lv20' => '伤害转奶60%'],
@@ -6587,7 +6587,7 @@ function battle_round(array &$u, array &$b, string $mode): array
                 }
                 // 溅射：50%伤害灌进队列，攒满一条血震死一只（只给经验金币）
                 $splashRate = $sTier >= 10 ? 0.6 : 0.5;
-                if ($sid === 'm8' && $sLv >= 20) { $b['splash'] = (int) ($b['splash'] + $pd * 0.1); $logHeal .= '(风火蔓延)'; }
+                if ($sid === 'm8' && $sLv >= 20) { $b['splash'] = (int) (($b['splash'] ?? 0) + $pd * 0.1); $logHeal .= '(风火蔓延)'; }
                 $b['splash'] = (int) (($b['splash'] ?? 0) + $pd * $splashRate);
                 while ((int) ($b['left'] ?? 1) > 1 && (int) ($b['splash'] ?? 0) >= (int) ($b['maxhp'] ?? 1)) {
                     $b['splash'] = (int) $b['splash'] - (int) $b['maxhp'];

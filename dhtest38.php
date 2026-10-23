@@ -44,6 +44,21 @@ foreach ($bases as $base => $slot) {
 ck38('所有传说base都映射到特效', $noKey === [], implode(',', $noKey));
 ck38('所有传说base都有独特故事', $noStory === [], implode(',', $noStory));
 
+// 唯一性：76 件特效的“字段组合”两两不同，且不与任何遗物特效撞车
+$kf = function ($e) { $k = array_keys((array)$e); sort($k); return implode('+', $k); };
+$relicSets = [];
+foreach (legend_relics() as $c) {
+    if (isset($c['eff']) && is_array($c['eff']) && $c['eff'] !== []) { $relicSets[$kf($c['eff'])] = true; }
+}
+$seenSet = []; $dupMsg = [];
+foreach ($reg as $k => $c) {
+    $s = $kf($c['eff'] ?? []);
+    if (isset($relicSets[$s])) { $dupMsg[] = "与遗物重复:$k($s)"; }
+    if (isset($seenSet[$s])) { $dupMsg[] = "互相重复:$k={$seenSet[$s]}($s)"; }
+    $seenSet[$s] = $k;
+}
+ck38('76件特效两两不同、且不与遗物重复', $dupMsg === [], implode(' | ', $dupMsg));
+
 // 实造：用旧的泛用 key 造装，make_equip 应自动替换成 lg_bl_* 传说词条
 $uid = (int) user_create('zz38' . mt_rand(10000, 99999), 'x', 'warrior', 'z1', true, 'tmp');
 $u = user_by_id($uid); $u['lv'] = 900; $u['str'] = 9999; $u['agi'] = 9999; user_save($u);

@@ -73,8 +73,20 @@ function hunter_dot_poison_pct(int $bMaxhp, int $stacks, bool $lv20): int
     return max(1, (int) ($bMaxhp * $per * $stacks / 100));
 }
 
+// 剧毒/腐蚀的“硬上限”：按施法者强度封顶，防止任何超血 BOSS 被“按最大生命比例”无限带飞。
+// 返回单次结算的伤害天花板（0 表示不设限）。约等于数段技能伤害，随玩家成长而提升、与怪物血量无关。
+function hunter_dot_hard_cap(array $u): int
+{
+    $pow = player_patk($u) + player_matk($u);
+    if ($pow <= 0) {
+        return 0;
+    }
+    return max(1, (int) ($pow * 3.0));
+}
+
 // 结算一轮所有 DOT，返回掉血和日志。$mult 为职业向DOT加成（游侠+35%）。
-function hunter_dot_tick(array &$b, float $mult = 1.0): array
+// $hardCap 为剧毒单次伤害硬上限（>0 时生效），用于避免对超血 BOSS 过度缩放。
+function hunter_dot_tick(array &$b, float $mult = 1.0, int $hardCap = 0): array
 {
     $dmg = 0;
     $log = '';
@@ -104,6 +116,9 @@ function hunter_dot_tick(array &$b, float $mult = 1.0): array
         }
         $hit = (int) round($hit * $mult);
         $hit = max(1, $hit);
+        if ($key === 'poison' && $hardCap > 0) {
+            $hit = min($hit, $hardCap);
+        }
         $dmg += $hit;
         $log .= $tag . '×' . $stacks . '，' . $name . '掉' . $hit . '点。';
         // 衰减靠「剩余轮数」：层数本身不自己减，轮数耗尽才整层清空

@@ -16,6 +16,17 @@ chk4('出血轮数衰减', (int) ($b['dot_bleed_turns'] ?? 0), 3);
 $b2 = ['id' => 'goblin', 'name' => '毒怪', 'hp' => 20000, 'maxhp' => 20000];
 hunter_dot_add($b2, 'poison', 2, 0, false);
 chk4('剧毒百分比', hunter_dot_tick($b2)['dmg'], (int) (20000 * 0.01 * 2));
+// 剧毒硬上限：超血目标 + 满层剧毒，单次结算不应超过传入的硬上限（防止被最大生命比例带飞）
+$mkHuge = function () {
+    return ['id' => 'goblin', 'name' => '超血', 'hp' => 9000000000, 'maxhp' => 9000000000,
+            'dot_lv20' => true, 'dot_poison' => 5, 'dot_poison_turns' => 4];
+};
+$rawHuge = $mkHuge(); $capHuge = $mkHuge();
+$dmgNoCap = hunter_dot_tick($rawHuge, 1.0, 0)['dmg'];
+$dmgCapped = hunter_dot_tick($capHuge, 1.0, 50000)['dmg'];
+chk4('剧毒无上限时按比例很大', $dmgNoCap > 1000000, true);
+chk4('剧毒硬上限生效', $dmgCapped <= 50000, true);
+chk4('剧毒硬上限确实压低', $dmgCapped < $dmgNoCap, true);
 $b3 = ['id' => 'goblin', 'name' => '引燃怪', 'hp' => 30000, 'maxhp' => 30000];
 hunter_dot_add($b3, 'bleed', 3, 2000, true);
 hunter_dot_add($b3, 'burn', 2, 2000, true);

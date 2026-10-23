@@ -30,6 +30,14 @@ php -S localhost:8080
 
 ## 更新日志（新的在上）
 
+### 2026-10-27-传说特效升级·全量完成（76 件 BOSS 传说全部行为型）
+- `boss_legendary_effects()` 扩展到全部 76 件 BOSS 专属掉落传说：每件一套独特行为型特效 + 独特说明；配套 `boss_legendary_key_by_base()`。
+- 掉落表零改动：在 `make_equip` 里按“基底名”统一拦截，任何 BOSS 传说造出来都会自动挂上对应的 `lg_bl_*` 词条（也兜住以后新增的传说）。
+- 新增通用 `execute`（斩杀：对残血目标增伤）eff 字段（接在 `legend_relic_outgoing`），斩杀系传说共用。
+- 特效覆盖多种机制：斩杀 / 减伤 / 反击 / 残血减伤·增伤·暴击 / 击杀回血 / 暴击回血 / 每回合回血 / 元素增伤 / DOT / 召唤 / 吸血 / 麻痹 / 闪避等；全部走已接入的战斗钩子（`outgoing/incoming/counter/on_hit/on_kill/gear_apply/def_mult/atk_mult/bonus_dodge/el_mult/dot_mult/summon_*`）。
+- 测试：新增 `dhtest38.php`（76 件逐一：有 base/intro、eff 字段合法、映射到 key、有独特故事、旧泛用 key 造装会自动替换成 `lg_bl_*` 词条；并抽验斩杀实战生效）。全量 35 个测试文件全绿。
+- 至此：68 件遗物 + 7 件死灵传说 + 76 件 BOSS 传说 = 全部 151 件传说都拥有**独特行为型特效 + 独特小故事**。
+
 ### 2026-10-27-传说特效升级·第1批（天空岛/沉没圣所 5件 → 行为型）
 - 建立 `boss_legendary_effects()` 注册表（`legend_relics.php`）：BOSS 专属掉落传说也能挂“行为型”特效。它复用遗物引擎——穿戴检测（`legend_relic_worn` 认所有 `lg_*` 词条）、eff 聚合（`legend_relic_eff_index` 已并入）、说明展示（`legend_relic_intro_by_key` 已并入）全部打通。
 - 本批把 5 件从“单条属性”改为独特行为型特效：

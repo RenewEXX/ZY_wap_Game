@@ -113,32 +113,111 @@ function legend_relics(): array
 }
 
 // BOSS 专属掉落传说·“行为型”传说特效（与遗物同一套引擎：靠 lg_* 词条判定穿戴，
-// 战斗钩子已统一处理 eff 字段；少数独特机制在对应钩子里按 key 特判）。
-// key => ['intro' => 说明, 'eff' => {与遗物相同的聚合字段}]
+// 战斗钩子已统一处理 eff 字段）。每件一件独特机制 + 一句独特说明。
+// key => ['base' => 装备基底名, 'intro' => 说明, 'eff' => {与遗物相同的聚合字段}]
+// eff 可用字段：dr/counter/kill_heal/oncrit_heal/regen/lowhp_reduce/lowhp_dodge/
+//   lowhp_dmg/lowhp_crit/single/perlost_crit/stun/execute/el/dot/summon_*/lifesteal/
+//   dodge/crit/critdmg/skill_damage/atk_pct/def_pct/allres/truedmg/element 等（均已接入战斗钩子）。
 function boss_legendary_effects(): array
 {
     return [
-        'lg_bl_thunder' => [
-            'intro' => '雷属性伤害+25%；暴击时汲取风暴之力，回复6%最大生命。',
-            'eff' => ['el' => ['thunder' => 25], 'oncrit_heal' => 6],
-        ],
-        'lg_bl_wind' => [
-            'intro' => '闪避+10%；生命低于40%时，再额外闪避+20%。',
-            'eff' => ['dodge' => 10, 'lowhp_dodge' => [0.4, 20]],
-        ],
-        'lg_bl_sky' => [
-            'intro' => '对生命低于30%的目标，造成伤害额外+40%（斩尽残穹）。',
-            'eff' => [],
-        ],
-        'lg_bl_siren' => [
-            'intro' => '受到伤害时有30%概率以溺歌夺魄，令敌人下一回合无法行动。',
-            'eff' => [],
-        ],
-        'lg_bl_whale' => [
-            'intro' => '吸血+4%；每击杀一个敌人，回复10%最大生命（吞海）。',
-            'eff' => ['lifesteal' => 4, 'kill_heal' => 10],
-        ],
+        // —— 天空岛·浮空列岛 / 沉没圣所·海渊（第1批，行为特判已接入钩子）——
+        'lg_bl_thunder' => ['base' => '雷霆君临·裂云护手', 'intro' => '雷属性伤害+25%；暴击时汲取风暴之力，回复6%最大生命。', 'eff' => ['el' => ['thunder' => 25], 'oncrit_heal' => 6]],
+        'lg_bl_wind' => ['base' => '风之母·追云之靴', 'intro' => '闪避+10%；生命低于40%时，再额外闪避+20。', 'eff' => ['dodge' => 10, 'lowhp_dodge' => [0.4, 20]]],
+        'lg_bl_sky' => ['base' => '苍穹之主·天穹之刃', 'intro' => '对生命低于30%的目标，造成伤害额外+40%（斩尽残穹）。', 'eff' => []],
+        'lg_bl_siren' => ['base' => '海妖女王·溺歌之冠', 'intro' => '受到伤害时有30%概率以溺歌夺魄，令敌人下一回合无法行动。', 'eff' => []],
+        'lg_bl_whale' => ['base' => '深渊鲸主·吞海之戒', 'intro' => '吸血+4%；每击杀一个敌人，回复10%最大生命（吞海）。', 'eff' => ['lifesteal' => 4, 'kill_heal' => 10]],
+
+        // —— 主线 / 沼泽 / 王城 一带 ——
+        'lg_bl_ogre' => ['base' => '食人魔战裙', 'intro' => '残血(<50%)时伤害+20%；每击杀回复6%最大生命。', 'eff' => ['lowhp_dmg' => [0.5, 20], 'kill_heal' => 6]],
+        'lg_bl_knight' => ['base' => '堕落骑士大剑', 'intro' => '对残血(<30%)目标伤害+40%（斩杀）；每损失10%生命暴击+5%。', 'eff' => ['execute' => [0.3, 40], 'perlost_crit' => 5]],
+        'lg_bl_spore' => ['base' => '孢子呼吸器·万菌共鸣', 'intro' => '持续伤害(DOT)+30%；召唤物伤害+15%。', 'eff' => ['dot' => 30, 'summon_power' => 15]],
+        'lg_bl_rayne' => ['base' => '雷恩回响戒', 'intro' => '暴击时回复8%最大生命；暴击率+4%。', 'eff' => ['oncrit_heal' => 8, 'crit' => 4]],
+        'lg_bl_swampcrown' => ['base' => '沼泽王冠·腐殖', 'intro' => '每次行动回复3%最大生命；持续伤害(DOT)+20%。', 'eff' => ['regen' => 3, 'dot' => 20]],
+        'lg_bl_seallord' => ['base' => '城主徽记·统御', 'intro' => '召唤物伤害+25%。', 'eff' => ['summon_power' => 25]],
+        'lg_bl_abysseye' => ['base' => '深渊之瞳·万渊', 'intro' => '对残血(<40%)目标伤害+50%（深渊凝视）；真伤+40。', 'eff' => ['execute' => [0.4, 50], 'truedmg' => 40]],
+        'lg_bl_abaddonblade' => ['base' => '影蚀·万魂蚀影', 'intro' => '吸血+5%；每击杀回复8%最大生命。', 'eff' => ['lifesteal' => 5, 'kill_heal' => 8]],
+        'lg_bl_ironwarden' => ['base' => '铁卫傀儡·忠骸', 'intro' => '受到伤害-8%；反击伤害+25%。', 'eff' => ['dr' => 8, 'counter' => 25]],
+        'lg_bl_masknoble' => ['base' => '假面贵胄·夜宴', 'intro' => '闪避+8；残血(<50%)时再额外闪避+15。', 'eff' => ['dodge' => 8, 'lowhp_dodge' => [0.5, 15]]],
+        'lg_bl_inkpen' => ['base' => '墨傀之笔·点睛', 'intro' => '暴击伤害+25%；暴击时回复6%最大生命。', 'eff' => ['critdmg' => 25, 'oncrit_heal' => 6]],
+        'lg_bl_silverundead' => ['base' => '不死银卫·永生', 'intro' => '每次行动回复2%最大生命；残血(<30%)时受伤-20%。', 'eff' => ['regen' => 2, 'lowhp_reduce' => [0.3, 20]]],
+        'lg_bl_moonpierce' => ['base' => '银月影刺·无痕', 'intro' => '单体目标伤害+20%；暴击率+6%。', 'eff' => ['single' => 20, 'crit' => 6]],
+        'lg_bl_puppetpriest' => ['base' => '圣骸祭司·赎罪', 'intro' => '每次行动回复3%最大生命；物防、法防各+10%。', 'eff' => ['regen' => 3, 'def_pct' => 10]],
+        'lg_bl_silvercocoon' => ['base' => '银丝之茧·重生', 'intro' => '吸血+4%；每击杀回复10%最大生命（破茧重生）。', 'eff' => ['lifesteal' => 4, 'kill_heal' => 10]],
+        'lg_bl_winterking' => ['base' => '凛冬王冠·永冻', 'intro' => '受到伤害-6%；残血(<40%)时受伤-15%。', 'eff' => ['dr' => 6, 'lowhp_reduce' => [0.4, 15]]],
+        'lg_bl_leviathan' => ['base' => '利维坦之牙·深渊', 'intro' => '吸血+5%；对残血(<30%)目标伤害+30%。', 'eff' => ['lifesteal' => 5, 'execute' => [0.3, 30]]],
+        'lg_bl_ruinwall' => ['base' => '遗迹壁垒·不陨', 'intro' => '受到伤害-10%；反击伤害+30%。', 'eff' => ['dr' => 10, 'counter' => 30]],
+        'lg_bl_moltenheart' => ['base' => '熔心·世界之血', 'intro' => '技能伤害+12%；持续伤害(DOT)+25%。', 'eff' => ['skill_damage' => 12, 'dot' => 25]],
+        'lg_bl_titantt' => ['base' => '岩狱泰坦·岳柱', 'intro' => '受到伤害-10%；物防、法防各+12%。', 'eff' => ['dr' => 10, 'def_pct' => 12]],
+        'lg_bl_puppetmaster' => ['base' => '傀儡大师·提线', 'intro' => '技能伤害+12%；单体目标伤害+15%。', 'eff' => ['skill_damage' => 12, 'single' => 15]],
+        'lg_bl_mistheart' => ['base' => '雾森之心·永绿', 'intro' => '吸血+4%；每次行动回复2%最大生命。', 'eff' => ['lifesteal' => 4, 'regen' => 2]],
+        'lg_bl_shadowclaw' => ['base' => '影爪领主·撕夜', 'intro' => '暴击率+6%；对残血(<35%)目标伤害+35%。', 'eff' => ['crit' => 6, 'execute' => [0.35, 35]]],
+        'lg_bl_brassbishop' => ['base' => '黄铜主教·赦令', 'intro' => '受到伤害-6%；每次行动回复2%最大生命。', 'eff' => ['dr' => 6, 'regen' => 2]],
+        'lg_bl_wanderer' => ['base' => '漫游者·无疆', 'intro' => '闪避+8；残血(<50%)时再额外闪避+12。', 'eff' => ['dodge' => 8, 'lowhp_dodge' => [0.5, 12]]],
+        'lg_bl_luckygoblin' => ['base' => '幸运哥布林·大金币', 'intro' => '每击杀回复8%最大生命；暴击率+4%。', 'eff' => ['kill_heal' => 8, 'crit' => 4]],
+        'lg_bl_goldenslime' => ['base' => '黄金史莱姆·王冠', 'intro' => '每次行动回复3%最大生命；暴击时回复5%最大生命。', 'eff' => ['regen' => 3, 'oncrit_heal' => 5]],
+        'lg_bl_mimic' => ['base' => '宝箱怪·贪婪之胃', 'intro' => '每次行动回复4%最大生命；每击杀回复8%最大生命（贪婪）。', 'eff' => ['regen' => 4, 'kill_heal' => 8]],
+        'lg_bl_voidtyrant' => ['base' => '虚空暴君·终焉', 'intro' => '技能伤害+15%；对残血(<30%)目标伤害+30%。', 'eff' => ['skill_damage' => 15, 'execute' => [0.3, 30]]],
+        'lg_bl_dragonheart' => ['base' => '烬焰龙心·焚天', 'intro' => '火属性伤害+30%；真伤+40。', 'eff' => ['el' => ['fire' => 30], 'truedmg' => 40]],
+        'lg_bl_hyena' => ['base' => '鬣狗之牙·噬月', 'intro' => '对残血(<35%)目标伤害+40%；暴击伤害+20%。', 'eff' => ['execute' => [0.35, 40], 'critdmg' => 20]],
+        'lg_bl_vulture' => ['base' => '秃鹫之眼·俯瞰', 'intro' => '暴击率+6%；单体目标伤害+18%。', 'eff' => ['crit' => 6, 'single' => 18]],
+        'lg_bl_wormhide' => ['base' => '蠕虫之皮·流沙', 'intro' => '受到伤害-8%；残血(<40%)时受伤-15%。', 'eff' => ['dr' => 8, 'lowhp_reduce' => [0.4, 15]]],
+        'lg_bl_raider' => ['base' => '掠夺者弯刀·血债', 'intro' => '吸血+5%；残血(<50%)时伤害+18%。', 'eff' => ['lifesteal' => 5, 'lowhp_dmg' => [0.5, 18]]],
+        'lg_bl_sandheart' => ['base' => '沙暴之心·无垠', 'intro' => '闪避+8；残血(<40%)时再额外闪避+15。', 'eff' => ['dodge' => 8, 'lowhp_dodge' => [0.4, 15]]],
+        'lg_bl_batwing' => ['base' => '巨蝠之翼·夜幕', 'intro' => '闪避+10；暴击时回复5%最大生命。', 'eff' => ['dodge' => 10, 'oncrit_heal' => 5]],
+        'lg_bl_nestwall' => ['base' => '巢穴壁垒·磐石', 'intro' => '受到伤害-8%；反击伤害+30%。', 'eff' => ['dr' => 8, 'counter' => 30]],
+        'lg_bl_whelpfang' => ['base' => '雏魔之牙·初啼', 'intro' => '暴击率+5%；每击杀回复6%最大生命。', 'eff' => ['crit' => 5, 'kill_heal' => 6]],
+        'lg_bl_bonecrown' => ['base' => '骨堆王冠·怨语', 'intro' => '技能伤害+10%；攻击时8%概率麻痹敌人。', 'eff' => ['skill_damage' => 10, 'stun' => 8]],
+        'lg_bl_venomsac' => ['base' => '毒涎之囊·蚀心', 'intro' => '持续伤害(DOT)+30%；反击伤害+15%。', 'eff' => ['dot' => 30, 'counter' => 15]],
+        'lg_bl_retainer' => ['base' => '亲卫重铠·暴食', 'intro' => '物防、法防各+10%；每击杀回复8%最大生命。', 'eff' => ['def_pct' => 10, 'kill_heal' => 8]],
+        'lg_bl_totem' => ['base' => '萨满图腾·血祭', 'intro' => '每击杀回复12%最大生命；每次行动回复2%最大生命。', 'eff' => ['kill_heal' => 12, 'regen' => 2]],
+        'lg_bl_brokentooth' => ['base' => '断牙之刃·复仇', 'intro' => '残血(<50%)时伤害+25%；暴击伤害+20%。', 'eff' => ['lowhp_dmg' => [0.5, 25], 'critdmg' => 20]],
+        'lg_bl_thronepuppet' => ['base' => '王座傀儡·朝拜', 'intro' => '受到伤害-6%；反击伤害+20%。', 'eff' => ['dr' => 6, 'counter' => 20]],
+        'lg_bl_gurucrown' => ['base' => '咕噜王冠·暴食君王', 'intro' => '每击杀回复10%最大生命；残血(<40%)时伤害+15%。', 'eff' => ['kill_heal' => 10, 'lowhp_dmg' => [0.4, 15]]],
+        'lg_bl_brood' => ['base' => '蠕虫母巢·繁育', 'intro' => '召唤物伤害+20%；每击杀回复8%最大生命。', 'eff' => ['summon_power' => 20, 'kill_heal' => 8]],
+        'lg_bl_shardcore' => ['base' => '碎片灵核·虚无', 'intro' => '全元素抗性+10；残血(<40%)时受伤-18%。', 'eff' => ['allres' => 10, 'lowhp_reduce' => [0.4, 18]]],
+        'lg_bl_gurushadow' => ['base' => '咕噜之影·真容', 'intro' => '闪避+12；残血(<50%)时再额外闪避+10。', 'eff' => ['dodge' => 12, 'lowhp_dodge' => [0.5, 10]]],
+        'lg_bl_nightmare' => ['base' => '梦魇之角·惊醒', 'intro' => '对残血(<40%)目标伤害+45%；攻击时10%概率麻痹敌人。', 'eff' => ['execute' => [0.4, 45], 'stun' => 10]],
+        'lg_bl_devourer' => ['base' => '远古暴食者·吞天', 'intro' => '吸血+6%；每击杀回复10%最大生命。', 'eff' => ['lifesteal' => 6, 'kill_heal' => 10]],
+
+        // —— 铸造车间 / 神殿 一带 ——
+        'lg_bl_forgeoverseer' => ['base' => '熔金监工·赤铁之翼', 'intro' => '受到伤害-8%；反击伤害+25%。', 'eff' => ['dr' => 8, 'counter' => 25]],
+        'lg_bl_forgeking' => ['base' => '熔炉之王·炽心戒', 'intro' => '暴击伤害+25%；暴击时回复8%最大生命。', 'eff' => ['critdmg' => 25, 'oncrit_heal' => 8]],
+        'lg_bl_forgetitan' => ['base' => '巨炉泰坦·雷鸣颈环', 'intro' => '雷属性伤害+25%；技能伤害+10%。', 'eff' => ['el' => ['thunder' => 25], 'skill_damage' => 10]],
+        'lg_bl_verdmom' => ['base' => '古藤母树·万叶之翼', 'intro' => '受到伤害-8%；每次行动回复2%最大生命。', 'eff' => ['dr' => 8, 'regen' => 2]],
+        'lg_bl_stagking' => ['base' => '银角鹿王·月华戒', 'intro' => '全元素抗性+12；每次行动回复2%最大生命。', 'eff' => ['allres' => 12, 'regen' => 2]],
+        'lg_bl_hollowtree' => ['base' => '空心巨树·渊苔链', 'intro' => '吸血+4%；受到伤害-6%。', 'eff' => ['lifesteal' => 4, 'dr' => 6]],
+        'lg_bl_cryptlord' => ['base' => '霜墓领主·永眠之翼', 'intro' => '受到伤害-8%；残血(<40%)时受伤-15%。', 'eff' => ['dr' => 8, 'lowhp_reduce' => [0.4, 15]]],
+        'lg_bl_cryptqueen' => ['base' => '墓园女主人·亡语戒', 'intro' => '技能伤害+12%；持续伤害(DOT)+20%。', 'eff' => ['skill_damage' => 12, 'dot' => 20]],
+        'lg_bl_lichking' => ['base' => '巫妖王·丧钟之链', 'intro' => '暴击伤害+25%；攻击时8%概率麻痹敌人。', 'eff' => ['critdmg' => 25, 'stun' => 8]],
+        'lg_bl_stardevourer' => ['base' => '吞噬星兽·噬星之翼', 'intro' => '技能伤害+15%；真伤+40。', 'eff' => ['skill_damage' => 15, 'truedmg' => 40]],
+        'lg_bl_oracle' => ['base' => '星象先知·预言之戒', 'intro' => '暴击率+6%；闪避+6（先知预判）。', 'eff' => ['crit' => 6, 'dodge' => 6]],
+        'lg_bl_startitan' => ['base' => '星陨泰坦·雷霆星链', 'intro' => '受到伤害-8%；雷属性伤害+20%。', 'eff' => ['dr' => 8, 'el' => ['thunder' => 20]]],
+        'lg_bl_magmabehemoth' => ['base' => '熔海巨兽·熔壳之背', 'intro' => '受到伤害-10%；反击伤害+25%。', 'eff' => ['dr' => 10, 'counter' => 25]],
+        'lg_bl_magmalord' => ['base' => '熔潮君主·涌心戒', 'intro' => '技能伤害+12%；火属性伤害+20%。', 'eff' => ['skill_damage' => 12, 'el' => ['fire' => 20]]],
+        'lg_bl_magmalev' => ['base' => '熔渊利维坦·深渊之链', 'intro' => '吸血+5%；对残血(<30%)目标伤害+35%。', 'eff' => ['lifesteal' => 5, 'execute' => [0.3, 35]]],
+        'lg_bl_chronowarden' => ['base' => '时之守望者·永劫之翼', 'intro' => '闪避+10；每次行动回复2%最大生命。', 'eff' => ['dodge' => 10, 'regen' => 2]],
+        'lg_bl_chronotyant' => ['base' => '时空暴君·万劫之戒', 'intro' => '暴击伤害+25%；对残血(<30%)目标伤害+30%。', 'eff' => ['critdmg' => 25, 'execute' => [0.3, 30]]],
+        'lg_bl_paradox' => ['base' => '悖论之核·永恒之链', 'intro' => '全元素抗性+12；残血(<40%)时受伤-20%。', 'eff' => ['allres' => 12, 'lowhp_reduce' => [0.4, 20]]],
+        'lg_bl_archon' => ['base' => '神墟执政官·圣翼', 'intro' => '技能伤害+15%；暴击时回复6%最大生命。', 'eff' => ['skill_damage' => 15, 'oncrit_heal' => 6]],
+        'lg_bl_judge' => ['base' => '天外审判者·裁决之戒', 'intro' => '暴击伤害+25%；对残血(<35%)目标伤害+40%（裁决）。', 'eff' => ['critdmg' => 25, 'execute' => [0.35, 40]]],
+        'lg_bl_ruinend' => ['base' => '神墟终焉·归墟之链', 'intro' => '全元素抗性+12；对残血(<40%)目标伤害+45%（归墟）。', 'eff' => ['allres' => 12, 'execute' => [0.4, 45]]],
     ];
+}
+
+// 按装备基底名取对应的行为型特效 key；没有则返回 ''
+function boss_legendary_key_by_base(string $base): string
+{
+    static $map = null;
+    if ($map === null) {
+        $map = [];
+        foreach (boss_legendary_effects() as $key => $cfg) {
+            if (isset($cfg['base'])) {
+                $map[(string) $cfg['base']] = (string) $key;
+            }
+        }
+    }
+    return $map[$base] ?? '';
 }
 
 // 掉落表：BOSS mid => [relic名...]
@@ -514,6 +593,11 @@ function legend_relic_outgoing(array &$u, array &$b, int $pd, bool $isSkill, str
             if (isset($e['stun']) && mt_rand(1, 100) <= (int) $e['stun']) {
                 $b['stun'] = max((int) ($b['stun'] ?? 0), 1);
                 $log .= '(麻痹)';
+            }
+            // 斩杀（残血目标增伤）：execute => [血量阈值, 增伤%]
+            if (isset($e['execute']) && (int) ($b['maxhp'] ?? 0) > 0 && (int) ($b['hp'] ?? 0) < (int) $b['maxhp'] * (float) $e['execute'][0]) {
+                $pd = (int) round($pd * (1 + (float) $e['execute'][1] / 100));
+                $log .= '(斩杀)';
             }
         }
     }

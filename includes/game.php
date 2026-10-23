@@ -3207,6 +3207,15 @@ function make_equip(int $uid, string $slot, string $base, int $q, int $itemLevel
         $primary = 'summon_hp';
     }
     $legendId = (string) ($legend['extra']['k'] ?? '');
+    // BOSS 专属传说：按基底名匹配到行为型传说特效后，统一覆盖成对应的 lg_* 词条
+    // （掉落表不用逐条改，也能兜住任何漏配的传说）
+    if ($q === 4 && function_exists('boss_legendary_key_by_base')) {
+        $__blKey = boss_legendary_key_by_base((string) $base);
+        if ($__blKey !== '') {
+            $legend = ['base' => (string) $base, 'extra' => ['k' => $__blKey, 'v' => 1]];
+            $legendId = $__blKey;
+        }
+    }
     if ($q === 4 && $legendId === '' && $slot !== 'soul' && !str_contains((string) $base, '·')) {
         // 传说装备必须带专属效果：没有专属词条的传说自动补一条
         // （神魂、以及套装/神铸/罪渊/召唤专属等自带效果的不在此列）

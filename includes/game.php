@@ -6658,7 +6658,9 @@ function battle_round(array &$u, array &$b, string $mode): array
         unset($GLOBALS['_melee_el_tag']);
     }
     // 召唤师：召唤型技能 → 按技能招不同的兽，越高阶代价越大
-    if ($mode !== 'hit' && $isSkill && isset($sk['kind']) && $sk['kind'] === 'summon' && job_id_of($u) === 'summoner') {
+    // 注意：必须“真的放出了技能”才算（$sid 只在蓝够、技能成功释放时被设置）。
+    // 否则没蓝打“拳击”时也会走这里，$sid 为空 → 落到下面的 else 白嫖一只小鬼。
+    if ($mode !== 'hit' && !empty($sid) && isset($sk['kind']) && $sk['kind'] === 'summon' && job_id_of($u) === 'summoner') {
         $sid2 = (string) ($sid ?? '');
         $sLv2 = (int) ($sLv ?? 0);
         $sT2 = (int) ($sTier ?? 0);

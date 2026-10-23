@@ -5599,7 +5599,7 @@ function player_matk(array $u): int
 {
     $job = job_id_of($u);
     $base = in_array($job, ['mage', 'priest', 'summoner'], true) ? (int) (jobs()[$job]['atk'] ?? 0) : 0;
-    $m = $base + (int) ($u['int'] ?? 0) + (int) gear_stats((int) ($u['id'] ?? 0))['matk'];
+    $m = $base + (int) ($u['int'] ?? 0) + (int) ($u['grow_matk'] ?? 0) + (int) gear_stats((int) ($u['id'] ?? 0))['matk'];
     if ($job !== '' && in_array($job, ['mage', 'priest', 'summoner'], true)) {
         $gs = gear_stats((int) ($u['id'] ?? 0));
         // 物攻/物攻% 也计入法攻（法系不点力量，装备上的物攻是法系唯一的固定攻来源）
@@ -5622,7 +5622,7 @@ function player_def(array $u): int
 // 物理防御：护甲+坚毅+装备
 function player_pdef(array $u): int
 {
-    $v = (int) $u['def'] + (int) ($u['agi'] ?? 0) + (int) gear_stats((int) ($u['id'] ?? 0))['def'];
+    $v = (int) $u['def'] + (int) ($u['agi'] ?? 0) + (int) ($u['grow_def'] ?? 0) + (int) gear_stats((int) ($u['id'] ?? 0))['def'];
     if (function_exists('rs_stat_mult')) {
         $v = (int) round($v * rs_stat_mult((int) ($u['id'] ?? 0)));
     }
@@ -5635,7 +5635,7 @@ function player_pdef(array $u): int
 // 魔法防御：护甲一半+坚毅+抗性装备（坚毅既加物防也加法防）
 function player_mdef(array $u): int
 {
-    $v = (int) ((int) $u['def'] / 2) + (int) ($u['agi'] ?? 0) + (int) gear_stats((int) ($u['id'] ?? 0))['mdef'];
+    $v = (int) ((int) $u['def'] / 2) + (int) ($u['agi'] ?? 0) + (int) ($u['grow_def'] ?? 0) + (int) gear_stats((int) ($u['id'] ?? 0))['mdef'];
     if (function_exists('rs_stat_mult')) {
         $v = (int) round($v * rs_stat_mult((int) ($u['id'] ?? 0)));
     }
@@ -5787,22 +5787,23 @@ function gain_exp(array &$u, int $exp): string
         $g = $rsN > 0 ? 2 : 1;
         // 升级成长按职业（*$g：转生后翻倍）。核心是每级给 3 点潜力由玩家自由分配，
         // 这里的自动成长只是小幅“职业特长”，大方向仍靠玩家点力量/坚毅/体质/智慧/灵力。
-        // 物攻=力量(str) 魔攻=智慧(int) 物防兼法防=坚毅(agi)；生命=maxhp 魔力=maxmp。
+        // 注意：物攻/魔攻/物防法防都走独立的基础成长字段（grow_def/grow_matk/atk），
+        // 不碰 5 个可分配属性（力量/坚毅/体质/智慧/灵力），免得面板“莫名其妙”自动加点。
         $jobUp = job_id_of($u);
         $growth = '';
         switch ($jobUp) {
-            case 'warrior': // 物防法防+1（坚毅），魔力+2
-                $u['agi'] = (int) ($u['agi'] ?? 0) + 1 * $g;
+            case 'warrior': // 物防法防+1（基础防御缩放入 pdef/mdef），魔力+2
+                $u['grow_def'] = (int) ($u['grow_def'] ?? 0) + 1 * $g;
                 $u['maxmp'] = (int) ($u['maxmp'] ?? 0) + 2 * $g;
                 $growth = '物防法防+' . (1 * $g) . '，魔力+' . (2 * $g);
                 break;
-            case 'hunter': // 物攻+2（力量），魔力+2
-                $u['str'] = (int) ($u['str'] ?? 0) + 2 * $g;
+            case 'hunter': // 物攻+2（基础物攻字段），魔力+2
+                $u['atk'] = (int) $u['atk'] + 2 * $g;
                 $u['maxmp'] = (int) ($u['maxmp'] ?? 0) + 2 * $g;
                 $growth = '物攻+' . (2 * $g) . '，魔力+' . (2 * $g);
                 break;
-            case 'mage': // 魔攻+2（智慧），魔力+2
-                $u['int'] = (int) ($u['int'] ?? 0) + 2 * $g;
+            case 'mage': // 魔攻+2（基础法攻字段），魔力+2
+                $u['grow_matk'] = (int) ($u['grow_matk'] ?? 0) + 2 * $g;
                 $u['maxmp'] = (int) ($u['maxmp'] ?? 0) + 2 * $g;
                 $growth = '魔攻+' . (2 * $g) . '，魔力+' . (2 * $g);
                 break;

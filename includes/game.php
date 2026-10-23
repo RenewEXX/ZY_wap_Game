@@ -8792,7 +8792,7 @@ function ch1_locations(): array
         $m['tomb' . $i] = ['name' => '地下墓穴B' . $i, 'desc' => '越往下越暖。墙上全是朝下掌印。', 'exits' => $ex, 'monsters' => ['skeleton', 'ghoul', 'cultist']];
     }
     $m['mine_gate'] = ['name' => '白石矿坑·封锁门', 'desc' => '三年前被封死的矿坑。门上钉着王国调查队的旧封条。', 'exits' => ['town_sq' => '白石镇广场', 'mine1' => '矿坑第一层'], 'monsters' => []];
-    $m['mine1'] = ['name' => '矿坑第一层·白纹矿脉', 'desc' => '矿车自己在动。空气里飘着腐化孢子的甜味。', 'exits' => ['mine_gate' => '封锁门', 'mine2' => '矿坑第二层'], 'monsters' => ['corrupt_rat', 'deep_bat']];
+    $m['mine1'] = ['name' => '矿坑第一层·白纹矿脉', 'desc' => '矿车自己在动。空气里飘着腐化孢子的甜味。', 'exits' => ['mine_gate' => '封锁门', 'mine2' => '矿坑第二层'], 'monsters' => ['runaway_miner', 'corrupt_rat', 'deep_bat']];
     $m['mine2'] = ['name' => '矿坑第二层·失落营地', 'desc' => '调查队的营火还在燃。墙上写着：不要回答。', 'exits' => ['mine1' => '第一层', 'mine3' => '矿坑第三层'], 'monsters' => ['runaway_miner', 'deep_bat']];
     $m['mine3'] = ['name' => '矿坑第三层·裂隙前', 'desc' => '凿穿的墙后没有岩石。十二具人形轮廓嵌在黑色流动空间里。', 'exits' => ['mine2' => '第二层', 'echo_room' => '回响厅'], 'monsters' => ['abyss_spore']];
     $m['echo_room'] = ['name' => '回响厅', 'desc' => '雷恩的声音从四面传来：“你也要进来吗？里面很温暖。”不要回答。', 'exits' => ['mine3' => '第三层'], 'monsters' => ['echo_rayne']];

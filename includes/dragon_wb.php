@@ -303,11 +303,7 @@ function drg_rewards(string $mid): void
         return;
     }
     $pieces = dragon_set_pieces((string) $d['set']);
-    if ($pieces === []) {
-        // 火龙沿用烬焰全套
-        $pieces = ['烬焰·龙裔刃', '烬焰·灰烬法杖', '烬焰·熔核锤', '烬焰·焚心弓', '烬焰·熔盾', '烬焰·余烬囊', '烬焰·守卫铠', '烬焰·祭司冠', '烬焰·熔渣腿', '烬焰·灰烬戒', '烬焰·余火链', '烬焰·束腰'];
-    }
-    $slots = dragon_piece_slots();
+    $slots = function_exists('dragon_piece_slot_map') ? dragon_piece_slot_map() : dragon_piece_slots();
     $elName = element_name((string) $d['el']);
 
     foreach ($rank as $i => $row) {
@@ -365,15 +361,8 @@ function drg_rewards(string $mid): void
     }
 }
 
-// 套装件默认部位
+// 套装件默认部位（兼容旧调用；以 dragon_set_layout 为准）
 function dragon_piece_slots(): array
 {
-    return [
-        '烬焰·龙裔刃' => 'weapon', '烬焰·灰烬法杖' => 'weapon', '烬焰·熔核锤' => 'weapon', '烬焰·焚心弓' => 'weapon', '烬焰·熔盾' => 'offhand', '烬焰·余烬囊' => 'offhand', '烬焰·守卫铠' => 'body', '烬焰·祭司冠' => 'head', '烬焰·熔渣腿' => 'legs', '烬焰·灰烬戒' => 'ring', '烬焰·余火链' => 'necklace', '烬焰·束腰' => 'belt',
-        '苍岚·疾风刃' => 'weapon', '苍岚·御风铠' => 'body', '苍岚·飘羽靴' => 'shoes', '苍岚·听风链' => 'necklace', '苍岚·游云戒' => 'ring', '苍岚·长弓' => 'weapon', '苍岚·天穹杖' => 'weapon',
-        '永冻·哀歌冠' => 'head', '永冻·冰棺胸甲' => 'body', '永冻·极寒腿' => 'legs', '永冻·霜噬爪' => 'gloves', '永冻·寂灭戒' => 'ring', '永冻·悲歌链' => 'necklace', '永冻·囚冰杖' => 'weapon',
-        '天谴·碎星锤' => 'weapon', '天谴·破晓刃' => 'weapon', '天谴·风暴铠' => 'body', '天谴·雷霆戒' => 'ring', '天谴·雷池链' => 'necklace', '天谴·闪羽弓' => 'weapon', '天谴·天谴杖' => 'weapon',
-        '终焉·噬界爪' => 'gloves', '终焉·黑蚀袍' => 'body', '终焉·腐朽冠' => 'head', '终焉·末日戒' => 'ring', '终焉·深渊缚带' => 'belt', '终焉·湮灭刃' => 'weapon', '终焉·骸骨杖' => 'weapon',
-        '圣裁·裁决杖' => 'weapon', '圣裁·天光铠' => 'body', '圣裁·辉耀盔' => 'head', '圣裁·破晓盾' => 'offhand', '圣裁·审判链' => 'necklace', '圣裁·纯白戒' => 'ring', '圣裁·圣光弓' => 'weapon',
-    ];
+    return function_exists('dragon_piece_slot_map') ? dragon_piece_slot_map() : [];
 }

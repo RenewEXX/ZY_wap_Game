@@ -2787,22 +2787,7 @@ function equip_is_set(string $shortName): bool
     if (function_exists('region_dungeon_prefix_of') && region_dungeon_prefix_of($shortName) !== '') {
         return true;
     }
-    if (str_starts_with($shortName, '剧场·')) {
-        return true;
-    }
-    if (str_starts_with($shortName, '傀儡·')) {
-        return true;
-    }
-    if (str_starts_with($shortName, '荆棘·')) {
-        return true;
-    }
-    if (str_starts_with($shortName, '岩狱·')) {
-        return true;
-    }
-    if (str_starts_with($shortName, '寒霜·')) {
-        return true;
-    }
-    if (str_starts_with($shortName, '烬焰·')) {
+    if (equip_set_id($shortName) !== '') {
         return true;
     }
     return in_array($shortName, ['沼泽兜帽', '沼泽轻靴', '沼泽之心', '深渊蚀甲', '深渊腿甲', '深渊护手'], true);
@@ -2886,6 +2871,9 @@ function equip_set_id(string $shortName): string
     if (str_starts_with($shortName, '圣裁·')) {
         return 'judgment';
     }
+    if (str_starts_with($shortName, '烈炎·')) {
+        return 'firedragon';
+    }
     return '';
 }
 
@@ -2959,13 +2947,13 @@ function equip_set_owned_count(int $uid, string $set): int
         $st->execute([(int) $uid, $mark]);
         return min($cap, (int) $st->fetchColumn());
     }
-    // 六龙王专属套装：按前缀计数
+    // 六龙王专属套装：按前缀计数（15件套，满档11=1职业武器+10防具首饰）
     if (function_exists('dragon_set_pieces') && dragon_set_pieces($set) !== []) {
-        $prefix = ['azure' => '苍岚·', 'glacier' => '永冻·', 'thunder' => '天谴·', 'ruin' => '终焉·', 'judgment' => '圣裁·'][$set] ?? '';
+        $prefix = ['firedragon' => '烈炎·', 'azure' => '苍岚·', 'glacier' => '永冻·', 'thunder' => '天谴·', 'ruin' => '终焉·', 'judgment' => '圣裁·'][$set] ?? '';
         if ($prefix !== '') {
             $st = db()->prepare('SELECT COUNT(*) FROM equips WHERE uid=? AND pos="wear" AND name LIKE ?');
             $st->execute([(int) $uid, '%' . $prefix . '%']);
-            return min(7, (int) $st->fetchColumn());
+            return min(11, (int) $st->fetchColumn());
         }
     }
     $n = 0;
@@ -4997,7 +4985,7 @@ function gear_stats(int $uid): array
     if ($rock >= 10) { $s['hp'] += 20000; $s['damage_reduction'] += 20; }
     // —— 六龙王专属套装（西风·北寒·东雷·深渊·中央）——
     $dlv = max(1, (int) (db()->query('SELECT lv FROM users WHERE id=' . (int) $uid)->fetchColumn() ?: 1));
-    $drgSets = ['azure' => '苍岚·', 'glacier' => '永冻·', 'thunder' => '天谴·', 'ruin' => '终焉·', 'judgment' => '圣裁·'];
+    $drgSets = ['firedragon' => '烈炎·', 'azure' => '苍岚·', 'glacier' => '永冻·', 'thunder' => '天谴·', 'ruin' => '终焉·', 'judgment' => '圣裁·'];
     $dcnt = [];
     foreach ($worn as $wn) {
         foreach ($drgSets as $sid => $pfx) {
@@ -5013,6 +5001,7 @@ function gear_stats(int $uid): array
         if ($n >= 3) { $s['element'] += 80; }
         if ($n >= 5) { $s['crit'] += 8; $s['skill_damage'] += 18; $s['move_speed'] += 5; }
         if ($n >= 7) { $s['all_attr'] += $dlv * 6; $s['element'] += 120; }
+        if ($n >= 11) { $s['element'] += $dlv * 4; $s['crit'] += 10; $s['move_speed'] += 8; $s['damage_reduction'] += 10; }
     }
     if (($dcnt['glacier'] ?? 0) > 0) {
         $n = $dcnt['glacier'];
@@ -5021,6 +5010,7 @@ function gear_stats(int $uid): array
         if ($n >= 3) { $s['damage_reduction'] += 10; $s['mdef'] += 150; }
         if ($n >= 5) { $s['hp'] += $dlv * 80; }
         if ($n >= 7) { $s['damage_reduction'] += 12; $s['slow_resist'] += 30; }
+        if ($n >= 11) { $s['mdef'] += 300; $s['hp'] += $dlv * 120; $s['damage_reduction'] += 12; $s['all_attr'] += $dlv * 6; }
     }
     if (($dcnt['thunder'] ?? 0) > 0) {
         $n = $dcnt['thunder'];
@@ -5028,6 +5018,7 @@ function gear_stats(int $uid): array
         if ($n >= 3) { $s['penetration'] += 80; $s['element'] += 100; }
         if ($n >= 5) { $s['skill_damage'] += 22; }
         if ($n >= 7) { $s['damage_reduction'] += 15; $s['element'] += 300; }
+        if ($n >= 11) { $s['penetration'] += 150; $s['element'] += $dlv * 5; $s['skill_damage'] += 15; $s['damage_reduction'] += 10; }
     }
     if (($dcnt['ruin'] ?? 0) > 0) {
         $n = $dcnt['ruin'];
@@ -5035,6 +5026,7 @@ function gear_stats(int $uid): array
         if ($n >= 3) { $s['truedmg'] += $dlv * 25; }
         if ($n >= 5) { $s['all_attr'] += $dlv * 5; $s['lifesteal'] += 8; }
         if ($n >= 7) { $s['truedmg'] += $dlv * 60; $s['damage_reduction'] += 18; }
+        if ($n >= 11) { $s['truedmg'] += $dlv * 40; $s['lifesteal'] += 8; $s['damage_reduction'] += 12; $s['all_attr'] += $dlv * 8; }
     }
     if (($dcnt['judgment'] ?? 0) > 0) {
         $n = $dcnt['judgment'];
@@ -5042,6 +5034,16 @@ function gear_stats(int $uid): array
         if ($n >= 3) { $s['skill_damage'] += 18; }
         if ($n >= 5) { $s['truedmg'] += $dlv * 40; $s['damage_reduction'] += 12; }
         if ($n >= 7) { $s['truedmg'] += $dlv * 80; $s['skill_damage'] += 30; $s['all_attr'] += $dlv * 8; }
+        if ($n >= 11) { $s['truedmg'] += $dlv * 40; $s['skill_damage'] += 20; $s['all_attr'] += $dlv * 10; $s['element'] += $dlv * 5; }
+    }
+    if (($dcnt['firedragon'] ?? 0) > 0) {
+        $n = $dcnt['firedragon'];
+        $s['res_fire'] += $n * 6;
+        $s['element'] += $n * 8;
+        if ($n >= 3) { $s['element'] += 80; $s['truedmg'] += $dlv * 4; }
+        if ($n >= 5) { $s['atk_pct'] += 8; $s['skill_damage'] += 15; }
+        if ($n >= 7) { $s['damage_reduction'] += 10; $s['truedmg'] += $dlv * 12; $s['all_attr'] += $dlv * 3; }
+        if ($n >= 11) { $s['all_attr'] += $dlv * 6; $s['damage_reduction'] += 8; $s['element'] += $dlv * 4; }
     }
     $gy = 0;
     foreach ($worn as $wn) {

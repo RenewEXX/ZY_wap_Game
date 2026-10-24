@@ -215,7 +215,15 @@ function arena_my_team(array $u): array
         $pn = pet_species()[$pet['species']]['name'] ?? $pet['species'];
         $p = ['name' => $pn, 'lv' => (int) $pet['level'], 'hp' => (int) $ps['maxhp'], 'atk' => (int) $ps['atk']];
     }
-    return ['name' => (string) ($u['username'] ?? ''), 'lv' => (int) ($u['lv'] ?? 1), 'hp' => (int) ($u['maxhp'] ?? 1), 'atk' => player_atk($u), 'def' => player_def($u), 'pet' => $p];
+    // 法系取 matk，物理取 atk；防御取对方法系/物理两侧的通用 pvp 防御
+    [$atk, $type] = function_exists('pvp_attack_of') ? pvp_attack_of($u) : [(int) player_atk($u), 'phys'];
+    return [
+        'name' => (string) ($u['username'] ?? ''), 'lv' => (int) ($u['lv'] ?? 1),
+        'hp' => (int) ($u['maxhp'] ?? 1),
+        'atk' => $atk, 'atk_type' => $type,
+        'pdef' => (int) player_pdef($u), 'mdef' => (int) player_mdef($u),
+        'def' => (int) player_def($u), 'pet' => $p,
+    ];
 }
 
 function arena_foe_team(array $row): array
@@ -224,18 +232,35 @@ function arena_foe_team(array $row): array
         $pw = max(1, (int) ($row['power'] ?? 100));
         $lv = max(1, (int) ($row['lv'] ?? 1));
         $pets = ['影猫', '石灵', '幽灵', '幼龙', '深渊魔龙'];
+        $d = max(0, (int) ($pw * 0.08));
         return [
             'name' => (string) $row['name'], 'lv' => $lv,
-            'hp' => (int) ($pw * 0.5), 'atk' => max(1, (int) ($pw * 0.12)), 'def' => max(0, (int) ($pw * 0.08)),
+            'hp' => (int) ($pw * 0.5), 'atk' => max(1, (int) ($pw * 0.12)), 'atk_type' => 'phys',
+            'pdef' => $d, 'mdef' => $d, 'def' => $d,
             'pet' => ['name' => $pets[$lv % count($pets)], 'lv' => max(1, $lv - 10), 'hp' => (int) ($pw * 0.1), 'atk' => max(1, (int) ($pw * 0.03))],
         ];
     }
     $tu = user_by_id((int) $row['uid']);
     if (!$tu) {
         $pw = max(1, (int) ($row['power'] ?? 100));
-        return ['name' => (string) $row['name'], 'lv' => (int) $row['lv'], 'hp' => (int) ($pw * 0.5), 'atk' => max(1, (int) ($pw * 0.12)), 'def' => max(0, (int) ($pw * 0.08)), 'pet' => null];
+        $d = max(0, (int) ($pw * 0.08));
+        return ['name' => (string) $row['name'], 'lv' => (int) $row['lv'], 'hp' => (int) ($pw * 0.5), 'atk' => max(1, (int) ($pw * 0.12)), 'atk_type' => 'phys', 'pdef' => $d, 'mdef' => $d, 'def' => $d, 'pet' => null];
     }
     return arena_my_team($tu);
+}
+
+// 竞技场单次打击：PVP 统一用 pdef/mdef 混合防御，物理法术对称，带浮动与暴击风味。
+function arena_strike(array $atkTeam, array $defTeam): array
+{
+    $def = ((float) ($defTeam['pdef'] ?? $defTeam['def'] ?? 0) + (float) ($defTeam['mdef'] ?? $defTeam['def'] ?? 0)) / 2;
+    $d = max(1, (int) ($atkTeam['atk'] * (0.9 + mt_rand(0, 20) / 100) - $def * 0.5));
+    // 暴击风味：8% 概率 ×1.6，让战斗不呆板
+    $critTag = '';
+    if (mt_rand(1, 100) <= 8) {
+        $d = (int) ($d * 1.6);
+        $critTag = '(暴击)';
+    }
+    return [$d, $critTag];
 }
 
 // 异步数值对撞：战力+宠物+骰子，返回[win, log[]]
@@ -244,12 +269,14 @@ function arena_sim(array $a, array $b): array
     $log = [];
     $ahp = $a['hp'];
     $bhp = $b['hp'];
-    $alog = '你的队伍：' . $a['name'] . '，等级' . $a['lv'] . '，生命' . $a['hp'] . '，攻击' . $a['atk'] . '，防御' . $a['def'] . '。';
+    $atypeTag = ($a['atk_type'] ?? 'phys') === 'mag' ? '法术' : '物理';
+    $btypeTag = ($b['atk_type'] ?? 'phys') === 'mag' ? '法术' : '物理';
+    $alog = '你的队伍：' . $a['name'] . '，等级' . $a['lv'] . '，生命' . $a['hp'] . '，' . $atypeTag . '攻击' . $a['atk'] . '。';
     if ($a['pet']) {
         $alog .= '宠物：' . $a['pet']['name'] . '，等级' . $a['pet']['lv'] . '，生命' . $a['pet']['hp'] . '，攻击' . $a['pet']['atk'] . '。';
     }
     $log[] = $alog;
-    $blog = '对手队伍：' . $b['name'] . '，等级' . $b['lv'] . '，生命' . $b['hp'] . '，攻击' . $b['atk'] . '，防御' . $b['def'] . '。';
+    $blog = '对手队伍：' . $b['name'] . '，等级' . $b['lv'] . '，生命' . $b['hp'] . '，' . $btypeTag . '攻击' . $b['atk'] . '。';
     if ($b['pet']) {
         $blog .= '宠物：' . $b['pet']['name'] . '，等级' . $b['pet']['lv'] . '，生命' . $b['pet']['hp'] . '，攻击' . $b['pet']['atk'] . '。';
     }
@@ -258,18 +285,20 @@ function arena_sim(array $a, array $b): array
     $aphp = $a['pet']['hp'] ?? 0;
     $bphp = $b['pet']['hp'] ?? 0;
     $skills = ['铁壁格挡', '怒斩', '火球术', '双连射', '普通攻击'];
+    $aSkills = ($a['atk_type'] ?? 'phys') === 'mag' ? ['火球术', '冰锥术', '雷光术'] : ['怒斩', '旋风斩', '重击'];
+    $bSkills = ($b['atk_type'] ?? 'phys') === 'mag' ? ['火球术', '冰锥术', '雷光术'] : ['怒斩', '旋风斩', '重击'];
     for ($r = 1; $r <= 30; $r++) {
         // 我方出手
-        $d = max(1, (int) ($a['atk'] * (0.9 + mt_rand(0, 20) / 100) - $b['def'] * 0.5));
+        [$d, $critTag] = arena_strike($a, $b);
         if ($bphp > 0 && mt_rand(1, 100) <= 30) {
             $bphp -= $d;
-            $log[] = '你使用' . $skills[array_rand($skills)] . '，对' . $b['pet']['name'] . '造成' . $d . '点伤害。';
+            $log[] = '你使用' . $aSkills[array_rand($aSkills)] . $critTag . '，对' . $b['pet']['name'] . '造成' . $d . '点伤害。';
             if ($bphp <= 0) {
                 $log[] = $b['pet']['name'] . '倒下了！';
             }
         } else {
             $bhp -= $d;
-            $log[] = '你使用' . $skills[array_rand($skills)] . '，对' . $b['name'] . '造成' . $d . '点伤害。';
+            $log[] = '你使用' . $aSkills[array_rand($aSkills)] . $critTag . '，对' . $b['name'] . '造成' . $d . '点伤害。';
         }
         if ($bhp <= 0) {
             $log[] = '战斗结束。你获胜。';
@@ -285,16 +314,16 @@ function arena_sim(array $a, array $b): array
             }
         }
         // 对方出手
-        $d2 = max(1, (int) ($b['atk'] * (0.9 + mt_rand(0, 20) / 100) - $a['def'] * 0.5));
+        [$d2, $critTag2] = arena_strike($b, $a);
         if ($aphp > 0 && $a['pet'] && mt_rand(1, 100) <= 30) {
             $aphp -= $d2;
-            $log[] = $b['name'] . '使用盾击，对' . $a['pet']['name'] . '造成' . $d2 . '点伤害。';
+            $log[] = $b['name'] . '使用' . $bSkills[array_rand($bSkills)] . $critTag2 . '，对' . $a['pet']['name'] . '造成' . $d2 . '点伤害。';
             if ($aphp <= 0) {
                 $log[] = $a['pet']['name'] . '倒下了！';
             }
         } else {
             $ahp -= $d2;
-            $log[] = $b['name'] . '使用盾击，对你造成' . $d2 . '点伤害。';
+            $log[] = $b['name'] . '使用' . $bSkills[array_rand($bSkills)] . $critTag2 . '，对你造成' . $d2 . '点伤害。';
         }
         if ($ahp <= 0) {
             $log[] = '战斗结束。你落败。';

@@ -5633,6 +5633,47 @@ function player_def(array $u): int
     return player_pdef($u);
 }
 
+// PVP 出手动词：按职业给出一点打斗味，别千篇一律“你砍”。
+function pvp_verb(array $u): string
+{
+    $job = job_id_of($u);
+    return ['warrior' => '你抡起兵器', 'hunter' => '你张弓搭箭', 'mage' => '你掷出法术', 'priest' => '你召来神罚', 'summoner' => '你驱使手下'][$job] ?? '你出手';
+}
+
+// ===== PVP 统一攻防换算 =====
+// 历史 bug：PVP（巅峰/公会战/罪技PK/竞技场）都用 player_atk()，而法系(法师/牧师/召唤师)
+// 的 player_atk 恒为 0，导致法系在 PVP 里每次只能打 1 点，等于白给。
+// 这里按“进攻方真实输出类型”取攻、按“防守方对应防御”减伤，并让法系吃 mdef、物理吃 pdef。
+function pvp_attack_of(array $u): array
+{
+    // 返回 [攻击力, 'phys'|'mag']
+    $job = job_id_of($u);
+    if (in_array($job, ['mage', 'priest', 'summoner'], true)) {
+        return [max(1, player_matk($u)), 'mag'];
+    }
+    return [max(1, player_atk($u)), 'phys'];
+}
+
+// 一次 PVP 打击的伤害（未走浮动/暴击管线，调用方再套 player_dmg_pipeline）。
+// $ub 为对方。返回 [基础伤害, 类型]。
+// 注意：玩家 mdef 天然约为 pdef 的一半（mdef 公式是 def/2+...），
+// 若法系直接吃 mdef 会白嫖一半减伤差，导致法系在 PVP 碾压物理。
+// 故 PVP 统一用「pdef/mdef 混合防御」，物理法术站位对称，只靠攻/法攻的养成决胜负。
+// 攻速连击：PVP 里也让攻速有用——按攻速概率追加半击（与 PVE 同一套 speed 口径）。
+function pvp_hit_base(array $ua, array $ub): array
+{
+    [$atk, $type] = pvp_attack_of($ua);
+    $def = (int) round((player_pdef($ub) + player_mdef($ub)) / 2);
+    $d = max(1, (int) ($atk * 0.9) + random_int(0, 3) - (int) ($def * 0.5));
+    $d = max(1, $d);
+    // 攻速连击（PVP 手感）
+    $spd = (float) (gear_stats((int) ($ua['id'] ?? 0))['speed'] ?? 0);
+    if ($spd > 0 && mt_rand(1, 10000) / 100 <= min(45.0, $spd * 2.5)) {
+        $d += max(1, (int) round($d * 0.5));
+    }
+    return [$d, $type];
+}
+
 // 物理防御：护甲+坚毅+装备
 function player_pdef(array $u): int
 {

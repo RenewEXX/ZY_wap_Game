@@ -288,7 +288,7 @@ if ($a === 'sin_hit') {
         header('Location: home.php');
         exit;
     }
-    $pd = max(1, player_atk($u) + random_int(0, 3) - player_def($t));
+    [$pd] = pvp_hit_base($u, $t);
     // 浮动管线（罪技PK）：浮动 → 档位 → 暴击
     [$pd, $pdTag] = player_dmg_pipeline($u, $pd);
     $t['hp'] = (int) $t['hp'] - $pd;
@@ -307,7 +307,7 @@ if ($a === 'sin_hit') {
         exit;
     }
     user_save($t);
-    $md = max(1, player_atk($t) + random_int(0, 2) - player_def($u));
+    [$md] = pvp_hit_base($t, $u);
     // 对方回敬也走浮动管线（用对方自己的暴击/精准）
     [$md, $mdTag] = player_dmg_pipeline($t, $md);
     $u['hp'] = (int) $u['hp'] - $md;
@@ -320,7 +320,7 @@ if ($a === 'sin_hit') {
         header('Location: home.php');
         exit;
     }
-    flash_set('你砍' . $pd . '点' . ($pdTag !== '' ? '(' . $pdTag . ')' : '') . '，对方回敬' . $md . '点' . ($mdTag !== '' ? '(' . $mdTag . ')' : '') . '。');
+    flash_set(pvp_verb($u) . '，造成' . $pd . '点' . ($pdTag !== '' ? '(' . $pdTag . ')' : '') . '，对方回敬' . $md . '点' . ($mdTag !== '' ? '(' . $mdTag . ')' : '') . '。');
     header('Location: fight.php?a=sinfight');
     exit;
 }
@@ -389,7 +389,7 @@ if ($a === 'pvp_hit') {
         header('Location: home.php');
         exit;
     }
-    $pd = max(1, player_atk($u) + random_int(0, 3) - player_def($t));
+    [$pd] = pvp_hit_base($u, $t);
     // 浮动管线：浮动 → 档位 → 暴击
     [$pd, $pdTag] = player_dmg_pipeline($u, $pd);
     $t['hp'] = (int) $t['hp'] - $pd;
@@ -405,7 +405,7 @@ if ($a === 'pvp_hit') {
         exit;
     }
     user_save($t);
-    $md = max(1, player_atk($t) + random_int(0, 2) - player_def($u));
+    [$md] = pvp_hit_base($t, $u);
     // 对方回敬也走浮动管线（用对方自己的暴击/精准）
     [$md, $mdTag] = player_dmg_pipeline($t, $md);
     $u['hp'] = (int) $u['hp'] - $md;
@@ -486,7 +486,7 @@ if ($a === 'peak_hit') {
         header('Location: home.php');
         exit;
     }
-    $pd = max(1, player_atk($u) + random_int(0, 3) - player_def($t));
+    [$pd] = pvp_hit_base($u, $t);
     // 浮动管线：浮动 → 档位 → 暴击
     [$pd, $pdTag] = player_dmg_pipeline($u, $pd);
     $t['hp'] = (int) $t['hp'] - $pd;
@@ -502,7 +502,7 @@ if ($a === 'peak_hit') {
         exit;
     }
     user_save($t);
-    $md = max(1, player_atk($t) + random_int(0, 2) - player_def($u));
+    [$md] = pvp_hit_base($t, $u);
     // 对方回敬也走浮动管线（用对方自己的暴击/精准）
     [$md, $mdTag] = player_dmg_pipeline($t, $md);
     $u['hp'] = (int) $u['hp'] - $md;

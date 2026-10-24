@@ -113,4 +113,36 @@ $prev=-1; $mono=true;
 foreach($allTiers as $t){ [$g,$c]=arena_tier_bonus($t); if($g<$prev)$mono=false; $prev=$g; }
 ck43('保底奖励随段位单调不减', $mono);
 
+// ---------- [天梯] 机器人动态刷新 ----------
+echo "\n[6] 机器人动态刷新（爬榜/补位/跟随玩家）\n";
+$zone='z1';
+db()->exec('DELETE FROM arena_rank WHERE zone='.db()->quote($zone));
+db()->exec("DELETE FROM sys_kv WHERE k LIKE 'arena_bot_tick_%'");
+arena_ensure($zone);
+$season=arena_season();
+$cnt=(int)db()->query('SELECT COUNT(*) FROM arena_rank WHERE zone='.db()->quote($zone).' AND season='.db()->quote($season).' AND is_dummy=1')->fetchColumn();
+ck43('生成200机器人', $cnt===200, (string)$cnt);
+$topBefore=(int)db()->query('SELECT power FROM arena_rank WHERE zone='.db()->quote($zone).' AND season='.db()->quote($season).' AND rank=1')->fetchColumn();
+// 放一个高战力真玩家，触发锚点抬升 + 多次刷新收敛
+$ubig=(int)user_create('big'.mt_rand(1,999999),'x','warrior','z1',true,'tmp'); $_SESSION['uid']=$ubig;
+$ub=user_by_id($ubig); $ub['lv']=300;$ub['str']=60000;$ub['atk']=60000;$ub['def']=30000;$ub['maxhp']=2000000;$ub['hp']=2000000; user_save($ub); _gear_uncache($ubig);
+arena_join($ubig);
+$anchor=arena_pop_anchor($zone);
+ck43('锚点随高战力玩家抬升', $anchor['top_power']>$topBefore, "top={$anchor['top_power']} before={$topBefore}");
+for($i=0;$i<10;$i++){ db()->exec("DELETE FROM sys_kv WHERE k='arena_bot_tick_{$zone}'"); arena_bots_tick($zone); }
+$topAfter=(int)db()->query('SELECT power FROM arena_rank WHERE zone='.db()->quote($zone).' AND season='.db()->quote($season).' AND rank<=2 ORDER BY rank LIMIT 1')->fetchColumn();
+ck43('机器人战力随玩家提升', $topAfter>$topBefore, "after={$topAfter} before={$topBefore}");
+// 榜单连续无空洞
+$all=db()->query('SELECT rank FROM arena_rank WHERE zone='.db()->quote($zone).' AND season='.db()->quote($season).' ORDER BY rank')->fetchAll();
+$cont=true;$exp=1;foreach($all as $r){if((int)$r['rank']!==$exp){$cont=false;break;}$exp++;}
+ck43('榜单连续无空洞(补位)', $cont);
+// 爬榜：记录一次，刷新后检查是否有人上移
+$nb=[];foreach(db()->query('SELECT name,rank FROM arena_rank WHERE zone='.db()->quote($zone).' AND season='.db()->quote($season).' AND is_dummy=1')->fetchAll() as $r){$nb[$r['name']]=(int)$r['rank'];}
+$climb=false;
+for($k=0;$k<5 && !$climb;$k++){ db()->exec("DELETE FROM sys_kv WHERE k='arena_bot_tick_{$zone}'"); arena_bots_tick($zone);
+  foreach(db()->query('SELECT name,rank FROM arena_rank WHERE zone='.db()->quote($zone).' AND season='.db()->quote($season).' AND is_dummy=1')->fetchAll() as $r){ if(isset($nb[$r['name']])&&(int)$r['rank']<$nb[$r['name']]){$climb=true;break;} } }
+ck43('机器人会往上爬', $climb);
+clean43($ubig);
+db()->exec("DELETE FROM sys_kv WHERE k LIKE 'arena_bot_tick_%'");
+
 echo "\nOK=$ok FAIL=$bad\n";

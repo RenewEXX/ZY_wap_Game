@@ -93,6 +93,50 @@ function arena_dummy_power(int $rank): int
     return (int) (3278 - ($rank - 1) * (3199 / 1999));
 }
 
+// 本区真玩家的成长基准，用来让机器人“跟随玩家提升”。
+// 没有真玩家时退回默认曲线，保证开局就有合理靶子。
+function arena_pop_anchor(string $zone): array
+{
+    $season = arena_season();
+    try {
+        $st = db()->prepare('SELECT MAX(power) mp, MAX(lv) ml, AVG(power) ap, COUNT(*) c FROM arena_rank WHERE zone=? AND season=? AND is_dummy=0');
+        $st->execute([$zone, $season]);
+        $r = $st->fetch() ?: [];
+    } catch (Throwable $e) {
+        $r = [];
+    }
+    $c = (int) ($r['c'] ?? 0);
+    $maxPower = (int) ($r['mp'] ?? 0);
+    $maxLv = (int) ($r['ml'] ?? 0);
+    $avgPower = (int) ($r['ap'] ?? 0);
+    // 目标“榜首机器人”战力：至少 3278；随最强玩家提升，但留 5% 让玩家能实际到顶
+    $topPower = $c > 0 ? max(3278, (int) round($maxPower * 0.95)) : 3278;
+    // 底部机器人战力：随平均玩家水平提升，但不低于 300，也不高于顶部的 15%
+    $bottomPower = $c > 0 ? max(300, min((int) round($maxPower * 0.15), (int) round($avgPower * 0.6))) : 300;
+    // 等级：顶部跟随最高玩家（夹在 100~300），底部 50
+    $topLv = $c > 0 ? max(100, min(300, $maxLv)) : 100;
+    return ['count' => $c, 'maxpower' => $maxPower, 'maxlv' => $maxLv, 'top_power' => $topPower, 'bottom_power' => $bottomPower, 'top_lv' => $topLv];
+}
+
+// 按排名+锚点算目标战力（1..200 线性从 top 到 bottom）。
+function arena_dummy_power_for(int $rank, array $anchor): int
+{
+    $top = (int) $anchor['top_power'];
+    $bottom = (int) $anchor['bottom_power'];
+    $r = max(1, min(200, $rank));
+    $f = (200 - $r) / 199.0; // 1名→1，200名→0
+    return (int) round($bottom + ($top - $bottom) * $f);
+}
+
+function arena_dummy_lv_for(int $rank, array $anchor): int
+{
+    $top = (int) $anchor['top_lv'];
+    $bottom = 50;
+    $r = max(1, min(200, $rank));
+    $f = (200 - $r) / 199.0;
+    return (int) round($bottom + ($top - $bottom) * $f);
+}
+
 function arena_dummy_lv(int $rank): int
 {
     if ($rank <= 10) {
@@ -128,6 +172,7 @@ function arena_ensure(string $zone): void
     $jobs = ['战士', '法师', '猎手', '牧师', '召唤师'];
     $pets = ['影猫', '石灵', '幽灵', '幼龙', '深渊魔龙'];
     $used = [];
+    $anchor = arena_pop_anchor($zone);
     $st = db()->prepare('INSERT OR IGNORE INTO arena_rank (uid, zone, rank, name, job, lv, power, is_dummy, season) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)');
     for ($r = 1; $r <= 200; $r++) {
         // 名字池有限，200个假人必然要重复取样；用有限次重试 + 数字后缀兜底，
@@ -151,7 +196,109 @@ function arena_ensure(string $zone): void
         }
         $used[$nm] = true;
         // 假人uid用负数（表主键是uid+zone，全0会撞键）
-        try { $st->execute([-$r, $zone, $r, $nm, $jobs[array_rand($jobs)], arena_dummy_lv($r), arena_dummy_power($r), $season]); } catch (Throwable $e) { break; }
+        try { $st->execute([-$r, $zone, $r, $nm, $jobs[array_rand($jobs)], arena_dummy_lv_for($r, $anchor), arena_dummy_power_for($r, $anchor), $season]); } catch (Throwable $e) { break; }
+    }
+}
+
+// 机器人动态刷新（每次 arena 相关页面访问时轻量触发，靠 arena_bot_tick 节流到每 3 分钟一次）：
+//  1) 战力/等级跟随本区玩家水平重算（缓慢逼近，避免瞬间跳变）；
+//  2) 模拟"机器人也会往上爬"：少量机器人小幅上移，制造动态榜单；
+//  3) 真玩家之间/机器人之间出现空位时补位。
+function arena_bots_tick(string $zone): void
+{
+    $season = arena_season();
+    $now = time();
+    $kvKey = 'arena_bot_tick_' . $zone;
+    $last = (int) (db()->query('SELECT num FROM sys_kv WHERE k=' . db()->quote($kvKey))->fetchColumn() ?: 0);
+    if ($now - $last < 180) {
+        return;
+    }
+    try {
+        db()->prepare('INSERT OR REPLACE INTO sys_kv (k, num) VALUES (?, ?)')->execute([$kvKey, $now]);
+    } catch (Throwable $e) {
+        return;
+    }
+    $anchor = arena_pop_anchor($zone);
+    $rows = db()->query('SELECT rowid, uid, rank, power, lv, name FROM arena_rank WHERE zone=' . db()->quote($zone) . ' AND season=' . db()->quote($season) . ' AND is_dummy=1 ORDER BY rank ASC')->fetchAll();
+    if ($rows === []) {
+        return;
+    }
+    $maxRank = 0;
+    foreach ($rows as $r) {
+        $maxRank = max($maxRank, (int) $r['rank']);
+    }
+    // 1) 战力/等级缓慢逼近锚点曲线
+    foreach ($rows as $r) {
+        $targetPw = arena_dummy_power_for((int) $r['rank'], $anchor);
+        $targetLv = arena_dummy_lv_for((int) $r['rank'], $anchor);
+        $curPw = (int) $r['power'];
+        $curLv = (int) $r['lv'];
+        // 每次最多变化 20% 差距，最少1点，避免跳变
+        $dp = (int) round(($targetPw - $curPw) * 0.2);
+        if ($dp === 0 && $targetPw !== $curPw) { $dp = $targetPw > $curPw ? 1 : -1; }
+        $dl = (int) round(($targetLv - $curLv) * 0.2);
+        if ($dl === 0 && $targetLv !== $curLv) { $dl = $targetLv > $curLv ? 1 : -1; }
+        $np = max(1, $curPw + $dp);
+        $nl = max(1, min(400, $curLv + $dl));
+        if ($np !== $curPw || $nl !== $curLv) {
+            db()->prepare('UPDATE arena_rank SET power=?, lv=? WHERE rowid=?')->execute([$np, $nl, (int) $r['rowid']]);
+        }
+    }
+    // 2) 机器人往上爬：随机挑 1~3 个机器人，若目标名次被别的机器人占着，就互换（模拟爬榜）
+    $climb = random_int(1, 3);
+    for ($i = 0; $i < $climb; $i++) {
+        $from = $rows[array_rand($rows)];
+        $fromRank = (int) $from['rank'];
+        if ($fromRank <= 1) {
+            continue;
+        }
+        // 想爬到前面 1~2 名内（但不能越过真人占据的更高名次边界）
+        $toRank = max(1, $fromRank - random_int(1, 3));
+        $st = db()->prepare('SELECT rowid, uid, rank, is_dummy FROM arena_rank WHERE zone=? AND season=? AND rank=?');
+        $st->execute([$zone, $season, $toRank]);
+        $occ = $st->fetch();
+        if (!$occ) {
+            continue;
+        }
+        // 只和别的机器人互换；真人名次不主动动（真人是玩家挣的）
+        if ((int) ($occ['is_dummy'] ?? 0) !== 1) {
+            continue;
+        }
+        if ((int) $occ['uid'] === (int) $from['uid']) {
+            continue;
+        }
+        db()->prepare('UPDATE arena_rank SET rank=? WHERE rowid=?')->execute([$toRank, (int) $from['rowid']]);
+        db()->prepare('UPDATE arena_rank SET rank=? WHERE rowid=?')->execute([$fromRank, (int) $occ['rowid']]);
+    }
+    // 3) 补位：真玩家离开/被清掉会留下空洞名次。把空洞上方的名次整体上移一格填平，榜单始终连续。
+    arena_bots_compact($zone);
+}
+
+// 把 1..maxRank 里的空名次填平：每次找最小空洞，把其上方最近一个机器人拉下来补位（真人优先保持不动，
+// 但为保持连续，整体做一次紧致重排）。
+function arena_bots_compact(string $zone): void
+{
+    $season = arena_season();
+    $rows = db()->query('SELECT rowid, rank FROM arena_rank WHERE zone=' . db()->quote($zone) . ' AND season=' . db()->quote($season) . ' ORDER BY rank ASC')->fetchAll();
+    if ($rows === []) {
+        return;
+    }
+    $expect = 1;
+    $need = false;
+    foreach ($rows as $r) {
+        if ((int) $r['rank'] !== $expect) { $need = true; break; }
+        $expect++;
+    }
+    if (!$need) {
+        return;
+    }
+    // 按现有 rank 顺序依次压成 1..N（O(n)，极端情况才触发，3分钟一次）
+    $rk = 1;
+    foreach ($rows as $r) {
+        if ((int) $r['rank'] !== $rk) {
+            db()->prepare('UPDATE arena_rank SET rank=? WHERE rowid=?')->execute([$rk, (int) $r['rowid']]);
+        }
+        $rk++;
     }
 }
 
@@ -163,6 +310,10 @@ function arena_my(int $uid): ?array
     }
     $zone = (string) ($u['zone'] ?? 'z1');
     arena_ensure($zone);
+    // 机器人动态刷新（节流到每3分钟一次）：战力跟随玩家 + 爬榜 + 补位
+    if (function_exists('arena_bots_tick')) {
+        try { arena_bots_tick($zone); } catch (Throwable $e) {}
+    }
     $season = arena_season();
     $st = db()->prepare('SELECT * FROM arena_rank WHERE uid=? AND zone=? AND season=?');
     $st->execute([(int) $uid, $zone, $season]);

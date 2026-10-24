@@ -4875,15 +4875,12 @@ function gear_stats(int $uid): array
         if ($se['atk_pct'] > 0) {
             $s['atk_pct'] += $se['atk_pct'];
         }
-        if ($se['hp_pct'] > 0) {
-            $s['hp'] = (int) round($s['hp'] * (1 + $se['hp_pct'] / 100));
-        }
+        // 源罪之盾在学会时直接抬 maxhp 存档列（见 src_sin_learn），这里不再叠 hp_pct 以免双重计算。
+        // 源罪之速叠加到 speed，已由 player_dmg_pipeline / 暴击管线消费（转实战暴击率）。
         if ($se['speed'] > 0) {
             $s['speed'] += $se['speed'];
         }
-        if ($se['lord']) {
-            $s['sin_dmg_pct'] = sin_of((int) $uid) * 0.5;
-        }
+        // 神之罪主的加伤在战斗出手时按 sin_of 实时结算（见 battle_round），不在此写死。
     }
     // 遗神铸庭传说（面板类无条件加成）
     if (function_exists('legend_relic_gear_apply')) {
@@ -6080,7 +6077,10 @@ function player_dmg_pipeline(array $u, int $base): array
         return [0, ''];
     }
     $gs = gear_stats((int) ($u['id'] ?? 0));
-    return dmg_pipeline($base, $gs['crit'], $gs['critdmg'], (float) ($gs['precision'] ?? 0));
+    // 源罪之速：攻速( speed )转实战暴击率（speed×0.4 个百分点），让“速度”不再是纯面板数字
+    $critAdd = 0.0;
+    if (!empty($gs['speed'])) { $critAdd += (float) $gs['speed'] * 0.4; }
+    return dmg_pipeline($base, $gs['crit'] + $critAdd, $gs['critdmg'], (float) ($gs['precision'] ?? 0));
 }
 
 function dmg_to_monster(array $u, array $m = []): int
@@ -6107,6 +6107,11 @@ function dmg_to_player(array $u, array $m): array
     $dodge = $gs['dodge'] + hunter_assassin_dodge((int) ($u['id'] ?? 0));
     if (function_exists('legend_relic_bonus_dodge')) {
         $dodge += legend_relic_bonus_dodge($u);
+    }
+    // 源罪技能树·源罪之逃：残血<30% 闪避+30
+    if (function_exists('src_sin_effects') && (int) ($u['maxhp'] ?? 0) > 0 && (int) $u['hp'] < (int) $u['maxhp'] * 0.3) {
+        $seDodge = src_sin_effects((int) ($u['id'] ?? 0));
+        if (!empty($seDodge['flee'])) { $dodge += 30; }
     }
     if ($dodge > 0 && mt_rand(1, 10000) / 100 <= $dodge) {
         $GLOBALS['_lg_dodged'] = 1; // 供夜幕判定"上次闪避"
@@ -6622,6 +6627,18 @@ function battle_round(array &$u, array &$b, string $mode): array
     }
     $rb2 = cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '';
     if ($rb2 === 'berserker' && (int) $u['hp'] < (int) $u['maxhp'] / 2 && $pd > 0) { $pd = (int) ($pd * 1.15); $logHeal .= '(狂怒)'; }
+    // 源罪技能树·攻击侧：神之罪主(按罪值加全伤) + 之怒(残血<30%物攻翻倍)
+    if ($pd > 0 && function_exists('src_sin_effects')) {
+        $seAtk = src_sin_effects((int) ($u['id'] ?? 0));
+        if (!empty($seAtk['lord'])) {
+            $sinPct = sin_of((int) ($u['id'] ?? 0)) * 0.5;
+            if ($sinPct > 0) { $pd = (int) round($pd * (1 + $sinPct / 100)); $logHeal .= '(神之罪主+' . round($sinPct, 1) . '%)'; }
+        }
+        if (!empty($seAtk['rage']) && (int) $u['maxhp'] > 0 && (int) $u['hp'] < (int) $u['maxhp'] * 0.3) {
+            $pd = (int) $pd * 2;
+            $logHeal .= '(源罪之怒)';
+        }
+    }
     
         if ($rb2 === 'wintermage' && in_array($skEl, ['ice', 'thunder'], true) && $pd > 0 && mt_rand(1, 100) <= 12) { $b['stun'] = 1; $logHeal .= '(麻痹)'; }
     // 怪架盾期间你的伤害被砍
@@ -6647,7 +6664,7 @@ function battle_round(array &$u, array &$b, string $mode): array
         $gsV = gear_stats((int) ($u['id'] ?? 0));
         $rb2cV = (string) (cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '');
         // 游侠不再加暴击（改走DOT加成），刺客靠高闪避而非暴击
-        $critRate = $forceCrit ? 10000 : ($gsV['crit'] + $lgCritAdd);
+        $critRate = $forceCrit ? 10000 : ($gsV['crit'] + $lgCritAdd + (!empty($gsV['speed']) ? (float) $gsV['speed'] * 0.4 : 0.0));
         [$pd, $vTag] = dmg_pipeline($pd, $critRate, $gsV['critdmg'], (float) ($gsV['precision'] ?? 0));
         if ($vTag !== '') {
             $logHeal .= '(' . $vTag . ')';
@@ -7432,6 +7449,14 @@ function battle_round(array &$u, array &$b, string $mode): array
     // 遗神铸庭·受击减伤/增伤（叹息之墙/磐石/死斗者）
     if ($md > 0 && function_exists('legend_relic_incoming')) {
         $md = legend_relic_incoming($u, $b, $md);
+    }
+    // 源罪技能树·源罪之守：残血<30% 受到伤害-30%
+    if ($md > 0 && function_exists('src_sin_effects') && (int) ($u['maxhp'] ?? 0) > 0 && (int) $u['hp'] < (int) $u['maxhp'] * 0.3) {
+        $seGuard = src_sin_effects((int) ($u['id'] ?? 0));
+        if (!empty($seGuard['guard'])) {
+            $md = max(1, (int) round($md * 0.7));
+            $log .= '(源罪之守-30%)';
+        }
     }
     $u['hp'] = (int) $u['hp'] - $md;
     // 泰坦之肤：受击叠层（本次反击即可吃到）

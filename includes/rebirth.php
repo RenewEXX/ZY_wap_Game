@@ -287,6 +287,16 @@ function src_sin_learn(int $uid, string $sid): string
     mat_set($uid, 'rs_point', src_sin_point($uid) - $cost);
     $own[$sid] = time();
     cflag_set($uid, 'src_sin', $own);
+    // 源罪之盾：直接把生命上限抬 5%（存档列 maxhp 同步；当前血按上限同幅增加）
+    if ($sid === 'shield') {
+        $uu = user_by_id($uid);
+        if ($uu) {
+            $add = max(1, (int) round((int) $uu['maxhp'] * 0.05));
+            $uu['maxhp'] = (int) $uu['maxhp'] + $add;
+            $uu['hp'] = min((int) $uu['maxhp'], (int) $uu['hp'] + $add);
+            user_save($uu);
+        }
+    }
     return '你学会了【' . $all[$sid]['name'] . '】：' . $all[$sid]['desc'] . '。';
 }
 

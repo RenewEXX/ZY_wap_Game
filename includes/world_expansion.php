@@ -98,6 +98,18 @@ function world_link_regions(array $all): array
             }
         }
     }
+    // 大区域副本：每个大区从指定野外点引一扇"副本入口"双向门
+    if (function_exists('region_dungeon_specs') && function_exists('region_dungeon_locations')) {
+        $rdLoc = region_dungeon_locations();
+        foreach (region_dungeon_specs() as $rk => $R) {
+            $gate = 'rd_' . $rk . '_gate';
+            $from = (string) $R['gate'];
+            if (isset($all[$gate], $all[$from])) {
+                $all[$from]['exits'][$gate] = (string) ($rdLoc[$gate]['name'] ?? $gate);
+                $all[$gate]['exits'][$from] = (string) ($all[$from]['name'] ?? $from);
+            }
+        }
+    }
     return $all;
 }
 
@@ -173,6 +185,9 @@ function world_identity_mid(string $mid): bool
     static $set = null;
     if ($set === null) {
         $set = array_fill_keys(array_keys(world_expansion_monsters()), true);
+        foreach (array_keys(region_dungeon_monsters()) as $__rk) {
+            $set[$__rk] = true;
+        }
     }
     return isset($set[$mid]);
 }

@@ -202,9 +202,19 @@ function boss_legendary_effects(): array
         'lg_bl_archon' => ['base' => '神墟执政官·圣翼', 'intro' => '技能伤害+15%；暴击时回复6%最大生命。', 'eff' => ['skill_damage' => 15, 'oncrit_heal' => 6]],
         'lg_bl_judge' => ['base' => '天外审判者·裁决之戒', 'intro' => '对残血(<35%)目标伤害+40%（裁决）；全元素抗性+10。', 'eff' => ['execute' => [0.35, 40], 'allres' => 10]],
         'lg_bl_ruinend' => ['base' => '神墟终焉·归墟之链', 'intro' => '对残血(<40%)目标伤害+45%（归墟）；物防、法防各+10%。', 'eff' => ['execute' => [0.4, 45], 'def_pct' => 10]],
+
+        // —— 大区域副本专属传说（9 件，均为三字段独特组合，互不相同更不与遗物撞车）——
+        'lg_bl_rd_sky' => ['base' => '苍穹回廊·裂空之刃', 'intro' => '单体目标伤害+16%；暴击率+4%；暴击伤害+15%（裂空）。', 'eff' => ['single' => 16, 'crit' => 4, 'critdmg' => 15]],
+        'lg_bl_rd_sunk' => ['base' => '海渊侍祭·溺魂之链', 'intro' => '受到伤害-6%；全元素抗性+12；残血(<40%)时再额外闪避+10（溺魂）。', 'eff' => ['dr' => 6, 'allres' => 12, 'lowhp_dodge' => [0.4, 10]]],
+        'lg_bl_rd_forge' => ['base' => '永燃之主·赤炎胸铠', 'intro' => '受到伤害-8%；反击伤害+25%；每击杀回复6%最大生命（永燃）。', 'eff' => ['dr' => 8, 'counter' => 25, 'kill_heal' => 6]],
+        'lg_bl_rd_verd' => ['base' => '万藤之母·缠灵护手', 'intro' => '吸血+5%；持续伤害(DOT)+20%；真伤+30（缠灵）。', 'eff' => ['lifesteal' => 5, 'dot' => 20, 'truedmg' => 30]],
+        'lg_bl_rd_crypt' => ['base' => '霜魄陵主·永眠之戒', 'intro' => '暴击伤害+30%；每损失10%生命暴击+5%；暴击率+4%（永眠之寒）。', 'eff' => ['critdmg' => 30, 'perlost_crit' => 5, 'crit' => 4]],
+        'lg_bl_rd_star' => ['base' => '星陨督主·坠光之冠', 'intro' => '对残血(<35%)目标伤害+35%；暴击伤害+22%；单体目标伤害+12%（坠光）。', 'eff' => ['execute' => [0.35, 35], 'critdmg' => 22, 'single' => 12]],
+        'lg_bl_rd_magma' => ['base' => '熔潮渊主·炽浪之脊', 'intro' => '真伤+140；全元素伤害+22%；物攻+10%（炽浪灼烧）。', 'eff' => ['truedmg' => 140, 'element' => 22, 'atk_pct' => 10]],
+        'lg_bl_rd_chrono' => ['base' => '凝固时主·停秒护手', 'intro' => '技能伤害+16%；暴击时回复6%最大生命；暴击率+3%（停秒）。', 'eff' => ['skill_damage' => 16, 'oncrit_heal' => 6, 'crit' => 3]],
+        'lg_bl_rd_divine' => ['base' => '墟心神主·归穹之链', 'intro' => '对残血(<40%)目标伤害+40%；全元素抗性+10；物防、法防各+10%（归穹）。', 'eff' => ['execute' => [0.4, 40], 'allres' => 10, 'def_pct' => 10]],
     ];
 }
-// 按装备基底名取对应的行为型特效 key；没有则返回 ''
 function boss_legendary_key_by_base(string $base): string
 {
     static $map = null;

@@ -23,6 +23,18 @@ $to = (string) ($_GET['to'] ?? '');
 if ($to !== '' && isset(locations()[$to])) {
     $here0 = loc((string) $u['loc']);
     if (isset($here0['exits'][$to])) {
+        // 大区域副本：等级不足直接拦下
+        if (function_exists('region_dungeon_of')) {
+            $rdGate0 = region_dungeon_of($to);
+            if ($rdGate0 !== '') {
+                $needLv = region_dungeon_min_lv($to);
+                if ($needLv > 0 && (int) $u['lv'] < $needLv) {
+                    flash_set('副本门口的封印亮了一下：你还是先到' . $needLv . '级再来吧。（当前' . (int) $u['lv'] . '级）');
+                    header('Location: home.php');
+                    exit;
+                }
+            }
+        }
         if ($to === 'dsw_throne' && dsw_stage((int) $u['id']) < 5) {
             flash_set('王座大门纹丝不动。集齐四样信物（阶段5/5）才能推开。');
             header('Location: home.php');

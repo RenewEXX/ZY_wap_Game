@@ -141,7 +141,7 @@ function locations(): array
             'exits' => ['gate' => '罪渊入口'],
             'monsters' => [],
         ],
-    ] + ch1_locations() + dsw_locations() + ch2_locations() + abx_locations() + ch3_locations() + mx_locations() + farm_locations() + ice_locations() + fr_locations() + fo_locations() + em_locations() + dragon_locations() + pz_locations() + sen_locations() + wild3_locations() + frostburg_locations() + greenheart_locations() + wild45_locations() + as_locations() + vx_locations() + gr_locations() + ry_locations() + god_locations() + gf_locations() + world_expansion_locations());
+    ] + ch1_locations() + dsw_locations() + ch2_locations() + abx_locations() + ch3_locations() + mx_locations() + farm_locations() + ice_locations() + fr_locations() + fo_locations() + em_locations() + dragon_locations() + pz_locations() + sen_locations() + wild3_locations() + frostburg_locations() + greenheart_locations() + wild45_locations() + as_locations() + vx_locations() + gr_locations() + ry_locations() + god_locations() + gf_locations() + world_expansion_locations() + region_dungeon_locations());
 }
 
 function loc(string $id): array
@@ -383,7 +383,7 @@ function monsters(): array
         'ry_shaper' => ['name' => '岩狱塑岩者', 'hp' => 4600000, 'atk' => 9000, 'exp' => 9500000, 'gold' => 4500000],
         'ry_warder' => ['name' => '岩狱狱卒', 'hp' => 5000000, 'atk' => 9500, 'exp' => 10400000, 'gold' => 4900000],
         'ry_titan' => ['name' => '岩狱泰坦·土龙岳柱', 'hp' => 9000000, 'atk' => 11000, 'exp' => 20000000, 'gold' => 9500000],
-    ] + dragon_monsters() + world_expansion_monsters();
+    ] + dragon_monsters() + world_expansion_monsters() + region_dungeon_monsters();
 }
 
 function items(): array
@@ -1386,6 +1386,11 @@ function boss_of_map(string $loc): string
         foreach (world_expansion_boss_map() as $__wk => $__wv) {
             if (!isset($m[$__wk])) {
                 $m[$__wk] = $__wv;
+            }
+        }
+        foreach (region_dungeon_boss_map() as $__rk => $__rv) {
+            if (!isset($m[$__rk])) {
+                $m[$__rk] = $__rv;
             }
         }
         $wnMerged = true;
@@ -2779,6 +2784,9 @@ function equip_shortname(string $name): string
 // 套装件：沼泽3件/深渊3件/剧场系列，显示醒目套装绿
 function equip_is_set(string $shortName): bool
 {
+    if (function_exists('region_dungeon_prefix_of') && region_dungeon_prefix_of($shortName) !== '') {
+        return true;
+    }
     if (str_starts_with($shortName, '剧场·')) {
         return true;
     }
@@ -2816,6 +2824,12 @@ function equip_color_by(string $fullName, int $q): string
 // 套装效果说明：有其中一件就展示整套，勾引玩家刷齐
 function equip_set_id(string $shortName): string
 {
+    if (function_exists('region_dungeon_prefix_of')) {
+        $rdp = region_dungeon_prefix_of($shortName);
+        if ($rdp !== '') {
+            return 'rd_set:' . $rdp;
+        }
+    }
     if (in_array($shortName, ['沼泽兜帽', '沼泽轻靴', '沼泽之心', '沼泽束腰'], true)) {
         return 'swamp';
     }
@@ -2877,6 +2891,10 @@ function equip_set_id(string $shortName): string
 
 function equip_set_pieces(string $set): array
 {
+    if (str_starts_with($set, 'rd_set:')) {
+        $info = region_dungeon_set_info(substr($set, 7));
+        return $info['pieces'] ?? [];
+    }
     if ($set === 'swamp') {
         return ['沼泽兜帽', '沼泽轻靴', '沼泽之心', '沼泽束腰'];
     }
@@ -2921,6 +2939,19 @@ function equip_set_pieces(string $set): array
 
 function equip_set_owned_count(int $uid, string $set): int
 {
+    if (str_starts_with($set, 'rd_set:')) {
+        $pieces = equip_set_pieces($set);
+        if ($pieces === []) {
+            return 0;
+        }
+        $st = db()->prepare('SELECT name FROM equips WHERE uid=? AND pos="wear"');
+        $st->execute([(int) $uid]);
+        $n = 0;
+        while ($r = $st->fetch()) {
+            if (in_array(equip_shortname((string) $r['name']), $pieces, true)) { $n++; }
+        }
+        return min(count($pieces), $n);
+    }
     if (in_array($set, ['theater', 'frost', 'ember', 'puppet', 'thorn', 'rockjail', 'sin', 'god', 'dusk', 'jimie', 'shiyuan', 'soulpact'], true)) {
         $mark = ['theater' => '%剧场·%', 'frost' => '%寒霜·%', 'ember' => '%烬焰·%', 'puppet' => '%傀儡·%', 'thorn' => '%荆棘·%', 'rockjail' => '%岩狱·%', 'sin' => '%罪渊·%', 'god' => '%神铸·%', 'dusk' => '%暮影·%', 'jimie' => '%寂灭·%', 'shiyuan' => '%噬渊·%', 'soulpact' => '%魂契·%'][$set];
         $cap = ['theater' => 99, 'frost' => 3, 'ember' => 7, 'puppet' => 5, 'thorn' => 4, 'rockjail' => 10, 'sin' => 11, 'god' => 11, 'dusk' => 3, 'jimie' => 5, 'shiyuan' => 5, 'soulpact' => 5][$set];
@@ -2950,6 +2981,9 @@ function equip_set_owned_count(int $uid, string $set): int
 
 function equip_set_bonus_text(string $set, int $owned): string
 {
+    if (str_starts_with($set, 'rd_set:')) {
+        return region_dungeon_set_bonus_text(substr($set, 7));
+    }
     if ($set === 'swamp') {
         return '【沼泽套装】已穿' . $owned . '/3（兜帽/轻靴/之心），集齐3件：能量+300，防御+20。';
     }
@@ -3177,7 +3211,7 @@ function monster_drops(string $mid): array
         'vx_knight' => ['slot' => 'body', 'base' => '烬焰·守卫铠'],
         'vx_herald' => ['slot' => 'necklace', 'base' => '烬焰·余火链'],
         'vx_tyrant' => ['slot' => 'ring', 'base' => '虚空暴君之戒', 'rate' => 0.3, 'q' => [0, 0, 20, 50, 30], 'legendary' => ['base' => '虚空暴君·终焉', 'extra' => ['k' => 'skill_damage', 'v' => 8.0]]],
-    ] + world_expansion_drops())[$mid] ?? [];
+    ] + world_expansion_drops() + region_dungeon_drops())[$mid] ?? [];
 }
 
 function equip_primary(string $slot, string $offKind = ''): string
@@ -4254,6 +4288,11 @@ function monster_element(string $mid): string
                 $m[$__wk] = $__wv;
             }
         }
+        foreach (region_dungeon_element() as $__rk => $__rv) {
+            if (!isset($m[$__rk])) {
+                $m[$__rk] = $__rv;
+            }
+        }
         $wnElMerged = true;
     }
     if (isset($m[$mid])) {
@@ -4555,7 +4594,7 @@ function ground_pickup(int $uid, int $gid): string
 function is_boss_mid(string $mid): bool
 {
     static $bosses = ['knight', 'echo_rayne', 'swamp_king', 'abaddon', 'abyss_eye', 'dark_lily', 'valentin', 'guardian', 'string_puller', 'silk_mother', 'winter_king', 'fr_leviathan', 'ancient_ruin_golem', 'em_heart', 'doyle', 'pz_master', 'sen_avatar', 'shadow_claw', 'brass_bishop', 'tundra_wanderer', 'avalanche_titan', 'obsidian_colossus', 'ash_titan'];
-    return in_array($mid, $bosses, true) || in_array($mid, world_expansion_bosses(), true);
+    return in_array($mid, $bosses, true) || in_array($mid, world_expansion_bosses(), true) || in_array($mid, region_dungeon_bosses(), true);
 }
 
 function is_ch3_mid(string $mid): bool
@@ -5066,6 +5105,10 @@ function gear_stats(int $uid): array
     // 遗神铸庭传说（面板类无条件加成）
     if (function_exists('legend_relic_gear_apply')) {
         legend_relic_gear_apply((int) $uid, $s);
+    }
+    // 大区域副本套装集齐加成（随角色等级缩放）
+    if (function_exists('region_dungeon_gear_apply')) {
+        region_dungeon_gear_apply((int) $uid, $s);
     }
     $cache[$uid] = $s;
     return $s;
@@ -5932,6 +5975,11 @@ function monster_lv(string $mid): int
         foreach (world_expansion_lv() as $__wk => $__wv) {
             if (!isset($lv[$__wk])) {
                 $lv[$__wk] = $__wv;
+            }
+        }
+        foreach (region_dungeon_lv() as $__rk => $__rv) {
+            if (!isset($lv[$__rk])) {
+                $lv[$__rk] = $__rv;
             }
         }
         $wnMerged = true;
@@ -7951,7 +7999,7 @@ function map_regions(): array
 // 副本图：只能找NPC进，不参与传送
 function dungeon_maps(): array
 {
-    return array_merge(dsw_maps(), abx_maps(), mx_maps(), fr_maps(), em_maps(), pz_maps(), sen_maps(), ry_maps(), vx_maps(), gy_maps(), gf_maps(), yz_maps());
+    return array_merge(dsw_maps(), abx_maps(), mx_maps(), fr_maps(), em_maps(), pz_maps(), sen_maps(), ry_maps(), vx_maps(), gy_maps(), gf_maps(), yz_maps(), region_dungeon_maps());
 }
 
 function exit_dirs(string $from): array
@@ -8290,21 +8338,30 @@ function dungeon_tick(array &$u): void
     $inPz = in_array($loc, pz_maps(), true);
     $inSen = in_array($loc, sen_maps(), true);
     $inAs = in_array($loc, as_maps(), true); $inVx = in_array($loc, vx_maps(), true); $inGy = in_array($loc, gy_maps(), true); $inGf = in_array($loc, gf_maps(), true); $inYz = in_array($loc, yz_maps(), true);
-    if (!in_array($loc, dsw_maps(), true) && !in_array($loc, abx_maps(), true) && !in_array($loc, mx_maps(), true) && !$inFr && !$inEm && !$inPz && !$inSen && !$inAs && !$inVx && !$inGy && !$inGf && !$inYz) {
+    $rdGate = function_exists('region_dungeon_of') ? region_dungeon_of($loc) : '';
+    $inRd = $rdGate !== '';
+    if (!in_array($loc, dsw_maps(), true) && !in_array($loc, abx_maps(), true) && !in_array($loc, mx_maps(), true) && !$inFr && !$inEm && !$inPz && !$inSen && !$inAs && !$inVx && !$inGy && !$inGf && !$inYz && !$inRd) {
         return;
     }
     $inAbx = in_array($loc, abx_maps(), true);
     $inMx = in_array($loc, mx_maps(), true);
     $mats = mats_of((int) ($u['id'] ?? 0));
     $enterKey = 'dsw_enter';
+    $rdEnterKey = '';
     if ($inAbx) { $enterKey = 'abx_enter'; } elseif ($inMx) { $enterKey = 'mx_enter'; }
     elseif ($inVx) { $enterKey = 'vx_enter'; } elseif ($inAs) { $enterKey = 'as_enter'; }
     elseif ($inSen) { $enterKey = 'sen_enter'; } elseif ($inPz) { $enterKey = 'pz_enter'; }
     elseif ($inEm) { $enterKey = 'em_enter'; } elseif ($inFr) { $enterKey = 'fr_enter'; }
     elseif (!empty($inGy)) { $enterKey = 'gy_enter'; } elseif (!empty($inGf)) { $enterKey = 'gf_enter'; }
     elseif (!empty($inYz)) { $enterKey = 'yz_enter'; }
+    elseif ($inRd) { $rdEnterKey = 'rd_enter_' . $rdGate; $enterKey = $rdEnterKey; }
+    // 副本是"走进去"的（无NPC开场），首次进入时自动开始计时
+    if ($inRd && $rdEnterKey !== '' && !isset($mats[$enterKey])) {
+        mat_set((int) ($u['id'] ?? 0), $enterKey, time());
+        $mats = mats_of((int) ($u['id'] ?? 0));
+    }
     $enter = (int) ($mats[$enterKey] ?? time());
-    $limit = ($inMx || $inFr || $inEm || $inPz || $inSen || $inAs || $inVx || $inGf) ? 2700 : 1800;
+    $limit = ($inMx || $inFr || $inEm || $inPz || $inSen || $inAs || $inVx || $inGf || $inRd) ? 2700 : 1800;
     if (time() - $enter > $limit) {
         unset($_SESSION['battle']);
         $eject = 'town_sq';
@@ -8314,9 +8371,10 @@ function dungeon_tick(array &$u): void
         elseif ($inMx) { $eject = 'avenue'; } elseif ($inAbx) { $eject = 'silver_sq'; }
         elseif (!empty($inGy)) { $eject = 'square'; } elseif (!empty($inGf)) { $eject = 'greenheart_sq'; }
         elseif (!empty($inYz)) { $eject = 'god_hall'; }
+        elseif ($inRd) { $eject = region_dungeon_eject($loc); }
         $u['loc'] = $eject;
         user_save($u);
-        $backName = ['ice_village' => '冰原村', 'ember_foothill' => '火山麓', 'theater' => '傀儡剧场', 'fo_gate' => '雾森渡口', 'volcano_heart' => '火山之心', 'avenue' => '中央大道', 'silver_sq' => '白银广场', 'square' => '灰雾村广场', 'greenheart_sq' => '青叶广场', 'god_hall' => '神界圣都', 'town_sq' => '白石镇广场'][$eject] ?? '白石镇广场';
+        $backName = ['ice_village' => '冰原村', 'ember_foothill' => '火山麓', 'theater' => '傀儡剧场', 'fo_gate' => '雾森渡口', 'volcano_heart' => '火山之心', 'avenue' => '中央大道', 'silver_sq' => '白银广场', 'square' => '灰雾村广场', 'greenheart_sq' => '青叶广场', 'god_hall' => '神界圣都', 'town_sq' => '白石镇广场'][$eject] ?? '根据地';
         flash_set(($limit >= 2700 ? '45' : '30') . '分钟到了，你被传回' . $backName . '。');
     }
 }

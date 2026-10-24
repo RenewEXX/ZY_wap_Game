@@ -18,6 +18,7 @@ require_once __DIR__ . '/wap.php';
 require_once __DIR__ . '/game.php';
 require_once __DIR__ . '/world_expansion.php';
 require_once __DIR__ . '/world_expansion2.php';
+require_once __DIR__ . '/region_dungeons.php';
 require_once __DIR__ . '/legend_relics.php';
 require_once __DIR__ . '/legend_story.php';
 require_once __DIR__ . '/dragons.php';

@@ -487,6 +487,9 @@ if ($a === 'peak_hit') {
         exit;
     }
     [$pd] = pvp_hit_base($u, $t);
+    // 缩圈增益：把捡到的临时增益转成这次对决的伤害/减伤
+    $buf = function_exists('peak_buff_take') ? peak_buff_take((int) $u['id']) : ['atk_pct' => 0.0, 'dr_pct' => 0.0, 'used' => []];
+    if ($buf['atk_pct'] > 0) { $pd = (int) round($pd * (1 + $buf['atk_pct'] / 100)); }
     // 浮动管线：浮动 → 档位 → 暴击
     [$pd, $pdTag] = player_dmg_pipeline($u, $pd);
     $t['hp'] = (int) $t['hp'] - $pd;
@@ -496,6 +499,7 @@ if ($a === 'peak_hit') {
         user_save($t);
         peak_forfeit((int) $t['id']);
         unset($_SESSION['peak']);
+        if ($buf['used'] !== [] && function_exists('peak_buff_consume')) { peak_buff_consume((int) $u['id']); }
         user_save($u);
         flash_set('你一刀结果了【' . $t['username'] . '】！他被抬出战场，丧失资格。');
         header('Location: home.php');
@@ -505,6 +509,8 @@ if ($a === 'peak_hit') {
     [$md] = pvp_hit_base($t, $u);
     // 对方回敬也走浮动管线（用对方自己的暴击/精准）
     [$md, $mdTag] = player_dmg_pipeline($t, $md);
+    if ($buf['dr_pct'] > 0) { $md = max(1, (int) round($md * (1 - $buf['dr_pct'] / 100))); }
+    if ($buf['used'] !== [] && function_exists('peak_buff_consume')) { peak_buff_consume((int) $u['id']); }
     $u['hp'] = (int) $u['hp'] - $md;
     user_save($u);
     if ((int) $u['hp'] <= 0) {

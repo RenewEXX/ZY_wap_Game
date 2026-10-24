@@ -28,7 +28,8 @@ if (in_array($a, ['rank', 'prize', 'def', 'shop', 'shopbuy'], true)) {
         $st = db()->prepare('SELECT * FROM arena_rank WHERE zone=? AND season=? ORDER BY rank ASC LIMIT 50');
         $st->execute([$zone, $season]);
         foreach ($st->fetchAll() as $row) {
-            echo '第' . (int) $row['rank'] . '名：' . h($row['name']) . ' Lv' . (int) $row['lv'] . ' 战力' . (int) $row['power'] . ((int) $row['uid'] === $uid ? '（你）' : '') . '<br>';
+            $tier = arena_tier((int) $row['rank']);
+            echo '<span style="color:' . $tier[2] . '">[' . $tier[1] . ']</span>第' . (int) $row['rank'] . '名：' . h($row['name']) . ' Lv' . (int) $row['lv'] . ' 战力' . (int) $row['power'] . ((int) $row['uid'] === $uid ? '（你）' : '') . '<br>';
         }
         echo '<a href="arena.php">返回</a>';
         nav_line();
@@ -37,6 +38,14 @@ if (in_array($a, ['rank', 'prize', 'def', 'shop', 'shopbuy'], true)) {
     }
     if ($a === 'prize') {
         echo '【奖 励】每日凌晨5点结算（邮件），每周一赛季重置（上周奖励再发一份）。<br>';
+        echo '—— 段位（按名次）——<br>';
+        foreach ([1 => '王者', 3 => '大师', 10 => '钻石', 30 => '铂金', 70 => '黄金', 150 => '白银', 400 => '青铜', 999999 => '黑铁'] as $top => $nm) {
+            $tier = arena_tier($top === 1 ? 1 : ($top === 3 ? 3 : $top));
+            [$bg, $bc] = arena_tier_bonus($tier[0]);
+            $range = $top === 999999 ? '400名以后' : '前' . $top . '名';
+            echo '<span style="color:' . $tier[2] . '">[' . $tier[1] . ']</span> ' . $range . '：名次奖励 + 段位保底(金' . $bg . '/币' . $bc . ')<br>';
+        }
+        echo '—— 名次奖励档位 ——<br>';
         foreach ([1, 2, 3, 10, 50, 100, 300, 1000, 999999] as $top) {
             [$gold, $coinP, $stones] = arena_rewards($top);
             $label = $top === 999999 ? '第1001名以后' : '第' . $top . '名档';
@@ -117,6 +126,8 @@ if ($a === 'fight') {
     exit;
 }
 echo '今日挑战：免费剩' . $ch['free'] . '/5，可用' . $ch['left'] . '次<br>';
+$myTier = arena_tier((int) $me['rank']);
+echo '当前：第' . (int) $me['rank'] . '名 <span style="color:' . $myTier[2] . '">[' . $myTier[1] . '段位]</span><br>';
 echo '[<a href="arena.php?a=targets">挑战对手</a>] [<a href="arena.php?a=rank">查看排名</a>] [<a href="arena.php?a=prize">查看奖励</a>] [<a href="arena.php?a=def">防守记录</a>] [<a href="arena.php?a=shop">竞技场商店</a>]<br>';
 if ($a === 'targets') {
     echo '<div class="hr">--------</div>【选 择 对 手】可挑战范围：第' . max(1, (int) $me['rank'] - 34) . '名到第' . ((int) $me['rank'] - 1) . '名<br>';

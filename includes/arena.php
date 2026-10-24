@@ -205,7 +205,25 @@ function arena_refresh_power(int $uid): void
     db()->prepare('UPDATE arena_rank SET name=?, job=?, lv=?, power=? WHERE uid=? AND zone=? AND season=?')->execute([(string) $u['username'], job_name_of($u), (int) $u['lv'], power_score($u), (int) $uid, $zone, arena_season()]);
 }
 
-// 我方战阵：攻/防/血 + 出战宠物
+// 各职业竞技场大招（取该职业罪技大招做“绝招”，数值略调以免秒杀）
+function arena_job_ult(string $jobId): array
+{
+    $map = [
+        'warrior'  => ['name' => '血狱狂斩', 'mult' => 2.4, 'heal' => false],
+        'mage'     => ['name' => '魂蚀天雷', 'mult' => 2.8, 'heal' => false],
+        'hunter'   => ['name' => '弑神连珠', 'mult' => 2.4, 'heal' => false],
+        'priest'   => ['name' => '堕天圣裁', 'mult' => 1.8, 'heal' => true],
+        'summoner' => ['name' => '深渊主宰', 'mult' => 2.5, 'heal' => false],
+    ];
+    return $map[$jobId] ?? ['name' => '全力一击', 'mult' => 2.0, 'heal' => false];
+}
+
+function arena_job_id_from_name(string $name): string
+{
+    return ['战士' => 'warrior', '法师' => 'mage', '猎手' => 'hunter', '猎人' => 'hunter', '牧师' => 'priest', '召唤师' => 'summoner'][$name] ?? 'warrior';
+}
+
+// 我方战阵：攻/防/血 + 出战宠物 + 职业大招
 function arena_my_team(array $u): array
 {
     $pet = active_pet((int) ($u['id'] ?? 0));
@@ -217,10 +235,12 @@ function arena_my_team(array $u): array
     }
     // 法系取 matk，物理取 atk；防御取对方法系/物理两侧的通用 pvp 防御
     [$atk, $type] = function_exists('pvp_attack_of') ? pvp_attack_of($u) : [(int) player_atk($u), 'phys'];
+    $jobId = job_id_of($u);
     return [
         'name' => (string) ($u['username'] ?? ''), 'lv' => (int) ($u['lv'] ?? 1),
         'hp' => (int) ($u['maxhp'] ?? 1),
         'atk' => $atk, 'atk_type' => $type,
+        'job' => $jobId, 'ult' => arena_job_ult($jobId),
         'pdef' => (int) player_pdef($u), 'mdef' => (int) player_mdef($u),
         'def' => (int) player_def($u), 'pet' => $p,
     ];
@@ -233,9 +253,12 @@ function arena_foe_team(array $row): array
         $lv = max(1, (int) ($row['lv'] ?? 1));
         $pets = ['影猫', '石灵', '幽灵', '幼龙', '深渊魔龙'];
         $d = max(0, (int) ($pw * 0.08));
+        $jobId = arena_job_id_from_name((string) ($row['job'] ?? '战士'));
+        $isMag = in_array($jobId, ['mage', 'priest', 'summoner'], true);
         return [
             'name' => (string) $row['name'], 'lv' => $lv,
-            'hp' => (int) ($pw * 0.5), 'atk' => max(1, (int) ($pw * 0.12)), 'atk_type' => 'phys',
+            'hp' => (int) ($pw * 0.5), 'atk' => max(1, (int) ($pw * 0.12)), 'atk_type' => $isMag ? 'mag' : 'phys',
+            'job' => $jobId, 'ult' => arena_job_ult($jobId),
             'pdef' => $d, 'mdef' => $d, 'def' => $d,
             'pet' => ['name' => $pets[$lv % count($pets)], 'lv' => max(1, $lv - 10), 'hp' => (int) ($pw * 0.1), 'atk' => max(1, (int) ($pw * 0.03))],
         ];
@@ -244,7 +267,8 @@ function arena_foe_team(array $row): array
     if (!$tu) {
         $pw = max(1, (int) ($row['power'] ?? 100));
         $d = max(0, (int) ($pw * 0.08));
-        return ['name' => (string) $row['name'], 'lv' => (int) $row['lv'], 'hp' => (int) ($pw * 0.5), 'atk' => max(1, (int) ($pw * 0.12)), 'atk_type' => 'phys', 'pdef' => $d, 'mdef' => $d, 'def' => $d, 'pet' => null];
+        $jobId = arena_job_id_from_name((string) ($row['job'] ?? '战士'));
+        return ['name' => (string) $row['name'], 'lv' => (int) $row['lv'], 'hp' => (int) ($pw * 0.5), 'atk' => max(1, (int) ($pw * 0.12)), 'atk_type' => 'phys', 'job' => $jobId, 'ult' => arena_job_ult($jobId), 'pdef' => $d, 'mdef' => $d, 'def' => $d, 'pet' => null];
     }
     return arena_my_team($tu);
 }
@@ -263,12 +287,28 @@ function arena_strike(array $atkTeam, array $defTeam): array
     return [$d, $critTag];
 }
 
-// 异步数值对撞：战力+宠物+骰子，返回[win, log[]]
+// 竞技场大招一击：倍率更高、可暴击、牧师系带自愈。返回 [伤害, 标签]。
+function arena_ult_strike(array $atkTeam, array $defTeam): array
+{
+    $ult = $atkTeam['ult'] ?? ['name' => '全力一击', 'mult' => 2.0, 'heal' => false];
+    $def = ((float) ($defTeam['pdef'] ?? $defTeam['def'] ?? 0) + (float) ($defTeam['mdef'] ?? $defTeam['def'] ?? 0)) / 2;
+    $d = max(1, (int) ($atkTeam['atk'] * (float) $ult['mult'] - $def * 0.5));
+    $critTag = '';
+    if (mt_rand(1, 100) <= 12) {
+        $d = (int) ($d * 1.6);
+        $critTag = '(暴击)';
+    }
+    return [$d, $critTag];
+}
+
+// 异步数值对撞：战力+宠物+骰子，每 3 回合双方各放一次职业大招。返回[win, log[]]
 function arena_sim(array $a, array $b): array
 {
     $log = [];
     $ahp = $a['hp'];
     $bhp = $b['hp'];
+    $amax = max(1, $a['hp']);
+    $bmax = max(1, $b['hp']);
     $atypeTag = ($a['atk_type'] ?? 'phys') === 'mag' ? '法术' : '物理';
     $btypeTag = ($b['atk_type'] ?? 'phys') === 'mag' ? '法术' : '物理';
     $alog = '你的队伍：' . $a['name'] . '，等级' . $a['lv'] . '，生命' . $a['hp'] . '，' . $atypeTag . '攻击' . $a['atk'] . '。';
@@ -284,59 +324,83 @@ function arena_sim(array $a, array $b): array
     $log[] = '战斗开始。';
     $aphp = $a['pet']['hp'] ?? 0;
     $bphp = $b['pet']['hp'] ?? 0;
-    $skills = ['铁壁格挡', '怒斩', '火球术', '双连射', '普通攻击'];
     $aSkills = ($a['atk_type'] ?? 'phys') === 'mag' ? ['火球术', '冰锥术', '雷光术'] : ['怒斩', '旋风斩', '重击'];
     $bSkills = ($b['atk_type'] ?? 'phys') === 'mag' ? ['火球术', '冰锥术', '雷光术'] : ['怒斩', '旋风斩', '重击'];
-    for ($r = 1; $r <= 30; $r++) {
-        // 我方出手
-        [$d, $critTag] = arena_strike($a, $b);
-        if ($bphp > 0 && mt_rand(1, 100) <= 30) {
-            $bphp -= $d;
-            $log[] = '你使用' . $aSkills[array_rand($aSkills)] . $critTag . '，对' . $b['pet']['name'] . '造成' . $d . '点伤害。';
-            if ($bphp <= 0) {
-                $log[] = $b['pet']['name'] . '倒下了！';
+    $aUlt = $a['ult']['name'] ?? '全力一击';
+    $bUlt = $b['ult']['name'] ?? '全力一击';
+    $aUltHeal = !empty($a['ult']['heal']);
+    $bUltHeal = !empty($b['ult']['heal']);
+    // 我方一个回合的进攻（含宠物）；返回 true 表示把对方主将打死
+    $actA = function (bool $ultRound) use (&$ahp, &$bhp, &$aphp, &$bphp, &$log, $a, $b, $aSkills, $aUlt, $aUltHeal, $amax): bool {
+        if ($ultRound) {
+            [$d, $t] = arena_ult_strike($a, $b);
+            $bhp -= $d;
+            $log[] = '【大招】你释放' . $aUlt . $t . '，对' . $b['name'] . '造成' . $d . '点重创！';
+            if ($aUltHeal && $ahp < $amax) {
+                $h = max(1, (int) ($amax * 0.08));
+                $ahp = min($amax, $ahp + $h);
+                $log[] = '圣光回涌，你恢复' . $h . '点生命。';
             }
         } else {
-            $bhp -= $d;
-            $log[] = '你使用' . $aSkills[array_rand($aSkills)] . $critTag . '，对' . $b['name'] . '造成' . $d . '点伤害。';
+            [$d, $t] = arena_strike($a, $b);
+            if ($bphp > 0 && mt_rand(1, 100) <= 30) {
+                $bphp -= $d;
+                $log[] = '你使用' . $aSkills[array_rand($aSkills)] . $t . '，对' . $b['pet']['name'] . '造成' . $d . '点伤害。';
+                if ($bphp <= 0) { $log[] = $b['pet']['name'] . '倒下了！'; }
+            } else {
+                $bhp -= $d;
+                $log[] = '你使用' . $aSkills[array_rand($aSkills)] . $t . '，对' . $b['name'] . '造成' . $d . '点伤害。';
+            }
         }
-        if ($bhp <= 0) {
-            $log[] = '战斗结束。你获胜。';
-            return [true, $log];
-        }
+        if ($bhp <= 0) { return true; }
         if ($a['pet'] && $aphp > 0) {
             $pd = max(1, (int) ($a['pet']['atk'] * (0.9 + mt_rand(0, 20) / 100)));
             $bhp -= $pd;
             $log[] = $a['pet']['name'] . '扑向' . $b['name'] . '，造成' . $pd . '点伤害。';
-            if ($bhp <= 0) {
-                $log[] = '战斗结束。你获胜。';
-                return [true, $log];
-            }
+            if ($bhp <= 0) { return true; }
         }
-        // 对方出手
-        [$d2, $critTag2] = arena_strike($b, $a);
-        if ($aphp > 0 && $a['pet'] && mt_rand(1, 100) <= 30) {
-            $aphp -= $d2;
-            $log[] = $b['name'] . '使用' . $bSkills[array_rand($bSkills)] . $critTag2 . '，对' . $a['pet']['name'] . '造成' . $d2 . '点伤害。';
-            if ($aphp <= 0) {
-                $log[] = $a['pet']['name'] . '倒下了！';
+        return false;
+    };
+    // 对方一个回合的进攻；返回 true 表示把你打死
+    $actB = function (bool $ultRound) use (&$ahp, &$bhp, &$aphp, &$bphp, &$log, $a, $b, $bSkills, $bUlt, $bUltHeal, $bmax): bool {
+        if ($ultRound) {
+            [$d, $t] = arena_ult_strike($b, $a);
+            $ahp -= $d;
+            $log[] = '【大招】' . $b['name'] . '释放' . $bUlt . $t . '，对你造成' . $d . '点重创！';
+            if ($bUltHeal && $bhp < $bmax) {
+                $h = max(1, (int) ($bmax * 0.08));
+                $bhp = min($bmax, $bhp + $h);
+                $log[] = $b['name'] . '圣光回涌，恢复' . $h . '点生命。';
             }
         } else {
-            $ahp -= $d2;
-            $log[] = $b['name'] . '使用' . $bSkills[array_rand($bSkills)] . $critTag2 . '，对你造成' . $d2 . '点伤害。';
+            [$d, $t] = arena_strike($b, $a);
+            if ($aphp > 0 && $a['pet'] && mt_rand(1, 100) <= 30) {
+                $aphp -= $d;
+                $log[] = $b['name'] . '使用' . $bSkills[array_rand($bSkills)] . $t . '，对' . $a['pet']['name'] . '造成' . $d . '点伤害。';
+                if ($aphp <= 0) { $log[] = $a['pet']['name'] . '倒下了！'; }
+            } else {
+                $ahp -= $d;
+                $log[] = $b['name'] . '使用' . $bSkills[array_rand($bSkills)] . $t . '，对你造成' . $d . '点伤害。';
+            }
         }
-        if ($ahp <= 0) {
-            $log[] = '战斗结束。你落败。';
-            return [false, $log];
-        }
+        if ($ahp <= 0) { return true; }
         if ($b['pet'] && $bphp > 0) {
             $pd2 = max(1, (int) ($b['pet']['atk'] * (0.9 + mt_rand(0, 20) / 100)));
             $ahp -= $pd2;
             $log[] = $b['pet']['name'] . '使用普通攻击，对你造成' . $pd2 . '点伤害。';
-            if ($ahp <= 0) {
-                $log[] = '战斗结束。你落败。';
-                return [false, $log];
-            }
+            if ($ahp <= 0) { return true; }
+        }
+        return false;
+    };
+    for ($r = 1; $r <= 30; $r++) {
+        $ultRound = ($r % 3 === 0); // 每 3 回合放一次大招
+        // 每回合随机先手，避免“进攻方永远先放大招”的结构性优势
+        if (mt_rand(0, 1) === 1) {
+            if ($actA($ultRound)) { $log[] = '战斗结束。你获胜。'; return [true, $log]; }
+            if ($actB($ultRound)) { $log[] = '战斗结束。你落败。'; return [false, $log]; }
+        } else {
+            if ($actB($ultRound)) { $log[] = '战斗结束。你落败。'; return [false, $log]; }
+            if ($actA($ultRound)) { $log[] = '战斗结束。你获胜。'; return [true, $log]; }
         }
     }
     // 30轮未分胜负：剩余血量多者胜，平局算守方胜
@@ -509,6 +573,32 @@ function arena_rewards(int $rank): array
     return [500, 5, []];
 }
 
+// 天梯段位：按排名划分。名次越小段位越高。
+function arena_tier(int $rank): array
+{
+    // [key, 中文, 代表色]
+    if ($rank <= 1)   { return ['king', '王者', '#ffcf40']; }
+    if ($rank <= 3)   { return ['master', '大师', '#c56bff']; }
+    if ($rank <= 10)  { return ['diamond', '钻石', '#5ad1ff']; }
+    if ($rank <= 30)  { return ['platinum', '铂金', '#7cf3d0']; }
+    if ($rank <= 70)  { return ['gold', '黄金', '#ffd84d']; }
+    if ($rank <= 150) { return ['silver', '白银', '#c9d4e0']; }
+    if ($rank <= 400) { return ['bronze', '青铜', '#c8895a']; }
+    return ['iron', '黑铁', '#8a8a8a'];
+}
+
+// 段位保底奖励系数：越往上越丰厚（用于每日+赛季结算兜底，不让人越打越亏）
+function arena_tier_bonus(string $tierKey): array
+{
+    // [金币额外, 竞技场币额外]
+    $map = [
+        'iron' => [0, 0], 'bronze' => [500, 3], 'silver' => [1500, 5],
+        'gold' => [3000, 8], 'platinum' => [6000, 12], 'diamond' => [12000, 20],
+        'master' => [20000, 30], 'king' => [40000, 50],
+    ];
+    return $map[$tierKey] ?? [0, 0];
+}
+
 // 每日05:00结算：按排名发邮件；每周一05:00重置赛季+发上周奖励
 function arena_tick(): void
 {
@@ -538,6 +628,9 @@ function arena_tick(): void
         $rows = db()->query('SELECT * FROM arena_rank WHERE zone=' . db()->quote($zone) . ' AND season=' . db()->quote($season) . ' AND is_dummy=0 ORDER BY rank ASC')->fetchAll();
         foreach ($rows as $r) {
             [$gold, $coin, $stones] = arena_rewards((int) $r['rank']);
+            $tier = arena_tier((int) $r['rank']);
+            [$bg, $bc] = arena_tier_bonus($tier[0]);
+            $gold += $bg; $coin += $bc;
             $att = [['t' => 'mat', 'id' => 'arena_coin', 'n' => $coin]];
             foreach ($stones as $sid => $n) {
                 $att[] = ['t' => 'mat', 'id' => $sid, 'n' => $n];
@@ -545,17 +638,20 @@ function arena_tick(): void
             if ($gold > 0) {
                 $att[] = ['t' => 'gold', 'n' => $gold];
             }
-            send_mail((int) $r['uid'], '竞技场', 'arena', '竞技场每日奖励：第' . $r['rank'] . '名', '今日排名第' . $r['rank'] . '名，奖励：' . fmt_money($gold) . '、竞技场币x' . $coin . '。请查收附件。', $att);
+            send_mail((int) $r['uid'], '竞技场', 'arena', '竞技场每日奖励：' . $tier[1] . '段位·第' . $r['rank'] . '名', '今日排名第' . $r['rank'] . '名（' . $tier[1] . '段位），奖励：' . fmt_money($gold) . '、竞技场币x' . $coin . '。请查收附件。', $att);
         }
         if ($isMonday) {
-            // 上周额外奖励：冠军翻倍概念——按名次再发一份
+            // 上周额外奖励：按段位加成后的名次奖励再发一份
             foreach ($rows as $r) {
                 [$gold, $coin, $stones] = arena_rewards((int) $r['rank']);
+                $tier = arena_tier((int) $r['rank']);
+                [$bg, $bc] = arena_tier_bonus($tier[0]);
+                $gold += $bg; $coin += $bc;
                 $att = [['t' => 'mat', 'id' => 'arena_coin', 'n' => $coin]];
                 if ($gold > 0) {
                     $att[] = ['t' => 'gold', 'n' => $gold];
                 }
-                send_mail((int) $r['uid'], '竞技场', 'arena', '竞技场赛季重置：上周第' . $r['rank'] . '名', '新赛季开始，你的排名回到初始状态。上周第' . $r['rank'] . '名的额外奖励请查收。', $att);
+                send_mail((int) $r['uid'], '竞技场', 'arena', '竞技场赛季重置：上周' . $tier[1] . '段位·第' . $r['rank'] . '名', '新赛季开始，你的排名回到初始状态。上周第' . $r['rank'] . '名（' . $tier[1] . '段位）的额外奖励请查收。', $att);
             }
             // 真人回初始位，假人回初始位置
             $players = db()->query('SELECT uid FROM arena_rank WHERE zone=' . db()->quote($zone) . ' AND season=' . db()->quote($season) . ' AND is_dummy=0 ORDER BY rank ASC')->fetchAll();

@@ -749,6 +749,91 @@ function peak_alive_in(string $arena, string $zone = 'z1'): array
     return $st->fetchAll();
 }
 
+// 巅峰战场·缩圈：随时间收窄的安全区。22:45 起全场开始掉血、越接近 23:00 越猛，
+// 把人从"站桩"里逼出来对拼；濒死不下死手（保底 1 血，最后一刀仍要靠玩家/怪）。
+// 返回 [阶段名, 本次掉血]。在界面上用。
+function peak_storm_phase(): array
+{
+    $start = strtotime(date('Y-m-d') . ' 22:45:00');
+    $end   = strtotime(date('Y-m-d') . ' 23:00:00');
+    $now = time();
+    if ($now < $start) {
+        return ['ok' => false, 'name' => '', 'pct' => 0];
+    }
+    $frac = min(1.0, max(0.0, ($now - $start) / max(1, ($end - $start)))); // 0~1
+    // 阶段：平静→警戒→紧迫→终局
+    $names = ['警戒', '紧迫', '危殆', '终局'];
+    $idx = min(3, (int) floor($frac * 4));
+    $pct = 0.02 + $frac * 0.10; // 每分钟掉 2%~12% 最大生命
+    return ['ok' => true, 'name' => '缩圈·' . $names[$idx], 'pct' => $pct];
+}
+
+// 每整分钟结算一次缩圈掉血 + 偶发增益/道具。返回给玩家看的战报。
+function peak_storm_apply(array &$u): string
+{
+    if (peak_arena_of((string) ($u['loc'] ?? '')) === '' || !peak_open()) {
+        return '';
+    }
+    $ph = peak_storm_phase();
+    if (!$ph['ok']) {
+        return '';
+    }
+    $uid = (int) $u['id'];
+    $minuteKey = intdiv(time(), 60);
+    $mats = mats_of($uid);
+    if ((int) ($mats['peak_storm_t'] ?? 0) === $minuteKey) {
+        return '';
+    }
+    mat_set($uid, 'peak_storm_t', $minuteKey);
+    $msg = '【' . $ph['name'] . '】战场的圈子在收紧。';
+    // 缩圈掉血：保底 1 血，逼出对拼
+    $dmg = max(1, (int) round((int) $u['maxhp'] * $ph['pct']));
+    $new = max(1, (int) $u['hp'] - $dmg);
+    $real = max(0, (int) $u['hp'] - $new);
+    $u['hp'] = $new;
+    sin_gain_array($u, 0);
+    user_save($u);
+    if ($real > 0) {
+        $msg .= '你被安全区外的乱流灼伤 ' . $real . ' 点（剩 ' . $new . '/' . (int) $u['maxhp'] . '）。';
+    }
+    if ($new <= 1) {
+        $msg .= '你已是强弩之末，随时会被收走。';
+    }
+    // 偶发增益道具：缩圈时中央刷出补给，30% 每分钟给玩家一个临时增益
+    if (mt_rand(1, 100) <= 30) {
+        $buffs = ['atk' => '战力增幅(攻+15%)', 'def' => '铁壁补给(减伤15%)', 'heal' => '急救包(回血15%)'];
+        $k = array_rand($buffs);
+        mat_set($uid, 'peak_buff_' . $k, 1);
+        if ($k === 'heal') {
+            $h = max(1, (int) ($u['maxhp'] * 0.15));
+            $u['hp'] = min((int) $u['maxhp'], (int) $u['hp'] + $h);
+            user_save($u);
+            $msg .= ' 你抢到【' . $buffs[$k] . '】，回复 ' . $h . ' 点生命。';
+        } else {
+            $msg .= ' 你抢到【' . $buffs[$k] . '】，下一场对决生效。';
+        }
+    }
+    return $msg;
+}
+
+// 把玩家在缩圈里捡到的临时增益，转成一次对决的攻击/减伤加成。用完即清。
+function peak_buff_take(int $uid): array
+{
+    $mats = mats_of($uid);
+    $out = ['atk_pct' => 0.0, 'dr_pct' => 0.0, 'used' => []];
+    if (!empty($mats['peak_buff_atk'])) { $out['atk_pct'] = 15.0; $out['used'][] = 'peak_buff_atk'; }
+    if (!empty($mats['peak_buff_def'])) { $out['dr_pct'] = 15.0; $out['used'][] = 'peak_buff_def'; }
+    return $out;
+}
+
+function peak_buff_consume(int $uid): void
+{
+    foreach (['peak_buff_atk', 'peak_buff_def', 'peak_buff_heal'] as $k) {
+        $mats = mats_of($uid);
+        if (!empty($mats[$k])) { mat_del($uid, $k); }
+    }
+}
+
 // 战场内每分钟强制配对：闲着的人会被拖入决斗
 function peak_tick(array &$u): string
 {
@@ -758,6 +843,11 @@ function peak_tick(array &$u): string
     }
     $uid = (int) $u['id'];
     $msg = '';
+    // 缩圈结算（每整分钟一次，未开缩圈则无）
+    $storm = peak_storm_apply($u);
+    if ($storm !== '') {
+        $msg .= $storm . '<br>';
+    }
     // 对方发起的决斗先送达：自动接战
     $foe = (int) (mats_of($uid)['peak_duel_from'] ?? 0);
     if ($foe > 0) {
@@ -2078,7 +2168,7 @@ function mat_hidden(string $mid): bool
     if (str_ends_with($mid, '_enter') || str_ends_with($mid, '_stage')) {
         return true;
     }
-    return in_array($mid, ['offline_on', 'offline_time', 'seen_last', 'exp_card_until', 'bag_ext5_used', 'bag_ext10_used', 'dummy_total', 'tank_cd_hp', 'tank_cd_mp', 'peak_force', 'peak_duel_from', 'arena_day', 'arena_used', 'arena_bought', 'active_wid', 'active_week', 'priest_wid', 'fr_enter', 'fr_stage', 'em_enter', 'em_stage', 'pz_enter', 'pz_stage', 'sen_enter', 'sen_stage', 'vx_enter', 'wb_claimed', 'legend_fixed', 'rs_summ_hp', 'rs_point', 'exp_card_mult', 'gy_month', 'yz_month'], true);
+    return in_array($mid, ['offline_on', 'offline_time', 'seen_last', 'exp_card_until', 'bag_ext5_used', 'bag_ext10_used', 'dummy_total', 'tank_cd_hp', 'tank_cd_mp', 'peak_force', 'peak_duel_from', 'peak_storm_t', 'peak_buff_atk', 'peak_buff_def', 'peak_buff_heal', 'arena_day', 'arena_used', 'arena_bought', 'active_wid', 'active_week', 'priest_wid', 'fr_enter', 'fr_stage', 'em_enter', 'em_stage', 'pz_enter', 'pz_stage', 'sen_enter', 'sen_stage', 'vx_enter', 'wb_claimed', 'legend_fixed', 'rs_summ_hp', 'rs_point', 'exp_card_mult', 'gy_month', 'yz_month'], true);
 }
 
 // 当前版本真正有用的锻造材料：强化石 + 属性石/晶石/珠/神石

@@ -241,7 +241,20 @@ if (peak_arena_of($cur) !== '') {
         echo '<div class="warn">' . $tickMsg . '</div>';
     }
     $alive = peak_alive_in($cur, (string) ($u['zone'] ?? 'z1'));
-    echo '<div class="warn">巅峰之战！场上还剩' . count($alive) . '人，活到23:00最后一人即胜。</div>';
+    $ph = function_exists('peak_storm_phase') ? peak_storm_phase() : ['ok' => false, 'name' => ''];
+    $stormLine = '巅峰之战！场上还剩' . count($alive) . '人，活到23:00最后一人即胜。';
+    if (!empty($ph['ok'])) {
+        $stormLine .= '【' . $ph['name'] . '·安全区收窄，每分钟全场掉血，别站着不动！】';
+    }
+    echo '<div class="warn">' . $stormLine . '</div>';
+    $bm = mats_of((int) $u['id']);
+    $buffs = [];
+    if (!empty($bm['peak_buff_atk'])) { $buffs[] = '战力增幅(攻+15%)'; }
+    if (!empty($bm['peak_buff_def'])) { $buffs[] = '铁壁补给(减伤15%)'; }
+    if (!empty($bm['peak_buff_heal'])) { $buffs[] = '急救包'; }
+    if ($buffs !== []) {
+        echo '<div style="color:#6cf">缩圈补给：' . h(implode('、', $buffs)) . '（下一场对决生效）</div>';
+    }
     if ($alive === []) {
         echo '<span class="muted">场上只有风声。</span><br>';
     }

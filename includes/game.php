@@ -5182,13 +5182,13 @@ function soul_lv(int $uid, int $eid): int
 function summon_units(): array
 {
     return [
-        'imp' => ['name' => '深渊小鬼', 'atk_mult' => 0.30, 'hp_mult' => 0.35, 'bomb' => false],
-        'wraith' => ['name' => '深渊恶鬼', 'atk_mult' => 0.55, 'hp_mult' => 0.60, 'bomb' => true],
-        'bone' => ['name' => '骸骨守卫', 'atk_mult' => 0.45, 'hp_mult' => 0.85, 'bomb' => false],
+        'imp' => ['name' => '深渊小鬼', 'atk_mult' => 0.70, 'hp_mult' => 0.35, 'bomb' => false],
+        'wraith' => ['name' => '深渊恶鬼', 'atk_mult' => 1.10, 'hp_mult' => 0.60, 'bomb' => true],
+        'bone' => ['name' => '骸骨守卫', 'atk_mult' => 0.85, 'hp_mult' => 0.85, 'bomb' => false],
         // 四阶·憎恶聚合体：多只恶鬼缝合的攻城兽，死时爆炸
-        'abom' => ['name' => '憎恶聚合体', 'atk_mult' => 0.80, 'hp_mult' => 0.70, 'bomb' => true],
+        'abom' => ['name' => '憎恶聚合体', 'atk_mult' => 1.60, 'hp_mult' => 0.70, 'bomb' => true],
         // 五阶·无面梦魇：深渊第五层的原住民，最强
-        'mare' => ['name' => '无面梦魇', 'atk_mult' => 1.10, 'hp_mult' => 0.80, 'bomb' => true],
+        'mare' => ['name' => '无面梦魇', 'atk_mult' => 2.10, 'hp_mult' => 0.80, 'bomb' => true],
     ];
 }
 

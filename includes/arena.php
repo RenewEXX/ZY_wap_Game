@@ -109,7 +109,7 @@ function arena_pop_anchor(string $zone): array
     $maxPower = (int) ($r['mp'] ?? 0);
     $maxLv = (int) ($r['ml'] ?? 0);
     $avgPower = (int) ($r['ap'] ?? 0);
-    // 目标“榜首机器人”战力：至少 3278；随最强玩家提升，但留 5% 让玩家能实际到顶
+    // 目标“榜首机器人”战力：至少 3278；随最强玩家提升
     $topPower = $c > 0 ? max(3278, (int) round($maxPower * 0.95)) : 3278;
     // 底部机器人战力：随平均玩家水平提升，但不低于 300，也不高于顶部的 15%
     $bottomPower = $c > 0 ? max(300, min((int) round($maxPower * 0.15), (int) round($avgPower * 0.6))) : 300;
@@ -118,21 +118,42 @@ function arena_pop_anchor(string $zone): array
     return ['count' => $c, 'maxpower' => $maxPower, 'maxlv' => $maxLv, 'top_power' => $topPower, 'bottom_power' => $bottomPower, 'top_lv' => $topLv];
 }
 
-// 按排名+锚点算目标战力（1..200 线性从 top 到 bottom）。
+// 按排名+锚点算目标战力。
+// 设计：前 3 名机器人要比最强真人还猛一点（1.15/1.10/1.06 倍），让“天花板”有挑战；
+// 第 4 名起回落到最强真人的 0.95 倍，再线性滑到榜尾，形成一道“前几名的墙”。
 function arena_dummy_power_for(int $rank, array $anchor): int
 {
-    $top = (int) $anchor['top_power'];
-    $bottom = (int) $anchor['bottom_power'];
     $r = max(1, min(200, $rank));
-    $f = (200 - $r) / 199.0; // 1名→1，200名→0
+    $maxPlayer = (int) ($anchor['maxpower'] ?? 0);
+    $bottom = (int) $anchor['bottom_power'];
+    if ($maxPlayer > 0) {
+        $topBots = [1 => 1.15, 2 => 1.10, 3 => 1.06];
+        if (isset($topBots[$r])) {
+            return (int) round($maxPlayer * $topBots[$r]);
+        }
+        // 第 4 名起：从 0.95×最强真人 线性滑到榜尾
+        $startR = 4;
+        $startPower = (int) round($maxPlayer * 0.95);
+        $f = (200 - $r) / max(1, (200 - $startR)); // r=4→1, r=200→0
+        $f = max(0.0, min(1.0, $f));
+        return (int) round($bottom + ($startPower - $bottom) * $f);
+    }
+    // 没有真人：旧默认曲线
+    $top = (int) $anchor['top_power'];
+    $f = (200 - $r) / 199.0;
     return (int) round($bottom + ($top - $bottom) * $f);
 }
 
 function arena_dummy_lv_for(int $rank, array $anchor): int
 {
-    $top = (int) $anchor['top_lv'];
-    $bottom = 50;
     $r = max(1, min(200, $rank));
+    $maxLv = (int) ($anchor['maxlv'] ?? 0);
+    $bottom = 50;
+    // 前 3 名机器人等级也压过最强真人一点（封顶 400）
+    if ($maxLv > 0 && $r <= 3) {
+        return min(400, $maxLv + (4 - $r) * 3);
+    }
+    $top = $maxLv > 0 ? max(100, min(300, $maxLv)) : 100;
     $f = (200 - $r) / 199.0;
     return (int) round($bottom + ($top - $bottom) * $f);
 }
@@ -270,8 +291,83 @@ function arena_bots_tick(string $zone): void
         db()->prepare('UPDATE arena_rank SET rank=? WHERE rowid=?')->execute([$toRank, (int) $from['rowid']]);
         db()->prepare('UPDATE arena_rank SET rank=? WHERE rowid=?')->execute([$fromRank, (int) $occ['rowid']]);
     }
-    // 3) 补位：真玩家离开/被清掉会留下空洞名次。把空洞上方的名次整体上移一格填平，榜单始终连续。
+    // 3) 机器人主动挑战真人：有输有赢，赢了就抢真人的名次。
+    arena_bots_attack_players($zone);
+    // 4) 补位：真玩家离开/被清掉会留下空洞名次。把空洞上方的名次整体上移一格填平，榜单始终连续。
     arena_bots_compact($zone);
+}
+
+// 让排名靠前的机器人主动来打真人。打赢→和真人互换名次（真人掉名次），打输→名次不变。
+// 每次刷新最多 1~2 次挑战，只挑“名次在真人前 1~30 名内”的机器人，且真人在 bot 后面（更靠后名次）才打得到。
+function arena_bots_attack_players(string $zone): void
+{
+    $season = arena_season();
+    // 本区真人
+    $players = db()->query('SELECT rowid, uid, rank, name, lv, power FROM arena_rank WHERE zone=' . db()->quote($zone) . ' AND season=' . db()->quote($season) . ' AND is_dummy=0 ORDER BY rank ASC')->fetchAll();
+    if ($players === []) {
+        return;
+    }
+    $bots = db()->query('SELECT rowid, uid, rank, name, job, lv, power FROM arena_rank WHERE zone=' . db()->quote($zone) . ' AND season=' . db()->quote($season) . ' AND is_dummy=1 ORDER BY rank ASC')->fetchAll();
+    if ($bots === []) {
+        return;
+    }
+    $attempts = random_int(1, 3);
+    for ($i = 0; $i < $attempts; $i++) {
+        // 一半概率专门挑"排名靠前的真人"（给强号压力），一半随机
+        if (mt_rand(0, 1) === 1) {
+            $front = array_slice($players, 0, max(1, (int) ceil(count($players) / 2)));
+            $target = $front[array_rand($front)];
+        } else {
+            $target = $players[array_rand($players)];
+        }
+        $tRank = (int) $target['rank'];
+        if ($tRank <= 1) {
+            continue; // 第1名不打，留点面子/避免榜首真人被无限薅
+        }
+        // 找名次刚好在真人前面（更靠前）的机器人，模拟“它来挑战你”
+        $cands = [];
+        foreach ($bots as $b) {
+            $br = (int) $b['rank'];
+            if ($br < $tRank && $br >= max(1, $tRank - 30)) {
+                $cands[] = $b;
+            }
+        }
+        if ($cands === []) {
+            continue;
+        }
+        $bot = $cands[array_rand($cands)];
+        // 机器人作为进攻方 vs 真人（防御方）
+        $tu = user_by_id((int) $target['uid']);
+        if (!$tu) {
+            continue;
+        }
+        $defTeam = arena_my_team($tu);  // 真人战队（含 _power）
+        $atkTeam = arena_bot_team_against($bot, $defTeam); // 机器人战队：按战力比对真人缩放，顶级机器人确实更强
+        [$botWin, $log] = arena_sim($atkTeam, $defTeam);
+        $botRank = (int) $bot['rank'];
+        if ($botWin) {
+            // 机器人胜：互换名次，真人掉到机器人原位
+            db()->prepare('UPDATE arena_rank SET rank=? WHERE rowid=?')->execute([$tRank, (int) $bot['rowid']]);
+            db()->prepare('UPDATE arena_rank SET rank=? WHERE rowid=?')->execute([$botRank, (int) $target['rowid']]);
+            // 记到真人防守记录里（win=0 表示真人被打败）
+            db()->prepare('INSERT INTO arena_log (zone, defender_uid, attacker_name, win, old_rank, new_rank, created_at) VALUES (?, ?, ?, 0, ?, ?, ?)')->execute([$zone, (int) $target['uid'], (string) $bot['name'], $tRank, $botRank, time()]);
+            // 给真人发一封邮件提示（不打扰但能看到）
+            if (function_exists('send_mail') && mt_rand(1, 100) <= 60) {
+                try {
+                    send_mail((int) $target['uid'], '竞技场', 'arena', '你被挑战了', '【' . $bot['name'] . '】在竞技场把你打下去了，你的名次从第' . $tRank . '名降到第' . $botRank . '名。打回来！', []);
+                } catch (Throwable $e) {}
+            }
+            arena_announce($zone, '【竞技场】机器人' . $bot['name'] . '挑战' . $target['name'] . '成功，排名上升至第' . $tRank . '名。');
+            // 更新本地内存里的名次，避免同一轮重复用旧名次
+            foreach ($players as &$p) { if ((int) $p['uid'] === (int) $target['uid']) { $p['rank'] = $botRank; } }
+            unset($p);
+            foreach ($bots as &$b) { if ((int) $b['uid'] === (int) $bot['uid']) { $b['rank'] = $tRank; } }
+            unset($b);
+        } else {
+            // 机器人输：名次不变，也记一条（win=1 真人守住了）
+            db()->prepare('INSERT INTO arena_log (zone, defender_uid, attacker_name, win, old_rank, new_rank, created_at) VALUES (?, ?, ?, 1, ?, ?, ?)')->execute([$zone, (int) $target['uid'], (string) $bot['name'], $tRank, $tRank, time()]);
+        }
+    }
 }
 
 // 把 1..maxRank 里的空名次填平：每次找最小空洞，把其上方最近一个机器人拉下来补位（真人优先保持不动，
@@ -394,6 +490,7 @@ function arena_my_team(array $u): array
         'job' => $jobId, 'ult' => arena_job_ult($jobId),
         'pdef' => (int) player_pdef($u), 'mdef' => (int) player_mdef($u),
         'def' => (int) player_def($u), 'pet' => $p,
+        '_power' => function_exists('power_score') ? (int) power_score($u) : 0,
     ];
 }
 
@@ -403,8 +500,7 @@ function arena_foe_team(array $row): array
         $pw = max(1, (int) ($row['power'] ?? 100));
         $lv = max(1, (int) ($row['lv'] ?? 1));
         $pets = ['影猫', '石灵', '幽灵', '幼龙', '深渊魔龙'];
-        $d = max(0, (int) ($pw * 0.08));
-        $jobId = arena_job_id_from_name((string) ($row['job'] ?? '战士'));
+        $d = max(0, (int) ($pw * 0.08));        $jobId = arena_job_id_from_name((string) ($row['job'] ?? '战士'));
         $isMag = in_array($jobId, ['mage', 'priest', 'summoner'], true);
         return [
             'name' => (string) $row['name'], 'lv' => $lv,
@@ -422,6 +518,34 @@ function arena_foe_team(array $row): array
         return ['name' => (string) $row['name'], 'lv' => (int) $row['lv'], 'hp' => (int) ($pw * 0.5), 'atk' => max(1, (int) ($pw * 0.12)), 'atk_type' => 'phys', 'job' => $jobId, 'ult' => arena_job_ult($jobId), 'pdef' => $d, 'mdef' => $d, 'def' => $d, 'pet' => null];
     }
     return arena_my_team($tu);
+}
+
+// 机器人来「挑战真人」时用的战队：按“机器人战力 / 真人战力”比例，从真人实际队伍属性缩放而来。
+// 这样顶级机器人(战力≈1.15×最强真人)实战确实略强、有赢有输；排名靠后的机器人 power 低则明显打不过。
+// 不直接吃 power 的固定倍率，是为了避开“power_score 不含血量、与实战强度非线性”导致的失真。
+function arena_bot_team_against(array $botRow, array $defTeam): array
+{
+    $botPow = max(1, (int) ($botRow['power'] ?? 1));
+    $defPow = max(1, (int) ($defTeam['_power'] ?? 0));
+    // 比例夹在 0.35~2.6，防止极端情况碾压或送死
+    $factor = $defPow > 0 ? $botPow / $defPow : 1.0;
+    $factor = max(0.35, min(2.6, $factor));
+    $jobId = arena_job_id_from_name((string) ($botRow['job'] ?? '战士'));
+    $isMag = in_array($jobId, ['mage', 'priest', 'summoner'], true);
+    $lv = max(1, (int) ($botRow['lv'] ?? 1));
+    $pets = ['影猫', '石灵', '幽灵', '幼龙', '深渊魔龙'];
+    return [
+        'name' => (string) ($botRow['name'] ?? '机器人'),
+        'lv' => $lv,
+        'hp' => max(1, (int) round((int) ($defTeam['hp'] ?? 1000) * $factor)),
+        'atk' => max(1, (int) round((int) ($defTeam['atk'] ?? 100) * $factor)),
+        'atk_type' => $isMag ? 'mag' : 'phys',
+        'job' => $jobId, 'ult' => arena_job_ult($jobId),
+        'pdef' => max(0, (int) round((int) ($defTeam['pdef'] ?? 0) * $factor)),
+        'mdef' => max(0, (int) round((int) ($defTeam['mdef'] ?? 0) * $factor)),
+        'def' => max(0, (int) round((int) ($defTeam['def'] ?? 0) * $factor)),
+        'pet' => [ 'name' => $pets[$lv % count($pets)], 'lv' => max(1, $lv - 10), 'hp' => max(1, (int) round((int) ($defTeam['hp'] ?? 1000) * 0.12 * $factor)), 'atk' => max(1, (int) round((int) ($defTeam['atk'] ?? 100) * 0.15 * $factor)) ],
+    ];
 }
 
 // 竞技场单次打击：PVP 统一用 pdef/mdef 混合防御，物理法术对称，带浮动与暴击风味。

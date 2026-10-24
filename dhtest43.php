@@ -142,6 +142,33 @@ $climb=false;
 for($k=0;$k<5 && !$climb;$k++){ db()->exec("DELETE FROM sys_kv WHERE k='arena_bot_tick_{$zone}'"); arena_bots_tick($zone);
   foreach(db()->query('SELECT name,rank FROM arena_rank WHERE zone='.db()->quote($zone).' AND season='.db()->quote($season).' AND is_dummy=1')->fetchAll() as $r){ if(isset($nb[$r['name']])&&(int)$r['rank']<$nb[$r['name']]){$climb=true;break;} } }
 ck43('机器人会往上爬', $climb);
+
+// ---------- [天梯] 机器人挑战玩家 ----------
+echo "\n[7] 机器人挑战玩家（有胜有负/前3名压过最强真人）\n";
+// 前3名机器人战力要高于最强真人（1.15/1.10/1.06 倍，视收敛程度）
+for($i=0;$i<30;$i++){ db()->exec("DELETE FROM sys_kv WHERE k='arena_bot_tick_{$zone}'"); arena_bots_tick($zone); }
+$maxReal=(int)db()->query('SELECT MAX(power) FROM arena_rank WHERE zone='.db()->quote($zone).' AND season='.db()->quote($season).' AND is_dummy=0')->fetchColumn();
+$b1=(int)db()->query('SELECT power FROM arena_rank WHERE zone='.db()->quote($zone).' AND season='.db()->quote($season).' AND is_dummy=1 AND rank=1')->fetchColumn();
+ck43('榜首机器人战力>最强真人', $b1>$maxReal, "b1={$b1} maxReal={$maxReal}");
+// 构造一个中档真人，让机器人按其战力比例打，验证胜率随比例上升
+$umid=(int)user_create('mid'.mt_rand(1,999999),'x','warrior','z1',true,'tmp'); $_SESSION['uid']=$umid;
+$um=user_by_id($umid); $um['lv']=150;$um['str']=3000;$um['atk']=3000;$um['def']=1500;$um['maxhp']=30000;$um['hp']=30000;$um['maxmp']=99999;$um['mp']=99999; $um['grow_matk']=3000;$um['grow_def']=1500; user_save($um); _gear_uncache($umid);
+$def=arena_my_team(user_by_id($umid));
+$botLo=arena_bot_team_against(['name'=>'弱机','job'=>'战士','lv'=>150,'power'=>(int)($def['_power']*0.6)],$def);
+$botHi=arena_bot_team_against(['name'=>'强机','job'=>'战士','lv'=>150,'power'=>(int)($def['_power']*1.2)],$def);
+$loWin=0;$hiWin=0;
+for($i=0;$i<200;$i++){ [$w]=arena_sim($botLo,$def); if($w)$loWin++; [$w2]=arena_sim($botHi,$def); if($w2)$hiWin++; }
+ck43('弱机器人(0.6x)几乎打不过真人', $loWin/200 < 0.2, "win=".($loWin/2)."%");
+ck43('强机器人(1.2x)能赢多数', $hiWin/200 > 0.5, "win=".($hiWin/2)."%");
+// 机器人挑战真人函数能正常运行并写防守记录
+arena_join($umid);
+db()->prepare('UPDATE arena_rank SET rank=120 WHERE uid=? AND zone='.db()->quote($zone))->execute([$umid]);
+$log0=(int)db()->query('SELECT COUNT(*) FROM arena_log WHERE defender_uid='.$umid)->fetchColumn();
+for($i=0;$i<50;$i++){ db()->prepare('UPDATE arena_rank SET rank=120 WHERE uid=? AND zone='.db()->quote($zone))->execute([$umid]); arena_bots_attack_players($zone); }
+$log1=(int)db()->query('SELECT COUNT(*) FROM arena_log WHERE defender_uid='.$umid)->fetchColumn();
+ck43('机器人挑战真人写入防守记录', $log1>$log0, "before={$log0} after={$log1}");
+clean43($umid);
+db()->exec("DELETE FROM arena_log WHERE zone=".db()->quote($zone));
 clean43($ubig);
 db()->exec("DELETE FROM sys_kv WHERE k LIKE 'arena_bot_tick_%'");
 

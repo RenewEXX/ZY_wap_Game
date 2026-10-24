@@ -211,7 +211,7 @@ function boss_legendary_effects(): array
         'lg_bl_rd_crypt' => ['base' => '未亡', 'intro' => '暴击伤害+30%；每损失10%生命暴击+5%；暴击率+4%（永眠之寒）。', 'eff' => ['critdmg' => 30, 'perlost_crit' => 5, 'crit' => 4]],
         'lg_bl_rd_star' => ['base' => '坠光', 'intro' => '对残血(<35%)目标伤害+35%；暴击伤害+22%；单体目标伤害+12%（坠光）。', 'eff' => ['execute' => [0.35, 35], 'critdmg' => 22, 'single' => 12]],
         'lg_bl_rd_magma' => ['base' => '潮脊', 'intro' => '真伤+140；全元素伤害+22%；物攻+10%（炽浪灼烧）。', 'eff' => ['truedmg' => 140, 'element' => 22, 'atk_pct' => 10]],
-        'lg_bl_rd_chrono' => ['base' => '偷秒', 'intro' => '技能伤害+16%；暴击时回复6%最大生命；暴击率+3%（停秒）。', 'eff' => ['skill_damage' => 16, 'oncrit_heal' => 6, 'crit' => 3]],
+        'lg_bl_rd_chrono' => ['base' => '刹那', 'intro' => '技能伤害+16%；暴击时回复6%最大生命；暴击率+3%（刹那）。', 'eff' => ['skill_damage' => 16, 'oncrit_heal' => 6, 'crit' => 3]],
         'lg_bl_rd_divine' => ['base' => '空座', 'intro' => '对残血(<40%)目标伤害+40%；全元素抗性+10；物防、法防各+10%（归穹）。', 'eff' => ['execute' => [0.4, 40], 'allres' => 10, 'def_pct' => 10]],
     ];
 }

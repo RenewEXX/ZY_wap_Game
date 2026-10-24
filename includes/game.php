@@ -4805,7 +4805,14 @@ function roll_drop(int $uid, string $mid, int $elite = 0): string
         if ($sp !== null) {
             // 55% 概率额外掉一件（封顶史诗）
             if (mt_rand(1, 100) <= 55) {
-                $piece = make_equip($uid, (string) $sp['slot'], (string) $sp['base'], 3, monster_lv($mid));
+                $spBase = (string) $sp['base'];
+                $spSlot = (string) $sp['slot'];
+                // 若是职业武器，按玩家职业换成对应武器
+                if (!empty($sp['class_weapons']) && is_array($sp['class_weapons'])) {
+                    $job = job_id_of(user_by_id($uid));
+                    $spBase = (string) ($sp['class_weapons'][$job] ?? $spBase);
+                }
+                $piece = make_equip($uid, $spSlot, $spBase, 3, monster_lv($mid));
                 if ($piece !== '') {
                     $base = $base !== '' ? $base . ' ' . $piece : $piece;
                 }
@@ -4866,7 +4873,14 @@ function roll_drop_base(int $uid, string $mid, int $elite = 0): string
             return make_equip($uid, $t['slot'], $t['legendary']['base'], 4, monster_lv($mid), $t['legendary']);
         }
     }
-    $eq = make_equip($uid, $t['slot'], $t['base'], $q, monster_lv($mid), null, (string) ($t['off'] ?? ''));
+    $dropBase = (string) $t['base'];
+    $dropSlot = (string) $t['slot'];
+    // 副本套装·职业武器：按玩家职业换成对应武器（斧/杖/锤/弓/魂灯）
+    if (!empty($t['class_weapons']) && is_array($t['class_weapons'])) {
+        $job = job_id_of(user_by_id($uid));
+        $dropBase = (string) ($t['class_weapons'][$job] ?? $dropBase);
+    }
+    $eq = make_equip($uid, $dropSlot, $dropBase, $q, monster_lv($mid), null, (string) ($t['off'] ?? ''));
     if ($eq === '') {
         return roll_summoner_box($uid, $mid);
     }

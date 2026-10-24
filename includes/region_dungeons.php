@@ -20,10 +20,65 @@ declare(strict_types=1);
 //   统一用 "<区字>·<部件>"，靠前缀识别套装（与既有套装机制一致）。
 // ============================================================
 
+// 生成一个副本套装的全部部件。命名规范（用户指定）：
+//   武器按 5 职业各一把：<前缀>之斧(战士) / <前缀>之杖(法师) / <前缀>之锤(牧师) / <前缀>之弓(猎手) / <前缀>之魂灯(召唤师)
+//   防具 6 件：<前缀>之护(副手) / <前缀>之甲(上身) / <前缀>之盔(头) / <前缀>之胫(腿) / <前缀>之手(手套) / <前缀>之足(鞋)
+// 返回：['pieces'=>[[slot,name],...全部11件], 'armor'=>[slot=>name], 'weapons'=>[job=>name], 'prefix'=>..]
+function region_dungeon_set_layout(string $prefix): array
+{
+    $armor = [
+        'offhand' => $prefix . '之护',
+        'body'    => $prefix . '之甲',
+        'head'    => $prefix . '之盔',
+        'legs'    => $prefix . '之胫',
+        'gloves'  => $prefix . '之手',
+        'shoes'   => $prefix . '之足',
+    ];
+    // 顺序即武器在界面里的展示顺序；魂灯命中 weapon_sub 的 '魂灯' 关键字→relic(召唤师)
+    $weapons = [
+        'warrior'  => $prefix . '之斧',
+        'mage'     => $prefix . '之杖',
+        'priest'   => $prefix . '之锤',
+        'hunter'   => $prefix . '之弓',
+        'summoner' => $prefix . '之魂灯',
+    ];
+    $pieces = [];
+    foreach ($weapons as $job => $wn) {
+        $pieces[] = ['weapon', $wn];
+    }
+    foreach ($armor as $slot => $an) {
+        $pieces[] = [$slot, $an];
+    }
+    return ['pieces' => $pieces, 'armor' => $armor, 'weapons' => $weapons, 'prefix' => $prefix];
+}
+
+// 一次性"挑一件副本套装件"的掉落定义。按 seed 在 7 个逻辑槽(武器+6防具)里定一件；
+// 若是武器，则带 class_weapons 映射，真正掉落时按玩家职业换成对应武器。
+function region_dungeon_pick_drop(string $seedKey, array $layout): array
+{
+    $armor = $layout['armor'] ?? [];
+    $weapons = $layout['weapons'] ?? [];
+    $slots = ['weapon', 'offhand', 'body', 'head', 'legs', 'gloves', 'shoes'];
+    if ($armor === [] || $weapons === []) {
+        return ['slot' => 'body', 'base' => '残片', 'rate' => 0.05, 'q' => [0, 20, 50, 30, 0]];
+    }
+    $slot = $slots[crc32($seedKey) % count($slots)];
+    if ($slot === 'weapon') {
+        return [
+            'slot' => 'weapon',
+            'base' => $weapons['warrior'] ?? reset($weapons),
+            'rate' => 0.05,
+            'q' => [0, 20, 50, 30, 0],
+            'class_weapons' => $weapons,
+        ];
+    }
+    return ['slot' => $slot, 'base' => $armor[$slot], 'rate' => 0.05, 'q' => [0, 20, 50, 30, 0]];
+}
+
 function region_dungeon_specs(): array
 {
-    // 每个大区一个副本。maps 顺序即深入顺序；最后一张是 BOSS 房。
-    // set: 3 部位（body / gloves / legs 各一件），配 <区字>· 前缀。
+    // set 只给一个大区前缀（如"苍穹"），真正的部件名/5职业武器由 region_dungeon_set_layout() 统一生成：
+    //   防具：<前缀>之甲/盔/胫/手/足/护；武器按 5 职业各一把（斧/法杖/锤/弓/魂灯）。
     // legend: BOSS 专属传说（单一部件）。
     return [
         // ============ 天空岛·浮空列岛 120~195 ============
@@ -45,16 +100,7 @@ function region_dungeon_specs(): array
             'boss' => ['rd_sky_warden', '裂风之喉·呜咽', 195, 'thunder', 'warden'],
             'legend' => ['slot' => 'weapon', 'base' => '裂帛', 'k' => 'skill_damage', 'v' => 6.0],
             'set' => [
-                'prefix' => '御风者',
-                'pieces' => [
-                    ['weapon', '御风者·裂空刃'],
-                    ['offhand', '御风者·逆翔'],
-                    ['body', '御风者·凌云'],
-                    ['head', '御风者·望舒'],
-                    ['legs', '御风者·蹑虚'],
-                    ['gloves', '御风者·引弦'],
-                    ['shoes', '御风者·踏霄'],
-                ],
+                'prefix' => '苍穹',
             ],
         ],
 
@@ -77,16 +123,7 @@ function region_dungeon_specs(): array
             'boss' => ['rd_sunk_hierophant', '咸海诵经者·溺声', 160, 'dark', 'hiero'],
             'legend' => ['slot' => 'necklace', 'base' => '溺声', 'k' => 'damage_reduction', 'v' => 5.0],
             'set' => [
-                'prefix' => '沉舟客',
-                'pieces' => [
-                    ['weapon', '沉舟客·断楫'],
-                    ['offhand', '沉舟客·蚌月'],
-                    ['body', '沉舟客·鲛绡'],
-                    ['head', '沉舟客·不瞑'],
-                    ['legs', '沉舟客·潜流'],
-                    ['gloves', '沉舟客·挽浪'],
-                    ['shoes', '沉舟客·踏波'],
-                ],
+                'prefix' => '溺海',
             ],
         ],
 
@@ -109,16 +146,7 @@ function region_dungeon_specs(): array
             'boss' => ['rd_forge_lord', '吞炉者·不熄', 255, 'fire', 'lord'],
             'legend' => ['slot' => 'body', 'base' => '不熄', 'k' => 'damage_reduction', 'v' => 6.0],
             'set' => [
-                'prefix' => '铸魂匠',
-                'pieces' => [
-                    ['weapon', '铸魂匠·锻骨锤'],
-                    ['offhand', '铸魂匠·淬锋'],
-                    ['body', '铸魂匠·流金'],
-                    ['head', '铸魂匠·炉心'],
-                    ['legs', '铸魂匠·赤铁'],
-                    ['gloves', '铸魂匠·执火'],
-                    ['shoes', '铸魂匠·踏焰'],
-                ],
+                'prefix' => '永燃',
             ],
         ],
 
@@ -141,16 +169,7 @@ function region_dungeon_specs(): array
             'boss' => ['rd_verd_mother', '缠木胎·绿眠', 345, 'wind', 'mother'],
             'legend' => ['slot' => 'gloves', 'base' => '缠心', 'k' => 'lifesteal', 'v' => 4.0],
             'set' => [
-                'prefix' => '守林人',
-                'pieces' => [
-                    ['weapon', '守林人·缠枝杖'],
-                    ['offhand', '守林人·落叶'],
-                    ['body', '守林人·青苔'],
-                    ['head', '守林人·年轮'],
-                    ['legs', '守林人·蜿蜒'],
-                    ['gloves', '守林人·攀枝'],
-                    ['shoes', '守林人·苔痕'],
-                ],
+                'prefix' => '万藤',
             ],
         ],
 
@@ -173,16 +192,7 @@ function region_dungeon_specs(): array
             'boss' => ['rd_crypt_king', '棺中未眠者·僵卧', 440, 'ice', 'king'],
             'legend' => ['slot' => 'ring', 'base' => '未亡', 'k' => 'critdmg', 'v' => 6.0],
             'set' => [
-                'prefix' => '守陵人',
-                'pieces' => [
-                    ['weapon', '守陵人·寒髓'],
-                    ['offhand', '守陵人·冰魄'],
-                    ['body', '守陵人·缟素'],
-                    ['head', '守陵人·未瞑'],
-                    ['legs', '守陵人·缄霜'],
-                    ['gloves', '守陵人·凝霜'],
-                    ['shoes', '守陵人·涉霜'],
-                ],
+                'prefix' => '霜魄',
             ],
         ],
 
@@ -205,16 +215,7 @@ function region_dungeon_specs(): array
             'boss' => ['rd_star_lord', '抱星巨甲·坠光', 525, 'thunder', 'lord'],
             'legend' => ['slot' => 'head', 'base' => '坠光', 'k' => 'crit', 'v' => 6.0],
             'set' => [
-                'prefix' => '陨星使',
-                'pieces' => [
-                    ['weapon', '陨星使·陨铁'],
-                    ['offhand', '陨星使·流荧'],
-                    ['body', '陨星使·熔星'],
-                    ['head', '陨星使·窥星'],
-                    ['legs', '陨星使·陨行'],
-                    ['gloves', '陨星使·拾光'],
-                    ['shoes', '陨星使·星轨'],
-                ],
+                'prefix' => '星陨',
             ],
         ],
 
@@ -237,16 +238,7 @@ function region_dungeon_specs(): array
             'boss' => ['rd_magma_overlord', '熔海吞潮鲸·焰喉', 615, 'fire', 'crawler'],
             'legend' => ['slot' => 'weapon', 'base' => '潮脊', 'k' => 'truedmg', 'v' => 120.0],
             'set' => [
-                'prefix' => '驭潮者',
-                'pieces' => [
-                    ['weapon', '驭潮者·裂浪'],
-                    ['offhand', '驭潮者·鲸骨'],
-                    ['body', '驭潮者·熔鲸'],
-                    ['head', '驭潮者·潮心'],
-                    ['legs', '驭潮者·踏浪'],
-                    ['gloves', '驭潮者·灼潮'],
-                    ['shoes', '驭潮者·浮光'],
-                ],
+                'prefix' => '熔潮',
             ],
         ],
 
@@ -269,16 +261,7 @@ function region_dungeon_specs(): array
             'boss' => ['rd_chrono_master', '擦钟者·停晷', 725, 'thunder', 'master'],
             'legend' => ['slot' => 'gloves', 'base' => '刹那', 'k' => 'skill_damage', 'v' => 9.0],
             'set' => [
-                'prefix' => '定晷者',
-                'pieces' => [
-                    ['weapon', '定晷者·止沙'],
-                    ['offhand', '定晷者·停摆'],
-                    ['body', '定晷者·钟摆'],
-                    ['head', '定晷者·齿轮'],
-                    ['legs', '定晷者·回溯'],
-                    ['gloves', '定晷者·发条'],
-                    ['shoes', '定晷者·迟光'],
-                ],
+                'prefix' => '凝固',
             ],
         ],
 
@@ -301,16 +284,7 @@ function region_dungeon_specs(): array
             'boss' => ['rd_divine_god', '摘神者·空座', 980, 'light', 'god'],
             'legend' => ['slot' => 'necklace', 'base' => '空座', 'k' => 'all_attr', 'v' => 55.0],
             'set' => [
-                'prefix' => '摘星者',
-                'pieces' => [
-                    ['weapon', '摘星者·断名'],
-                    ['offhand', '摘星者·无相'],
-                    ['body', '摘星者·空寂'],
-                    ['head', '摘星者·神骸'],
-                    ['legs', '摘星者·坠神'],
-                    ['gloves', '摘星者·承光'],
-                    ['shoes', '摘星者·踏墟'],
-                ],
+                'prefix' => '墟心',
             ],
         ],
     ];
@@ -358,6 +332,9 @@ function region_dungeon_build(): array
             $loc[$c]['exits'][$a] = (string) ($loc[$a]['name'] ?? $a);
         }
 
+        // 本副本套装布局（5职业武器 + 6防具）
+        $setLayout = region_dungeon_set_layout((string) $R['set']['prefix']);
+
         // 小怪（沿用 we2 线性缩放口径：hp=lv*175、atk=lv*2.6，identity 体系下 base 即最终值）
         foreach ($R['mobs'] as $M) {
             [$mid, $nm, $mlv, $mel, $atkName] = $M;
@@ -368,7 +345,7 @@ function region_dungeon_build(): array
             $mon[$mid] = ['name' => $nm, 'hp' => $hp, 'atk' => $atk, 'exp' => $exp, 'gold' => $gold];
             $lv[$mid] = $mlv;
             $el[$mid] = $mel;
-            $drops[$mid] = region_dungeon_mob_drop($rk, $M, $R);
+            $drops[$mid] = region_dungeon_pick_drop($mid, $setLayout);
             $skills[$mid] = ['atk' => $atkName, 'skills' => [['name' => $nm . '·扑击', 'rate' => 22, 'mult' => 1.5, 'el' => $mel]]];
         }
 
@@ -384,20 +361,17 @@ function region_dungeon_build(): array
         $bossMap[$R['maps'][count($R['maps']) - 1][0]] = $bmid; // 最后一张图 = BOSS 房
         $bosses[] = $bmid;
 
-        // BOSS 掉专属传说；并把套装件挂到 BOSS（随机一件，掉率更高，凑齐 7 件靠 BOSS 更稳）
+        // BOSS 掉专属传说；并把套装件挂到 BOSS（挑一件，掉率更高，凑齐 7 件搭 BOSS 更稳）
         $L = $R['legend'];
-        $pieces = (array) ($R['set']['pieces'] ?? []);
-        $sIdx = count($pieces) > 0 ? (crc32($bmid) % count($pieces)) : 0;
-        $setSlot = count($pieces) > 0 ? $pieces[$sIdx][0] : 'body';
-        $setBase = count($pieces) > 0 ? $pieces[$sIdx][1] : '套装残片';
+        $bossSetDrop = region_dungeon_pick_drop('boss' . $bmid, $setLayout);
         $drops[$bmid] = [
             'slot' => (string) $L['slot'],
             'base' => (string) $L['base'],
             'rate' => 0.42,
             'q' => [0, 0, 10, 40, 50],
             'legendary' => ['base' => (string) $L['base'], 'extra' => ['k' => (string) $L['k'], 'v' => (float) $L['v']]],
-            // BOSS 额外"保底风格"地掉一件套装件（与传说同样按部位走，quest 掉落里单独判定）
-            'set_piece' => ['slot' => $setSlot, 'base' => $setBase],
+            // BOSS 额外"保底风格"地掉一件套装件（与传说分开判定）
+            'set_piece' => ['slot' => $bossSetDrop['slot'], 'base' => $bossSetDrop['base'], 'class_weapons' => $bossSetDrop['class_weapons'] ?? null],
         ];
         $legendByMid[$bmid] = (string) $L['base'];
         $skills[$bmid] = ['atk' => $batk, 'skills' => [
@@ -406,10 +380,11 @@ function region_dungeon_build(): array
             ['name' => $bnm . '·壁障', 'rate' => 12, 'mult' => 0.5, 'guard' => 3],
         ]];
 
-        // 套装前缀 → 部件
+        // 套装前缀 → 部件（5职业武器 + 6防具，共 11 件；玩家最多穿 1 武器+6防具=7）
         $setByPrefix[$R['set']['prefix']] = [
             'prefix' => (string) $R['set']['prefix'],
-            'pieces' => array_map(fn($p) => $p[1], $R['set']['pieces']),
+            'pieces' => array_map(fn($p) => $p[1], $setLayout['pieces']),
+            'layout' => $setLayout,
             'region' => (string) $R['region'],
         ];
     }
@@ -420,22 +395,6 @@ function region_dungeon_build(): array
         'skills' => $skills, 'maps' => $maps, 'gateOf' => $gateOf,
         'minLv' => $minLv, 'setByPrefix' => $setByPrefix, 'legendByMid' => $legendByMid,
     ];
-}
-
-// 小怪掉配套装件：每次击杀从该套 7 件里随机挑一件（磨齐整套）。
-// 不同小怪可掉重叠部件，靠多刷凑齐 7 件。
-function region_dungeon_mob_drop(string $rk, array $M, array $R): array
-{
-    $mid = (string) $M[0];
-    $pieces = (array) ($R['set']['pieces'] ?? []);
-    if ($pieces === []) {
-        return ['slot' => 'body', 'base' => '残片', 'rate' => 0.05, 'q' => [0, 20, 50, 30, 0]];
-    }
-    // 用 mid 做种子决定"主要掉哪个部位"，让不同小怪有偏好、又不至于死板
-    $seed = crc32($mid);
-    $idx = $seed % count($pieces);
-    [$slot, $base] = $pieces[$idx];
-    return ['slot' => $slot, 'base' => $base, 'rate' => 0.05, 'q' => [0, 20, 50, 30, 0]];
 }
 
 // ---- 对外访问器 ----
@@ -568,10 +527,11 @@ function region_dungeon_boss_set_piece(string $mid): ?array
 }
 
 // 若某件装备短名属于某个副本套装，返回该套装前缀，否则空串
+// 命名规范：<前缀>之<部位>（如 苍穹之盔），所以按 "<前缀>之" 识别
 function region_dungeon_prefix_of(string $shortName): string
 {
     foreach (array_keys(region_dungeon_build()['setByPrefix']) as $prefix) {
-        if (str_starts_with($shortName, $prefix . '·')) {
+        if (str_starts_with($shortName, $prefix . '之')) {
             return $prefix;
         }
     }

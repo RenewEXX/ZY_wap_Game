@@ -4798,6 +4798,25 @@ function monster_dodge(string $mid): float
 
 function roll_drop(int $uid, string $mid, int $elite = 0): string
 {
+    $base = roll_drop_base($uid, $mid, $elite);
+    // 大区域副本 BOSS：额外掉一件副本套装件（磨齐 7 件套的主要来源）
+    if (function_exists('region_dungeon_boss_set_piece')) {
+        $sp = region_dungeon_boss_set_piece($mid);
+        if ($sp !== null) {
+            // 55% 概率额外掉一件（封顶史诗）
+            if (mt_rand(1, 100) <= 55) {
+                $piece = make_equip($uid, (string) $sp['slot'], (string) $sp['base'], 3, monster_lv($mid));
+                if ($piece !== '') {
+                    $base = $base !== '' ? $base . ' ' . $piece : $piece;
+                }
+            }
+        }
+    }
+    return $base;
+}
+
+function roll_drop_base(int $uid, string $mid, int $elite = 0): string
+{
     $ch3 = roll_ch3_drop($uid, $mid, $elite);
     if ($ch3 !== '' || isset(ch3_drops()[$mid])) {
         // 召唤师：契匣掉率独立一轮（原 offhand 格已被改名，不和专属表冲突）

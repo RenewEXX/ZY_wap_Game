@@ -55,14 +55,14 @@ foreach ($specs as $rk=>$R) {
     $prefix=$R['set']['prefix'];
     $sid='rd_set:'.$prefix;
     ck44("[$rk] 套装可识别", region_dungeon_is_set_prefix($prefix), $prefix);
-    ck44("[$rk] 套装件数=3", count(equip_set_pieces($sid))===3, (string)count(equip_set_pieces($sid)));
+    ck44("[$rk] 套装件数=7", count(equip_set_pieces($sid))===7, (string)count(equip_set_pieces($sid)));
     foreach (equip_set_pieces($sid) as $pc) { if (region_dungeon_prefix_of($pc)!==$prefix) $setOk=false; }
 }
 ck44('套装件都被识别为对应副本套装', $setOk);
 
-// 实造全套穿戴 → 集齐加成生效
+// 实造全套穿戴 → 集齐加成生效（7件套）
 $uid=(int)user_create('rd'.mt_rand(1,999999),'x','warrior','z1',true,'tmp'); $_SESSION['uid']=$uid;
-$u=user_by_id($uid); $u['lv']=300;$u['str']=8000;$u['atk']=8000;$u['def']=4000;$u['maxhp']=200000;$u['hp']=200000; user_save($u); _gear_uncache($uid);
+$u=user_by_id($uid); $u['lv']=300;$u['str']=8000;$u['agi']=8000;$u['int']=8000;$u['vit']=8000;$u['atk']=8000;$u['def']=4000;$u['maxhp']=200000;$u['hp']=200000; user_save($u); _gear_uncache($uid);
 $firstKey=array_key_first($specs); $setDef=$specs[$firstKey]['set']; $pref=$setDef['prefix'];
 foreach ($setDef['pieces'] as $p) { make_equip($uid, $p[0], $p[1], 3, 300); }
 $st=db()->prepare("SELECT id FROM equips WHERE uid=? AND pos='' "); $st->execute([$uid]);
@@ -70,10 +70,35 @@ $ids=[]; while($r=$st->fetch()){ $ids[]=(int)$r['id']; }
 foreach($ids as $id){ wear_equip($uid,$id); }
 _gear_uncache($uid);
 $cnt=equip_set_owned_count($uid,'rd_set:'.$pref);
-ck44('穿戴后套装计数=3', $cnt===3, "cnt=$cnt pref=$pref");
+ck44('穿戴后套装计数=7', $cnt===7, "cnt=$cnt pref=$pref");
 $stats=gear_stats($uid);
 ck44('套装集齐有减伤加成', (float)($stats['damage_reduction']??0)>=6.0, (string)($stats['damage_reduction']??0));
+ck44('7件套满档有物攻%加成', (float)($stats['atk_pct']??0)>=8.0, (string)($stats['atk_pct']??0));
 ck44('套装说明非空', equip_set_bonus_text('rd_set:'.$pref,$cnt)!=='');
+
+// 验证"最低3件才生效"：直接对套装结算函数做隔离测试（排除装备自身词条干扰）
+db()->exec('DELETE FROM equips WHERE uid='.$uid);
+$pieces=$setDef['pieces'];
+foreach ([0,2] as $i) { $p=$pieces[$i]; make_equip($uid, $p[0], $p[1], 3, 300); }
+$st=db()->prepare("SELECT id FROM equips WHERE uid=? AND pos='' "); $st->execute([$uid]);
+$ids=[]; while($r=$st->fetch()){ $ids[]=(int)$r['id']; }
+foreach($ids as $id){ wear_equip($uid,$id); }
+_gear_uncache($uid);
+$cnt2=equip_set_owned_count($uid,'rd_set:'.$pref);
+ck44('只穿2件时套装计数=2', $cnt2===2, "cnt=$cnt2");
+// 隔离：对空属性表调用套装结算，2件时不应注入任何加成
+$empty=['atk'=>0,'matk'=>0,'hp'=>0,'damage_reduction'=>0.0,'atk_pct'=>0.0,'truedmg'=>0.0,'lifesteal'=>0.0,'all_attr'=>0.0,'skill_damage'=>0.0,'matk_pct'=>0.0];
+$s2=$empty; region_dungeon_gear_apply($uid,$s2);
+ck44('2件时套装结算加成为0(最低3件生效)', $s2['atk']===0 && $s2['damage_reduction']==0.0 && $s2['atk_pct']==0.0 && $s2['skill_damage']==0.0, json_encode($s2));
+// 对照：穿满7件时结算函数确实注入加成
+db()->exec('DELETE FROM equips WHERE uid='.$uid);
+foreach ($pieces as $p) { make_equip($uid, $p[0], $p[1], 3, 300); }
+$st=db()->prepare("SELECT id FROM equips WHERE uid=? AND pos='' "); $st->execute([$uid]);
+$ids=[]; while($r=$st->fetch()){ $ids[]=(int)$r['id']; }
+foreach($ids as $id){ wear_equip($uid,$id); }
+_gear_uncache($uid);
+$s7=$empty; region_dungeon_gear_apply($uid,$s7);
+ck44('7件时套装结算有加成', $s7['atk']>0 && $s7['atk_pct']>=8.0 && $s7['damage_reduction']>=14.0, json_encode($s7));
 
 // 造一件副本传说，确认带 lg_bl_ 词条
 $bm=region_dungeon_boss_map(); $bossMid=reset($bm); $dd=monster_drops($bossMid);

@@ -47,9 +47,13 @@ function region_dungeon_specs(): array
             'set' => [
                 'prefix' => '苍穹',
                 'pieces' => [
+                    ['weapon', '苍穹·流云刃'],
+                    ['offhand', '苍穹·风翎盾'],
                     ['body', '苍穹·流云胸甲'],
-                    ['gloves', '苍穹·风弦手套'],
+                    ['head', '苍穹·御风冠'],
                     ['legs', '苍穹·羽光胫甲'],
+                    ['gloves', '苍穹·风弦手套'],
+                    ['shoes', '苍穹·踏云靴'],
                 ],
             ],
         ],
@@ -75,9 +79,13 @@ function region_dungeon_specs(): array
             'set' => [
                 'prefix' => '溺海',
                 'pieces' => [
+                    ['weapon', '溺海·潮涌矛'],
+                    ['offhand', '溺海·渊珊瑚盾'],
                     ['body', '溺海·潮纹胸甲'],
-                    ['gloves', '溺海·缠藻手套'],
+                    ['head', '溺海·溺冠'],
                     ['legs', '溺海·深流胫甲'],
+                    ['gloves', '溺海·缠藻手套'],
+                    ['shoes', '溺海·沉渊靴'],
                 ],
             ],
         ],
@@ -103,9 +111,13 @@ function region_dungeon_specs(): array
             'set' => [
                 'prefix' => '永燃',
                 'pieces' => [
+                    ['weapon', '永燃·炽铁战锤'],
+                    ['offhand', '永燃·熔炉盾'],
                     ['body', '永燃·炽铁胸甲'],
-                    ['gloves', '永燃·炉火护手'],
+                    ['head', '永燃·炉心盔'],
                     ['legs', '永燃·熔流胫甲'],
+                    ['gloves', '永燃·炉火护手'],
+                    ['shoes', '永燃·铁蹄靴'],
                 ],
             ],
         ],
@@ -131,9 +143,13 @@ function region_dungeon_specs(): array
             'set' => [
                 'prefix' => '万藤',
                 'pieces' => [
+                    ['weapon', '万藤·缠枝法杖'],
+                    ['offhand', '万藤·古叶盾'],
                     ['body', '万藤·古木胸甲'],
-                    ['gloves', '万藤·缠枝护手'],
+                    ['head', '万藤·藤冠'],
                     ['legs', '万藤·根脉胫甲'],
+                    ['gloves', '万藤·缠枝护手'],
+                    ['shoes', '万藤·苔行靴'],
                 ],
             ],
         ],
@@ -159,9 +175,13 @@ function region_dungeon_specs(): array
             'set' => [
                 'prefix' => '霜魄',
                 'pieces' => [
+                    ['weapon', '霜魄·寒骨长刀'],
+                    ['offhand', '霜魄·墓石盾'],
                     ['body', '霜魄·寒骨胸甲'],
-                    ['gloves', '霜魄·霜缚护手'],
+                    ['head', '霜魄·冻魂盔'],
                     ['legs', '霜魄·冻髓胫甲'],
+                    ['gloves', '霜魄·霜缚护手'],
+                    ['shoes', '霜魄·霜履'],
                 ],
             ],
         ],
@@ -187,9 +207,13 @@ function region_dungeon_specs(): array
             'set' => [
                 'prefix' => '星陨',
                 'pieces' => [
+                    ['weapon', '星陨·陨铁巨剑'],
+                    ['offhand', '星陨·流星盾'],
                     ['body', '星陨·陨铁胸甲'],
-                    ['gloves', '星陨·流螢护手'],
+                    ['head', '星陨·坠星盔'],
                     ['legs', '星陨·坠光胫甲'],
+                    ['gloves', '星陨·流螢护手'],
+                    ['shoes', '星陨·星轨靴'],
                 ],
             ],
         ],
@@ -215,9 +239,13 @@ function region_dungeon_specs(): array
             'set' => [
                 'prefix' => '熔潮',
                 'pieces' => [
+                    ['weapon', '熔潮·炽浪巨斧'],
+                    ['offhand', '熔潮·熔岩盾'],
                     ['body', '熔潮·赤浪胸甲'],
-                    ['gloves', '熔潮·焰喉护手'],
+                    ['head', '熔潮·焰喉盔'],
                     ['legs', '熔潮·熔底胫甲'],
+                    ['gloves', '熔潮·焰喉护手'],
+                    ['shoes', '熔潮·熔岩靴'],
                 ],
             ],
         ],
@@ -243,9 +271,13 @@ function region_dungeon_specs(): array
             'set' => [
                 'prefix' => '凝固',
                 'pieces' => [
+                    ['weapon', '凝固·停秒长刃'],
+                    ['offhand', '凝固·时砂盾'],
                     ['body', '凝固·时纹胸甲'],
-                    ['gloves', '凝固·停秒护手'],
+                    ['head', '凝固·永恒盔'],
                     ['legs', '凝固·永恒胫甲'],
+                    ['gloves', '凝固·停秒护手'],
+                    ['shoes', '凝固·时砂靴'],
                 ],
             ],
         ],
@@ -271,9 +303,13 @@ function region_dungeon_specs(): array
             'set' => [
                 'prefix' => '墟心',
                 'pieces' => [
+                    ['weapon', '墟心·归穹圣刃'],
+                    ['offhand', '墟心·神骸盾'],
                     ['body', '墟心·神骸胸甲'],
-                    ['gloves', '墟心·归穹护手'],
+                    ['head', '墟心·圣辉冠'],
                     ['legs', '墟心·圣光胫甲'],
+                    ['gloves', '墟心·归穹护手'],
+                    ['shoes', '墟心·踏光靴'],
                 ],
             ],
         ],
@@ -348,14 +384,20 @@ function region_dungeon_build(): array
         $bossMap[$R['maps'][count($R['maps']) - 1][0]] = $bmid; // 最后一张图 = BOSS 房
         $bosses[] = $bmid;
 
-        // BOSS 掉专属传说 + 偶尔掉套装件
+        // BOSS 掉专属传说；并把套装件挂到 BOSS（随机一件，掉率更高，凑齐 7 件靠 BOSS 更稳）
         $L = $R['legend'];
+        $pieces = (array) ($R['set']['pieces'] ?? []);
+        $sIdx = count($pieces) > 0 ? (crc32($bmid) % count($pieces)) : 0;
+        $setSlot = count($pieces) > 0 ? $pieces[$sIdx][0] : 'body';
+        $setBase = count($pieces) > 0 ? $pieces[$sIdx][1] : '套装残片';
         $drops[$bmid] = [
             'slot' => (string) $L['slot'],
             'base' => (string) $L['base'],
             'rate' => 0.42,
             'q' => [0, 0, 10, 40, 50],
             'legendary' => ['base' => (string) $L['base'], 'extra' => ['k' => (string) $L['k'], 'v' => (float) $L['v']]],
+            // BOSS 额外"保底风格"地掉一件套装件（与传说同样按部位走，quest 掉落里单独判定）
+            'set_piece' => ['slot' => $setSlot, 'base' => $setBase],
         ];
         $legendByMid[$bmid] = (string) $L['base'];
         $skills[$bmid] = ['atk' => $batk, 'skills' => [
@@ -380,27 +422,20 @@ function region_dungeon_build(): array
     ];
 }
 
-// 小怪掉配套装件：三只小怪分别对应 body/gloves/legs 三个部件
+// 小怪掉配套装件：每次击杀从该套 7 件里随机挑一件（磨齐整套）。
+// 不同小怪可掉重叠部件，靠多刷凑齐 7 件。
 function region_dungeon_mob_drop(string $rk, array $M, array $R): array
 {
-    static $slotCycle = ['body', 'gloves', 'legs'];
-    static $idx = 0;
-    // 根据 mid 在 mobs 列表里的位置轮转部位（保证两三种小怪恰好覆盖套装 3 件）
     $mid = (string) $M[0];
-    $pos = 0;
-    foreach ($R['mobs'] as $i => $mm) {
-        if ((string) $mm[0] === $mid) { $pos = $i; break; }
+    $pieces = (array) ($R['set']['pieces'] ?? []);
+    if ($pieces === []) {
+        return ['slot' => 'body', 'base' => '残片', 'rate' => 0.05, 'q' => [0, 20, 50, 30, 0]];
     }
-    $slot = $slotCycle[$pos % 3];
-    // 确定该部位对应的套装件名
-    $pieceName = '';
-    foreach ($R['set']['pieces'] as $p) {
-        if ($p[0] === $slot) { $pieceName = (string) $p[1]; break; }
-    }
-    if ($pieceName === '') {
-        $pieceName = $R['set']['prefix'] . '·' . $slot;
-    }
-    return ['slot' => $slot, 'base' => $pieceName, 'rate' => 0.05, 'q' => [0, 20, 50, 30, 0]];
+    // 用 mid 做种子决定"主要掉哪个部位"，让不同小怪有偏好、又不至于死板
+    $seed = crc32($mid);
+    $idx = $seed % count($pieces);
+    [$slot, $base] = $pieces[$idx];
+    return ['slot' => $slot, 'base' => $base, 'rate' => 0.05, 'q' => [0, 20, 50, 30, 0]];
 }
 
 // ---- 对外访问器 ----
@@ -450,6 +485,7 @@ function region_dungeon_min_lv(string $loc): int
 }
 
 // 套装集齐加成：在 gear_stats() 末尾调用。按角色等级缩放，卡在区域等级区间使用。
+// 7 件套，最低 3 件起效，3/5/7 三档递进。
 function region_dungeon_gear_apply(int $uid, array &$s): void
 {
     $info = region_dungeon_build()['setByPrefix'];
@@ -471,22 +507,31 @@ function region_dungeon_gear_apply(int $uid, array &$s): void
         foreach ($set['pieces'] as $piece) {
             if (in_array($piece, $worn, true)) { $n++; }
         }
-        if ($n <= 0) {
+        // 最低 3 件才有效果
+        if ($n < 3) {
             continue;
         }
-        // 每件：攻击/法攻/生命 小幅加成（随等级）
+        // 3件起基础档：攻击/法攻/生命 随等级
         $s['atk']  = (int) ($s['atk'] ?? 0) + (int) round($ulv * 1.2) * $n;
         $s['matk'] = (int) ($s['matk'] ?? 0) + (int) round($ulv * 1.2) * $n;
         $s['hp']   = (int) ($s['hp'] ?? 0) + (int) round($ulv * 6) * $n;
-        if ($n >= 2) {
-            $s['skill_damage'] = (float) ($s['skill_damage'] ?? 0) + 6.0;
-            $s['truedmg'] = (float) ($s['truedmg'] ?? 0) + $ulv * 4;
-        }
-        if ($n >= 3) {
+        $s['skill_damage'] = (float) ($s['skill_damage'] ?? 0) + 6.0;
+        $s['truedmg'] = (float) ($s['truedmg'] ?? 0) + $ulv * 4;
+        // 5件档
+        if ($n >= 5) {
             $s['damage_reduction'] = (float) ($s['damage_reduction'] ?? 0) + 6.0;
             $s['lifesteal'] = (float) ($s['lifesteal'] ?? 0) + 2.0;
             $s['truedmg'] = (float) ($s['truedmg'] ?? 0) + $ulv * 8;
             $s['all_attr'] = (float) ($s['all_attr'] ?? 0) + 3.0;
+        }
+        // 7件满档（整套）
+        if ($n >= 7) {
+            $s['atk_pct'] = (float) ($s['atk_pct'] ?? 0) + 8.0;
+            $s['matk_pct'] = (float) ($s['matk_pct'] ?? 0) + 8.0;
+            $s['damage_reduction'] = (float) ($s['damage_reduction'] ?? 0) + 8.0;
+            $s['skill_damage'] = (float) ($s['skill_damage'] ?? 0) + 10.0;
+            $s['truedmg'] = (float) ($s['truedmg'] ?? 0) + $ulv * 12;
+            $s['all_attr'] = (float) ($s['all_attr'] ?? 0) + 5.0;
         }
     }
 }
@@ -499,16 +544,27 @@ function region_dungeon_set_bonus_text(string $prefix): string
         return '';
     }
     $region = $set['region'] ?? '';
-    return '【' . $prefix . '套装】' . $region . '副本套装，已穿件数决定加成——'
+    return '【' . $prefix . '套装】' . $region . '副本套装，集齐件数决定加成（最低3件生效）——'
         . '每件：攻击/法攻+等级×1.2、生命+等级×6；'
-        . '2件：全伤害+6%、真伤+等级×4；'
-        . '3件：减伤+6%、吸血+2%、真伤+等级×8、全属性+3。';
+        . '3件：全伤害+6%、真伤+等级×4；'
+        . '5件：再+减伤6%、吸血2%、真伤+等级×8、全属性+3；'
+        . '7件：再+物攻/法攻+8%、减伤+8%、全伤害+10%、真伤+等级×12、全属性+5！';
 }
 
 // 该前缀是否是"副本套装"
 function region_dungeon_is_set_prefix(string $prefix): bool
 {
     return isset(region_dungeon_build()['setByPrefix'][$prefix]);
+}
+
+// 某个 BOSS mid 是否掉落副本套装件；返回 ['slot'=>,base=>] 或 null
+function region_dungeon_boss_set_piece(string $mid): ?array
+{
+    $d = region_dungeon_build()['drops'][$mid] ?? null;
+    if (is_array($d) && isset($d['set_piece'])) {
+        return $d['set_piece'];
+    }
+    return null;
 }
 
 // 若某件装备短名属于某个副本套装，返回该套装前缀，否则空串

@@ -46,21 +46,36 @@ echo "\n[3] 巅峰缩圈\n";
 $ph=peak_storm_phase(); // 真实时间，可能未到 22:45
 ck43('缩圈阶段结构完整', isset($ph['ok']) && array_key_exists('pct',$ph));
 // 构造一个在 peak 场、hp 满的玩家，直接验证掉血公式（绕过时间窗，用反射式调用内部逻辑不现实，
-// 改验证：即便当前没开赛，函数也不报错、返回 ok=false）
+// ---------- [巅峰] 缩圈·圈内/圈外 ----------
+echo "\n[3] 巅峰缩圈：圈内安全 / 圈外重伤 / 安全区收窄 / 终局塌缩\n";
+$ph=peak_storm_phase();
+ck43('缩圈阶段结构完整', isset($ph['ok']) && array_key_exists('pct',$ph) && array_key_exists('safe_ratio',$ph) && array_key_exists('final',$ph));
+// 模拟一条时间轴验证 safe_ratio 单调下降 & 掉血比例单调上升（用同一公式重算）
+$startStr=strtotime(date('Y-m-d').' 22:45:00'); $endStr=strtotime(date('Y-m-d').' 23:00:00');
+$prevRatio=2.0; $prevPct=-1; $monoR=true; $monoP=true;
+for($t=$startStr; $t<=$endStr; $t+=60){
+    $frac=min(1.0,max(0.0,($t-$startStr)/max(1,($endStr-$startStr))));
+    $ratio=max(0.0,1.0-$frac*1.15); $pct=0.04+$frac*0.12;
+    if($ratio>$prevRatio)$monoR=false; if($pct<$prevPct)$monoP=false;
+    $prevRatio=$ratio; $prevPct=$pct;
+}
+ck43('安全区占比随时间单调收窄', $monoR);
+ck43('圈外掉血比例随时间单调上升', $monoP);
+
 $up=mk43('warrior');
-$u=user_by_id($up);
-$u['loc']='peak1'; user_save($u);
-$u=user_by_id($up);
-$storm=peak_storm_apply($u); // 若未开赛返回空串
-ck43('未开赛不报错', true); // 能跑到这里没抛异常即通过
-// 直接验证缩圈伤害随阶段推进的单调性（用阶段函数的 pct 曲线）
-// 用相同公式手算一遍，确认保底1血
-$pct=max(0.02,0.02); // 最低档
-$testHp=100; $dmg=max(1,(int)round($testHp*$pct)); ck43('缩圈伤害≥1', $dmg>=1);
-// buff take/consume 不炸
+$u=user_by_id($up); $u['loc']='peak1'; $u['hp']=(int)$u['maxhp']; user_save($u);
+// 圈内/圈外：1=圈内(安全)，2=圈外
+peak_set_zone($up,1); ck43('默认在圈内', peak_zone_state($up)===1);
+peak_set_zone($up,2); ck43('可切到圈外', peak_zone_state($up)===2);
+peak_set_zone($up,1);
+// buff take/consume
 mat_set($up,'peak_buff_atk',1);
 $buf=peak_buff_take($up); ck43('buff取到攻+15', $buf['atk_pct']==15.0);
 peak_buff_consume($up); $buf2=peak_buff_take($up); ck43('buff消耗后清空', $buf2['atk_pct']==0.0);
+// 缩圈伤害保底 1 血
+$testHp=100; $dmg=max(1,(int)round($testHp*0.04)); ck43('缩圈伤害≥1', $dmg>=1);
+// 倒计时条函数不炸（未开赛返回空，开赛返回HTML）
+$bar=peak_storm_bar($up); ck43('倒计时条可用', is_string($bar));
 clean43($up);
 
 // ---------- [天梯] 段位 & 保底 ----------

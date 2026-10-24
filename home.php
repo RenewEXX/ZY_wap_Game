@@ -240,13 +240,26 @@ if (peak_arena_of($cur) !== '') {
     if ($tickMsg !== '') {
         echo '<div class="warn">' . $tickMsg . '</div>';
     }
+    // 顶部红色缩圈倒计时条
+    if (function_exists('peak_storm_bar')) {
+        echo peak_storm_bar((int) $u['id']);
+    }
     $alive = peak_alive_in($cur, (string) ($u['zone'] ?? 'z1'));
     $ph = function_exists('peak_storm_phase') ? peak_storm_phase() : ['ok' => false, 'name' => ''];
     $stormLine = '巅峰之战！场上还剩' . count($alive) . '人，活到23:00最后一人即胜。';
     if (!empty($ph['ok'])) {
-        $stormLine .= '【' . $ph['name'] . '·安全区收窄，每分钟全场掉血，别站着不动！】';
+        $stormLine .= '【' . $ph['name'] . '·安全区收窄，圈外重伤，别站着不动！】';
     }
     echo '<div class="warn">' . $stormLine . '</div>';
+    // 圈内/圈外切换
+    $inSafe = function_exists('peak_zone_state') ? peak_zone_state((int) $u['id']) === 1 : true;
+    $zoneTxt = $inSafe
+        ? ($ph['final'] ?? false ? '你正在【圈内·但安全区已塌缩】' : '你正在【圈内·安全】')
+        : '你正在【圈外·危险但能捡补给】';
+    echo '<div style="color:#f99">' . $zoneTxt . '</div>';
+    echo $inSafe
+        ? '<a href="fight.php?a=peak_zone&z=0">冲出安全区抢补给（每分钟重伤）</a><br>'
+        : '<a href="fight.php?a=peak_zone&z=1">退回安全区保命</a><br>';
     $bm = mats_of((int) $u['id']);
     $buffs = [];
     if (!empty($bm['peak_buff_atk'])) { $buffs[] = '战力增幅(攻+15%)'; }

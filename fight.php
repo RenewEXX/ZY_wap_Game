@@ -466,6 +466,19 @@ function peak_check(array $u, int $tuid): array
     return [$t, ''];
 }
 
+if ($a === 'peak_zone') {
+    // 圈内/圈外切换：冲进圈外可抢补给但每分钟重伤；回圈内安全但没补给。
+    if (peak_arena_of((string) ($u['loc'] ?? '')) === '' || !peak_open()) {
+        flash_set('你不在巅峰战场，或战场没开。');
+        header('Location: home.php');
+        exit;
+    }
+    $z = (int) ($_GET['z'] ?? 1) === 0 ? 2 : 1; // 0=冲出安全区→圈外(2)；1=退回圈内
+    peak_set_zone((int) $u['id'], $z);
+    flash_set($z === 1 ? '你撤回安全区，喘口气——但补给也跟你无缘。' : '你冲进安全区外的废墟，乱流开始灼烧，但废墟里有补给。');
+    header('Location: home.php');
+    exit;
+}
 if ($a === 'peak') {
     [$t, $err] = peak_check($u, (int) ($_GET['uid'] ?? 0));
     if ($err !== '') {
@@ -537,6 +550,7 @@ if ($a === 'peakfight') {
         exit;
     }
     wap_start('巅峰决斗');
+    if (function_exists('peak_storm_bar')) { echo peak_storm_bar((int) $u['id']); }
     echo '敌【' . h($t['username']) . '】' . (int) $t['lv'] . '级<br>';
     echo '<div class="hp">敌生命 ' . (int) $t['hp'] . '/' . (int) $t['maxhp'] . '</div>';
     echo '<div class="hp">你 ' . (int) $u['hp'] . '/' . (int) $u['maxhp'] . '</div>';

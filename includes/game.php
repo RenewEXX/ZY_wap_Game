@@ -749,26 +749,52 @@ function peak_alive_in(string $arena, string $zone = 'z1'): array
     return $st->fetchAll();
 }
 
-// 巅峰战场·缩圈：随时间收窄的安全区。22:45 起全场开始掉血、越接近 23:00 越猛，
-// 把人从"站桩"里逼出来对拼；濒死不下死手（保底 1 血，最后一刀仍要靠玩家/怪）。
-// 返回 [阶段名, 本次掉血]。在界面上用。
-function peak_storm_phase(): array
+// 巅峰战场·缩圈「圈内/圈外」地图机制
+//  - 安全区随时间收窄（safe_ratio 从 1.0 逐步缩到 0）。
+//  - 站在「圈内」安全不掉血，但刷不到补给；
+//  - 冲进「圈外」才可能抢到补给/增益，但每分钟受重伤，越晚占比越大；
+//  - 终局阶段安全区塌缩为 0，圈内也开始掉血——逼所有人出来决一死战。
+// 返回：ok/name/pct(圈外每分钟掉血比例)/safe_ratio(安全区占比)/remain(到23:00剩余秒)/final(是否终局)
+function peak_storm_phase(?int $now = null): array
 {
+    $now = $now ?? time();
     $start = strtotime(date('Y-m-d') . ' 22:45:00');
     $end   = strtotime(date('Y-m-d') . ' 23:00:00');
-    $now = time();
     if ($now < $start) {
-        return ['ok' => false, 'name' => '', 'pct' => 0];
+        return ['ok' => false, 'name' => '', 'pct' => 0.0, 'safe_ratio' => 1.0, 'remain' => max(0, $end - $now), 'final' => false];
     }
     $frac = min(1.0, max(0.0, ($now - $start) / max(1, ($end - $start)))); // 0~1
-    // 阶段：平静→警戒→紧迫→终局
     $names = ['警戒', '紧迫', '危殆', '终局'];
     $idx = min(3, (int) floor($frac * 4));
-    $pct = 0.02 + $frac * 0.10; // 每分钟掉 2%~12% 最大生命
-    return ['ok' => true, 'name' => '缩圈·' . $names[$idx], 'pct' => $pct];
+    $final = $idx >= 3;
+    // 圈外每分钟掉 4%~16% 最大生命
+    $pct = 0.04 + $frac * 0.12;
+    // 安全区占比：1.0 → 0（终局塌缩）
+    $safeRatio = max(0.0, 1.0 - $frac * 1.15);
+    return [
+        'ok' => true,
+        'name' => '缩圈·' . $names[$idx],
+        'pct' => $pct,
+        'safe_ratio' => $safeRatio,
+        'remain' => max(0, $end - $now),
+        'final' => $final,
+    ];
 }
 
-// 每整分钟结算一次缩圈掉血 + 偶发增益/道具。返回给玩家看的战报。
+// 玩家在圈内/圈外。默认圈内(1=安全, 2=圈外)。mats 存 peak_zone（用2表示圈外，因为0会被 mat_set 当删除）。
+function peak_zone_state(int $uid): int
+{
+    $mats = mats_of($uid);
+    return array_key_exists('peak_zone', $mats) ? (int) $mats['peak_zone'] : 1;
+}
+
+function peak_set_zone(int $uid, int $zone): void
+{
+    // 1=圈内，2=圈外（避免用 0，否则 mat_set 会删行）
+    mat_set($uid, 'peak_zone', $zone === 2 ? 2 : 1);
+}
+
+// 每整分钟结算：只有「圈外」掉血、也只有「圈外」可能捡到补给；终局圈内也掉。
 function peak_storm_apply(array &$u): string
 {
     if (peak_arena_of((string) ($u['loc'] ?? '')) === '' || !peak_open()) {
@@ -785,22 +811,28 @@ function peak_storm_apply(array &$u): string
         return '';
     }
     mat_set($uid, 'peak_storm_t', $minuteKey);
-    $msg = '【' . $ph['name'] . '】战场的圈子在收紧。';
-    // 缩圈掉血：保底 1 血，逼出对拼
+
+    $inSafe = peak_zone_state($uid) === 1;
+    $exposed = !$inSafe || $ph['final']; // 圈外，或终局圈内也塌缩
+    $msg = '【' . $ph['name'] . '】';
+    if ($inSafe && !$ph['final']) {
+        $msg .= '你缩在安全区内，暂无损伤，但也捡不到场上的补给。';
+        return $msg;
+    }
+    // 掉血（圈外，或终局）：保底 1 血
+    $where = $ph['final'] ? '安全区已经塌缩，无处可躲' : '你在安全区外';
     $dmg = max(1, (int) round((int) $u['maxhp'] * $ph['pct']));
     $new = max(1, (int) $u['hp'] - $dmg);
     $real = max(0, (int) $u['hp'] - $new);
     $u['hp'] = $new;
     sin_gain_array($u, 0);
     user_save($u);
-    if ($real > 0) {
-        $msg .= '你被安全区外的乱流灼伤 ' . $real . ' 点（剩 ' . $new . '/' . (int) $u['maxhp'] . '）。';
-    }
+    $msg .= $where . '，乱流灼伤 ' . $real . ' 点（剩 ' . $new . '/' . (int) $u['maxhp'] . '）。';
     if ($new <= 1) {
         $msg .= '你已是强弩之末，随时会被收走。';
     }
-    // 偶发增益道具：缩圈时中央刷出补给，30% 每分钟给玩家一个临时增益
-    if (mt_rand(1, 100) <= 30) {
+    // 只有圈外能捡补给（终局圈内也能）。掉落更慷慨：45%
+    if ($exposed && mt_rand(1, 100) <= 45) {
         $buffs = ['atk' => '战力增幅(攻+15%)', 'def' => '铁壁补给(减伤15%)', 'heal' => '急救包(回血15%)'];
         $k = array_rand($buffs);
         mat_set($uid, 'peak_buff_' . $k, 1);
@@ -808,12 +840,43 @@ function peak_storm_apply(array &$u): string
             $h = max(1, (int) ($u['maxhp'] * 0.15));
             $u['hp'] = min((int) $u['maxhp'], (int) $u['hp'] + $h);
             user_save($u);
-            $msg .= ' 你抢到【' . $buffs[$k] . '】，回复 ' . $h . ' 点生命。';
+            $msg .= ' 你在废墟里翻到【' . $buffs[$k] . '】，回复 ' . $h . ' 点生命。';
         } else {
-            $msg .= ' 你抢到【' . $buffs[$k] . '】，下一场对决生效。';
+            $msg .= ' 你在废墟里翻到【' . $buffs[$k] . '】，下一场对决生效。';
         }
     }
     return $msg;
+}
+
+// 顶部红色缩圈倒计时条（HTML）。home / 战场页用。
+function peak_storm_bar(int $uid): string
+{
+    if (peak_arena_of((string) (user_by_id($uid)['loc'] ?? '')) === '' || !peak_open()) {
+        return '';
+    }
+    $ph = peak_storm_phase();
+    if (!$ph['ok']) {
+        $start = strtotime(date('Y-m-d') . ' 22:45:00');
+        $left = max(0, $start - time());
+        if ($left <= 0 || $left > 1800) {
+            return '';
+        }
+        return '<div style="background:#221;border:1px solid #553;border-radius:8px;padding:6px 8px;margin:6px 0;color:#fa6">'
+            . '缩圈预警：' . gmdate('i:s', $left) . ' 后安全区开始收窄，冲圈外抢补给，别站桩。</div>';
+    }
+    $remain = (int) $ph['remain'];
+    $mmss = sprintf('%02d:%02d', intdiv($remain, 60), $remain % 60);
+    $safePct = (int) round($ph['safe_ratio'] * 100);
+    $inSafe = peak_zone_state($uid) === 1;
+    $whereTag = $inSafe
+        ? ($ph['final'] ? '<span style="color:#f55">圈内已塌缩！</span>' : '<span style="color:#6f6">你在圈内·安全</span>')
+        : '<span style="color:#f55">你在圈外·每分钟重伤+可抢补给</span>';
+    $fill = max(0, min(100, $remain / 900 * 100)); // 15分钟窗口
+    return '<div style="background:#2a0f0f;border:1px solid #a33;border-radius:8px;padding:6px 8px;margin:6px 0">'
+        . '<div style="color:#ff6b6b;font-weight:bold">' . h($ph['name']) . '　距决赛圈塌缩 ' . $mmss . '</div>'
+        . '<div style="background:#1a0808;height:10px;border-radius:5px;overflow:hidden;margin:4px 0">'
+        . '<div style="width:' . $fill . '%;height:100%;background:linear-gradient(90deg,#a00,#ff4d4d)"></div></div>'
+        . '<div style="color:#f99">安全区剩余 ' . $safePct . '%　' . $whereTag . '</div></div>';
 }
 
 // 把玩家在缩圈里捡到的临时增益，转成一次对决的攻击/减伤加成。用完即清。
@@ -2168,7 +2231,7 @@ function mat_hidden(string $mid): bool
     if (str_ends_with($mid, '_enter') || str_ends_with($mid, '_stage')) {
         return true;
     }
-    return in_array($mid, ['offline_on', 'offline_time', 'seen_last', 'exp_card_until', 'bag_ext5_used', 'bag_ext10_used', 'dummy_total', 'tank_cd_hp', 'tank_cd_mp', 'peak_force', 'peak_duel_from', 'peak_storm_t', 'peak_buff_atk', 'peak_buff_def', 'peak_buff_heal', 'arena_day', 'arena_used', 'arena_bought', 'active_wid', 'active_week', 'priest_wid', 'fr_enter', 'fr_stage', 'em_enter', 'em_stage', 'pz_enter', 'pz_stage', 'sen_enter', 'sen_stage', 'vx_enter', 'wb_claimed', 'legend_fixed', 'rs_summ_hp', 'rs_point', 'exp_card_mult', 'gy_month', 'yz_month'], true);
+    return in_array($mid, ['offline_on', 'offline_time', 'seen_last', 'exp_card_until', 'bag_ext5_used', 'bag_ext10_used', 'dummy_total', 'tank_cd_hp', 'tank_cd_mp', 'peak_force', 'peak_duel_from', 'peak_storm_t', 'peak_buff_atk', 'peak_buff_def', 'peak_buff_heal', 'peak_zone', 'arena_day', 'arena_used', 'arena_bought', 'active_wid', 'active_week', 'priest_wid', 'fr_enter', 'fr_stage', 'em_enter', 'em_stage', 'pz_enter', 'pz_stage', 'sen_enter', 'sen_stage', 'vx_enter', 'wb_claimed', 'legend_fixed', 'rs_summ_hp', 'rs_point', 'exp_card_mult', 'gy_month', 'yz_month'], true);
 }
 
 // 当前版本真正有用的锻造材料：强化石 + 属性石/晶石/珠/神石

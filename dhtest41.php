@@ -65,13 +65,25 @@ echo "\n[2] 源罪之盾  最大生命 {$h0}->{$h1} ( +".($h1-$h0)." )\n";
 ck41('盾 maxhp +5%', $h1>$h0 && abs(($h1-$h0)/$h0*100-5)<0.6, "{$h0}->{$h1}");
 cleanup($uid);
 
-// [3] 速 速度->实战暴击
+// [3] 速 速度->连击（追加50%伤害）
 $uid=mku();_gear_uncache($uid);$sp0=(float)gear_stats($uid)['speed'];
 src_sin_learn($uid,'swift');_gear_uncache($uid);$sp1=(float)gear_stats($uid)['speed'];
 $src=file_get_contents(__DIR__.'/includes/game.php');
-echo "\n[3] 源罪之速  speed {$sp0}->{$sp1} → 实战暴击率 +".round($sp1*0.4,2)."%\n";
+echo "\n[3] 源罪之速  speed {$sp0}->{$sp1} → 连击率 ".round(min(45,$sp1*2.5),1)."% (追打50%)\n";
 ck41('速 speed 增', $sp1>$sp0);
-ck41('速 被暴击管线消费', str_contains($src,"(float) \$gsV['speed'] * 0.4") && str_contains($src,"(float) \$gs['speed'] * 0.4"));
+ck41('速 接入连击', function_exists('speed_combo_strike') && str_contains($src,'speed_combo_strike($u, (int) $pd'));
+// 实战：直接压测 speed_combo_strike 的触发率与追打伤害（避开暴击/完美一击噪声）
+$uidNo=mku(); $dNo=avgOut($uidNo,100);
+$uidYes=mku(); _gear_uncache($uidYes); src_sin_learn($uidYes,'swift'); _gear_uncache($uidYes); $dYes=avgOut($uidYes,100);
+$uYes=user_by_id($uidYes);
+$hit=0;$sumCombo=0;
+for($i=0;$i<2000;$i++){ $lg=''; $c=speed_combo_strike($uYes,1000,$lg); if($c>0){$hit++;$sumCombo+=$c;} }
+$rate=round($hit/2000*100,1);
+echo "    均值输出 无速 {$dNo} → 有速 {$dYes}；连击压测 2000 次触发 {$rate}% (期望~12.5%)\n";
+ck41('速 连击触发率≈speed*2.5%', $rate > 8 && $rate < 18, "实测{$rate}%");
+ck41('速 追打≈主伤害50%', $hit>0 && abs(round($sumCombo/$hit)-500) <= 20, $hit>0?"均值".round($sumCombo/$hit):'无触发');
+ck41('速 实战总输出大致不降', $dYes >= $dNo*0.97, "{$dNo}->{$dYes}");
+cleanup($uidNo);cleanup($uidYes);
 cleanup($uid);
 
 // [4] 怒 残血攻击翻倍（用法系避战士反伤稀释）

@@ -233,7 +233,7 @@ function src_sin_skills(): array
     return [
         'power' => ['name' => '源罪之力', 'tier' => 1, 'desc' => '攻击力+5%'],
         'shield' => ['name' => '源罪之盾', 'tier' => 1, 'desc' => '生命值+5%'],
-        'swift' => ['name' => '源罪之速', 'tier' => 1, 'desc' => '速度+5%'],
+        'swift' => ['name' => '源罪之速', 'tier' => 1, 'desc' => '攻速+5（连击率随攻速提升，最高45%）'],
         'rage' => ['name' => '源罪之怒', 'tier' => 2, 'desc' => '生命低于30%时攻击力翻倍'],
         'guard' => ['name' => '源罪之守', 'tier' => 2, 'desc' => '生命低于30%时减伤+30%'],
         'flee' => ['name' => '源罪之逃', 'tier' => 2, 'desc' => '生命低于30%时闪避+30%'],

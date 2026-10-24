@@ -4876,7 +4876,7 @@ function gear_stats(int $uid): array
             $s['atk_pct'] += $se['atk_pct'];
         }
         // 源罪之盾在学会时直接抬 maxhp 存档列（见 src_sin_learn），这里不再叠 hp_pct 以免双重计算。
-        // 源罪之速叠加到 speed，已由 player_dmg_pipeline / 暴击管线消费（转实战暴击率）。
+        // 源罪之速叠加到 speed，由 speed_combo_strike() 消费（攻速→连击率）。
         if ($se['speed'] > 0) {
             $s['speed'] += $se['speed'];
         }
@@ -6077,10 +6077,27 @@ function player_dmg_pipeline(array $u, int $base): array
         return [0, ''];
     }
     $gs = gear_stats((int) ($u['id'] ?? 0));
-    // 源罪之速：攻速( speed )转实战暴击率（speed×0.4 个百分点），让“速度”不再是纯面板数字
-    $critAdd = 0.0;
-    if (!empty($gs['speed'])) { $critAdd += (float) $gs['speed'] * 0.4; }
-    return dmg_pipeline($base, $gs['crit'] + $critAdd, $gs['critdmg'], (float) ($gs['precision'] ?? 0));
+    return dmg_pipeline($base, $gs['crit'], $gs['critdmg'], (float) ($gs['precision'] ?? 0));
+}
+
+// 源罪/攻速·连击：速度越高，越可能追加一击。返回追加伤害（0=没触发）。
+// 连击打的是同一目标，伤害按主伤害的比例，速度封顶避免无限叠。
+function speed_combo_strike(array $u, int $pd, string &$log): int
+{
+    if ($pd <= 0) {
+        return 0;
+    }
+    $spd = (float) gear_stats((int) ($u['id'] ?? 0))['speed'];
+    if ($spd <= 0) {
+        return 0;
+    }
+    $chance = min(45.0, $spd * 2.5);   // 攻速5→12.5%，攻速15→37.5%，上限45%
+    if (mt_rand(1, 10000) / 100 > $chance) {
+        return 0;
+    }
+    $dmg = max(1, (int) round($pd * 0.5)); // 追打按主伤害50%
+    $log .= '(连击' . $dmg . ')';
+    return $dmg;
 }
 
 function dmg_to_monster(array $u, array $m = []): int
@@ -6664,7 +6681,7 @@ function battle_round(array &$u, array &$b, string $mode): array
         $gsV = gear_stats((int) ($u['id'] ?? 0));
         $rb2cV = (string) (cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '');
         // 游侠不再加暴击（改走DOT加成），刺客靠高闪避而非暴击
-        $critRate = $forceCrit ? 10000 : ($gsV['crit'] + $lgCritAdd + (!empty($gsV['speed']) ? (float) $gsV['speed'] * 0.4 : 0.0));
+        $critRate = $forceCrit ? 10000 : ($gsV['crit'] + $lgCritAdd);
         [$pd, $vTag] = dmg_pipeline($pd, $critRate, $gsV['critdmg'], (float) ($gsV['precision'] ?? 0));
         if ($vTag !== '') {
             $logHeal .= '(' . $vTag . ')';
@@ -6682,6 +6699,13 @@ function battle_round(array &$u, array &$b, string $mode): array
             $logHeal .= (string) $GLOBALS['_melee_el_tag'];
         }
         unset($GLOBALS['_melee_el_tag']);
+    }
+    // 攻速·连击：速度够高时追加一击（同一目标，按主伤害50%），击杀/掉落仍由下方统一结算
+    if ($pd > 0 && (int) $b['hp'] > 0) {
+        $combo = speed_combo_strike($u, (int) $pd, $logHeal);
+        if ($combo > 0) {
+            $b['hp'] = (int) $b['hp'] - $combo;
+        }
     }
     // 召唤师：召唤型技能 → 按技能招不同的兽，越高阶代价越大
     // 注意：必须“真的放出了技能”才算（$sid 只在蓝够、技能成功释放时被设置）。

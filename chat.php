@@ -23,7 +23,13 @@ if ($ch === 'guild') {
 
 if ((string) ($_GET['a'] ?? '') === 'poll') {
     header('Content-Type: application/json; charset=utf-8');
-    echo json_encode(chat_fetch($ch, $target, (int) ($_GET['last'] ?? 0), (string) ($u['zone'] ?? 'z1')), JSON_UNESCAPED_UNICODE);
+    $rows = chat_fetch($ch, $target, (int) ($_GET['last'] ?? 0), (string) ($u['zone'] ?? 'z1'));
+    // 附带每条消息的头像 HTML，前端轮询时直接插入
+    foreach ($rows as &$m) {
+        $m['avatar'] = avatar_by_uid_html((int) ($m['uid'] ?? 0), 20);
+    }
+    unset($m);
+    echo json_encode($rows, JSON_UNESCAPED_UNICODE);
     exit;
 }
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -44,7 +50,7 @@ if ($flash !== '') {
 }
 echo '<div id="msgs">';
 foreach (chat_fetch($ch, $target, 0, (string) ($u['zone'] ?? 'z1')) as $m) {
-    echo '<div>【' . sin_name_html((string) $m['username'], sin_of((int) ($m['uid'] ?? 0))) . '】' . h($m['text']) . '</div>';
+    echo '<div>' . avatar_name_by_uid_html((int) ($m['uid'] ?? 0), (string) $m['username'], 20) . '　' . h($m['text']) . '</div>';
 }
 echo '</div>';
 echo '<form method="post" action="chat.php?ch=' . h($ch) . '">';
@@ -64,7 +70,7 @@ const d=await r.json();
 if(!Array.isArray(d)||!d.length)return;
 const box=document.getElementById("msgs");
 for(const m of d){lastId=Math.max(lastId,m.id);
-const dv=document.createElement("div");dv.textContent="【"+m.username+"】"+m.text;box.appendChild(dv);}
+const dv=document.createElement("div");dv.innerHTML=(m.avatar||"")+" "+m.username+"　"+m.text;box.appendChild(dv);}
 }catch(e){}},5000);
 </script>';
 nav_line();

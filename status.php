@@ -8,9 +8,15 @@ $u = user_by_id((int) $u['id']);
 $here = loc((string) $u['loc']);
 
 wap_start('状态');
+echo avatar_html($u, 48) . '<br>';
 echo sin_name_html((string) $u['username'], sin_of((int) $u['id'])) . '　' . h(lv_text((int) $u['id'], (int) $u['lv']));
 echo '　' . h(job_of($u)['name']) . '(' . h(job_of($u)['skill']) . ')';
+$rb2cur = (string) (cflags((int) $u['id'])['rb2_job'] ?? '');
+if ($rb2cur !== '' && function_exists('rebirth2_name') && rebirth2_name($rb2cur) !== '') {
+    echo '·' . h(rebirth2_name($rb2cur));
+}
 echo '<br>';
+echo '<a href="avatar.php">更换头像</a><br>';
 echo '罪值 ' . sin_of((int) $u['id']) . (sin_of((int) $u['id']) >= 100 ? '（<span style="color:#f66">恶贯满盈，任何人都可强制PK你</span>）' : (sin_of((int) $u['id']) < 10 ? '（<span style="color:#9c9">心地纯善，生命+20%</span>）' : '')) . '<br>';
 echo '<span class="hp">生命 ' . (int) $u['hp'] . '/' . (int) $u['maxhp'] . '</span><br>';
 echo '<span style="color:#6cf">魔力 ' . (int) ($u['mp'] ?? 0) . '/' . (int) ($u['maxmp'] ?? 0) . '</span><br>';

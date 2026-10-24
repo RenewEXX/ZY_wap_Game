@@ -30,5 +30,6 @@ require_once __DIR__ . '/warrior_hunter.php';
 require_once __DIR__ . '/monster_skills.php';
 require_once __DIR__ . '/arena.php';
 require_once __DIR__ . '/rebirth.php';
+require_once __DIR__ . '/avatar.php';
 
 db_init();

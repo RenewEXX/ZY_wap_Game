@@ -41,13 +41,16 @@ if ($tab === 'power') {
         $st->execute(['zone' => (string) ($u['zone'] ?? 'z1')]);
     }
     $all = $st->fetchAll();
+    $byName = [];
     foreach ($all as $r) {
         $rows[] = ['name' => $r['username'], 'job' => job_name_of($r), 'lv' => $r['lv'], 'v' => power_score($r)];
+        $byName[(string) $r['username']] = $r;
     }
     usort($rows, fn($a, $b) => $b['v'] <=> $a['v']);
     $rows = array_slice($rows, 0, 20);
     foreach ($rows as $i => $r) {
-        echo ($i + 1) . '. ' . h($r['name']) . '【' . h($r['job']) . '】Lv' . $r['lv'] . ' 战力' . $r['v'] . '<br>';
+        $av = isset($byName[$r['name']]) ? avatar_html($byName[$r['name']], 22) : '';
+        echo ($i + 1) . '. ' . $av . ' ' . h($r['name']) . '【' . h($r['job']) . '】Lv' . $r['lv'] . ' 战力' . $r['v'] . '<br>';
     }
 } elseif ($tab === 'active') {
     echo '【活跃榜·' . h(zones()[$u['zone'] ?? 'z1']['name'] ?? '') . '】（累计在线时长，本大区）<br>';

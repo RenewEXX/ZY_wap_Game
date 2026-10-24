@@ -203,6 +203,11 @@ function db_init(): void
         } catch (Throwable $e) {
         }
     }
+    // 头像：存所选头像 id（空=跟随当前职业/转职的默认头像）
+    try {
+        db()->exec('ALTER TABLE users ADD COLUMN avatar TEXT NOT NULL DEFAULT ""');
+    } catch (Throwable $e) {
+    }
     try {
         db()->exec("UPDATE users SET account=username WHERE account=''");
     } catch (Throwable $e) {
@@ -793,6 +798,10 @@ function user_save(array $u): void
         (int) ($u['grow_def'] ?? 0), (int) ($u['grow_matk'] ?? 0),
         (int) ($u['active_secs'] ?? 0), (int) ($u['last_seen'] ?? 0), (int) ($u['diamonds_bought'] ?? 0), (int) ($u['diamonds_spent'] ?? 0), (int) ($u['horse_won'] ?? 0), $u['id'],
     ]);
+    // 头像单独更新（避免影响既有 UPDATE 的参数顺序）
+    if (array_key_exists('avatar', $u)) {
+        db()->prepare('UPDATE users SET avatar=? WHERE id=?')->execute([(string) $u['avatar'], (int) $u['id']]);
+    }
 }
 
 function user_save_flags(array $u): void

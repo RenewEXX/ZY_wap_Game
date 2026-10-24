@@ -25,9 +25,15 @@ if ((int) $t['id'] === (int) $u['id']) {
 }
 
 wap_start('查看玩家');
+echo avatar_html($t, 44) . '<br>';
 echo '【' . sin_name_html((string) $t['username'], sin_of((int) $t['id'])) . '】<br>';
 echo '等级：' . (int) $t['lv'] . '<br>';
-echo '职业：' . h(job_of($t)['name']) . '（' . h(job_of($t)['skill']) . '）<br>';
+echo '职业：' . h(job_of($t)['name']) . '（' . h(job_of($t)['skill']) . '）';
+$tRb2 = (string) (cflags((int) $t['id'])['rb2_job'] ?? '');
+if ($tRb2 !== '' && function_exists('rebirth2_name') && rebirth2_name($tRb2) !== '') {
+    echo '·' . h(rebirth2_name($tRb2));
+}
+echo '<br>';
 echo '生命：' . (int) $t['hp'] . '/' . (int) $t['maxhp'] . '<br>';
 echo '魔力：' . (int) ($t['mp'] ?? 0) . '/' . (int) ($t['maxmp'] ?? 0) . '<br>';
 echo '位置：' . h(loc((string) $t['loc'])['name']) . '<br>';

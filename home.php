@@ -113,6 +113,11 @@ $grounds = ground_list($cur);
 if ($grounds !== []) {
     echo '<div class="hr">--------</div>地上有东西（1分钟后消失）：<br>';
     foreach ($grounds as $g) {
+        if (($g['kind'] ?? '') === 'peak') {
+            $pnames = ['atk' => '战力增幅(攻+15%)', 'def' => '铁壁补给(减伤15%)', 'heal' => '急救包(回血15%)'];
+            echo '·<span style="color:#6cf">【战场补给·' . h($pnames[(string) $g['ref']] ?? '?') . '】</span> <a href="home.php?a=pickup&id=' . $g['id'] . '">抢</a><br>';
+            continue;
+        }
         if (($g['kind'] ?? '') === 'equip') {
             $st = db()->prepare('SELECT name, quality FROM equips WHERE id=? AND uid=0 AND pos="ground"');
             $st->execute([(int) $g['ref']]);

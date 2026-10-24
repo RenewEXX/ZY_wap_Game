@@ -831,19 +831,13 @@ function peak_storm_apply(array &$u): string
     if ($new <= 1) {
         $msg .= '你已是强弩之末，随时会被收走。';
     }
-    // 只有圈外能捡补给（终局圈内也能）。掉落更慷慨：45%
+    // 只有圈外能捡补给（终局圈内也能）。改为在战场上真实掉落共享补给：谁先点到谁拿。
     if ($exposed && mt_rand(1, 100) <= 45) {
-        $buffs = ['atk' => '战力增幅(攻+15%)', 'def' => '铁壁补给(减伤15%)', 'heal' => '急救包(回血15%)'];
-        $k = array_rand($buffs);
-        mat_set($uid, 'peak_buff_' . $k, 1);
-        if ($k === 'heal') {
-            $h = max(1, (int) ($u['maxhp'] * 0.15));
-            $u['hp'] = min((int) $u['maxhp'], (int) $u['hp'] + $h);
-            user_save($u);
-            $msg .= ' 你在废墟里翻到【' . $buffs[$k] . '】，回复 ' . $h . ' 点生命。';
-        } else {
-            $msg .= ' 你在废墟里翻到【' . $buffs[$k] . '】，下一场对决生效。';
-        }
+        $keys = ['atk', 'def', 'heal'];
+        $k = $keys[array_rand($keys)];
+        ground_place_peak_supply((string) ($u['loc'] ?? ''), $k);
+        $names = ['atk' => '战力增幅', 'def' => '铁壁补给', 'heal' => '急救包'];
+        $msg .= ' 战场废墟里刷出了一个【' . $names[$k] . '】，谁先点到归谁——去捡！';
     }
     return $msg;
 }
@@ -4488,6 +4482,16 @@ function ground_place_equip(string $loc, int $eid): void
     ground_trim($loc);
 }
 
+// 战场补给：做成真实掉落物（谁都能抢）。kind=peak，ref=atk/def/heal。
+function ground_place_peak_supply(string $loc, string $buffKey): void
+{
+    if (!in_array($buffKey, ['atk', 'def', 'heal'], true)) {
+        return;
+    }
+    db()->prepare('INSERT INTO ground_items (loc, kind, ref, num, at) VALUES (?, "peak", ?, 1, ?)')->execute([$loc, $buffKey, time()]);
+    ground_trim($loc);
+}
+
 function ground_list(string $loc): array
 {
     $st = db()->prepare('SELECT * FROM ground_items WHERE loc=? ORDER BY at DESC LIMIT 50');
@@ -4502,6 +4506,30 @@ function ground_pickup(int $uid, int $gid): string
     $g = $st->fetch();
     if (!$g) {
         return '地上啥也没有了。';
+    }
+    if (($g['kind'] ?? '') === 'peak') {
+        // 战场补给：谁先点到谁拿到，给个人增益
+        $k = (string) $g['ref'];
+        $names = ['atk' => '战力增幅(攻+15%)', 'def' => '铁壁补给(减伤15%)', 'heal' => '急救包(回血15%)'];
+        if (!isset($names[$k])) {
+            db()->prepare('DELETE FROM ground_items WHERE id=?')->execute([$gid]);
+            return '那件补给已经失效了。';
+        }
+        $del = db()->prepare('DELETE FROM ground_items WHERE id=?');
+        $del->execute([$gid]);
+        if ($del->rowCount() === 0) {
+            return '慢了一步，补给被别人抢走了！';
+        }
+        mat_set((int) $uid, 'peak_buff_' . $k, 1);
+        $u = user_by_id((int) $uid);
+        $tail = '';
+        if ($k === 'heal' && $u) {
+            $h = max(1, (int) ($u['maxhp'] * 0.15));
+            $u['hp'] = min((int) $u['maxhp'], (int) $u['hp'] + $h);
+            user_save($u);
+            $tail = '，回复 ' . $h . ' 点生命';
+        }
+        return '你抢到【' . $names[$k] . '】' . $tail . '！';
     }
     if (($g['kind'] ?? '') === 'equip') {
         if (bag_full((int) $uid)) {

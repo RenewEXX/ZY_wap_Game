@@ -78,8 +78,31 @@ $testHp=100; $dmg=max(1,(int)round($testHp*0.04)); ck43('缩圈伤害≥1', $dmg
 $bar=peak_storm_bar($up); ck43('倒计时条可用', is_string($bar));
 clean43($up);
 
+// ---------- [巅峰] 补给=共享地面掉落，可抢 ----------
+echo "\n[4] 战场补给共享掉落（抢）\n";
+$ua=mk43('warrior'); $ub=mk43('mage');
+$aU=user_by_id($ua); $bU=user_by_id($ub);
+$aU['loc']='peak2'; user_save($aU); $bU['loc']='peak2'; user_save($bU);
+$gloc='peak2';
+db()->exec('DELETE FROM ground_items WHERE loc='.db()->quote($gloc));
+ground_place_peak_supply($gloc,'atk');
+$list=ground_list($gloc);
+$found=null; foreach($list as $g){ if(($g['kind']??'')==='peak'){$found=$g;break;} }
+ck43('补给作为地面掉落出现', $found!==null && ($found['kind']??'')==='peak');
+ck43('补给位置=战场', $found && $found['loc']===$gloc);
+// A 先抢到
+$msgA=ground_pickup($ua,(int)$found['id']);
+ck43('A抢到补给', str_contains($msgA,'抢到') || str_contains($msgA,'战力增幅'), $msgA);
+// 已被抢走，B 再抢应失败
+$msgB=ground_pickup($ub,(int)$found['id']);
+ck43('B再抢时已没了', str_contains($msgB,'没有') || str_contains($msgB,'失效') || str_contains($msgB,'慢了一步'), $msgB);
+// A 确实拿到了 atk buff
+$mA=mats_of($ua); ck43('A获得atk增益', !empty($mA['peak_buff_atk']));
+db()->exec('DELETE FROM ground_items WHERE loc='.db()->quote($gloc));
+clean43($ua); clean43($ub);
+
 // ---------- [天梯] 段位 & 保底 ----------
-echo "\n[4] 天梯段位\n";
+echo "\n[5] 天梯段位\n";
 $cases=[[1,'王者'],[2,'大师'],[10,'钻石'],[30,'铂金'],[70,'黄金'],[150,'白银'],[400,'青铜'],[5000,'黑铁']];
 foreach($cases as [$rk,$want]){ $t=arena_tier($rk); ck43("第{$rk}名→{$want}", $t[1]===$want, $t[1]); }
 // 段位越高保底越多

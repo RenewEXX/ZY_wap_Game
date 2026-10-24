@@ -119,7 +119,7 @@ function arena_pop_anchor(string $zone): array
 }
 
 // 按排名+锚点算目标战力。
-// 设计：前 3 名机器人要比最强真人还猛一点（1.15/1.10/1.06 倍），让“天花板”有挑战；
+// 设计：前 3 名机器人要比最强真人略高一点（1.02/1.01/1.00 倍），让“天花板”有挑战但不至于碾压；
 // 第 4 名起回落到最强真人的 0.95 倍，再线性滑到榜尾，形成一道“前几名的墙”。
 function arena_dummy_power_for(int $rank, array $anchor): int
 {
@@ -127,7 +127,7 @@ function arena_dummy_power_for(int $rank, array $anchor): int
     $maxPlayer = (int) ($anchor['maxpower'] ?? 0);
     $bottom = (int) $anchor['bottom_power'];
     if ($maxPlayer > 0) {
-        $topBots = [1 => 1.15, 2 => 1.10, 3 => 1.06];
+        $topBots = [1 => 1.02, 2 => 1.01, 3 => 1.00];
         if (isset($topBots[$r])) {
             return (int) round($maxPlayer * $topBots[$r]);
         }

@@ -106,4 +106,23 @@ $qid2=(int)db()->query("SELECT id FROM equips WHERE uid=$mg AND name LIKE '%兽�
 ck48('法师不能背箭袋', str_contains(wear_equip($mg,$qid2),'拿不动'), '');
 db()->exec("DELETE FROM users WHERE id IN ($hu,$mg)");db()->exec("DELETE FROM mats WHERE uid IN ($hu,$mg)");db()->exec("DELETE FROM equips WHERE uid IN ($hu,$mg)");
 
+// ---- 8) 猎人打怪按等级段掉弓/箭袋（不是只能买）----
+$hq=(int)user_create('hq'.mt_rand(1,99999),'x','hunter','z1',true,'tmp'); $_SESSION['uid']=$hq;
+$hqu=user_by_id($hq); $hqu['lv']=980; user_save($hqu); _gear_uncache($hq);
+// 各等级段基底正确
+ck48('lv1段=新手短弓/兽皮箭袋', (hunter_arsenal_for_lv(10)['bow']??'')==='新手短弓' && (hunter_arsenal_for_lv(10)['quiver']??'')==='兽皮箭袋', '');
+ck48('lv800段=时序追星弓/星辉箭袋', (hunter_arsenal_for_lv(850)['bow']??'')==='时序追星弓' && (hunter_arsenal_for_lv(850)['quiver']??'')==='星辉箭袋', '');
+// 各段确实能掉（sampling）
+$byLv=[]; foreach(monsters() as $mid=>$m){ $lv=monster_lv($mid); if($lv>=5&&!isset($byLv[$lv]))$byLv[$lv]=$mid; } ksort($byLv);
+foreach([30,250,500,800] as $tgt){ $best=null;$bd=1e9; foreach($byLv as $lv=>$mid){ if(abs($lv-$tgt)<$bd){$bd=abs($lv-$tgt);$best=$mid;} }
+  $got=0; for($i=0;$i<1500;$i++){ db()->exec("DELETE FROM equips WHERE uid=$hq"); if(roll_hunter_gear($hq,$best)!=='')$got++; }
+  db()->exec("DELETE FROM equips WHERE uid=$hq");
+  ck48("猎人lv$tgt段能掉弓/箭袋(>0.5%)", $got/1500*100 >= 0.5, 'got='.$got);
+}
+// 非猎人不掉
+$wq=(int)user_create('wq'.mt_rand(1,99999),'x','warrior','z1',true,'tmp'); $_SESSION['uid']=$wq;
+$wqu=user_by_id($wq); $wqu['lv']=980; user_save($wqu); _gear_uncache($wq);
+ck48('战士不掉弓/箭袋', roll_hunter_gear($wq, $byLv[500]??'shadow_rat')==='', '');
+db()->exec("DELETE FROM users WHERE id IN ($hq,$wq)");db()->exec("DELETE FROM mats WHERE uid IN ($hq,$wq)");db()->exec("DELETE FROM equips WHERE uid IN ($hq,$wq)");
+
 echo "\nOK=$ok FAIL=$bad\n";

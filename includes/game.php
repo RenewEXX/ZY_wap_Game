@@ -4830,6 +4830,64 @@ function player_resist(array $u, string $el): float
     return min(75, $r);
 }
 
+// ========== 猎人专属掉落：弓(主手) / 箭袋(副手) 按怪物等级分段掉落 ==========
+// 与召唤师契匣同一套思路：不看固定怪表，按击杀怪等级给对应区间的弓或箭袋，
+// 猎人打怪就有机会摸到，各等级段都能逐步换新，而不是只能去商店买。
+function hunter_arsenal_tiers(): array
+{
+    return [
+        ['min' => 1,   'max' => 99,  'bow' => '新手短弓',   'quiver' => '兽皮箭袋'],
+        ['min' => 100, 'max' => 199, 'bow' => '精铁猎弓',   'quiver' => '精铁箭袋'],
+        ['min' => 200, 'max' => 299, 'bow' => '疾风长弓',   'quiver' => '疾风箭袋'],
+        ['min' => 300, 'max' => 419, 'bow' => '霜纹战弓',   'quiver' => '霜纹箭袋'],
+        ['min' => 420, 'max' => 499, 'bow' => '穿林强弓',   'quiver' => '穿林箭袋'],
+        ['min' => 500, 'max' => 599, 'bow' => '荆棘游侠弓', 'quiver' => '荆棘箭袋'],
+        ['min' => 600, 'max' => 699, 'bow' => '烬焰猎日弓', 'quiver' => '烬焰箭囊'],
+        ['min' => 700, 'max' => 799, 'bow' => '岩狱裂石弓', 'quiver' => '岩狱箭袋'],
+        ['min' => 800, 'max' => 999, 'bow' => '时序追星弓', 'quiver' => '星辉箭袋'],
+    ];
+}
+
+// 该等级区间的弓/箭袋基底。返回 ['bow'=>名字,'quiver'=>名字] 或 null。
+function hunter_arsenal_for_lv(int $lv): ?array
+{
+    foreach (hunter_arsenal_tiers() as $t) {
+        if ($lv >= $t['min'] && $lv <= $t['max']) {
+            return ['bow' => $t['bow'], 'quiver' => $t['quiver']];
+        }
+    }
+    return null;
+}
+
+// 猎人打怪独立掉落：每次击杀按怪物等级给对应区间的弓或箭袋（约5%基础，吃寻宝/转生）。
+// 只对猎人触发；品质走全游戏同一档位（低劣~史诗）。
+function roll_hunter_gear(int $uid, string $mid): string
+{
+    if (job_id_of(user_by_id((int) $uid) ?? []) !== 'hunter') {
+        return '';
+    }
+    $lv = monster_lv($mid);
+    if ($lv < 5) {
+        return '';
+    }
+    $tier = hunter_arsenal_for_lv($lv);
+    if ($tier === null) {
+        return '';
+    }
+    // 固定基础掉率，不随怪物等级暴涨；只吃寻宝(magic_find)与转生加成
+    $m = 1 + min(200, gear_stats($uid)['magic_find']) / 100;
+    if (function_exists('rs_drop_mult')) { $m *= rs_drop_mult($uid); }
+    if (mt_rand() / mt_getrandmax() > 0.04 * $m) {
+        return '';
+    }
+    // 弓与箭袋各半
+    $slot = mt_rand(0, 1) === 0 ? 'weapon' : 'offhand';
+    $base = $slot === 'weapon' ? $tier['bow'] : $tier['quiver'];
+    $r = mt_rand() / mt_getrandmax();
+    $q = $r < 0.10 ? 3 : ($r < 0.35 ? 2 : ($r < 0.70 ? 1 : 0));
+    return make_equip($uid, $slot, $base, $q, $lv);
+}
+
 function monster_dodge(string $mid): float
 {
     static $d = ['bat' => 6, 'wraith' => 5, 'thief' => 5, 'cultist' => 3, 'knight' => 10, 'echo_rayne' => 12, 'bee' => 4, 'deep_bat' => 6];
@@ -4858,6 +4916,11 @@ function roll_drop(int $uid, string $mid, int $elite = 0): string
                 }
             }
         }
+    }
+    // 猎人专属：按怪物等级独立掉弓/箭袋（与主掉落互不影响，各等级段都能陆续换新）
+    $hg = roll_hunter_gear($uid, $mid);
+    if ($hg !== '') {
+        $base = $base !== '' ? $base . ' ' . $hg : $hg;
     }
     return $base;
 }

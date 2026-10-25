@@ -8253,7 +8253,7 @@ function map_regions(): array
 // 副本图：只能找NPC进，不参与传送
 function dungeon_maps(): array
 {
-    return array_merge(dsw_maps(), abx_maps(), mx_maps(), fr_maps(), em_maps(), pz_maps(), sen_maps(), ry_maps(), vx_maps(), gy_maps(), gf_maps(), yz_maps(), region_dungeon_maps());
+    return array_merge(dsw_maps(), abx_maps(), mx_maps(), fr_maps(), em_maps(), pz_maps(), sen_maps(), as_maps(), ry_maps(), vx_maps(), gy_maps(), gf_maps(), yz_maps(), region_dungeon_maps());
 }
 
 function exit_dirs(string $from): array
@@ -8818,7 +8818,7 @@ function ch3_locations(): array
 {
     $m = [];
     $m['capital_gate'] = ['name' => '王都城门', 'desc' => '城墙高耸入云。守卫动作僵硬，像被线提着，关节处有细小的银丝连着天空。', 'exits' => ['buf23b' => '尘埃长路', 'avenue' => '中央大道', 'buf34a' => '风雪关道', 'buf35a' => '灰雾关道'], 'monsters' => []];
-    $m['avenue'] = ['name' => '王都中央大道', 'desc' => '市民走路没有声音，关节咔咔作响。瓦尔顿在街角等你：真正的王都二十年前就没了。', 'exits' => ['capital_gate' => '王都城门', 'noble' => '贵族区', 'library' => '皇家图书馆', 'slum' => '贫民窟'], 'monsters' => ['puppet_guard']];
+    $m['avenue'] = ['name' => '王都中央大道', 'desc' => '市民走路没有声音，关节咔咔作响。瓦尔顿在街角等你：真正的王都二十年前就没了。', 'exits' => ['capital_gate' => '王都城门', 'noble' => '贵族区', 'library' => '皇家图书馆', 'slum' => '贫民窟', 'arena_gate' => '竞技场·试炼门'], 'monsters' => ['puppet_guard']];
     $m['noble'] = ['name' => '贵族区', 'desc' => '舞会彻夜不停。贵族们脚不沾地，被银丝吊在天花板上跳舞。', 'exits' => ['avenue' => '中央大道', 'cathedral' => '光明大教堂'], 'monsters' => ['masked_noble']];
     $m['library'] = ['name' => '皇家图书馆', 'desc' => '满架子全是剧本，记载着王都每一天该发生什么。墨傀儡在吃掉关于真王都的记载。', 'exits' => ['avenue' => '中央大道', 'ctomb' => '皇家陵墓'], 'monsters' => ['ink_puppet', 'mimic_chest']];
     $m['ctomb'] = ['name' => '皇家陵墓', 'desc' => '所有棺材都是空的。国王雷金纳德根本没有葬在这里。', 'exits' => ['library' => '皇家图书馆'], 'monsters' => ['silver_undead']];
@@ -9010,7 +9010,7 @@ function greenheart_locations(): array
 function wild45_locations(): array
 {
     $m = [];
-    $m['frost_graveyard'] = ['name' => '霜语墓园', 'desc' => '墓碑上全是冰。霜裔猎手在碑林里练箭，箭箭不离碑——碑都快被射穿了。', 'exits' => ['ice_village' => '冰原村', 'howl_valley' => '冰嚎谷'], 'monsters' => ['frostborn_hunter', 'ice_specter']];
+    $m['frost_graveyard'] = ['name' => '霜语墓园', 'desc' => '墓碑上全是冰。霜裔猎手在碑林里练箭，箭箭不离碑——碑都快被射穿了。', 'exits' => ['ice_village' => '冰原村', 'howl_valley' => '冰嚎谷', 'frostborn_camp' => '霜裔营地'], 'monsters' => ['frostborn_hunter', 'ice_specter']];
     $m['howl_valley'] = ['name' => '冰嚎谷', 'desc' => '风过谷口像狼嚎。冻原霜狼在这里开会，商量下山路线。', 'exits' => ['frost_graveyard' => '墓园', 'frost_waste' => '冻土荒原'], 'monsters' => ['frost_wolf', 'frostborn_hunter']];
     $m['frost_waste'] = ['name' => '冻土荒原', 'desc' => '荒原上只有风和雪盲。雪盲洼地在前面，进去容易，出来看命。', 'exits' => ['howl_valley' => '冰嚎谷', 'snowblind_hollow' => '雪盲洼地'], 'monsters' => ['snow_mammoth', 'winter_knight']];
     $m['snowblind_hollow'] = ['name' => '雪盲洼地', 'desc' => '白茫茫一片，走三步就分不清东南西北。冰瀑在洼地尽头轰隆隆响。', 'exits' => ['frost_waste' => '荒原', 'ice_fall' => '冰瀑'], 'monsters' => ['blizzard_shaman', 'frost_matriarch']];
@@ -9018,7 +9018,7 @@ function wild45_locations(): array
     $m['frostborn_camp'] = ['name' => '霜裔营地', 'desc' => '霜裔猎手的营地，火堆整夜不灭。他们说：火灭了，人就散了。', 'exits' => ['frost_graveyard' => '墓园'], 'monsters' => ['frostborn_hunter', 'aurora_serpent']];
     $m['whisper_marsh'] = ['name' => '低语沼泽', 'desc' => '沼泽里全是硫磺味。硫磺精在气泡里洗澡，洗得越久越黄。', 'exits' => ['sage_grove' => '贤者林', 'mushroom_forest' => '蘑菇林'], 'monsters' => ['sulfur_sprite', 'rot_sage']];
     $m['mushroom_forest'] = ['name' => '蘑菇林', 'desc' => '蘑菇比人高。孢子群落在这里开演唱会，门票是你的鼻子。', 'exits' => ['whisper_marsh' => '沼泽', 'fallen_city' => '落叶城废墟'], 'monsters' => ['spore_colony', 'sulfur_sprite']];
-    $m['fallen_city'] = ['name' => '落叶城废墟', 'desc' => '曾经的城，现在只剩城门。荆棘猎手在城墙上巡逻，巡的是寂寞。', 'exits' => ['mushroom_forest' => '蘑菇林', 'sulfur_spring' => '硫磺泉'], 'monsters' => ['thorn_hunter', 'ancient_boa']];
+    $m['fallen_city'] = ['name' => '落叶城废墟', 'desc' => '曾经的城，现在只剩城门。荆棘猎手在城墙上巡逻，巡的是寂寞。', 'exits' => ['mushroom_forest' => '蘑菇林', 'sulfur_spring' => '硫磺泉', 'ash_chapel2' => '灰烬小教堂'], 'monsters' => ['thorn_hunter', 'ancient_boa']];
     $m['sulfur_spring'] = ['name' => '硫磺泉', 'desc' => '泉水咕嘟咕嘟冒泡。黑曜石原在前面，黑得发亮。', 'exits' => ['fallen_city' => '废墟', 'obsidian_field' => '黑曜石原'], 'monsters' => ['sulfur_sprite', 'ember_imp']];
     $m['obsidian_field'] = ['name' => '黑曜石原', 'desc' => '满地黑曜石，亮得晃眼。黑曜石巨像站在原中央，一动不动——动起来就是灾难。', 'exits' => ['sulfur_spring' => '硫磺泉'], 'monsters' => ['obsidian_colossus']];
     $m['ash_chapel2'] = ['name' => '灰烬小教堂', 'desc' => '和废弃礼拜堂一个师傅盖的。灰烬教徒在这里排练，排的是葬礼——自己的。', 'exits' => ['fallen_city' => '废墟'], 'monsters' => ['ash_cultist', 'magma_golem']];
@@ -9357,13 +9357,25 @@ function ch1_locations(): array
         $m['wild' . $i] = ['name' => '荒野' . $i, 'desc' => '灰黄草原，史莱姆与灰狼游荡。任务：各杀20只。', 'exits' => $ex, 'monsters' => ['slime', 'wolf']];
     }
     for ($i = 1; $i <= 4; $i++) {
-        $m['forest' . $i] = ['name' => '低语林' . $i, 'desc' => '树学人说话。巨蜂+盗贼。杀20蜂交差。', 'exits' => ['wild3' => '荒野3', 'swamp1' => '黑水沼1'], 'monsters' => ['bee', 'thief']];
+        $fx = ['wild3' => '荒野3', 'swamp1' => '黑水沼1'];
+        // 同层串联：低语林1↔2↔3↔4，保证每一座都走得进（原先 3/4 无入口=死图）
+        if ($i > 1) { $fx['forest' . ($i - 1)] = '低语林' . ($i - 1); }
+        if ($i < 4) { $fx['forest' . ($i + 1)] = '低语林' . ($i + 1); }
+        $m['forest' . $i] = ['name' => '低语林' . $i, 'desc' => '树学人说话。巨蜂+盗贼。杀20蜂交差。', 'exits' => $fx, 'monsters' => ['bee', 'thief']];
     }
     for ($i = 1; $i <= 4; $i++) {
-        $m['swamp' . $i] = ['name' => '黑水沼' . $i, 'desc' => '毒蛙遍地。修女要20份蛙囊。', 'exits' => ['forest2' => '低语林2', 'hill1' => '灰岩丘1'], 'monsters' => ['frog', 'slime']];
+        $fx = ['forest2' => '低语林2', 'hill1' => '灰岩丘1'];
+        // 同层串联：黑水沼1↔2↔3↔4（原 3/4 无入口）
+        if ($i > 1) { $fx['swamp' . ($i - 1)] = '黑水沼' . ($i - 1); }
+        if ($i < 4) { $fx['swamp' . ($i + 1)] = '黑水沼' . ($i + 1); }
+        $m['swamp' . $i] = ['name' => '黑水沼' . $i, 'desc' => '毒蛙遍地。修女要20份蛙囊。', 'exits' => $fx, 'monsters' => ['frog', 'slime']];
     }
     for ($i = 1; $i <= 4; $i++) {
-        $m['hill' . $i] = ['name' => '灰岩丘' . $i, 'desc' => '骷髅+吸血蝠群。', 'exits' => ['swamp2' => '黑水沼2', 'ruin1' => '废弃村1'], 'monsters' => ['skeleton', 'bat']];
+        $fx = ['swamp2' => '黑水沼2', 'ruin1' => '废弃村1'];
+        // 同层串联：灰岩丘1↔2↔3↔4（原 2/3/4 无入口）
+        if ($i > 1) { $fx['hill' . ($i - 1)] = '灰岩丘' . ($i - 1); }
+        if ($i < 4) { $fx['hill' . ($i + 1)] = '灰岩丘' . ($i + 1); }
+        $m['hill' . $i] = ['name' => '灰岩丘' . $i, 'desc' => '骷髅+吸血蝠群。', 'exits' => $fx, 'monsters' => ['skeleton', 'bat']];
     }
     $m['ruin1'] = ['name' => '废弃村1·外围', 'desc' => '和灰雾村一样的空村。食尸鬼啃着燕麦。', 'exits' => ['hill1' => '灰岩丘1', 'ruin2' => '废弃村2'], 'monsters' => ['ghoul', 'skeleton']];
     $m['ruin2'] = ['name' => '废弃村2·教堂', 'desc' => '教徒布道：下面很暖和。', 'exits' => ['ruin1' => '外围', 'ruin3' => '废弃村3'], 'monsters' => ['cultist', 'ghoul']];

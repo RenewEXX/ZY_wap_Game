@@ -4867,17 +4867,26 @@ function roll_hunter_gear(int $uid, string $mid): string
         return '';
     }
     $lv = monster_lv($mid);
-    if ($lv < 5) {
+    if ($lv < 1) {
         return '';
     }
     $tier = hunter_arsenal_for_lv($lv);
     if ($tier === null) {
         return '';
     }
+    $isBoss = is_boss_mid($mid);
+    $isDun = function_exists('is_dungeon_mob') ? is_dungeon_mob($mid) : false;
+    // 高等级(≥300)弓/箭袋只在副本小怪或 BOSS 掉，野外大地图不再产出（低段仍随处可掉，方便练级）
+    $isHigh = $lv >= 300;
+    if ($isHigh && !$isBoss && !$isDun) {
+        return '';
+    }
+    // 掉率：野外/低段 4%，副本小怪 7%，BOSS 大幅提高（约30%）
+    $baseRate = $isBoss ? 0.30 : ($isDun ? 0.07 : 0.04);
     // 固定基础掉率，不随怪物等级暴涨；只吃寻宝(magic_find)与转生加成
     $m = 1 + min(200, gear_stats($uid)['magic_find']) / 100;
     if (function_exists('rs_drop_mult')) { $m *= rs_drop_mult($uid); }
-    if (mt_rand() / mt_getrandmax() > 0.04 * $m) {
+    if (mt_rand() / mt_getrandmax() > $baseRate * $m) {
         return '';
     }
     // 弓与箭袋各半
@@ -4885,6 +4894,10 @@ function roll_hunter_gear(int $uid, string $mid): string
     $base = $slot === 'weapon' ? $tier['bow'] : $tier['quiver'];
     $r = mt_rand() / mt_getrandmax();
     $q = $r < 0.10 ? 3 : ($r < 0.35 ? 2 : ($r < 0.70 ? 1 : 0));
+    // BOSS 保底稀有(2)，高等级 BOSS 更易出史诗(3)
+    if ($isBoss) {
+        $q = max($q, $isHigh ? 3 : 2);
+    }
     return make_equip($uid, $slot, $base, $q, $lv);
 }
 

@@ -112,17 +112,27 @@ $hqu=user_by_id($hq); $hqu['lv']=980; user_save($hqu); _gear_uncache($hq);
 // 各等级段基底正确
 ck48('lv1段=新手短弓/兽皮箭袋', (hunter_arsenal_for_lv(10)['bow']??'')==='新手短弓' && (hunter_arsenal_for_lv(10)['quiver']??'')==='兽皮箭袋', '');
 ck48('lv800段=时序追星弓/星辉箭袋', (hunter_arsenal_for_lv(850)['bow']??'')==='时序追星弓' && (hunter_arsenal_for_lv(850)['quiver']??'')==='星辉箭袋', '');
-// 各段确实能掉（sampling）
-$byLv=[]; foreach(monsters() as $mid=>$m){ $lv=monster_lv($mid); if($lv>=5&&!isset($byLv[$lv]))$byLv[$lv]=$mid; } ksort($byLv);
-foreach([30,250,500,800] as $tgt){ $best=null;$bd=1e9; foreach($byLv as $lv=>$mid){ if(abs($lv-$tgt)<$bd){$bd=abs($lv-$tgt);$best=$mid;} }
-  $got=0; for($i=0;$i<1500;$i++){ db()->exec("DELETE FROM equips WHERE uid=$hq"); if(roll_hunter_gear($hq,$best)!=='')$got++; }
-  db()->exec("DELETE FROM equips WHERE uid=$hq");
-  ck48("猎人lv$tgt段能掉弓/箭袋(>0.5%)", $got/1500*100 >= 0.5, 'got='.$got);
+$grate=function($mid,$N=2000) use($hq){ $got=0; for($i=0;$i<$N;$i++){ db()->exec("DELETE FROM equips WHERE uid=$hq"); if(roll_hunter_gear($hq,$mid)!=='')$got++; } db()->exec("DELETE FROM equips WHERE uid=$hq"); return $got/$N*100; };
+// 挑选：低段野外 / 中段野外 / 高段野外(应0) / 高段副本小怪(应>0) / 高段BOSS(应更高)
+$fLo=$fMid=$fHi=$dHi=$bHi=null;
+foreach(monsters() as $mid=>$m){ $lv=monster_lv($mid); $boss=is_boss_mid($mid); $dun=is_dungeon_mob($mid);
+  if($lv<90 && !$boss && !$dun && !$fLo)$fLo=$mid;
+  if($lv>=200 && $lv<290 && !$boss && !$dun && !$fMid)$fMid=$mid;
+  if($lv>=400 && !$boss && !$dun && !$fHi)$fHi=$mid;
+  if($lv>=400 && !$boss && $dun && !$dHi)$dHi=$mid;
+  if($lv>=400 && $boss && !$bHi)$bHi=$mid;
 }
+ck48('低段野外能掉弓/箭袋', $fLo && $grate($fLo) >= 0.5, $fLo.' '.round($grate($fLo),2).'%');
+ck48('中段(200-299)野外仍能掉', $fMid && $grate($fMid) >= 0.5, (string)$fMid);
+ck48('高段(≥300)野外不掉弓/箭袋', $fHi && $grate($fHi, 1500) < 0.1, (string)$fHi);
+ck48('高段副本小怪掉弓/箭袋', $dHi && $grate($dHi) >= 0.5, $dHi.' '.round($grate($dHi),2).'%');
+ck48('高段BOSS掉弓/箭袋(掉率更高)', $bHi && $grate($bHi, 600) >= 10, $bHi.' '.round($grate($bHi,600),1).'%');
+// BOSS 保底品质
+if($bHi){ $mq=-1; for($i=0;$i<60;$i++){ db()->exec("DELETE FROM equips WHERE uid=$hq"); roll_hunter_gear($hq,$bHi); $r=db()->query("SELECT quality FROM equips WHERE uid=$hq LIMIT 1")->fetch(); if($r)$mq=max($mq,(int)$r['quality']); } db()->exec("DELETE FROM equips WHERE uid=$hq"); ck48('高段BOSS掉弓/箭袋品质保底史诗(≥3)', $mq>=3, 'q='.$mq); }
 // 非猎人不掉
 $wq=(int)user_create('wq'.mt_rand(1,99999),'x','warrior','z1',true,'tmp'); $_SESSION['uid']=$wq;
 $wqu=user_by_id($wq); $wqu['lv']=980; user_save($wqu); _gear_uncache($wq);
-ck48('战士不掉弓/箭袋', roll_hunter_gear($wq, $byLv[500]??'shadow_rat')==='', '');
+ck48('战士不掉弓/箭袋', roll_hunter_gear($wq, $dHi??'shadow_rat')==='', '');
 db()->exec("DELETE FROM users WHERE id IN ($hq,$wq)");db()->exec("DELETE FROM mats WHERE uid IN ($hq,$wq)");db()->exec("DELETE FROM equips WHERE uid IN ($hq,$wq)");
 
 echo "\nOK=$ok FAIL=$bad\n";

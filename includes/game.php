@@ -3210,9 +3210,19 @@ function monster_drops(string $mid): array
     ] + world_expansion_drops() + region_dungeon_drops())[$mid] ?? [];
 }
 
-function equip_primary(string $slot, string $offKind = ''): string
+// 箭袋：猎手专属副手（名字含"箭袋"），与法器/盾不同，走猎人的物理词条
+function is_quiver(string $base): bool
+{
+    return str_contains($base, '箭袋');
+}
+
+function equip_primary(string $slot, string $offKind = '', string $base = ''): string
 {
     if ($slot === 'offhand') {
+        // 箭袋：主属性给物攻（猎手物理输出），而不是法系的元素伤害
+        if (is_quiver($base)) {
+            return 'atk';
+        }
         return $offKind === 'shield' ? 'def' : 'element';
     }
     if ($slot === 'ring') {
@@ -3229,7 +3239,7 @@ function equip_damage_type(string $slot, string $base, string $offKind = ''): st
         return in_array(weapon_sub((string) $base), ['staff', 'relic'], true) ? 'magic' : 'phys';
     }
     if ($slot === 'offhand') {
-        return $offKind === 'shield' ? 'phys' : 'magic';
+        return ($offKind === 'shield' || is_quiver($base)) ? 'phys' : 'magic';
     }
     // 防具与首饰全职业通用，不做偏向
     return 'any';
@@ -3238,6 +3248,11 @@ function equip_damage_type(string $slot, string $base, string $offKind = ''): st
 // 副词条池：按伤害路数剔掉用不上的攻击词条，避免法系刷出物攻、物理刷出法攻
 function equip_sub_pool(string $slot, string $base, string $primary, string $legendId = '', string $offKind = ''): array
 {
+    // 箭袋：猎人物理副词条池（暴击/暴伤/攻速/穿透/元素/物攻%/生命/物防），不出法攻/召唤词条
+    if ($slot === 'offhand' && is_quiver($base)) {
+        $pool = ['crit', 'critdmg', 'speed', 'penetration', 'element', 'atk_pct', 'hp', 'def'];
+        return array_values(array_filter($pool, fn($id) => $id !== $primary && ($legendId === '' || $id !== $legendId)));
+    }
     $pool = array_values(array_filter(
         slot_pools()[$slot] ?? ['atk', 'def', 'hp'],
         fn($id) => $id !== $primary && $id !== $legendId
@@ -3393,7 +3408,7 @@ function make_equip(int $uid, string $slot, string $base, int $q, int $itemLevel
     $reqLv = $req['lv'];
     $reqStr = $isStr ? $req['str'] : 0;
     $reqAgi = !$isStr ? $req['str'] : 0;
-    $primary = equip_primary($slot, $offKind);
+    $primary = equip_primary($slot, $offKind, (string) $base);
     if ($slot === 'weapon' && in_array(weapon_sub((string) $base), ['staff', 'relic'], true)) {
         $primary = 'matk';
     }

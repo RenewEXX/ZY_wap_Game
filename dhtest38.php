@@ -14,10 +14,12 @@ foreach (monsters() as $mid => $_) {
 foreach (world_expansion_drops() as $d) {
     if (isset($d['legendary']['base'])) { $bases[(string)$d['legendary']['base']] = (string)$d['slot']; }
 }
-ck38('唯一传说件数=85', count($bases) === 85, (string)count($bases));
+// 猎人传说箭袋由副本BOSS的猎手掉落（roll_region_boss_hunter_gear），不在这两张表里，单独登记进审计
+$bases['裂空猎魂箭袋'] = 'offhand';
+ck38('唯一传说件数=86', count($bases) === 86, (string)count($bases));
 
 $reg = boss_legendary_effects();
-ck38('注册表件数=85', count($reg) === 85, (string)count($reg));
+ck38('注册表件数=86', count($reg) === 86, (string)count($reg));
 
 // 每个 eff 字段都必须是“已接入钩子”的合法字段
 $allowed = ['dr','counter','kill_heal','oncrit_heal','regen','lowhp_reduce','lowhp_dodge','lowhp_dmg','lowhp_crit','single','perlost_crit','stun','execute','el','dot','summon_power','summon_hp','summon_cap','lifesteal','dodge','crit','critdmg','skill_damage','atk_pct','def_pct','allres','truedmg','element','hp','atk','matk','def','mdef'];

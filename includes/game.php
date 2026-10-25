@@ -4946,9 +4946,9 @@ function roll_region_boss_hunter_gear(int $uid, string $mid): string
     $lv = monster_lv($mid);
     $m = 1 + min(200, gear_stats($uid)['magic_find']) / 100;
     $r = mt_rand() / mt_getrandmax();
-    // 传说箭袋（q4，仅 BOSS，约 3%*寻宝）
+    // 传说箭袋（q4，仅 BOSS，约 3%*寻宝）：统一为唯一的传说箭袋，带专属传说特效+故事
     if ($r < 0.03 * $m) {
-        return make_equip($uid, 'offhand', $prefix . '·裂空猎魂箭袋', 4, $lv);
+        return make_equip($uid, 'offhand', '裂空猎魂箭袋', 4, $lv);
     }
     // 副本套装弓 / 套装箭袋（q3，约 22%*寻宝，各半）：弓=主手、箭袋=副手
     if ($r < 0.25 * $m) {

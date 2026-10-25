@@ -213,6 +213,8 @@ function boss_legendary_effects(): array
         'lg_bl_rd_magma' => ['base' => '潮脊', 'intro' => '真伤+140；全元素伤害+22%；物攻+10%（炽浪灼烧）。', 'eff' => ['truedmg' => 140, 'element' => 22, 'atk_pct' => 10]],
         'lg_bl_rd_chrono' => ['base' => '刹那', 'intro' => '技能伤害+16%；暴击时回复6%最大生命；暴击率+3%（刹那）。', 'eff' => ['skill_damage' => 16, 'oncrit_heal' => 6, 'crit' => 3]],
         'lg_bl_rd_divine' => ['base' => '空座', 'intro' => '对残血(<40%)目标伤害+40%；全元素抗性+10；物防、法防各+10%（归穹）。', 'eff' => ['execute' => [0.4, 40], 'allres' => 10, 'def_pct' => 10]],
+        // 猎人传说箭袋（由大区域副本BOSS的猎手掉落）
+        'lg_bl_rd_quiver' => ['base' => '裂空猎魂箭袋', 'intro' => '暴击率+6%；暴击伤害+20%；对残血(<30%)目标伤害+40%（猎魂收割）。', 'eff' => ['crit' => 6, 'critdmg' => 20, 'execute' => [0.3, 40]]],
     ];
 }
 function boss_legendary_key_by_base(string $base): string

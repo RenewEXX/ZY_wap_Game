@@ -2936,13 +2936,17 @@ function equip_set_owned_count(int $uid, string $set): int
         if ($pieces === []) {
             return 0;
         }
+        // BOSS 专属套装箭袋（<前缀>之箭袋）也算作该套装的一件
+        $prefix = substr($set, strlen('rd_set:'));
+        $quiver = $prefix . '之箭袋';
         $st = db()->prepare('SELECT name FROM equips WHERE uid=? AND pos="wear"');
         $st->execute([(int) $uid]);
         $n = 0;
         while ($r = $st->fetch()) {
-            if (in_array(equip_shortname((string) $r['name']), $pieces, true)) { $n++; }
+            $sn = equip_shortname((string) $r['name']);
+            if (in_array($sn, $pieces, true) || $sn === $quiver) { $n++; }
         }
-        return min(count($pieces), $n);
+        return min(count($pieces) + 1, $n);
     }
     if (in_array($set, ['theater', 'frost', 'ember', 'puppet', 'thorn', 'rockjail', 'sin', 'god', 'dusk', 'jimie', 'shiyuan', 'soulpact'], true)) {
         $mark = ['theater' => '%剧场·%', 'frost' => '%寒霜·%', 'ember' => '%烬焰·%', 'puppet' => '%傀儡·%', 'thorn' => '%荆棘·%', 'rockjail' => '%岩狱·%', 'sin' => '%罪渊·%', 'god' => '%神铸·%', 'dusk' => '%暮影·%', 'jimie' => '%寂灭·%', 'shiyuan' => '%噬渊·%', 'soulpact' => '%魂契·%'][$set];
@@ -4901,6 +4905,40 @@ function roll_hunter_gear(int $uid, string $mid): string
     return make_equip($uid, $slot, $base, $q, $lv);
 }
 
+// 大区域副本 BOSS 专属：猎人可在此摸到【副本套装弓 / 套装箭袋】与【传说箭袋】。
+// 传说与套装级别的弓/箭袋只由副本 BOSS 产出，不走野外/小怪。
+function roll_region_boss_hunter_gear(int $uid, string $mid): string
+{
+    if (job_id_of(user_by_id((int) $uid) ?? []) !== 'hunter') {
+        return '';
+    }
+    if (!is_boss_mid($mid) || !function_exists('region_dungeon_boss_set_piece')) {
+        return '';
+    }
+    $sp = region_dungeon_boss_set_piece($mid);
+    if (!$sp) {
+        return '';
+    }
+    $prefix = region_dungeon_prefix_of(equip_shortname((string) ($sp['base'] ?? '')));
+    if ($prefix === '' || !region_dungeon_is_set_prefix($prefix)) {
+        return '';
+    }
+    $lv = monster_lv($mid);
+    $m = 1 + min(200, gear_stats($uid)['magic_find']) / 100;
+    $r = mt_rand() / mt_getrandmax();
+    // 传说箭袋（q4，仅 BOSS，约 3%*寻宝）
+    if ($r < 0.03 * $m) {
+        return make_equip($uid, 'offhand', $prefix . '·裂空猎魂箭袋', 4, $lv);
+    }
+    // 副本套装弓 / 套装箭袋（q3，约 22%*寻宝，各半）：弓=主手、箭袋=副手
+    if ($r < 0.25 * $m) {
+        $wantBow = mt_rand(0, 1) === 0;
+        $base = $wantBow ? $prefix . '之弓' : $prefix . '之箭袋';
+        return make_equip($uid, $wantBow ? 'weapon' : 'offhand', $base, 3, $lv);
+    }
+    return '';
+}
+
 function monster_dodge(string $mid): float
 {
     static $d = ['bat' => 6, 'wraith' => 5, 'thief' => 5, 'cultist' => 3, 'knight' => 10, 'echo_rayne' => 12, 'bee' => 4, 'deep_bat' => 6];
@@ -4934,6 +4972,11 @@ function roll_drop(int $uid, string $mid, int $elite = 0): string
     $hg = roll_hunter_gear($uid, $mid);
     if ($hg !== '') {
         $base = $base !== '' ? $base . ' ' . $hg : $hg;
+    }
+    // 副本 BOSS：猎人专属套装弓/套装箭袋/传说箭袋（传说与套装级只由 BOSS 产出）
+    $hbq = roll_region_boss_hunter_gear($uid, $mid);
+    if ($hbq !== '') {
+        $base = $base !== '' ? $base . ' ' . $hbq : $hbq;
     }
     return $base;
 }

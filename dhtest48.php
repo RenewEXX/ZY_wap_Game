@@ -135,4 +135,22 @@ $wqu=user_by_id($wq); $wqu['lv']=980; user_save($wqu); _gear_uncache($wq);
 ck48('战士不掉弓/箭袋', roll_hunter_gear($wq, $dHi??'shadow_rat')==='', '');
 db()->exec("DELETE FROM users WHERE id IN ($hq,$wq)");db()->exec("DELETE FROM mats WHERE uid IN ($hq,$wq)");db()->exec("DELETE FROM equips WHERE uid IN ($hq,$wq)");
 
+// ---- 9) 传说/套装级弓·箭袋只由副本BOSS掉落；副本小怪不再出弓/箭袋 ----
+// 副本小怪(非BOSS)不会掉任何弓/箭袋（含套装弓）
+$mobBow=[]; foreach(monsters() as $mid=>$m){ if(is_boss_mid($mid)||!is_dungeon_mob($mid))continue; $d=monster_drops($mid); if(!$d||!isset($d['base']))continue; $b=$d['base']; if(!empty($d['class_weapons']['hunter']))$b=$d['class_weapons']['hunter']; if(weapon_sub($b)==='bow'||str_contains($b,'箭袋'))$mobBow[]=$mid; }
+ck48('副本小怪不掉弓/箭袋', $mobBow===[], implode(',',array_slice($mobBow,0,8)));
+// 每个副本BOSS：猎人都能从BOSS专属掉落摸到套装弓/套装箭袋/传说箭袋
+$bTest=(int)user_create('bt'.mt_rand(1,99999),'x','hunter','z1',true,'tmp'); $_SESSION['uid']=$bTest;
+$btu=user_by_id($bTest); $btu['lv']=980; user_save($btu); _gear_uncache($bTest);
+$gotSetBow=false;$gotSetQ=false;$gotLgQ=false;
+foreach(region_dungeon_bosses() as $bmid){ for($i=0;$i<200;$i++){ db()->exec("DELETE FROM equips WHERE uid=$bTest"); roll_region_boss_hunter_gear($bTest,$bmid); $r=db()->query("SELECT slot,name,quality FROM equips WHERE uid=$bTest LIMIT 1")->fetch(); if($r){ if((int)$r['quality']===4)$gotLgQ=true; elseif($r['slot']==='weapon')$gotSetBow=true; else $gotSetQ=true; } db()->exec("DELETE FROM equips WHERE uid=$bTest"); } }
+ck48('BOSS能掉套装弓', $gotSetBow);
+ck48('BOSS能掉套装箭袋', $gotSetQ);
+ck48('BOSS能掉传说箭袋', $gotLgQ);
+// 非BOSS(小怪/野外)绝不产出传说级弓/箭袋(roll_drop对非BOSS封顶史诗)
+$fieldMid=$fHi??$dHi;
+$anyLg=false; for($i=0;$i<300 && $fieldMid;$i++){ db()->exec("DELETE FROM equips WHERE uid=$bTest"); roll_drop($bTest,$fieldMid,0); $r=db()->query("SELECT quality FROM equips WHERE uid=$bTest AND (name LIKE '%箭袋%' OR name LIKE '%弓%') ORDER BY id DESC LIMIT 1")->fetch(); if($r && (int)$r['quality']===4)$anyLg=true; db()->exec("DELETE FROM equips WHERE uid=$bTest"); }
+ck48('非BOSS不出传说级弓/箭袋', !$anyLg, (string)$fieldMid);
+db()->exec("DELETE FROM users WHERE id=$bTest");db()->exec("DELETE FROM mats WHERE uid=$bTest");db()->exec("DELETE FROM equips WHERE uid=$bTest");
+
 echo "\nOK=$ok FAIL=$bad\n";

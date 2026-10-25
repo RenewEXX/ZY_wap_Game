@@ -54,11 +54,15 @@ function region_dungeon_set_layout(string $prefix): array
 
 // 一次性"挑一件副本套装件"的掉落定义。按 seed 在 7 个逻辑槽(武器+6防具)里定一件；
 // 若是武器，则带 class_weapons 映射，真正掉落时按玩家职业换成对应武器。
-function region_dungeon_pick_drop(string $seedKey, array $layout): array
+// $allowWeapon=false 时（副本小怪用）只出防具，武器类套装件（含猎人弓）只由 BOSS 出。
+function region_dungeon_pick_drop(string $seedKey, array $layout, bool $allowWeapon = true): array
 {
     $armor = $layout['armor'] ?? [];
     $weapons = $layout['weapons'] ?? [];
     $slots = ['weapon', 'offhand', 'body', 'head', 'legs', 'gloves', 'shoes'];
+    if (!$allowWeapon) {
+        $slots = ['offhand', 'body', 'head', 'legs', 'gloves', 'shoes'];
+    }
     if ($armor === [] || $weapons === []) {
         return ['slot' => 'body', 'base' => '残片', 'rate' => 0.05, 'q' => [0, 20, 50, 30, 0]];
     }
@@ -345,7 +349,7 @@ function region_dungeon_build(): array
             $mon[$mid] = ['name' => $nm, 'hp' => $hp, 'atk' => $atk, 'exp' => $exp, 'gold' => $gold];
             $lv[$mid] = $mlv;
             $el[$mid] = $mel;
-            $drops[$mid] = region_dungeon_pick_drop($mid, $setLayout);
+            $drops[$mid] = region_dungeon_pick_drop($mid, $setLayout, false);
             $skills[$mid] = ['atk' => $atkName, 'skills' => [['name' => $nm . '·扑击', 'rate' => 22, 'mult' => 1.5, 'el' => $mel]]];
         }
 

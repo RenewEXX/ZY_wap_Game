@@ -2506,6 +2506,11 @@ function weapon_jobs(string $sub): array
 
 function weapon_is_twohand(string $base): bool
 {
+    // 弓一律视为单手武器：任意弓都能与箭袋(副手)同时装备，不再占用副手位。
+    // （弓/弩的 weapon_sub 均为 bow，这里统一放行，含"长弓"等此前判为双手的弓。）
+    if (weapon_sub($base) === 'bow') {
+        return false;
+    }
     if (in_array(equip_shortname($base), twohand_bases(), true)) {
         return true;
     }

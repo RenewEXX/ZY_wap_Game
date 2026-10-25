@@ -168,4 +168,23 @@ $qok=true; for($i=0;$i<20;$i++){ make_equip($qv,'offhand','苍穹之箭袋',3,40
 ck48('实造箭袋:主=暴击率且无发法攻/召唤词条(20件)', $qok);
 db()->exec("DELETE FROM users WHERE id=$qv");db()->exec("DELETE FROM mats WHERE uid=$qv");db()->exec("DELETE FROM equips WHERE uid=$qv");
 
+// ---- 11) 弓统一为单手：任意弓与箭袋可同时装备 ----
+$allBowOnehand=true; foreach(hunter_arsenal_tiers() as $t){ if(isset($t['bow']) && weapon_is_twohand($t['bow'])) $allBowOnehand=false; }
+foreach(['疾风长弓','寒霜·长弓','傀儡长弓'] as $bn){ if(weapon_is_twohand($bn)) $allBowOnehand=false; }
+ck48('所有弓都是单手(含长弓)', $allBowOnehand, '');
+ck48('弓的weapon_sub=bow', weapon_sub('疾风长弓')==='bow' && weapon_sub('寒霜·长弓')==='bow', '');
+// 非弓双手仍保留
+ck48('非弓双手不受影响(大剑/战斧)', weapon_is_twohand('堕落骑士大剑') && weapon_is_twohand('寒霜·战斧'), '');
+// 实穿：长弓 + 箭袋可同时装备
+$du=(int)user_create('dw'.mt_rand(1,99999),'x','hunter','z1',true,'tmp'); $_SESSION['uid']=$du;
+$duo=user_by_id($du); $duo['lv']=999; $duo['str']=8000; $duo['agi']=8000; $duo['int']=8000; $duo['vit']=8000; user_save($duo); _gear_uncache($du);
+db()->exec("DELETE FROM equips WHERE uid=$du");
+make_equip($du,'weapon','疾风长弓',3,300); make_equip($du,'offhand','疾风箭袋',3,300);
+$st=db()->prepare("SELECT id,name FROM equips WHERE uid=? AND pos=''"); $st->execute([$du]); $wid=[];
+while($r=$st->fetch())$wid[$r['name']]=(int)$r['id'];
+foreach($wid as $id){ wear_equip($du,$id); }
+$wornSlots=db()->query("SELECT slot FROM equips WHERE uid=$du AND pos='wear'")->fetchAll(PDO::FETCH_COLUMN);
+ck48('长弓+箭袋可同时装备', in_array('weapon',$wornSlots,true)&&in_array('offhand',$wornSlots,true), implode(',',$wornSlots));
+db()->exec("DELETE FROM users WHERE id=$du");db()->exec("DELETE FROM mats WHERE uid=$du");db()->exec("DELETE FROM equips WHERE uid=$du");
+
 echo "\nOK=$ok FAIL=$bad\n";

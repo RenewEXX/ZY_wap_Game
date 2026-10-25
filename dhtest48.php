@@ -153,18 +153,19 @@ $anyLg=false; for($i=0;$i<300 && $fieldMid;$i++){ db()->exec("DELETE FROM equips
 ck48('非BOSS不出传说级弓/箭袋', !$anyLg, (string)$fieldMid);
 db()->exec("DELETE FROM users WHERE id=$bTest");db()->exec("DELETE FROM mats WHERE uid=$bTest");db()->exec("DELETE FROM equips WHERE uid=$bTest");
 
-// ---- 10) 箭袋主属性=物攻，副词条不出法攻/召唤（猎手向） ----
-ck48('箭袋主属性=物攻(atk)', equip_primary('offhand','','苍穹之箭袋')==='atk', equip_primary('offhand','','苍穹之箭袋'));
+// ---- 10) 箭袋主属性=暴击率，副词条不出法攻/召唤（猎手向） ----
+ck48('箭袋主属性=暴击率(crit)', equip_primary('offhand','','苍穹之箭袋')==='crit', equip_primary('offhand','','苍穹之箭袋'));
 ck48('箭袋属物理系(排除法攻)', equip_damage_type('offhand','苍穹之箭袋','')==='phys', equip_damage_type('offhand','苍穹之箭袋',''));
-$qpool=equip_sub_pool('offhand','苍穹之箭袋','atk');
+$qpool=equip_sub_pool('offhand','苍穹之箭袋','crit');
 ck48('箭袋副词条不含法攻', !in_array('matk',$qpool,true) && !in_array('matk_pct',$qpool,true), json_encode($qpool));
 ck48('箭袋副词条不含召唤', !in_array('summon_power',$qpool,true) && !in_array('summon_hp',$qpool,true), json_encode($qpool));
-ck48('箭袋副词条含暴击/暴伤/攻速', in_array('crit',$qpool,true)&&in_array('critdmg',$qpool,true)&&in_array('speed',$qpool,true), json_encode($qpool));
-// 实造校验：主词条是 atk，且不含 matk/summon
+ck48('箭袋副词条含暴伤/攻速/物攻', in_array('critdmg',$qpool,true)&&in_array('speed',$qpool,true)&&in_array('atk',$qpool,true), json_encode($qpool));
+ck48('箭袋副词条不含暴击(主属性已占)', !in_array('crit',$qpool,true), json_encode($qpool));
+// 实造校验：主词条是 crit，且不含 matk/summon
 $qv=(int)user_create('qq'.mt_rand(1,99999),'x','hunter','z1',true,'tmp'); $_SESSION['uid']=$qv;
 db()->exec("DELETE FROM equips WHERE uid=$qv");
-$qok=true; for($i=0;$i<20;$i++){ make_equip($qv,'offhand','苍穹之箭袋',3,400); $row=db()->query("SELECT affixes FROM equips WHERE uid=$qv ORDER BY id DESC LIMIT 1")->fetch(); db()->exec("DELETE FROM equips WHERE uid=$qv"); $aff=json_decode((string)$row['affixes'],true); $main=false; foreach($aff as $a){ if($a['id']==='atk'&&!empty($a['main']))$main=true; if(in_array($a['id'],['matk','matk_pct','summon_power','summon_hp'],true))$qok=false; } if(!$main)$qok=false; }
-ck48('实造箭袋:主=物攻且无发法攻/召唤词条(20件)', $qok);
+$qok=true; for($i=0;$i<20;$i++){ make_equip($qv,'offhand','苍穹之箭袋',3,400); $row=db()->query("SELECT affixes FROM equips WHERE uid=$qv ORDER BY id DESC LIMIT 1")->fetch(); db()->exec("DELETE FROM equips WHERE uid=$qv"); $aff=json_decode((string)$row['affixes'],true); $main=false; foreach($aff as $a){ if($a['id']==='crit'&&!empty($a['main']))$main=true; if(in_array($a['id'],['matk','matk_pct','summon_power','summon_hp'],true))$qok=false; } if(!$main)$qok=false; }
+ck48('实造箭袋:主=暴击率且无发法攻/召唤词条(20件)', $qok);
 db()->exec("DELETE FROM users WHERE id=$qv");db()->exec("DELETE FROM mats WHERE uid=$qv");db()->exec("DELETE FROM equips WHERE uid=$qv");
 
 echo "\nOK=$ok FAIL=$bad\n";

@@ -3219,9 +3219,9 @@ function is_quiver(string $base): bool
 function equip_primary(string $slot, string $offKind = '', string $base = ''): string
 {
     if ($slot === 'offhand') {
-        // 箭袋：主属性给物攻（猎手物理输出），而不是法系的元素伤害
+        // 箭袋：主属性给暴击率（猎手向），而不是法系的元素伤害
         if (is_quiver($base)) {
-            return 'atk';
+            return 'crit';
         }
         return $offKind === 'shield' ? 'def' : 'element';
     }
@@ -3248,9 +3248,9 @@ function equip_damage_type(string $slot, string $base, string $offKind = ''): st
 // 副词条池：按伤害路数剔掉用不上的攻击词条，避免法系刷出物攻、物理刷出法攻
 function equip_sub_pool(string $slot, string $base, string $primary, string $legendId = '', string $offKind = ''): array
 {
-    // 箭袋：猎人物理副词条池（暴击/暴伤/攻速/穿透/元素/物攻%/生命/物防），不出法攻/召唤词条
+    // 箭袋：猎人物理副词条池（暴击/暴伤/攻速/穿透/元素/物攻/物攻%/生命/物防），不出法攻/召唤词条
     if ($slot === 'offhand' && is_quiver($base)) {
-        $pool = ['crit', 'critdmg', 'speed', 'penetration', 'element', 'atk_pct', 'hp', 'def'];
+        $pool = ['crit', 'critdmg', 'speed', 'penetration', 'element', 'atk', 'atk_pct', 'hp', 'def'];
         return array_values(array_filter($pool, fn($id) => $id !== $primary && ($legendId === '' || $id !== $legendId)));
     }
     $pool = array_values(array_filter(

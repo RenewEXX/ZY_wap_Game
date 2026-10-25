@@ -204,7 +204,7 @@ function world_expansion_drops(): array
         'wind_golem' => ['slot' => 'gloves', 'base' => '风蚀护手', 'rate' => 0.10, 'q' => [0, 20, 50, 30, 0]],
         'sky_priest' => ['slot' => 'necklace', 'base' => '苍穹圣链', 'rate' => 0.10, 'q' => [0, 20, 50, 30, 0]],
         'void_wisp' => ['slot' => 'shoes', 'base' => '虚空游步', 'rate' => 0.10, 'q' => [0, 20, 50, 30, 0]],
-        'tide_hunter' => ['slot' => 'weapon', 'base' => '潮汐之矛', 'rate' => 0.10, 'q' => [0, 20, 50, 30, 0]],
+        'tide_hunter' => ['slot' => 'weapon', 'base' => '潮汐之弓', 'rate' => 0.10, 'q' => [0, 20, 50, 30, 0]],
         'drowned_one' => ['slot' => 'body', 'base' => '溺亡者之衣', 'rate' => 0.10, 'q' => [0, 20, 50, 30, 0]],
         'coral_guard' => ['slot' => 'belt', 'base' => '珊瑚束腰', 'rate' => 0.10, 'q' => [0, 20, 50, 30, 0]],
         'siren_singer' => ['slot' => 'legs', 'base' => '海妖歌裙', 'rate' => 0.10, 'q' => [0, 20, 50, 30, 0]],

@@ -10,7 +10,7 @@ $go = (string) ($_GET['go'] ?? '');
 $backRegion = (string) ($_GET['region'] ?? '');
 $backSuffix = $backRegion !== '' ? '?region=' . urlencode($backRegion) : '';
 if ($go !== '' && isset($all[$go])) {
-    $cost = teleport_cost($cur, $go);
+    $cost = teleport_cost($cur, $go, (int) $u['lv']);
     if (in_array($go, dragon_maps(), true)) {
         flash_set('六圣柱只能徒步前往，无法直接传送。');
         header('Location: teleport.php' . $backSuffix);
@@ -78,7 +78,7 @@ if ($go !== '' && isset($all[$go])) {
 wap_start('传送');
 echo '你在哪：' . h($all[$cur]['name'] ?? $cur) . '<br>';
 echo '<span class="gold">' . h(fmt_money((int) $u['gold'])) . '</span><br>';
-echo '<span class="muted">按距离收费：越远越贵（约 20铜×步数×步数）。任务【立即前往】免费，走路免费。</span>';
+echo '<span class="muted">按距离收费：越远越贵（约 20铜×步数×步数，低等级享折扣）。任务【立即前往】免费，走路免费。</span>';
 echo '<div class="hr">--------</div>';
 $flash = flash_get();
 if ($flash !== '') {
@@ -112,7 +112,7 @@ foreach (teleport_region_order() as $region => $rMinLv) {
             echo '·' . h($all[$id]['name']) . '(你在)<br>';
             continue;
         }
-        $cost = teleport_cost($cur, $id);
+        $cost = teleport_cost($cur, $id, (int) $u['lv']);
         if ($cost === null) {
             echo '·' . h($all[$id]['name']) . '(到不了)<br>';
             continue;

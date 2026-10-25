@@ -204,7 +204,7 @@ function boss_legendary_effects(): array
         'lg_bl_ruinend' => ['base' => '神墟终焉·归墟之链', 'intro' => '对残血(<40%)目标伤害+45%（归墟）；物防、法防各+10%。', 'eff' => ['execute' => [0.4, 45], 'def_pct' => 10]],
 
         // —— 大区域副本专属传说（9 件，均为三字段独特组合，互不相同更不与遗物撞车）——
-        'lg_bl_rd_sky' => ['base' => '裂帛', 'intro' => '单体目标伤害+16%；暴击率+4%；暴击伤害+15%（裂空）。', 'eff' => ['single' => 16, 'crit' => 4, 'critdmg' => 15]],
+        'lg_bl_rd_sky' => ['base' => '裂空长弓', 'intro' => '单体目标伤害+16%；暴击率+4%；暴击伤害+15%（裂空）。', 'eff' => ['single' => 16, 'crit' => 4, 'critdmg' => 15]],
         'lg_bl_rd_sunk' => ['base' => '溺声', 'intro' => '受到伤害-6%；全元素抗性+12；残血(<40%)时再额外闪避+10（溺魂）。', 'eff' => ['dr' => 6, 'allres' => 12, 'lowhp_dodge' => [0.4, 10]]],
         'lg_bl_rd_forge' => ['base' => '不熄', 'intro' => '受到伤害-8%；反击伤害+25%；每击杀回复6%最大生命（永燃）。', 'eff' => ['dr' => 8, 'counter' => 25, 'kill_heal' => 6]],
         'lg_bl_rd_verd' => ['base' => '缠心', 'intro' => '吸血+5%；持续伤害(DOT)+20%；真伤+30（缠灵）。', 'eff' => ['lifesteal' => 5, 'dot' => 20, 'truedmg' => 30]],

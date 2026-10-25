@@ -18,7 +18,9 @@ if ($buy !== '' && isset($all[$buy])) {
     } else {
         // 商店旧货直接换成新装备系统的正式装备（普通随机2词缀）
         $u['gold'] = (int) $u['gold'] - (int) $it['gold'];
-        $nm = make_equip((int) $u['id'], $it['slot'] === 'armor' ? 'body' : 'weapon', $it['name'], 1);
+        $slot = (string) ($it['slot'] ?? 'weapon');
+        if ($slot === 'armor') { $slot = 'body'; }
+        $nm = make_equip((int) $u['id'], $slot, $it['name'], 1);
         user_save($u);
         flash_set('买下【' . $nm . '】，去背包穿上。');
     }

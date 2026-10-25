@@ -98,7 +98,7 @@ function region_dungeon_specs(): array
                 ['rd_sky_gust', '狂风气旋', 170, 'wind', 'gust'],
             ],
             'boss' => ['rd_sky_warden', '裂风之喉·呜咽', 195, 'thunder', 'warden'],
-            'legend' => ['slot' => 'weapon', 'base' => '裂帛', 'k' => 'skill_damage', 'v' => 6.0],
+            'legend' => ['slot' => 'weapon', 'base' => '裂空长弓', 'k' => 'skill_damage', 'v' => 6.0],
             'set' => [
                 'prefix' => '苍穹',
             ],

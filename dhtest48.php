@@ -67,4 +67,43 @@ ck48('成员贡献=10', (int)($byUid[$uidB]['contrib']??-1)===10, (string)($byUi
 db()->exec("DELETE FROM guild_members WHERE gid=$gid");db()->exec("DELETE FROM guilds WHERE id=$gid");
 db()->exec("DELETE FROM users WHERE id IN ($uidA,$uidB)");db()->exec("DELETE FROM mats WHERE uid IN ($uidA,$uidB)");
 
+// ---- 5) 召唤兽满上限不再重复耗蓝召唤；召唤师普攻残血免献祭 ----
+$su=(int)user_create('sc'.mt_rand(1,99999),'x','summoner','z1',true,'tmp'); $_SESSION['uid']=$su;
+$uu=user_by_id($su); $uu['lv']=30;$uu['int']=120; user_save($uu); _gear_uncache($su);
+$uu=user_by_id($su); $uu['maxhp']=1200;$uu['hp']=1200;$uu['maxmp']=800;$uu['mp']=800; user_save($uu); _gear_uncache($su);
+db()->exec("DELETE FROM skills WHERE uid=$su");
+db()->prepare("INSERT INTO skills (uid,skill,level,tier,prof,active) VALUES (?,'s1',1,1,0,1)")->execute([$su]);
+summon_save([]);
+$bb=['id'=>'x','name'=>'木桩','hp'=>999999,'maxhp'=>999999,'atk'=>20,'exp'=>1,'gold'=>1,'num'=>1,'left'=>1,'drops'=>[],'last'=>time()];
+$_SESSION['battle']=$bb;
+$cap=summon_cap($uu); $mpLeak=0;
+for($i=0;$i<20;$i++){ $before=count(summon_list()); $mpB=$uu['mp']; $res=battle_round($uu,$bb,'tick'); if($before>=summon_cap($uu) && str_contains($res['log']??'','应召')) $mpLeak++; }
+ck48('满上限不再重复耗蓝召唤', $mpLeak===0, "leak=$mpLeak");
+
+// ---- 6) 召唤兽生命/伤害词条显示带 % 且生效 ----
+ck48('召唤兽生命词条显示带%', str_ends_with(affix_fmt('summon_hp',6.0,'T3'),'%'), affix_fmt('summon_hp',6.0,'T3'));
+ck48('召唤兽伤害词条显示带%', str_ends_with(affix_fmt('summon_power',8.0,'T2'),'%'), affix_fmt('summon_power',8.0,'T2'));
+$su2=(int)user_create('sh'.mt_rand(1,99999),'x','summoner','z1',true,'tmp'); $_SESSION['uid']=$su2;
+$hh=user_by_id($su2); $hh['lv']=60;$hh['int']=200;$hh['maxhp']=1800; user_save($hh); _gear_uncache($su2); $hh=user_by_id($su2);
+$matk=player_matk($hh); $hp0=summon_spawn('imp',$matk,(int)$hh['maxhp'],$hh)['hp'];
+db()->prepare('INSERT INTO equips (uid,slot,name,quality,affixes,pos,item_level) VALUES (?,"necklace","n",3,?,"wear",300)')->execute([$su2, json_encode([['id'=>'summon_hp','tier'=>'T1','v'=>50.0,'main'=>true]])]);
+_gear_uncache($su2); $hh=user_by_id($su2); $hp1=summon_spawn('imp',$matk,(int)$hh['maxhp'],$hh)['hp'];
+ck48('召唤兽生命词条实际生效(+50%)', $hp1 > $hp0, "$hp0->$hp1");
+db()->exec("DELETE FROM users WHERE id IN ($su,$su2)");db()->exec("DELETE FROM mats WHERE uid IN ($su,$su2)");db()->exec("DELETE FROM equips WHERE uid=$su2");db()->exec("DELETE FROM skills WHERE uid=$su");
+
+// ---- 7) 猎人：弓(单手)+箭袋(仅猎手)可穿，其他职业穿箭袋被拒 ----
+ck48('硬木短弓=bow且单手', weapon_sub('硬木短弓')==='bow' && !weapon_is_twohand('硬木短弓'), '');
+ck48('兽皮箭袋仅猎手', equip_jobs_text(['slot'=>'offhand','name'=>'兽皮箭袋'])==='仅猎手', equip_jobs_text(['slot'=>'offhand','name'=>'兽皮箭袋']));
+$hu=(int)user_create('hh'.mt_rand(1,99999),'x','hunter','z1',true,'tmp'); $_SESSION['uid']=$hu;
+$huu=user_by_id($hu); $huu['lv']=200;$huu['str']=99999;$huu['agi']=99999; user_save($huu); _gear_uncache($hu);
+make_equip($hu,'offhand','兽皮箭袋',2,200);
+$qid=(int)db()->query("SELECT id FROM equips WHERE uid=$hu AND name LIKE '%兽皮箭袋%' LIMIT 1")->fetchColumn();
+ck48('猎手可背箭袋', str_contains(wear_equip($hu,$qid),'穿上了'), '');
+$mg=(int)user_create('mm'.mt_rand(1,99999),'x','mage','z1',true,'tmp'); $_SESSION['uid']=$mg;
+$mgu=user_by_id($mg); $mgu['lv']=200;$mgu['str']=99999;$mgu['agi']=99999; user_save($mgu); _gear_uncache($mg);
+make_equip($mg,'offhand','兽皮箭袋',2,200);
+$qid2=(int)db()->query("SELECT id FROM equips WHERE uid=$mg AND name LIKE '%兽皮箭袋%' LIMIT 1")->fetchColumn();
+ck48('法师不能背箭袋', str_contains(wear_equip($mg,$qid2),'拿不动'), '');
+db()->exec("DELETE FROM users WHERE id IN ($hu,$mg)");db()->exec("DELETE FROM mats WHERE uid IN ($hu,$mg)");db()->exec("DELETE FROM equips WHERE uid IN ($hu,$mg)");
+
 echo "\nOK=$ok FAIL=$bad\n";

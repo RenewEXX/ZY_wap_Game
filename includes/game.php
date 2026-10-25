@@ -391,6 +391,10 @@ function items(): array
     return [
         'rusty' => ['name' => '生锈铁剑', 'slot' => 'weapon', 'atk' => 3, 'def' => 0, 'gold' => 300],
         'bow' => ['name' => '猎弓', 'slot' => 'weapon', 'atk' => 4, 'def' => 0, 'gold' => 450],
+        'shortbow' => ['name' => '硬木短弓', 'slot' => 'weapon', 'atk' => 6, 'def' => 0, 'gold' => 900],
+        'quiver' => ['name' => '兽皮箭袋', 'slot' => 'offhand', 'atk' => 2, 'def' => 0, 'gold' => 400],
+        'quiver2' => ['name' => '精铁箭袋', 'slot' => 'offhand', 'atk' => 4, 'def' => 1, 'gold' => 1500],
+        'quiver3' => ['name' => '龙骨箭袋', 'slot' => 'offhand', 'atk' => 7, 'def' => 2, 'gold' => 6000],
         'staff' => ['name' => '桦木法杖', 'slot' => 'weapon', 'atk' => 5, 'def' => 0, 'gold' => 500],
         'mace' => ['name' => '白木槌', 'slot' => 'weapon', 'atk' => 3, 'def' => 0, 'gold' => 350],
         'sickle' => ['name' => '草药镰', 'slot' => 'weapon', 'atk' => 2, 'def' => 0, 'gold' => 120],
@@ -2727,7 +2731,7 @@ function affix_fmt(string $k, float $v, ?string $tier = null): string
     if (str_starts_with($k, 'lg_')) {
         return legend_relic_intro_by_key($k);
     }
-    $percent = ['atk_pct', 'matk_pct', 'crit', 'critdmg', 'speed', 'lifesteal', 'penetration', 'skill_damage', 'execute', 'damage_reduction', 'resist', 'regen', 'cooldown', 'hit', 'exp_gain', 'dodge', 'move_speed', 'control_resist', 'slow_resist', 'gold_gain', 'magic_find', 'res_light', 'res_dark', 'res_fire', 'res_wind', 'res_ice', 'res_thunder', 'allres'];
+    $percent = ['atk_pct', 'matk_pct', 'crit', 'critdmg', 'speed', 'lifesteal', 'penetration', 'skill_damage', 'execute', 'damage_reduction', 'resist', 'regen', 'cooldown', 'hit', 'exp_gain', 'dodge', 'move_speed', 'control_resist', 'slow_resist', 'gold_gain', 'magic_find', 'summon_power', 'summon_hp', 'res_light', 'res_dark', 'res_fire', 'res_wind', 'res_ice', 'res_thunder', 'allres'];
     $value = in_array($k, $percent, true) ? rtrim(rtrim(number_format($v, 1, '.', ''), '0'), '.') . '%' : (string) (int) round($v);
     return ($tier ? $tier . ' ' : '') . affix_label($k) . '+' . $value;
 }
@@ -3037,7 +3041,7 @@ function monster_drops(string $mid): array
         'wolf' => ['slot' => 'necklace', 'base' => '狼牙项链', 'rate' => 0.02, 'q' => [50, 35, 15, 0, 0]],
         'banshee' => ['slot' => 'ring', 'base' => '哭泣戒指', 'rate' => 0.025, 'q' => [0, 60, 30, 10, 0]],
         'wraith' => ['slot' => 'back', 'base' => '怨魂斗篷', 'rate' => 0.03, 'q' => [30, 50, 20, 0, 0]],
-        'rift_hound' => ['slot' => 'weapon', 'base' => '裂隙猎牙', 'rate' => 0.12, 'q' => [0, 30, 50, 20, 0]],
+        'rift_hound' => ['slot' => 'weapon', 'base' => '裂隙猎弓', 'rate' => 0.12, 'q' => [0, 30, 50, 20, 0]],
         'rift_weaver' => ['slot' => 'offhand', 'base' => '织影法器', 'rate' => 0.12, 'q' => [0, 30, 50, 20, 0]],
         'swamp_slime' => ['slot' => 'belt', 'base' => '沼泽束腰', 'rate' => 0.04, 'q' => [60, 30, 10, 0, 0]],
         'mist_treant' => ['slot' => 'belt', 'base' => '雾狐软腰', 'rate' => 0.05, 'q' => [30, 45, 25, 0, 0]],
@@ -3049,7 +3053,7 @@ function monster_drops(string $mid): array
         'ogre' => ['slot' => 'belt', 'base' => '兽皮腰带', 'rate' => 0.06, 'q' => [0, 45, 40, 12, 3], 'legendary' => ['base' => '食人魔战裙', 'extra' => ['k' => 'damage_reduction', 'v' => 2.0]]],
         'skeleton' => ['slot' => 'head', 'base' => '锈盔', 'rate' => 0.035, 'q' => [20, 50, 30, 0, 0]],
         'bat' => ['slot' => 'back', 'base' => '蝠翼披风', 'rate' => 0.035, 'q' => [20, 50, 30, 0, 0]],
-        'ghoul' => ['slot' => 'weapon', 'base' => '食尸鬼之爪', 'rate' => 0.05, 'q' => [0, 30, 50, 20, 0]],
+        'ghoul' => ['slot' => 'weapon', 'base' => '食尸鬼骨弓', 'rate' => 0.06, 'q' => [0, 30, 50, 20, 0]],
         // 召唤师契匣（过渡副手，掉出来就能戴，各自带开场召唤）
         'cultist' => ['slot' => 'offhand', 'off' => 'magic', 'base' => '引魂旧匣', 'rate' => 0.05, 'q' => [0, 100, 0, 0, 0]],
         'guard' => ['slot' => 'legs', 'base' => '祭坛护腿', 'rate' => 0.06, 'q' => [0, 20, 50, 30, 0]],
@@ -3320,6 +3324,8 @@ function equip_job_list(array $e): array
             $jobs = ['mage', 'priest'];
         } elseif (str_contains($nm, '契匣') || str_contains($nm, '魂匣') || str_contains($nm, '灵幡') || summoner_is_box($nm)) {
             $jobs = ['summoner'];
+        } elseif (str_contains($nm, '箭袋')) {
+            $jobs = ['hunter'];
         } else {
             $jobs = $order;
         }
@@ -3363,6 +3369,9 @@ function equip_can_wear(array $u, array $e): string
             if ($job !== 'summoner') {
                 return '封不住：契匣只有召唤师能契。';
             }
+        }
+        if (str_contains($nm, '箭袋') && $job !== 'hunter') {
+            return '拿不动：箭袋只有猎手能背。';
         }
     }
     return '';
@@ -6538,6 +6547,10 @@ function battle_round(array &$u, array &$b, string $mode): array
     if ($mode !== 'hit') {
         $job = job_id_of($u);
         $sk = active_skill((int) ($u['id'] ?? 0), $job);
+        // 召唤型技能但召唤兽已满上限：不再白白耗蓝重复召唤，改为按普通攻击出手
+        if ($sk !== null && $job === 'summoner' && ($sk['kind'] ?? '') === 'summon' && count(summon_list()) >= summon_cap($u)) {
+            $sk = null;
+        }
         if ($sk === null) {
             $isSkill = true;
             if ($job === 'warrior') {
@@ -6551,11 +6564,21 @@ function battle_round(array &$u, array &$b, string $mode): array
                 $u['hp'] = min((int) $u['maxhp'], (int) $u['hp'] + 25);
                 $pd = max(1, (int) (player_matk($u) * 0.5) + 2 - (int) (monster_mdef($b) / 2));
             } elseif ($job === 'summoner') {
-                // 召唤师平A：献祭5%生命换伤害
-                $cost = max(1, (int) ($u['hp'] * 0.05));
-                $u['hp'] = max(1, (int) $u['hp'] - $cost);
-                $pd = max(1, (int) (player_matk($u) * 0.85) + 2 - (int) (monster_mdef($b) / 2));
-                $logHeal .= '(献祭' . $cost . '血)';
+                // 召唤已满：普通暗影攻击，不再空耗蓝重复召唤，也不献祭生命（否则挂机每回合掉血暴毙）
+                if (count(summon_list()) >= summon_cap($u)) {
+                    $pd = max(1, (int) (player_matk($u)) + 2 - (int) (monster_mdef($b) / 2));
+                    $logHeal .= '(召唤已满·普攻)';
+                } elseif ((int) ($u['hp'] ?? 0) > (int) $u['maxhp'] * 0.3) {
+                    // 召唤师平A：献祭5%生命换伤害（生命高于30%才献祭，避免挂机自杀）
+                    $cost = max(1, (int) ($u['hp'] * 0.05));
+                    $u['hp'] = max(1, (int) $u['hp'] - $cost);
+                    $pd = max(1, (int) (player_matk($u) * 0.85) + 2 - (int) (monster_mdef($b) / 2));
+                    $logHeal .= '(献祭' . $cost . '血)';
+                } else {
+                    // 残血：改用不献祭的暗影普攻，优先保命
+                    $pd = max(1, (int) (player_matk($u)) + 2 - (int) (monster_mdef($b) / 2));
+                    $logHeal .= '(残血·免献祭)';
+                }
             }
             $skillName = job_of($u)['skill'];
         } elseif ((int) ($u['mp'] ?? 0) >= (int) $sk['mp']) {
@@ -8028,7 +8051,9 @@ function find_route(string $from, string $to): array
 // 传送费用：严格按距离（最短步数）收费，且越远单价越高（距离平方级）。
 // 近处几步几十铜，横穿整个世界(约30+步)要 1~2 金，让"路远=贵"真正体现出来。
 // 公式：20铜 × 步数 × (步数+1)。1步=40铜，5步=6银，10步=22银，20步=84银，34步≈2.38金。
-function teleport_cost(string $from, string $to): ?int
+// $playerLv>0 时按玩家等级打折：低等级玩家传送更便宜（≤30级 6折、≤60级 8折、更高原价），
+// 缓解"低等级地图传送费用太高"。负方不变（帮助新手跨越早期地图）。
+function teleport_cost(string $from, string $to, int $playerLv = 0): ?int
 {
     if ($from === $to) {
         return 0;
@@ -8038,7 +8063,13 @@ function teleport_cost(string $from, string $to): ?int
         return null;
     }
     $steps = count($path) - 1;
-    return 20 * $steps * ($steps + 1);
+    $cost = 20 * $steps * ($steps + 1);
+    if ($playerLv > 0) {
+        // 低等级折扣：随等级线性从 5 折抬到原价（约 120 级起原价）
+        $ratio = min(1.0, max(0.5, $playerLv / 120));
+        $cost = (int) ceil($cost * $ratio);
+    }
+    return $cost;
 }
 
 function teleport_region_order(): array

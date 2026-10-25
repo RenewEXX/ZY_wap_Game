@@ -2,16 +2,19 @@
 define('DH_TEST_MODE', true);
 require 'includes/bootstrap.php';
 error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
-// DOT传说(10件 300~999) + 蚀心DOT套装(堕天阶) 审计
+// DOT传说(20件: 10防具+5弓+5箭袋, 300~999) + 蚀心DOT套装(11件毕业, 堕天阶) 审计
 $ok=0;$bad=0;
 function ck53($l,$c,$d=''){ global $ok,$bad; if($c){$ok++;}else{$bad++;echo "FAIL $l $d\n";} }
 function del53(int $uid){ db()->exec("DELETE FROM users WHERE id=$uid");db()->exec("DELETE FROM mats WHERE uid=$uid");db()->exec("DELETE FROM equips WHERE uid=$uid"); }
 $DFLT='深渊里捞出来的东西，每一件都记得主人的名字。<br>它现在记得你的了。';
 
-// ============ Part 1：10 件 DOT 传说 ============
+// ============ Part 1：20 件 DOT 传说 ============
 $relics = legend_relics();
 $dotRelics = array_filter($relics, fn($c)=>str_starts_with((string)($c['key']??''),'lg_dot'));
-ck53('10件DOT传说', count($dotRelics)===10, (string)count($dotRelics));
+ck53('20件DOT传说', count($dotRelics)===20, (string)count($dotRelics));
+$bowN=0;$qvN=0; foreach($dotRelics as $c){ if($c['slot']==='weapon')$bowN++; if($c['slot']==='offhand' && ($c['key']??'')!=='lg_dot3')$qvN++; }
+ck53('5把传说弓', $bowN===5, (string)$bowN);
+ck53('5个传说箭袋(新增)', $qvN===5, (string)$qvN);
 $lvs = array_map(fn($c)=>(int)$c['lv'], array_values($dotRelics));
 ck53('覆盖300~999: 最低>=300', min($lvs)>=300, (string)min($lvs));
 ck53('覆盖300~999: 最高>=900', max($lvs)>=900, (string)max($lvs));
@@ -35,10 +38,10 @@ db()->exec("DELETE FROM equips WHERE uid=$uid"); db()->exec("DELETE FROM mats WH
 // 无装时 dot_mult=1
 ck53('裸装dot_mult=1', abs(legend_relic_dot_mult($uid)-1.0)<0.001, (string)legend_relic_dot_mult($uid));
 // 戴 lg_dot1 (dot12) → 1.12
-make_equip($uid,'ring','蚀骨之戒',4,300,['extra'=>['k'=>'lg_dot1','v'=>1]],'');
+make_equip($uid,'ring','蛇吻之戒',4,300,['extra'=>['k'=>'lg_dot1','v'=>1]],'');
 $rid=(int)db()->query("SELECT id FROM equips WHERE uid=$uid ORDER BY id DESC LIMIT 1")->fetchColumn();
 wear_equip($uid,$rid); _gear_uncache($uid);
-ck53('戴蚀骨之戒 dot_mult=1.12', abs(legend_relic_dot_mult($uid)-1.12)<0.001, (string)legend_relic_dot_mult($uid));
+ck53('戴蛇吻之戒 dot_mult=1.12', abs(legend_relic_dot_mult($uid)-1.12)<0.001, (string)legend_relic_dot_mult($uid));
 
 // 掉落门槛
 // 找 BOSS(>=300) / BOSS(<300) / 非BOSS
@@ -66,16 +69,16 @@ if($got!==''){
   ck53('掉的是lg_dot词条', $lgk!=='', $lgk);
 }
 
-// ============ Part 2：蚀心 DOT 套装 ============
+// ============ Part 2：蚀心 DOT 套装（11件毕业） ============
 ck53('set_id=shixing', equip_set_id('蚀心·猎弓')==='shixing');
 $pcs=equip_set_pieces('shixing');
-ck53('7件套', count($pcs)===7, (string)count($pcs));
-$layout=[['weapon','蚀心·猎弓'],['offhand','蚀心·箭袋'],['body','蚀心·血衣'],['head','蚀心·覆面'],['legs','蚀心·绑腿'],['gloves','蚀心·裹手'],['shoes','蚀心·轻履']];
+ck53('11件套', count($pcs)===11, (string)count($pcs));
+$layout=[['weapon','蚀心·猎弓'],['offhand','蚀心·箭袋'],['body','蚀心·噬心袍'],['head','蚀心·瞑目兜帽'],['legs','蚀心·缚足胫'],['gloves','蚀心·引弦手'],['shoes','蚀心·疾影靴'],['belt','蚀心·束魂带'],['back','蚀心·蚀空披'],['ring','蚀心·蚀骨戒'],['necklace','蚀心·噬魂链']];
 foreach($layout as [$slot,$base]){
   if($slot==='weapon') ck53("弓 $base→bow", weapon_sub($base)==='bow', weapon_sub($base));
   if($slot==='offhand') ck53("箭袋 $base", is_quiver($base) && equip_jobs_text(['slot'=>'offhand','name'=>$base])==='仅猎手');
 }
-// 裸装 dot_mult=1；造+穿满7件
+// 裸装 dot_mult=1；造+穿满11件
 db()->exec("DELETE FROM equips WHERE uid=$uid"); _gear_uncache($uid);
 $m0=dot_set_dot_pct($uid); $hm0=hunter_dot_mult(user_by_id($uid));
 ck53('无套装 dot_pct=0', $m0==0.0, (string)$m0);
@@ -83,11 +86,11 @@ foreach($layout as [$slot,$base]){ make_equip($uid,$slot,$base,4,900); }
 $eids=db()->query("SELECT id FROM equips WHERE uid=$uid")->fetchAll(PDO::FETCH_COLUMN);
 foreach($eids as $eid){ wear_equip($uid,(int)$eid); }
 _gear_uncache($uid);
-ck53('穿满7件 owned=7', equip_set_owned_count($uid,'shixing')===7, (string)equip_set_owned_count($uid,'shixing'));
-ck53('7件 dot_pct=30', dot_set_dot_pct($uid)==30.0, (string)dot_set_dot_pct($uid));
+ck53('穿满11件 owned=11', equip_set_owned_count($uid,'shixing')===11, (string)equip_set_owned_count($uid,'shixing'));
+ck53('11件 dot_pct=90', dot_set_dot_pct($uid)==90.0, (string)dot_set_dot_pct($uid));
 $hm1=hunter_dot_mult(user_by_id($uid));
-ck53('7件 hunter_dot_mult≈1.30', abs($hm1-1.30)<0.01, (string)$hm1);
-ck53('套装说明非空', trim(equip_set_bonus_text('shixing',7))!=='');
+ck53('11件 hunter_dot_mult≈1.90', abs($hm1-1.90)<0.01, (string)$hm1);
+ck53('套装说明非空', trim(equip_set_bonus_text('shixing',11))!=='');
 // gear_stats 面板应含套装加成(至少物攻%上升)
 $gs=gear_stats($uid); ck53('gear_stats有atk_pct', isset($gs['atk_pct']));
 

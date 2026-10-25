@@ -110,18 +110,31 @@ function legend_relics(): array
         '瘴疠' => ['slot' => 'body', 'lv' => 600, 'key' => 'lg_miasma', 'job' => 'summoner', 'intro' => '所有持续伤害(DOT)+25%。', 'eff' => ['dot' => 25]],
         '永夜' => ['slot' => 'belt', 'lv' => 700, 'key' => 'lg_endlessnight', 'job' => 'summoner', 'intro' => '召唤数量上限+1，召唤物伤害+15%。', 'eff' => ['summon_cap' => 1, 'summon_power' => 15]],
 
-        // ===== 第三接口：10 件 DOT(持续伤害)增强传说（猎人向，覆盖 300~999 级）=====
-        // 全部带 dot 词条（走 legend_relic_dot_mult → hunter_dot_mult 结算），随等级递强。
-        '蚀骨之戒' => ['slot' => 'ring', 'lv' => 300, 'key' => 'lg_dot1', 'job' => 'hunter', 'intro' => '持续伤害+12%；暴击+3%（蚀骨）。', 'eff' => ['dot' => 12, 'crit' => 3]],
-        '淬毒之链' => ['slot' => 'necklace', 'lv' => 360, 'key' => 'lg_dot2', 'job' => 'hunter', 'intro' => '持续伤害+15%；暴击伤害+18%（淬毒）。', 'eff' => ['dot' => 15, 'critdmg' => 18]],
-        '溃腐箭袋' => ['slot' => 'offhand', 'lv' => 420, 'key' => 'lg_dot3', 'job' => 'hunter', 'intro' => '持续伤害+18%；闪避+6（溃腐）。', 'eff' => ['dot' => 18, 'dodge' => 6]],
-        '腐心裹手' => ['slot' => 'gloves', 'lv' => 480, 'key' => 'lg_dot4', 'job' => 'hunter', 'intro' => '持续伤害+20%；对单体目标伤害+12%（腐心）。', 'eff' => ['dot' => 20, 'single' => 12]],
-        '血蚀皮甲' => ['slot' => 'body', 'lv' => 550, 'key' => 'lg_dot5', 'job' => 'hunter', 'intro' => '持续伤害+24%；吸血+4%（血蚀）。', 'eff' => ['dot' => 24, 'lifesteal' => 4]],
-        '毒云兜帽' => ['slot' => 'head', 'lv' => 620, 'key' => 'lg_dot6', 'job' => 'hunter', 'intro' => '持续伤害+27%；暴击+5%；暴击时回复4%最大生命（毒云）。', 'eff' => ['dot' => 27, 'crit' => 5, 'oncrit_heal' => 4]],
-        '流毒护腿' => ['slot' => 'legs', 'lv' => 690, 'key' => 'lg_dot7', 'job' => 'hunter', 'intro' => '持续伤害+30%；暴击伤害+25%（流毒）。', 'eff' => ['dot' => 30, 'critdmg' => 25]],
-        '疾淬之靴' => ['slot' => 'shoes', 'lv' => 770, 'key' => 'lg_dot8', 'job' => 'hunter', 'intro' => '持续伤害+34%；闪避+8（疾淬）。', 'eff' => ['dot' => 34, 'dodge' => 8]],
-        '万毒束带' => ['slot' => 'belt', 'lv' => 870, 'key' => 'lg_dot9', 'job' => 'hunter', 'intro' => '持续伤害+38%；对残血(<40%)目标伤害+30%（万毒）。', 'eff' => ['dot' => 38, 'execute' => [0.4, 30]]],
-        '蚀天披风' => ['slot' => 'back', 'lv' => 960, 'key' => 'lg_dot10', 'job' => 'hunter', 'intro' => '持续伤害+44%；暴击+6%；暴击伤害+30%（蚀天）。', 'eff' => ['dot' => 44, 'crit' => 6, 'critdmg' => 30]],
+        // ===== 第三接口：DOT(持续伤害)增强传说（猎人向，覆盖 300~999 级）=====
+        // 10 件防具/首饰 + 5 弓 + 5 箭袋 = 20 件；全部带 dot 词条（走 legend_relic_dot_mult → hunter_dot_mult）。
+        // —— 防具/首饰 10 件 ——
+        '蛇吻之戒' => ['slot' => 'ring', 'lv' => 300, 'key' => 'lg_dot1', 'job' => 'hunter', 'intro' => '持续伤害+12%；暴击+3%（蛇吻）。', 'eff' => ['dot' => 12, 'crit' => 3]],
+        '饮鸩之链' => ['slot' => 'necklace', 'lv' => 360, 'key' => 'lg_dot2', 'job' => 'hunter', 'intro' => '持续伤害+15%；暴击伤害+18%（饮鸩）。', 'eff' => ['dot' => 15, 'critdmg' => 18]],
+        '淬羽箭袋' => ['slot' => 'offhand', 'lv' => 420, 'key' => 'lg_dot3', 'job' => 'hunter', 'intro' => '持续伤害+18%；闪避+6（淬羽）。', 'eff' => ['dot' => 18, 'dodge' => 6]],
+        '毒牙手甲' => ['slot' => 'gloves', 'lv' => 480, 'key' => 'lg_dot4', 'job' => 'hunter', 'intro' => '持续伤害+20%；对单体目标伤害+12%（毒牙）。', 'eff' => ['dot' => 20, 'single' => 12]],
+        '血蟒皮甲' => ['slot' => 'body', 'lv' => 550, 'key' => 'lg_dot5', 'job' => 'hunter', 'intro' => '持续伤害+24%；吸血+4%（血蟒）。', 'eff' => ['dot' => 24, 'lifesteal' => 4]],
+        '蛇瞳兜帽' => ['slot' => 'head', 'lv' => 620, 'key' => 'lg_dot6', 'job' => 'hunter', 'intro' => '持续伤害+27%；暴击+5%；暴击时回复4%最大生命（蛇瞳）。', 'eff' => ['dot' => 27, 'crit' => 5, 'oncrit_heal' => 4]],
+        '蛇行护腿' => ['slot' => 'legs', 'lv' => 690, 'key' => 'lg_dot7', 'job' => 'hunter', 'intro' => '持续伤害+30%；暴击伤害+25%（蛇行）。', 'eff' => ['dot' => 30, 'critdmg' => 25]],
+        '蹑影之靴' => ['slot' => 'shoes', 'lv' => 770, 'key' => 'lg_dot8', 'job' => 'hunter', 'intro' => '持续伤害+34%；闪避+8（蹑影）。', 'eff' => ['dot' => 34, 'dodge' => 8]],
+        '鸩壶束带' => ['slot' => 'belt', 'lv' => 870, 'key' => 'lg_dot9', 'job' => 'hunter', 'intro' => '持续伤害+38%；对残血(<40%)目标伤害+30%（鸩壶）。', 'eff' => ['dot' => 38, 'execute' => [0.4, 30]]],
+        '冥蚀披风' => ['slot' => 'back', 'lv' => 960, 'key' => 'lg_dot10', 'job' => 'hunter', 'intro' => '持续伤害+44%；暴击+6%；暴击伤害+30%（冥蚀）。', 'eff' => ['dot' => 44, 'crit' => 6, 'critdmg' => 30]],
+        // —— 5 把传说弓（不同等级）——
+        '青蝮弓' => ['slot' => 'weapon', 'lv' => 320, 'key' => 'lg_dot_bow1', 'job' => 'hunter', 'intro' => '持续伤害+14%；暴击+4%（青蝮）。', 'eff' => ['dot' => 14, 'crit' => 4]],
+        '蚀羽弓' => ['slot' => 'weapon', 'lv' => 460, 'key' => 'lg_dot_bow2', 'job' => 'hunter', 'intro' => '持续伤害+20%；暴击伤害+20%；对单体伤害+10%（蚀羽）。', 'eff' => ['dot' => 20, 'critdmg' => 20, 'single' => 10]],
+        '噬骨弓' => ['slot' => 'weapon', 'lv' => 600, 'key' => 'lg_dot_bow3', 'job' => 'hunter', 'intro' => '持续伤害+26%；暴击+5%；对残血(<30%)目标伤害+25%（噬骨）。', 'eff' => ['dot' => 26, 'crit' => 5, 'execute' => [0.3, 25]]],
+        '冥蛇弓' => ['slot' => 'weapon', 'lv' => 740, 'key' => 'lg_dot_bow4', 'job' => 'hunter', 'intro' => '持续伤害+32%；暴击伤害+28%；对单体伤害+14%（冥蛇）。', 'eff' => ['dot' => 32, 'critdmg' => 28, 'single' => 14]],
+        '蚀天弓' => ['slot' => 'weapon', 'lv' => 900, 'key' => 'lg_dot_bow5', 'job' => 'hunter', 'intro' => '持续伤害+40%；暴击+6%；暴击伤害+34%；对残血(<40%)目标伤害+35%（蚀天）。', 'eff' => ['dot' => 40, 'crit' => 6, 'critdmg' => 34, 'execute' => [0.4, 35]]],
+        // —— 5 个传说箭袋（不同等级）——
+        '青蝮箭袋' => ['slot' => 'offhand', 'lv' => 320, 'key' => 'lg_dot_q1', 'job' => 'hunter', 'intro' => '持续伤害+14%；闪避+5（青蝮）。', 'eff' => ['dot' => 14, 'dodge' => 5]],
+        '蚀羽箭袋' => ['slot' => 'offhand', 'lv' => 460, 'key' => 'lg_dot_q2', 'job' => 'hunter', 'intro' => '持续伤害+20%；吸血+4%；暴击伤害+18%（蚀羽）。', 'eff' => ['dot' => 20, 'lifesteal' => 4, 'critdmg' => 18]],
+        '噬骨箭袋' => ['slot' => 'offhand', 'lv' => 600, 'key' => 'lg_dot_q3', 'job' => 'hunter', 'intro' => '持续伤害+26%；吸血+5%；暴击时回复5%最大生命（噬骨）。', 'eff' => ['dot' => 26, 'lifesteal' => 5, 'oncrit_heal' => 5]],
+        '冥蛇箭袋' => ['slot' => 'offhand', 'lv' => 740, 'key' => 'lg_dot_q4', 'job' => 'hunter', 'intro' => '持续伤害+32%；闪避+8；暴击伤害+24%（冥蛇）。', 'eff' => ['dot' => 32, 'dodge' => 8, 'critdmg' => 24]],
+        '蚀天箭袋' => ['slot' => 'offhand', 'lv' => 900, 'key' => 'lg_dot_q5', 'job' => 'hunter', 'intro' => '持续伤害+40%；吸血+6%；闪避+10；真伤+50（蚀天）。', 'eff' => ['dot' => 40, 'lifesteal' => 6, 'dodge' => 10, 'truedmg' => 50]],
     ];
 }
 

@@ -496,7 +496,7 @@ if ($g) {
             echo '<span class="muted">暂无记录。</span><br>';
         }
     } else {
-        $st = db()->prepare('SELECT u.* FROM guild_members m JOIN users u ON u.id=m.uid WHERE m.gid=? LIMIT 60');
+        $st = db()->prepare('SELECT u.*, m.role AS role, m.contrib AS contrib FROM guild_members m JOIN users u ON u.id=m.uid WHERE m.gid=? LIMIT 60');
         $st->execute([(int) $g['id']]);
         $members = [];
         while ($m = $st->fetch()) {

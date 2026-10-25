@@ -3308,6 +3308,11 @@ function equip_job_list(array $e): array
     $order = ['warrior', 'mage', 'hunter', 'priest', 'summoner'];
     if ($slot === 'weapon') {
         $jobs = weapon_jobs(weapon_sub($nm));
+        // 双手武器：只有能真正抡动的职业才算（如双手锤/斧/大剑仅战士，双手法杖法师，长弓猎手），
+        // 否则「可装备」会错误地把牧师等列到双手重锤上（实际穿戴会被拒）。
+        if (weapon_is_twohand($nm)) {
+            $jobs = array_values(array_filter($jobs, fn($j) => job_can_twohand_weapon($j, $nm)));
+        }
     } elseif ($slot === 'offhand') {
         if (str_contains($nm, '盾')) {
             $jobs = ['warrior', 'priest'];

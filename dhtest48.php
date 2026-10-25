@@ -187,4 +187,25 @@ $wornSlots=db()->query("SELECT slot FROM equips WHERE uid=$du AND pos='wear'")->
 ck48('长弓+箭袋可同时装备', in_array('weapon',$wornSlots,true)&&in_array('offhand',$wornSlots,true), implode(',',$wornSlots));
 db()->exec("DELETE FROM users WHERE id=$du");db()->exec("DELETE FROM mats WHERE uid=$du");db()->exec("DELETE FROM equips WHERE uid=$du");
 
+// ---- 12) 弓/箭袋均可强化且数值随强化变化 ----
+$en=(int)user_create('en'.mt_rand(1,99999),'x','hunter','z1',true,'tmp'); $_SESSION['uid']=$en;
+$enu=user_by_id($en); $enu['lv']=999; $enu['str']=8000; $enu['agi']=8000; $enu['int']=8000; $enu['vit']=8000; user_save($enu); _gear_uncache($en);
+// 弓：主 atk，+0→+15 有效物攻单调上升
+db()->exec("DELETE FROM equips WHERE uid=$en"); make_equip($en,'weapon','时序追星弓',3,900);
+$bid=(int)db()->query("SELECT id FROM equips WHERE uid=$en ORDER BY id DESC LIMIT 1")->fetchColumn(); wear_equip($en,$bid);
+$bowAtks=[]; foreach([0,5,10,15] as $lv){ db()->prepare("UPDATE equips SET enhance_level=? WHERE id=?")->execute([$lv,$bid]); _gear_uncache($en); $bowAtks[$lv]=gear_stats($en)['atk']; }
+ck48('弓强化后物攻随等级单调上升', $bowAtks[0]<$bowAtks[5] && $bowAtks[5]<$bowAtks[10] && $bowAtks[10]<$bowAtks[15], json_encode($bowAtks));
+// 箭袋：主 crit，+0→+15 有效暴击单调上升
+db()->exec("DELETE FROM equips WHERE uid=$en"); make_equip($en,'offhand','星辉箭袋',3,900);
+$qid=(int)db()->query("SELECT id FROM equips WHERE uid=$en ORDER BY id DESC LIMIT 1")->fetchColumn(); wear_equip($en,$qid);
+$qvCrits=[]; foreach([0,5,10,15] as $lv){ db()->prepare("UPDATE equips SET enhance_level=? WHERE id=?")->execute([$lv,$qid]); _gear_uncache($en); $qvCrits[$lv]=gear_stats($en)['crit']; }
+ck48('箭袋强化后暴击率随等级单调上升', $qvCrits[0]<$qvCrits[5] && $qvCrits[5]<$qvCrits[10] && $qvCrits[10]<$qvCrits[15], json_encode($qvCrits));
+// 真实强化路径：给材料走 enhance_equip，等级应能提升
+foreach(['enhance_t1'=>9999,'enhance_t2'=>9999,'enhance_t3'=>9999] as $m=>$n){ add_mat($en,$m,$n); }
+db()->exec("DELETE FROM equips WHERE uid=$en"); make_equip($en,'weapon','时序追星弓',3,900);
+$bid2=(int)db()->query("SELECT id FROM equips WHERE uid=$en ORDER BY id DESC LIMIT 1")->fetchColumn(); wear_equip($en,$bid2);
+$lvUp=false; for($i=0;$i<40;$i++){ enhance_equip($en,$bid2); if((int)db()->query("SELECT enhance_level FROM equips WHERE id=$bid2")->fetchColumn()>0){$lvUp=true;break;} }
+ck48('强化界面可对弓实际强化升级', $lvUp, '');
+db()->exec("DELETE FROM users WHERE id=$en");db()->exec("DELETE FROM mats WHERE uid=$en");db()->exec("DELETE FROM equips WHERE uid=$en");
+
 echo "\nOK=$ok FAIL=$bad\n";

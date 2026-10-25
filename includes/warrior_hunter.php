@@ -104,6 +104,10 @@ function hunter_dot_mult(array $u): float
     if (function_exists('legend_relic_dot_mult')) {
         $m *= legend_relic_dot_mult((int) ($u['id'] ?? 0));
     }
+    // 蚀心 DOT 套装：按穿戴件数加成
+    if (function_exists('dot_set_dot_pct')) {
+        $m *= (1 + dot_set_dot_pct((int) ($u['id'] ?? 0)) / 100);
+    }
     return $m;
 }
 

@@ -2724,6 +2724,12 @@ function legend_lore(string $shortName): string
             return $hl[$shortName];
         }
     }
+    if (function_exists('dot_legendary_lore')) {
+        $dl = dot_legendary_lore();
+        if (isset($dl[$shortName])) {
+            return $dl[$shortName];
+        }
+    }
     if (function_exists('legend_story_map')) {
         $extra = legend_story_map();
         if (isset($extra[$shortName])) {
@@ -2870,6 +2876,9 @@ function equip_set_id(string $shortName): string
     if (str_starts_with($shortName, '岩狱·')) {
         return 'rockjail';
     }
+    if (str_starts_with($shortName, '蚀心·')) {
+        return 'shixing';
+    }
     // —— 六龙王专属套装（按前缀）——
     if (str_starts_with($shortName, '苍岚·')) {
         return 'azure';
@@ -2932,6 +2941,9 @@ function equip_set_pieces(string $set): array
     if ($set === 'god') {
         return ['神铸·裁决', '神铸·雷霆', '神铸·苍穹', '神铸·铁律', '神铸·圣盾', '神铸·天罚', '神铸·曙光', '神铸·圣冠', '神铸·羽甲', '神铸·天裤', '神铸·云腰', '神铸·踏云靴', '神铸·执掌手套', '神铸·天翼披风', '神铸·星辰戒', '神铸·神谕链', '神铸·圣灯'];
     }
+    if ($set === 'shixing') {
+        return ['蚀心·猎弓', '蚀心·箭袋', '蚀心·血衣', '蚀心·覆面', '蚀心·绑腿', '蚀心·裹手', '蚀心·轻履'];
+    }
     // 六龙王专属套装
     $dp = function_exists('dragon_set_pieces') ? dragon_set_pieces($set) : [];
     if ($dp !== []) {
@@ -2959,9 +2971,9 @@ function equip_set_owned_count(int $uid, string $set): int
         }
         return min(count($pieces) + 1, $n);
     }
-    if (in_array($set, ['theater', 'frost', 'ember', 'puppet', 'thorn', 'rockjail', 'sin', 'god', 'dusk', 'jimie', 'shiyuan', 'soulpact'], true)) {
-        $mark = ['theater' => '%剧场·%', 'frost' => '%寒霜·%', 'ember' => '%烬焰·%', 'puppet' => '%傀儡·%', 'thorn' => '%荆棘·%', 'rockjail' => '%岩狱·%', 'sin' => '%罪渊·%', 'god' => '%神铸·%', 'dusk' => '%暮影·%', 'jimie' => '%寂灭·%', 'shiyuan' => '%噬渊·%', 'soulpact' => '%魂契·%'][$set];
-        $cap = ['theater' => 99, 'frost' => 3, 'ember' => 7, 'puppet' => 5, 'thorn' => 4, 'rockjail' => 10, 'sin' => 11, 'god' => 11, 'dusk' => 3, 'jimie' => 5, 'shiyuan' => 5, 'soulpact' => 5][$set];
+    if (in_array($set, ['theater', 'frost', 'ember', 'puppet', 'thorn', 'rockjail', 'sin', 'god', 'dusk', 'jimie', 'shiyuan', 'soulpact', 'shixing'], true)) {
+        $mark = ['theater' => '%剧场·%', 'frost' => '%寒霜·%', 'ember' => '%烬焰·%', 'puppet' => '%傀儡·%', 'thorn' => '%荆棘·%', 'rockjail' => '%岩狱·%', 'sin' => '%罪渊·%', 'god' => '%神铸·%', 'dusk' => '%暮影·%', 'jimie' => '%寂灭·%', 'shiyuan' => '%噬渊·%', 'soulpact' => '%魂契·%', 'shixing' => '%蚀心·%'][$set];
+        $cap = ['theater' => 99, 'frost' => 3, 'ember' => 7, 'puppet' => 5, 'thorn' => 4, 'rockjail' => 10, 'sin' => 11, 'god' => 11, 'dusk' => 3, 'jimie' => 5, 'shiyuan' => 5, 'soulpact' => 5, 'shixing' => 7][$set];
         $st = db()->prepare('SELECT COUNT(*) FROM equips WHERE uid=? AND pos="wear" AND name LIKE ?');
         $st->execute([(int) $uid, $mark]);
         return min($cap, (int) $st->fetchColumn());
@@ -3032,6 +3044,9 @@ function equip_set_bonus_text(string $set, int $owned): string
     }
     if ($set === 'rockjail') {
         return '【岩狱套装】已穿' . $owned . '/10：3件血+3000，5件减伤+8%，7件血+8000减伤+12%，10件血+20000减伤+20%、磐岩（承伤再-5%）。';
+    }
+    if ($set === 'shixing') {
+        return '【蚀心DOT套装】已穿' . $owned . '/7（猎弓/箭袋/血衣/覆面/绑腿/裹手/轻履）——每件：物攻+2%、暴击+1；3件：技能伤+8%、暴击+5%、持续伤害+12%；5件：暴伤+20%、吸血+4%、物攻+6%、持续伤害+20%；7件满：物攻+10%、暴伤+25%、真伤+等级×15、减伤+8%、持续伤害+30%！猎人DOT流毕业套（堕天阶掉落）。';
     }
     // 六龙王专属套装
     if (function_exists('dragon_set_bonus') && dragon_set_bonus($set, $owned) !== '') {
@@ -4963,6 +4978,52 @@ function hunter_arsenal_legendary_lore(): array
     ];
 }
 
+// DOT 传说(10件) + 蚀心DOT套装(7件) 的专属故事（equip.php 讲述用）
+function dot_legendary_lore(): array
+{
+    return [
+        // —— 10 件 DOT 传说 ——
+        '蚀骨之戒' => '戒指内圈刻着一行小字：毒入骨，方知痛。<br>戴它的人不怕疼，只怕不疼。',
+        '淬毒之链' => '链坠是一枚空了的毒囊，凑近还能闻到甜味。<br>甜味散尽的那天，链子会自己收紧。',
+        '溃腐箭袋' => '袋里的箭永远在慢慢烂，烂得越久，射出去越不讲道理。<br>它不保养箭，它养的是怨。',
+        '腐心裹手' => '手套贴着掌心长出细密的黑脉，像有什么在里面爬。<br>握弓的人说：心先烂，手才稳。',
+        '血蚀皮甲' => '甲是用浸透血又晒干的皮缝的，颜色洗不掉。<br>穿上它，敌人的血和你的血分不清谁是谁的。',
+        '毒云兜帽' => '帽檐压得很低，垂下的雾终年不散。<br>没人看清过戴它的人的脸——看清的人都已倒下。',
+        '流毒护腿' => '护腿的接缝处渗着不凝的黑液，走一步，地上就多一个印。<br>追着脚印找它的人，都倒在了最后一段路。',
+        '疾淬之靴' => '靴底淬过毒，落地无声，落地之后的声音也不长久。<br>它跑得越快，身后的路烂得越彻底。',
+        '万毒束带' => '带上别着七只小瓶，每只装着一种死法。<br>解毒的人通常先选错一瓶。',
+        '蚀天披风' => '披风展开像一片正在扩散的阴影，边缘在慢慢吞掉光。<br>穿它的人背对太阳站着，因为影子才归他管。',
+        // —— 蚀心 DOT 套装（堕天阶）——
+        '蚀心·猎弓' => '弓臂是用被毒浸透的神木削的，拉满时有细小的黑纹在木头上爬。<br>它猎的从来不是猎物，是猎物剩下的时间。',
+        '蚀心·箭袋' => '袋口永远开着一道缝，毒气从缝里一丝丝往外漏。<br>满袋的箭没有一支是干净的。',
+        '蚀心·血衣' => '衣服吸进去的血比吐出来的多，越穿越沉，越沉越贴身。<br>它记得每一个被它裹住的人的心跳。',
+        '蚀心·覆面' => '覆面只露出一双眼睛，眼睛以下的部分没人想看清。<br>戴上它，你就不再需要表情。',
+        '蚀心·绑腿' => '绑腿缠得很紧，紧到能听见血液被逼着改道。<br>改道的血，流得更快，也更毒。',
+        '蚀心·裹手' => '裹手的布条浸过三种毒，每一种都为了让下一击更难拔出。<br>被它碰到的地方，第二天还是黑的。',
+        '蚀心·轻履' => '轻履落地无声，落地三步之内，草会先黄。<br>它不是让你走得更快，是让追你的人慢下来。',
+    ];
+}
+
+// 蚀心 DOT 套装：按穿戴件数给持续伤害加成（在 hunter_dot_mult 里乘算）。
+// 3件+12%，5件+20%，7件(满)+30%。
+function dot_set_dot_pct(int $uid): float
+{
+    $n = 0;
+    $st = db()->prepare('SELECT COUNT(*) FROM equips WHERE uid=? AND pos="wear" AND name LIKE ?');
+    $st->execute([(int) $uid, '%蚀心·%']);
+    $n = (int) $st->fetchColumn();
+    if ($n >= 7) {
+        return 30.0;
+    }
+    if ($n >= 5) {
+        return 20.0;
+    }
+    if ($n >= 3) {
+        return 12.0;
+    }
+    return 0.0;
+}
+
 // 某等级段可掉的传说弓/箭袋（弓+箭袋各一件）。返回条目列表。
 function hunter_arsenal_legendary_for_lv(int $lv): array
 {
@@ -5005,6 +5066,44 @@ function roll_hunter_legendary_arsenal(int $uid, string $mid): string
     $cfg = $cands[array_rand($cands)];
     return make_equip((int) $uid, (string) $cfg['slot'], (string) $cfg['base'], 4, $lv,
         ['extra' => ['k' => (string) $cfg['key'], 'v' => (float) $cfg['param']]]);
+}
+
+// 猎人打怪掉 DOT 增强传说（lg_dot1~10，300~999 级）：只由 BOSS 产出，
+// 怪物等级 >= 该件设计等级才可能掉（低级BOSS掉低段，高级BOSS可掉全段）。
+// 掉率 9%，吃寻宝/转生。
+function roll_dot_legendary_gear(int $uid, string $mid): string
+{
+    if (job_id_of(user_by_id((int) $uid) ?? []) !== 'hunter') {
+        return '';
+    }
+    if (!is_boss_mid($mid)) {
+        return '';
+    }
+    $lv = monster_lv($mid);
+    $cands = [];
+    foreach (legend_relics() as $name => $cfg) {
+        if (!str_starts_with((string) ($cfg['key'] ?? ''), 'lg_dot')) {
+            continue;
+        }
+        if ($lv >= (int) $cfg['lv']) {
+            $cands[$name] = $cfg;
+        }
+    }
+    if ($cands === []) {
+        return '';
+    }
+    $rate = 0.09;
+    $m = 1 + min(200, gear_stats($uid)['magic_find']) / 100;
+    if (function_exists('rs_drop_mult')) {
+        $m *= rs_drop_mult($uid);
+    }
+    if (mt_rand() / mt_getrandmax() > $rate * $m) {
+        return '';
+    }
+    $name = array_rand($cands);
+    $cfg = $cands[$name];
+    return make_equip((int) $uid, (string) $cfg['slot'], (string) $name, 4, (int) $cfg['lv'],
+        ['extra' => ['k' => (string) $cfg['key'], 'v' => (float) ($cfg['param'] ?? 1)]]);
 }
 
 // 猎人打怪独立掉落：每次击杀按怪物等级给对应区间的弓或箭袋（约5%基础，吃寻宝/转生）。
@@ -5121,6 +5220,11 @@ function roll_drop(int $uid, string $mid, int $elite = 0): string
     $hl = roll_hunter_legendary_arsenal($uid, $mid);
     if ($hl !== '') {
         $base = $base !== '' ? $base . ' ' . $hl : $hl;
+    }
+    // 猎人专属：DOT 增强传说（lg_dot1~10，BOSS 掉，独立一轮）
+    $hd = roll_dot_legendary_gear($uid, $mid);
+    if ($hd !== '') {
+        $base = $base !== '' ? $base . ' ' . $hd : $hd;
     }
     // 副本 BOSS：猎人专属套装弓/套装箭袋/传说箭袋（传说与套装级只由 BOSS 产出）
     $hbq = roll_region_boss_hunter_gear($uid, $mid);
@@ -5434,6 +5538,19 @@ function gear_stats(int $uid): array
     }
     if ($dusk >= 2) { $s['atk_pct'] += 15; $s['skill_damage'] += 10; }
     if ($dusk >= 3) { $s['crit'] += 8; $s['truedmg'] += max(1, (int) (db()->query('SELECT lv FROM users WHERE id=' . (int) $uid)->fetchColumn() ?: 1)) * 10; }
+    // —— 蚀心 DOT 套装（堕天阶掉落）：面板通用加成；DOT 加成在 hunter_dot_mult 单独结算 ——
+    $shx = 0;
+    foreach ($worn as $wn) {
+        if (str_starts_with($wn, '蚀心·')) { $shx++; }
+    }
+    if ($shx > 0) {
+        $shxLv = max(1, (int) (db()->query('SELECT lv FROM users WHERE id=' . (int) $uid)->fetchColumn() ?: 1));
+        $s['atk_pct'] += $shx * 2;
+        $s['crit'] += $shx * 1;
+        if ($shx >= 3) { $s['skill_damage'] += 8; $s['crit'] += 5; }
+        if ($shx >= 5) { $s['critdmg'] += 20; $s['lifesteal'] += 4; $s['atk_pct'] += 6; }
+        if ($shx >= 7) { $s['atk_pct'] += 10; $s['critdmg'] += 25; $s['truedmg'] += $shxLv * 15; $s['damage_reduction'] += 8; }
+    }
     $qu = db()->prepare('SELECT quest FROM users WHERE id=?');
     $qu->execute([$uid]);
     if ((int) ($qu->fetchColumn() ?: 0) >= 38) {
@@ -7688,6 +7805,10 @@ function battle_round(array &$u, array &$b, string $mode): array
         $duskMsg = dusk_kill_drop((int) ($u['id'] ?? 0), (string) ($b['id'] ?? ''));
         if ($duskMsg !== '') {
             $msg .= $duskMsg;
+        }
+        $shixingMsg = gf_dot_set_drop((int) ($u['id'] ?? 0), (string) ($b['id'] ?? ''));
+        if ($shixingMsg !== '') {
+            $msg .= $shixingMsg;
         }        $yzMsg = yz_kill_drop((int) ($u['id'] ?? 0), (string) ($b['id'] ?? ''));
         if ($yzMsg !== '') {
             $msg .= $yzMsg;
@@ -10168,6 +10289,36 @@ function dusk_kill_drop(int $uid, string $mid): string
         return '';
     }
     return '掉落传说【' . $sn . '】（暮影套装，拾光者的执念）！';
+}
+
+// 蚀心 DOT 套装掉落：神界副本·堕天阶(gf_*)专属，只给猎人。小怪低概率、BOSS 高概率。
+function gf_dot_set_drop(int $uid, string $mid): string
+{
+    // 堕天阶(gf_*)入口~小怪，及其 BOSS 堕天神帝(god_emperor)
+    if ($mid !== 'god_emperor' && !str_starts_with($mid, 'gf_')) {
+        return '';
+    }
+    if (job_id_of(user_by_id((int) $uid) ?? []) !== 'hunter') {
+        return '';
+    }
+    $rate = ($mid === 'god_emperor') ? 30 : 6;
+    if (mt_rand(1, 100) > $rate) {
+        return '';
+    }
+    $u = user_by_id((int) $uid);
+    if (!$u) {
+        return '';
+    }
+    $pieces = [
+        ['weapon', '蚀心·猎弓'], ['offhand', '蚀心·箭袋'], ['body', '蚀心·血衣'],
+        ['head', '蚀心·覆面'], ['legs', '蚀心·绑腿'], ['gloves', '蚀心·裹手'], ['shoes', '蚀心·轻履'],
+    ];
+    $p = $pieces[array_rand($pieces)];
+    $sn = make_equip((int) $uid, (string) $p[0], (string) $p[1], 4, max(750, (int) ($u['lv'] ?? 750)));
+    if ($sn === '') {
+        return '';
+    }
+    return '掉落传说【' . $sn . '】（蚀心DOT套装，凑齐引爆持续伤害）！';
 }
 // 【源罪渊】BOSS掉落：70%概率给一件【寂灭】/【噬渊】套装或同主题传说
 function yz_kill_drop(int $uid, string $mid): string

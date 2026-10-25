@@ -6,7 +6,7 @@ $ok = 0; $bad = 0;
 function ck27(string $l, bool $c, string $d = '') { global $ok,$bad; if ($c) { $ok++; } else { $bad++; echo "FAIL $l $d\n"; } }
 
 $relics = legend_relics();
-ck27('传说relic数量=62', count($relics) === 62, (string) count($relics));
+ck27('传说relic数量=72', count($relics) === 72, (string) count($relics));
 
 // 1) 部位合法、key前缀、说明非空、职业合法
 $jobs = array_keys(jobs());
@@ -29,6 +29,10 @@ foreach ([legend_relic_drops(), legend_relic_drops2()] as $map) {
             $bothDrops[$n] = true;
         }
     }
+}
+// lg_dot1~10（DOT传说）由 roll_dot_legendary_gear 独立掉落（BOSS，怪物等级门控），不在标准掉落表
+foreach ($relics as $n => $c) {
+    if (str_starts_with((string) $c['key'], 'lg_dot')) { $bothDrops[$n] = true; }
 }
 foreach ([legend_relic_drops(), legend_relic_drops2()] as $map) {
     foreach ($map as $mid => $names) {
@@ -53,7 +57,7 @@ foreach ($relics as $name => $c) {
         ck27("[$name]eff被索引", isset($idx[$c['key']]), $c['key']);
     }
 }
-ck27('第二接口eff件数=40', $effCount === 40, (string) $effCount);
+ck27('第二接口eff件数=50', $effCount === 50, (string) $effCount);
 
 // 3) affix 显示（专属传说效果文字）
 $uid = user_create('w27' . mt_rand(1000, 9999), 'x', 'warrior', 'z1', true, 'tmp');

@@ -100,14 +100,16 @@ function hunter_dot_mult(array $u): float
 {
     $rb2 = (string) (cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '');
     $m = $rb2 === 'ranger' ? (1 + RANGER_DOT_BONUS) : 1.0;
-    // 遗神铸庭·转职传说：DOT 加成
+    // DOT 加成合并成「一个加法基数」：散件传说的 dot 总和 + 蚀心套装加成。
+    // 必须相加、不能相乘——否则"穿部分套装 + 剩下槽位塞散件"会因乘法被混搭刷爆，毕业套就不再是终点。
+    $pct = 0.0;
     if (function_exists('legend_relic_dot_mult')) {
-        $m *= legend_relic_dot_mult((int) ($u['id'] ?? 0));
+        $pct += (legend_relic_dot_mult((int) ($u['id'] ?? 0)) - 1) * 100; // 散件传说 dot 总和(%)
     }
-    // 蚀心 DOT 套装：按穿戴件数加成
     if (function_exists('dot_set_dot_pct')) {
-        $m *= (1 + dot_set_dot_pct((int) ($u['id'] ?? 0)) / 100);
+        $pct += dot_set_dot_pct((int) ($u['id'] ?? 0)); // 蚀心套装加成(%)
     }
+    $m *= (1 + $pct / 100);
     return $m;
 }
 

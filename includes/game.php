@@ -3275,28 +3275,10 @@ function equip_req_text(array $e): string
     return $t;
 }
 
-// 装备详情用：哪些职业能穿
+// 装备详情用：哪些职业能穿（旧函数，统一委托到 equip_jobs_text 保持一致）
 function equip_job_text(array $e): string
 {
-    $names = ['warrior' => '战士', 'mage' => '法师', 'hunter' => '猎手', 'priest' => '牧师', 'summoner' => '召唤师'];
-    $slot = (string) ($e['slot'] ?? '');
-    if ($slot === 'weapon') {
-        $jobs = weapon_jobs(weapon_sub((string) ($e['name'] ?? '')));
-    } elseif ($slot === 'offhand') {
-        $nm = (string) ($e['name'] ?? '');
-        if (str_contains($nm, '盾')) {
-            $jobs = ['warrior', 'priest'];
-        } elseif (str_contains($nm, '法器') || str_contains($nm, '法杖') || str_contains($nm, '提灯')) {
-            $jobs = ['mage', 'priest'];
-        } elseif (str_contains($nm, '契匣') || str_contains($nm, '魂匣') || str_contains($nm, '灵幡') || summoner_is_box($nm)) {
-            $jobs = ['summoner'];
-        } else {
-            $jobs = ['warrior', 'mage', 'hunter', 'priest', 'summoner'];
-        }
-    } else {
-        $jobs = ['warrior', 'mage', 'hunter', 'priest', 'summoner'];
-    }
-    return implode('/', array_map(fn($j) => $names[$j] ?? $j, $jobs));
+    return equip_jobs_text($e);
 }
 
 function equip_jobs_text(array $e): string
@@ -3304,17 +3286,46 @@ function equip_jobs_text(array $e): string
     $slot = (string) ($e['slot'] ?? '');
     $nm = (string) ($e['name'] ?? '');
     if ($slot === 'title') { return '全职业（100级可戴）'; }
+    $jobs = equip_job_list($e);
+    $all = ['warrior', 'mage', 'hunter', 'priest', 'summoner'];
+    if (count($jobs) >= 5 || !array_diff($all, $jobs)) {
+        return '全职业（战法猎牧召）';
+    }
+    $names = ['warrior' => '战士', 'mage' => '法师', 'hunter' => '猎手', 'priest' => '牧师', 'summoner' => '召唤师'];
+    $labels = array_map(fn($j) => $names[$j] ?? $j, $jobs);
+    // 单一职业限定 → 统一用「仅X」；多职业限定 → 「X/Y」
+    if (count($labels) === 1) {
+        return '仅' . $labels[0];
+    }
+    return implode('/', $labels);
+}
+
+// 一件装备能被哪些职业穿戴（job id 数组，按固定顺序）
+function equip_job_list(array $e): array
+{
+    $slot = (string) ($e['slot'] ?? '');
+    $nm = (string) ($e['name'] ?? '');
+    $order = ['warrior', 'mage', 'hunter', 'priest', 'summoner'];
     if ($slot === 'weapon') {
-        $m = ['staff' => '法师/牧师', 'axe' => '战士', 'bow' => '猎手', 'mace' => '战士/牧师', 'shield' => '战士/牧师', 'blade' => '战士/猎手', 'relic' => '召唤师'];
-        return $m[weapon_sub($nm)] ?? '战士';
+        $jobs = weapon_jobs(weapon_sub($nm));
+    } elseif ($slot === 'offhand') {
+        if (str_contains($nm, '盾')) {
+            $jobs = ['warrior', 'priest'];
+        } elseif (str_contains($nm, '法器') || str_contains($nm, '法杖') || str_contains($nm, '提灯')) {
+            $jobs = ['mage', 'priest'];
+        } elseif (str_contains($nm, '契匣') || str_contains($nm, '魂匣') || str_contains($nm, '灵幡') || summoner_is_box($nm)) {
+            $jobs = ['summoner'];
+        } else {
+            $jobs = $order;
+        }
+    } elseif ($slot === 'title') {
+        $jobs = $order;
+    } else {
+        $jobs = $order;
     }
-    if ($slot === 'offhand') {
-        if (str_contains($nm, '盾')) { return '战士/牧师'; }
-        if (str_contains($nm, '法器') || str_contains($nm, '法杖') || str_contains($nm, '提灯')) { return '法师/牧师'; }
-        if (str_contains($nm, '契匣') || str_contains($nm, '魂匣') || str_contains($nm, '灵幡') || summoner_is_box($nm)) { return '仅召唤师'; }
-        return '全职业';
-    }
-    return '全职业（战法猎牧召）';
+    // 去重并按固定职业顺序排列
+    $jobs = array_values(array_intersect($order, array_unique($jobs)));
+    return $jobs === [] ? $order : $jobs;
 }
 
 function equip_can_wear(array $u, array $e): string
@@ -4591,6 +4602,30 @@ function is_ch3_mid(string $mid): bool
     return in_array($mid, $mids, true);
 }
 
+// 该 mid 是否是"某个副本里的小怪"（非 BOSS）。用于统一副本小怪掉率。
+// 副本集合 = dungeon_maps() 里所有地图点的小怪（含大区域副本/主线副本/第三阶段副本），
+// 不含野外大地图(we2)与主城野外。构建一次后缓存。
+function is_dungeon_mob(string $mid): bool
+{
+    static $set = null;
+    if ($set === null) {
+        $set = [];
+        $locs = locations();
+        foreach (dungeon_maps() as $loc) {
+            $L = $locs[$loc] ?? null;
+            if (!is_array($L)) { continue; }
+            foreach (($L['monsters'] ?? []) as $m) {
+                $set[(string) $m] = true;
+            }
+        }
+    }
+    if (!isset($set[$mid])) {
+        return false;
+    }
+    // BOSS 不算小怪（BOSS 有自己的掉率）
+    return !is_boss_mid($mid);
+}
+
 function scale_monster(array $m, string $mid, int $elite = 0): array
 {
     if (is_ch3_mid($mid) || world_identity_mid($mid)) {
@@ -4719,9 +4754,12 @@ function roll_ch3_drop(int $uid, string $mid, int $elite = 0): string
     if ($tab === null) {
         return '';
     }
-    $m = 1 + monster_lv($mid) * 0.03 + min(200, gear_stats($uid)['magic_find']) / 100;
+    // 副本小怪：基础掉率固定 1%，只吃寻宝与转生加成，不随怪物等级暴涨
+    $m = min(200, gear_stats($uid)['magic_find']) / 100;
+    // 转生：掉落率+20%
+    if (function_exists('rs_drop_mult')) { $m *= rs_drop_mult($uid); }
     $one = function () use ($uid, $mid, $tab, $m) {
-        if (mt_rand() / mt_getrandmax() > 0.05 * $m) {
+        if (mt_rand() / mt_getrandmax() > 0.01 * (1 + $m)) {
             return '';
         }
         $r = mt_rand(1, 100);
@@ -4827,12 +4865,18 @@ function roll_drop_base(int $uid, string $mid, int $elite = 0): string
         return roll_summoner_box($uid, $mid);
     }
     $mlv = monster_lv($mid);
-    $m = 1 + $mlv * 0.03 + min(200, gear_stats($uid)['magic_find']) / 100;
+    // 副本小怪：套件/装备基础掉率固定 1%，只吃寻宝与转生加成，不再随怪物等级暴涨
+    $isDunMob = is_dungeon_mob($mid);
+    $m = $isDunMob ? 1 : (1 + $mlv * 0.03);
+    $m += min(200, gear_stats($uid)['magic_find']) / 100;
     // 转生：掉落率+20%
     if (function_exists('rs_drop_mult')) { $m *= rs_drop_mult($uid); }
     if (is_boss_mid($mid)) {
         // BOSS：品质整体上移，传说装备掉率显著提高（传说只挂在BOSS掉落表上）
         $chances = [4 => 0.004 * $m, 3 => 0.012 * $m, 2 => 0.03 * $m, 1 => 0.08 * $m, 0 => 0.16 * $m];
+    } elseif ($isDunMob) {
+        // 副本小怪：总掉率 1%（q0 阈值即总掉落率），品质分布沿用低阶为主；小怪不可能出传说(4)
+        $chances = [4 => 0.000125 * $m, 3 => 0.0005 * $m, 2 => 0.0015 * $m, 1 => 0.0035 * $m, 0 => 0.01 * $m];
     } else {
         $chances = [4 => 0.0002 * $m, 3 => 0.0007 * $m, 2 => 0.0025 * $m, 1 => 0.01 * $m, 0 => 0.04 * $m];
     }

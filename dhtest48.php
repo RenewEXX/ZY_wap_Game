@@ -110,8 +110,13 @@ db()->exec("DELETE FROM users WHERE id IN ($hu,$mg)");db()->exec("DELETE FROM ma
 $hq=(int)user_create('hq'.mt_rand(1,99999),'x','hunter','z1',true,'tmp'); $_SESSION['uid']=$hq;
 $hqu=user_by_id($hq); $hqu['lv']=980; user_save($hqu); _gear_uncache($hq);
 // 各等级段基底正确
-ck48('lv1段=新手短弓/兽皮箭袋', (hunter_arsenal_for_lv(10)['bow']??'')==='新手短弓' && (hunter_arsenal_for_lv(10)['quiver']??'')==='兽皮箭袋', '');
+ck48('lv1段=缠藤短弓/兽皮箭袋', (hunter_arsenal_for_lv(10)['bow']??'')==='缠藤短弓' && (hunter_arsenal_for_lv(10)['quiver']??'')==='兽皮箭袋', '');
 ck48('lv800段=时序追星弓/星辉箭袋', (hunter_arsenal_for_lv(850)['bow']??'')==='时序追星弓' && (hunter_arsenal_for_lv(850)['quiver']??'')==='星辉箭袋', '');
+ck48('lv150段=逐鹿强弓/逐鹿箭袋', (hunter_arsenal_for_lv(150)['bow']??'')==='逐鹿强弓' && (hunter_arsenal_for_lv(150)['quiver']??'')==='逐鹿箭袋', '');
+ck48('lv250段=掠影长弓/掠影箭袋', (hunter_arsenal_for_lv(250)['bow']??'')==='掠影长弓' && (hunter_arsenal_for_lv(250)['quiver']??'')==='掠影箭袋', '');
+// 过渡弓/箭袋命名必须保留职业识别关键字：弓含“弓”→weapon_sub=bow；箭袋含“箭袋”→猎手专属+暴击主属性
+foreach(['缠藤短弓','逐鹿强弓','掠影长弓'] as $bn){ ck48("过渡弓 $bn 识别为bow", weapon_sub($bn)==='bow', ''); }
+foreach(['逐鹿箭袋','掠影箭袋'] as $qn){ ck48("过渡箭袋 $qn 为猎手专属", is_quiver($qn) && equip_jobs_text(['slot'=>'offhand','name'=>$qn])==='仅猎手', ''); }
 $grate=function($mid,$N=2000) use($hq){ $got=0; for($i=0;$i<$N;$i++){ db()->exec("DELETE FROM equips WHERE uid=$hq"); if(roll_hunter_gear($hq,$mid)!=='')$got++; } db()->exec("DELETE FROM equips WHERE uid=$hq"); return $got/$N*100; };
 // 挑选：低段野外 / 中段野外 / 高段野外(应0) / 高段副本小怪(应>0) / 高段BOSS(应更高)
 $fLo=$fMid=$fHi=$dHi=$bHi=null;
@@ -170,16 +175,16 @@ db()->exec("DELETE FROM users WHERE id=$qv");db()->exec("DELETE FROM mats WHERE 
 
 // ---- 11) 弓统一为单手：任意弓与箭袋可同时装备 ----
 $allBowOnehand=true; foreach(hunter_arsenal_tiers() as $t){ if(isset($t['bow']) && weapon_is_twohand($t['bow'])) $allBowOnehand=false; }
-foreach(['疾风长弓','寒霜·长弓','傀儡长弓'] as $bn){ if(weapon_is_twohand($bn)) $allBowOnehand=false; }
+foreach(['掠影长弓','寒霜·长弓','傀儡长弓'] as $bn){ if(weapon_is_twohand($bn)) $allBowOnehand=false; }
 ck48('所有弓都是单手(含长弓)', $allBowOnehand, '');
-ck48('弓的weapon_sub=bow', weapon_sub('疾风长弓')==='bow' && weapon_sub('寒霜·长弓')==='bow', '');
+ck48('弓的weapon_sub=bow', weapon_sub('掠影长弓')==='bow' && weapon_sub('寒霜·长弓')==='bow', '');
 // 非弓双手仍保留
 ck48('非弓双手不受影响(大剑/战斧)', weapon_is_twohand('堕落骑士大剑') && weapon_is_twohand('寒霜·战斧'), '');
 // 实穿：长弓 + 箭袋可同时装备
 $du=(int)user_create('dw'.mt_rand(1,99999),'x','hunter','z1',true,'tmp'); $_SESSION['uid']=$du;
 $duo=user_by_id($du); $duo['lv']=999; $duo['str']=8000; $duo['agi']=8000; $duo['int']=8000; $duo['vit']=8000; user_save($duo); _gear_uncache($du);
 db()->exec("DELETE FROM equips WHERE uid=$du");
-make_equip($du,'weapon','疾风长弓',3,300); make_equip($du,'offhand','疾风箭袋',3,300);
+make_equip($du,'weapon','掠影长弓',3,300); make_equip($du,'offhand','掠影箭袋',3,300);
 $st=db()->prepare("SELECT id,name FROM equips WHERE uid=? AND pos=''"); $st->execute([$du]); $wid=[];
 while($r=$st->fetch())$wid[$r['name']]=(int)$r['id'];
 foreach($wid as $id){ wear_equip($du,$id); }

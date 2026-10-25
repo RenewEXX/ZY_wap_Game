@@ -4860,9 +4860,9 @@ function player_resist(array $u, string $el): float
 function hunter_arsenal_tiers(): array
 {
     return [
-        ['min' => 1,   'max' => 99,  'bow' => '新手短弓',   'quiver' => '兽皮箭袋'],
-        ['min' => 100, 'max' => 199, 'bow' => '精铁猎弓',   'quiver' => '精铁箭袋'],
-        ['min' => 200, 'max' => 299, 'bow' => '疾风长弓',   'quiver' => '疾风箭袋'],
+        ['min' => 1,   'max' => 99,  'bow' => '缠藤短弓',   'quiver' => '兽皮箭袋'],
+        ['min' => 100, 'max' => 199, 'bow' => '逐鹿强弓',   'quiver' => '逐鹿箭袋'],
+        ['min' => 200, 'max' => 299, 'bow' => '掠影长弓',   'quiver' => '掠影箭袋'],
         ['min' => 300, 'max' => 419, 'bow' => '霜纹战弓',   'quiver' => '霜纹箭袋'],
         ['min' => 420, 'max' => 499, 'bow' => '穿林强弓',   'quiver' => '穿林箭袋'],
         ['min' => 500, 'max' => 599, 'bow' => '荆棘游侠弓', 'quiver' => '荆棘箭袋'],

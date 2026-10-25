@@ -2718,6 +2718,12 @@ function legend_lore(string $shortName): string
     if (isset($lore[$shortName])) {
         return $lore[$shortName];
     }
+    if (function_exists('hunter_arsenal_legendary_lore')) {
+        $hl = hunter_arsenal_legendary_lore();
+        if (isset($hl[$shortName])) {
+            return $hl[$shortName];
+        }
+    }
     if (function_exists('legend_story_map')) {
         $extra = legend_story_map();
         if (isset($extra[$shortName])) {
@@ -4883,6 +4889,124 @@ function hunter_arsenal_for_lv(int $lv): ?array
     return null;
 }
 
+// ===== 猎人专属·分等级段的传说弓/箭袋（16 件：8 个等级段 × 弓+箭袋成套）=====
+// 每段一套：弓走输出(暴击/暴伤/斩杀/单体)，箭袋走副攻(持续/真伤/吸血/闪避)。
+// eff 走 legend_relic 通用引擎结算（已在 legend_relic_eff_index 并入），靠 lg_* 词条判定穿戴。
+// 弓名必含“弓”→weapon_sub=bow、职业猎手；箭袋名必含“箭袋”→猎手专属+暴击主属性。
+function hunter_arsenal_legendaries(): array
+{
+    // [slot, base, min, max, key, param, job, intro, eff]
+    return [
+        // —— 100~199 ——
+        ['slot' => 'weapon', 'base' => '白翎短弓',   'min' => 100, 'max' => 199, 'key' => 'lg_hla_bow1', 'param' => 1, 'job' => 'hunter',
+            'intro' => '暴击率+4%；对单体目标伤害+8%（白翎惊鸿）。', 'eff' => ['crit' => 4, 'single' => 8]],
+        ['slot' => 'offhand', 'base' => '白翎箭袋',  'min' => 100, 'max' => 199, 'key' => 'lg_hla_q1', 'param' => 1, 'job' => 'hunter',
+            'intro' => '暴击伤害+15%；持续伤害+10%（翎羽淬毒）。', 'eff' => ['critdmg' => 15, 'dot' => 10]],
+        // —— 200~299 ——
+        ['slot' => 'weapon', 'base' => '裂石强弓',   'min' => 200, 'max' => 299, 'key' => 'lg_hla_bow2', 'param' => 1, 'job' => 'hunter',
+            'intro' => '暴击伤害+20%；对残血(<30%)目标伤害+20%（裂石穿杨）。', 'eff' => ['critdmg' => 20, 'execute' => [0.3, 20]]],
+        ['slot' => 'offhand', 'base' => '裂石箭袋',  'min' => 200, 'max' => 299, 'key' => 'lg_hla_q2', 'param' => 1, 'job' => 'hunter',
+            'intro' => '持续伤害+18%；吸血+4%（蚀骨箭）。', 'eff' => ['dot' => 18, 'lifesteal' => 4]],
+        // —— 300~419 ——
+        ['slot' => 'weapon', 'base' => '幽林长弓',   'min' => 300, 'max' => 419, 'key' => 'lg_hla_bow3', 'param' => 1, 'job' => 'hunter',
+            'intro' => '暴击率+5%；持续伤害+15%；闪避+5（幽林潜行）。', 'eff' => ['crit' => 5, 'dot' => 15, 'dodge' => 5]],
+        ['slot' => 'offhand', 'base' => '幽林箭袋',  'min' => 300, 'max' => 419, 'key' => 'lg_hla_q3', 'param' => 1, 'job' => 'hunter',
+            'intro' => '闪避+6；暴击率+4%；暴击时回复4%最大生命（林息）。', 'eff' => ['dodge' => 6, 'crit' => 4, 'oncrit_heal' => 4]],
+        // —— 420~499 ——
+        ['slot' => 'weapon', 'base' => '霜弦长弓',   'min' => 420, 'max' => 499, 'key' => 'lg_hla_bow4', 'param' => 1, 'job' => 'hunter',
+            'intro' => '暴击伤害+26%；对残血(<30%)目标伤害+26%；攻击8%概率麻痹（霜弦封喉）。', 'eff' => ['critdmg' => 26, 'execute' => [0.3, 26], 'stun' => 8]],
+        ['slot' => 'offhand', 'base' => '霜弦箭袋',  'min' => 420, 'max' => 499, 'key' => 'lg_hla_q4', 'param' => 1, 'job' => 'hunter',
+            'intro' => '暴击伤害+30%；持续伤害+20%（霜蚀箭）。', 'eff' => ['critdmg' => 30, 'dot' => 20]],
+        // —— 500~599 ——
+        ['slot' => 'weapon', 'base' => '血棘战弓',   'min' => 500, 'max' => 599, 'key' => 'lg_hla_bow5', 'param' => 1, 'job' => 'hunter',
+            'intro' => '对单体目标伤害+15%；吸血+5%；暴击时回复5%最大生命（饮血）。', 'eff' => ['single' => 15, 'lifesteal' => 5, 'oncrit_heal' => 5]],
+        ['slot' => 'offhand', 'base' => '血棘箭袋',  'min' => 500, 'max' => 599, 'key' => 'lg_hla_q5', 'param' => 1, 'job' => 'hunter',
+            'intro' => '真伤+35；吸血+5%；对残血(<30%)目标伤害+25%（血棘蚀）。', 'eff' => ['truedmg' => 35, 'lifesteal' => 5, 'execute' => [0.3, 25]]],
+        // —— 600~699 ——
+        ['slot' => 'weapon', 'base' => '噬日战弓',   'min' => 600, 'max' => 699, 'key' => 'lg_hla_bow6', 'param' => 1, 'job' => 'hunter',
+            'intro' => '暴击率+7%；暴击伤害+34%；真伤+40（噬日）。', 'eff' => ['crit' => 7, 'critdmg' => 34, 'truedmg' => 40]],
+        ['slot' => 'offhand', 'base' => '噬日箭袋',  'min' => 600, 'max' => 699, 'key' => 'lg_hla_q6', 'param' => 1, 'job' => 'hunter',
+            'intro' => '闪避+8；暴击时回复6%最大生命；暴击率+6%（噬日回环）。', 'eff' => ['dodge' => 8, 'oncrit_heal' => 6, 'crit' => 6]],
+        // —— 700~799 ——
+        ['slot' => 'weapon', 'base' => '陨星长弓',   'min' => 700, 'max' => 799, 'key' => 'lg_hla_bow7', 'param' => 1, 'job' => 'hunter',
+            'intro' => '对单体目标伤害+20%；对残血(<35%)目标伤害+35%；技能伤害+15%（陨落）。', 'eff' => ['single' => 20, 'execute' => [0.35, 35], 'skill_damage' => 15]],
+        ['slot' => 'offhand', 'base' => '陨星箭袋',  'min' => 700, 'max' => 799, 'key' => 'lg_hla_q7', 'param' => 1, 'job' => 'hunter',
+            'intro' => '持续伤害+30%；真伤+60；吸血+6%（星陨蚀）。', 'eff' => ['dot' => 30, 'truedmg' => 60, 'lifesteal' => 6]],
+        // —— 800~999 ——
+        ['slot' => 'weapon', 'base' => '猎神之弓',   'min' => 800, 'max' => 999, 'key' => 'lg_hla_bow8', 'param' => 1, 'job' => 'hunter',
+            'intro' => '暴击率+8%；暴击伤害+45%；对残血(<40%)目标伤害+45%；真伤+60（猎神裁决）。', 'eff' => ['crit' => 8, 'critdmg' => 45, 'execute' => [0.4, 45], 'truedmg' => 60]],
+        ['slot' => 'offhand', 'base' => '猎神箭袋',  'min' => 800, 'max' => 999, 'key' => 'lg_hla_q8', 'param' => 1, 'job' => 'hunter',
+            'intro' => '暴击伤害+50%；对残血(<40%)目标伤害+40%；真伤+80；吸血+6%（猎神收割）。', 'eff' => ['critdmg' => 50, 'execute' => [0.4, 40], 'truedmg' => 80, 'lifesteal' => 6]],
+    ];
+}
+
+// 上述传说弓/箭袋的专属故事（equip.php 讲述用）
+function hunter_arsenal_legendary_lore(): array
+{
+    return [
+        '白翎短弓' => '一位白翎部的老猎人临终前把弓掰成两截。<br>他说：短弓射不远，但足够替我看着山下的路。',
+        '白翎箭袋' => '箭尾绑的白翎是从他猎到的第一只鸟身上拔的。<br>那之后他再没失手，也再没回过家。',
+        '裂石强弓' => '这张弓第一次拉开时，弓背裂了道缝，箭却把石头射穿了。<br>猎人笑着说：弓裂它的，箭走箭的。',
+        '裂石箭袋' => '箭袋里永远装着三支没磨完的箭。<br>他说留给最后一头猎物——总要给它一点挣扎的余地。',
+        '幽林长弓' => '林子深处没有路，只有被箭钉住的树记着来过的人。<br>你拉满弓时，风会替你指方向。',
+        '幽林箭袋' => '箭袋是用一整张雾做的，取出来时还带着林子的潮气。<br>中箭的人先迷路，再倒下。',
+        '霜弦长弓' => '弓弦是用冬天第一根结冰的草搓的，一拉就响，像远处有人在哭。<br>听见哭声的猎物，通常已经晚了。',
+        '霜弦箭袋' => '箭头凝着一层化不掉的霜，射进肉里才慢慢化。<br>化开的那一下，血是凉的。',
+        '血棘战弓' => '弓身缠着吸饱了血的荆棘，越杀长得越密。<br>有一天它会先勒住拿弓的手——猎人知道，但没打算停。',
+        '血棘箭袋' => '箭袋上的刺是它替主人挡过一次刀留下的。<br>它不记得救过谁，只记得那口血很烫。',
+        '噬日战弓' => '有人试着在正午射太阳，箭在半空烧成了灰。<br>弓没断——它只是从此见不得太亮的东西。',
+        '噬日箭袋' => '箭袋是黑的，装进去的箭会慢慢变短，像被谁从里面吃掉一点。<br>没人说得清吃箭的是敌人，还是这张袋。',
+        '陨星长弓' => '陨铁打的弓，握把处还留着坠地那晚的温度。<br>它从天上掉下来，是想找个人替它再射一次。',
+        '陨星箭袋' => '袋底积着一层星屑，倒出来能照亮一小块地。<br>猎人从不倒，他说那是箭还在烧。',
+        '猎神之弓' => '传说第一位猎手射出的箭从没落空，因为猎物从来不躲。<br>它们只是想看看，究竟是谁在拉这张弓。',
+        '猎神箭袋' => '箭袋空着也能听见满弓的声音。<br>它记得每一个死在箭下者的名字——按它们倒下的顺序。',
+    ];
+}
+
+// 某等级段可掉的传说弓/箭袋（弓+箭袋各一件）。返回条目列表。
+function hunter_arsenal_legendary_for_lv(int $lv): array
+{
+    $out = [];
+    foreach (hunter_arsenal_legendaries() as $cfg) {
+        if ($lv >= (int) $cfg['min'] && $lv <= (int) $cfg['max']) {
+            $out[] = $cfg;
+        }
+    }
+    return $out;
+}
+
+// 猎人打怪掉本等级段的【传说弓 / 传说箭袋】（走 legend 引擎，穿上有 lg_* 特效）。
+// 沿用全游戏规则：传说只由 BOSS 产出（roll_drop 对非 BOSS 封顶史诗），所以这里只在 BOSS 轮判定。
+// 掉率 12%，吃寻宝/转生；独立于普通弓/箭袋掉落。
+function roll_hunter_legendary_arsenal(int $uid, string $mid): string
+{
+    if (job_id_of(user_by_id((int) $uid) ?? []) !== 'hunter') {
+        return '';
+    }
+    $lv = monster_lv($mid);
+    if ($lv < 1) {
+        return '';
+    }
+    if (!is_boss_mid($mid)) {
+        return '';
+    }
+    $cands = hunter_arsenal_legendary_for_lv($lv);
+    if ($cands === []) {
+        return '';
+    }
+    $baseRate = 0.12;
+    $m = 1 + min(200, gear_stats($uid)['magic_find']) / 100;
+    if (function_exists('rs_drop_mult')) {
+        $m *= rs_drop_mult($uid);
+    }
+    if (mt_rand() / mt_getrandmax() > $baseRate * $m) {
+        return '';
+    }
+    $cfg = $cands[array_rand($cands)];
+    return make_equip((int) $uid, (string) $cfg['slot'], (string) $cfg['base'], 4, $lv,
+        ['extra' => ['k' => (string) $cfg['key'], 'v' => (float) $cfg['param']]]);
+}
+
 // 猎人打怪独立掉落：每次击杀按怪物等级给对应区间的弓或箭袋（约5%基础，吃寻宝/转生）。
 // 只对猎人触发；品质走全游戏同一档位（低劣~史诗）。
 function roll_hunter_gear(int $uid, string $mid): string
@@ -4992,6 +5116,11 @@ function roll_drop(int $uid, string $mid, int $elite = 0): string
     $hg = roll_hunter_gear($uid, $mid);
     if ($hg !== '') {
         $base = $base !== '' ? $base . ' ' . $hg : $hg;
+    }
+    // 猎人专属：分等级段的传说弓/传说箭袋（低概率，独立一轮）
+    $hl = roll_hunter_legendary_arsenal($uid, $mid);
+    if ($hl !== '') {
+        $base = $base !== '' ? $base . ' ' . $hl : $hl;
     }
     // 副本 BOSS：猎人专属套装弓/套装箭袋/传说箭袋（传说与套装级只由 BOSS 产出）
     $hbq = roll_region_boss_hunter_gear($uid, $mid);

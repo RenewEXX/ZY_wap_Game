@@ -296,6 +296,14 @@ function legend_relic_eff_index(): array
             }
         }
     }
+    // 猎人分等级段传说弓/箭袋：同样并入
+    if (function_exists('hunter_arsenal_legendaries')) {
+        foreach (hunter_arsenal_legendaries() as $cfg) {
+            if (isset($cfg['eff']) && is_array($cfg['eff']) && $cfg['eff'] !== []) {
+                $idx[(string) $cfg['key']] = $cfg['eff'];
+            }
+        }
+    }
     return $idx;
 }
 
@@ -359,6 +367,13 @@ function legend_relic_intro_by_key(string $key): string
         $boss = boss_legendary_effects();
         if (isset($boss[$key])) {
             return (string) $boss[$key]['intro'];
+        }
+    }
+    if (function_exists('hunter_arsenal_legendaries')) {
+        foreach (hunter_arsenal_legendaries() as $cfg) {
+            if ((string) $cfg['key'] === $key) {
+                return (string) $cfg['intro'];
+            }
         }
     }
     return '';

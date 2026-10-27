@@ -3498,7 +3498,15 @@ function make_equip(int $uid, string $slot, string $base, int $q, int $itemLevel
     }
     if ($primary !== '') {
         $rolled = affix_roll($primary, $q, $itemLevel);
-        $affixes[] = ['id' => $primary, 'tier' => $rolled['tier'], 'v' => $rolled['v'], 'main' => true];
+        $mainAffix = ['id' => $primary, 'tier' => $rolled['tier'], 'v' => $rolled['v'], 'main' => true];
+        // 双手武器：主词缀约单手 2.2 倍，补偿"占掉副手位"的损失，否则没人愿牺牲副手。
+        if ($slot === 'weapon' && weapon_is_twohand((string) $base)) {
+            $twPrec = (int) (affix_catalog()[$primary]['data']['precision'] ?? 0);
+            $twV = $rolled['v'] * 2.2;
+            $mainAffix['v'] = $twPrec === 0 ? (float) max(1, round($twV)) : round($twV, $twPrec);
+            $mainAffix['tw'] = 1;
+        }
+        $affixes[] = $mainAffix;
     }
     if ($legendId !== '' && isset($legend['extra']['v'])) {
         $affixes[] = ['id' => $legendId, 'tier' => '特', 'v' => (float) $legend['extra']['v'], 'legend' => true];
@@ -3565,6 +3573,47 @@ function migrate_plain_legendaries(int $uid): void
         }
     }
     mat_set($uid, 'legend_fixed', 1);
+}
+
+// 一次性迁移：把已有的双手武器主词缀补成单手 2.2 倍（新装备在 make_equip 里直接按 2.2 倍生成）。
+// 按主词缀上的 tw 标记做幂等，避免重复放大；legend_fixed 类似的 per-user 标记只跑一次。
+function migrate_twohand_main(int $uid): void
+{
+    if ((int) (mats_of($uid)['twohand_fixed'] ?? 0) > 0) {
+        return;
+    }
+    $st = db()->prepare('SELECT id, name, affixes FROM equips WHERE uid=? AND slot="weapon"');
+    $st->execute([$uid]);
+    $rows = $st->fetchAll();
+    if ($rows) {
+        $catalog = affix_catalog();
+        $upd = db()->prepare('UPDATE equips SET affixes=? WHERE id=?');
+        foreach ($rows as $r) {
+            $sn = equip_shortname((string) $r['name']);
+            if (!weapon_is_twohand($sn)) {
+                continue;
+            }
+            $affixes = json_decode((string) $r['affixes'], true);
+            if (!is_array($affixes)) {
+                continue;
+            }
+            $changed = false;
+            foreach ($affixes as $i => $a) {
+                if (empty($a['main']) || !empty($a['tw'])) {
+                    continue;
+                }
+                $prec = (int) ($catalog[$a['id']]['data']['precision'] ?? 0);
+                $nv = (float) $a['v'] * 2.2;
+                $affixes[$i]['v'] = $prec === 0 ? (float) max(1, round($nv)) : round($nv, $prec);
+                $affixes[$i]['tw'] = 1;
+                $changed = true;
+            }
+            if ($changed) {
+                $upd->execute([json_encode($affixes, JSON_UNESCAPED_UNICODE), (int) $r['id']]);
+            }
+        }
+    }
+    mat_set($uid, 'twohand_fixed', 1);
 }
 
 function monster_material(string $mid): array

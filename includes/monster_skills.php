@@ -327,7 +327,7 @@ function monster_skills(): array
                 ['name' => '岳柱壁垒', 'rate' => 12, 'mult' => 0.5, 'guard' => 2],
             ],
         ],
-    ] + world_expansion_skills() + region_dungeon_skills();
+    ] + world_expansion_skills() + region_dungeon_skills() + ticket_hunt_skills();
 }
 
 // 怪物的招牌普攻动作（没抽中技能时显示）

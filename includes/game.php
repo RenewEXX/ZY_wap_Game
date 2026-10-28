@@ -141,7 +141,7 @@ function locations(): array
             'exits' => ['gate' => '罪渊入口'],
             'monsters' => [],
         ],
-    ] + ch1_locations() + dsw_locations() + ch2_locations() + abx_locations() + ch3_locations() + mx_locations() + farm_locations() + ice_locations() + fr_locations() + fo_locations() + em_locations() + dragon_locations() + pz_locations() + sen_locations() + wild3_locations() + frostburg_locations() + greenheart_locations() + wild45_locations() + as_locations() + vx_locations() + gr_locations() + ry_locations() + god_locations() + gf_locations() + world_expansion_locations() + region_dungeon_locations());
+    ] + ch1_locations() + dsw_locations() + ch2_locations() + abx_locations() + ch3_locations() + mx_locations() + farm_locations() + ice_locations() + fr_locations() + fo_locations() + em_locations() + dragon_locations() + pz_locations() + sen_locations() + wild3_locations() + frostburg_locations() + greenheart_locations() + wild45_locations() + as_locations() + vx_locations() + gr_locations() + ry_locations() + god_locations() + gf_locations() + world_expansion_locations() + region_dungeon_locations() + ticket_hunt_locations());
 }
 
 function loc(string $id): array
@@ -383,7 +383,7 @@ function monsters(): array
         'ry_shaper' => ['name' => '岩狱塑岩者', 'hp' => 4600000, 'atk' => 9000, 'exp' => 9500000, 'gold' => 4500000],
         'ry_warder' => ['name' => '岩狱狱卒', 'hp' => 5000000, 'atk' => 9500, 'exp' => 10400000, 'gold' => 4900000],
         'ry_titan' => ['name' => '岩狱泰坦·土龙岳柱', 'hp' => 9000000, 'atk' => 11000, 'exp' => 20000000, 'gold' => 9500000],
-    ] + dragon_monsters() + world_expansion_monsters() + region_dungeon_monsters();
+    ] + dragon_monsters() + world_expansion_monsters() + region_dungeon_monsters() + ticket_hunt_monsters();
 }
 
 function items(): array
@@ -3653,7 +3653,8 @@ function quest_mats(): array
  'ice_badge' => '冰原徽章', 'frost_heart' => '霜王之心', 'ch4_proof' => '第四章通关证明', 'fr_ticket' => '冰渊副本入场券', 'fr_item1' => '渊底冰核', 'fr_item2' => '利维坦之牙',
  'forest_badge' => '森语徽章', 'south_flame_token' => '南炎信物', 'ch5_proof' => '第五章通关证明', 'rb2_proof' => '2觉证明', 'em_ticket' => '熔心副本入场券', 'pz_ticket' => '傀儡回廊入场券', 'tt_ticket' => '岩狱副本入场券', 'sen_ticket' => '雾森祭坛入场券', 'em_item1' => '熔核碎片', 'em_item2' => '熔心之血',
  'soul_shard' => '神魂碎片',
- 'rd_ticket_sky' => '苍穹回廊入场券', 'rd_ticket_sunk' => '溺海神龛入场券', 'rd_ticket_forge' => '永燃锻炉入场券', 'rd_ticket_verd' => '万藤古祠入场券', 'rd_ticket_crypt' => '霜魄陵寝入场券', 'rd_ticket_star' => '陨星坑入场券', 'rd_ticket_magma' => '熔潮深渊入场券', 'rd_ticket_chrono' => '凝固时刻入场券', 'rd_ticket_divine' => '墟心圣殿入场券'];
+ 'rd_ticket_sky' => '苍穹回廊入场券', 'rd_ticket_sunk' => '溺海神龛入场券', 'rd_ticket_forge' => '永燃锻炉入场券', 'rd_ticket_verd' => '万藤古祠入场券', 'rd_ticket_crypt' => '霜魄陵寝入场券', 'rd_ticket_star' => '陨星坑入场券', 'rd_ticket_magma' => '熔潮深渊入场券', 'rd_ticket_chrono' => '凝固时刻入场券', 'rd_ticket_divine' => '墟心圣殿入场券',
+ 'as_ticket' => '灰烬深渊入场券', 'vx_ticket' => '虚空裂隙入场券'];
 }
 
 function skill_catalog(): array
@@ -4365,6 +4366,9 @@ function element_chart(string $atk, string $def): float
 
 function monster_element(string $mid): string
 {
+    if (function_exists('ticket_hunt_element') && isset(ticket_hunt_element()[$mid])) {
+        return ticket_hunt_element()[$mid];
+    }
     static $m = [
         'slime' => 'ice', 'goblin' => 'fire', 'banshee' => 'dark', 'wraith' => 'dark', 'bee' => 'wind',
         'leech' => 'dark', 'ogre' => 'fire', 'bat' => 'wind', 'ghoul' => 'dark', 'cultist' => 'fire',
@@ -6487,6 +6491,9 @@ function exp_need(int $lv): int
 
 function monster_lv(string $mid): int
 {
+    if (function_exists('ticket_hunt_lv') && isset(ticket_hunt_lv()[$mid])) {
+        return ticket_hunt_lv()[$mid];
+    }
     static $lv = [
         'rat' => 1, 'goblin' => 2, 'banshee' => 3, 'ogre' => 4,
         'slime' => 4, 'wolf' => 5, 'rat_pack' => 18, 'wraith' => 19, 'thief' => 6, 'bee' => 6,
@@ -8882,14 +8889,22 @@ function roll_dsw_ticket(int $uid, string $mid): string
     return '黑暗沼泽副本入场券';
 }
 
-// ===== 区域副本门票掉落：每区最终BOSS 0.5% =====
-// 返回 mid => [mat, name]。0.5% 概率命中则发一张门票并返回其在战报里的名字。
+// ===== 副本门票掉落：每区最终BOSS 0.5%（含旧金币副本门票）=====
+// 返回 mid => [[mat,name],...]。每个门票独立 0.5% 命中；命中则发一张并汇总其名字。
 function region_final_ticket_drops(): array
 {
     $m = [];
     if (function_exists('region_dungeon_ticket_map')) {
         foreach (region_dungeon_ticket_map() as $t) {
-            $m[(string) $t['boss']] = [(string) $t['mat'], (string) $t['name']];
+            $m[(string) $t['boss']][] = [(string) $t['mat'], (string) $t['name']];
+        }
+    }
+    // 旧副本门票：傀儡回廊用现成的牵线者；其余用新延展的"门票猎场"专属BOSS
+    $m['string_puller'][] = ['pz_ticket', '傀儡回廊入场券'];
+    if (function_exists('ticket_hunt_ticket_map')) {
+        $names = ['sen_ticket' => '雾森祭坛入场券', 'as_ticket' => '灰烬深渊入场券', 'vx_ticket' => '虚空裂隙入场券', 'tt_ticket' => '岩狱副本入场券'];
+        foreach (ticket_hunt_ticket_map() as $boss => $mat) {
+            $m[$boss][] = [$mat, $names[$mat] ?? $mat];
         }
     }
     return $m;
@@ -8901,12 +8916,14 @@ function roll_region_ticket(int $uid, string $mid): string
     if (!isset($map[$mid])) {
         return '';
     }
-    if (mt_rand(1, 1000) > 5) { // 0.5%
-        return '';
+    $got = [];
+    foreach ($map[$mid] as [$mat, $name]) {
+        if (mt_rand(1, 1000) <= 5) { // 0.5%
+            add_mat($uid, $mat, 1);
+            $got[] = $name;
+        }
     }
-    [$mat, $name] = $map[$mid];
-    add_mat($uid, $mat, 1);
-    return $name;
+    return implode('、', $got);
 }
 
 function roll_dungeon_quest(int $uid, string $mid): string

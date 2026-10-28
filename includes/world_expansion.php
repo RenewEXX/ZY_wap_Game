@@ -110,6 +110,17 @@ function world_link_regions(array $all): array
             }
         }
     }
+    // 旧副本门票猎场：从对应野外点双向连通（走过去杀 BOSS 掉入场券）
+    if (function_exists('ticket_hunt_specs')) {
+        foreach (ticket_hunt_specs() as $s) {
+            $mapId = (string) $s['loc'];
+            $from = (string) $s['from'];
+            if (isset($all[$mapId], $all[$from])) {
+                $all[$from]['exits'][$mapId] = (string) ($all[$mapId]['name'] ?? $mapId);
+                $all[$mapId]['exits'][$from] = (string) ($all[$from]['name'] ?? $from);
+            }
+        }
+    }
     return $all;
 }
 

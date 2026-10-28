@@ -457,16 +457,16 @@ if ($who === 'voidwalker' && $choice === 'open') {
     $lv = (int) ($u['lv'] ?? 1);
     if ($lv < 600) {
         flash_set('虚空行者摇头：裂隙只要600级以上的冒险者，你现在' . $lv . '级。');
-    } elseif ((int) ($u['gold'] ?? 0) < 300000) {
-        flash_set('虚空行者：进裂隙要30万买命钱。');
+    } elseif (empty(mats_of((int) $u['id'])['vx_ticket'])) {
+        flash_set('虚空行者：进裂隙要【虚空裂隙入场券】×1（杀裂隙前庭的虚空先驱 0.5% 掉）。');
     } else {
-        $u['gold'] = (int) $u['gold'] - 300000;
+        add_mat((int) $u['id'], 'vx_ticket', -1);
         mat_set((int) $u['id'], 'vx_enter', time());
         $u['loc'] = 'vx_gate';
         user_save($u);
         flash_set('虚空行者把你推进裂隙！45分钟倒计时开始！');
     }
-if ($who === 'spider' && $choice === 'open2') {    $lv = (int) ($u['lv'] ?? 1);    if ($lv < 300 || $lv > 460) {        flash_set('阿蛛摇头：傀儡回廊只要300到460级的冒险者，你现在' . $lv . '级。');    } elseif ((int) ($u['gold'] ?? 0) < 50000) {        flash_set('阿蛛：进回廊要5万门票（修补提线的钱）。');    } else {        $u['gold'] = (int) $u['gold'] - 50000;        mat_set((int) $u['id'], 'pz_stage', 1);        mat_set((int) $u['id'], 'pz_enter', time());        $u['loc'] = 'pz_gate';        user_save($u);        flash_set('阿蛛剪断你影子上的丝，送你进傀儡回廊！45分钟倒计时开始！');    }    header('Location: home.php');    exit;}if ($who === 'qingya' && $choice === 'open') {    $lv = (int) ($u['lv'] ?? 1);    if ($lv < 500 || $lv > 620) {        flash_set('青芽摇头：雾森祭坛只要500到620级的冒险者，你现在' . $lv . '级。');    } elseif ((int) ($u['gold'] ?? 0) < 200000) {        flash_set('青芽：进祭坛要20万供奉（雾要喝甜的）。');    } else {        $u['gold'] = (int) $u['gold'] - 200000;        mat_set((int) $u['id'], 'sen_stage', 1);        mat_set((int) $u['id'], 'sen_enter', time());        $u['loc'] = 'sen_gate';        user_save($u);        flash_set('青芽吹了声口哨，雾让开一条路：雾森祭坛，45分钟！');    }    header('Location: home.php');    exit;}if ($who === 'northwind' && $choice === 'start' && in_array((int) $u['quest'], [38, 46], true)) {
+if ($who === 'spider' && $choice === 'open2') {    $lv = (int) ($u['lv'] ?? 1);    if ($lv < 300 || $lv > 460) {        flash_set('阿蛛摇头：傀儡回廊只要300到460级的冒险者，你现在' . $lv . '级。');    } elseif (empty(mats_of((int) $u['id'])['pz_ticket'])) {        flash_set('阿蛛：进回廊要【傀儡回廊入场券】×1（杀牵线者 0.5% 掉）。');    } else {        add_mat((int) $u['id'], 'pz_ticket', -1);        mat_set((int) $u['id'], 'pz_stage', 1);        mat_set((int) $u['id'], 'pz_enter', time());        $u['loc'] = 'pz_gate';        user_save($u);        flash_set('阿蛛剪断你影子上的丝，送你进傀儡回廊！45分钟倒计时开始！');    }    header('Location: home.php');    exit;}if ($who === 'qingya' && $choice === 'open') {    $lv = (int) ($u['lv'] ?? 1);    if ($lv < 500 || $lv > 620) {        flash_set('青芽摇头：雾森祭坛只要500到620级的冒险者，你现在' . $lv . '级。');    } elseif (empty(mats_of((int) $u['id'])['sen_ticket'])) {        flash_set('青芽：进祭坛要【雾森祭坛入场券】×1（杀雾隐猎场的雾眼先知 0.5% 掉）。');    } else {        add_mat((int) $u['id'], 'sen_ticket', -1);        mat_set((int) $u['id'], 'sen_stage', 1);        mat_set((int) $u['id'], 'sen_enter', time());        $u['loc'] = 'sen_gate';        user_save($u);        flash_set('青芽吹了声口哨，雾让开一条路：雾森祭坛，45分钟！');    }    header('Location: home.php');    exit;}if ($who === 'northwind' && $choice === 'start' && in_array((int) $u['quest'], [38, 46], true)) {
     $u['quest'] = 50;
     user_save($u);
     quest3_baseline((int) $u['id'], 50);
@@ -478,10 +478,10 @@ if ($who === 'rockwarden' && $choice === 'open') {
     $lv = (int) ($u['lv'] ?? 1);
     if ($lv < 700 || $lv > 900) {
         flash_set('磐石摇头：岩狱只要700~900级的冒险者，你现在' . $lv . '级。');
-    } elseif ((int) ($u['gold'] ?? 0) < 300000) {
-        flash_set('磐石：进岩狱要30万门票（修门）。');
+    } elseif (empty(mats_of((int) $u['id'])['tt_ticket'])) {
+        flash_set('磐石：进岩狱要【岩狱副本入场券】×1（杀岩窟前哨的岩狱先锋 0.5% 掉）。');
     } else {
-        $u['gold'] = (int) $u['gold'] - 300000;
+        add_mat((int) $u['id'], 'tt_ticket', -1);
         mat_set((int) $u['id'], 'ry_stage', 1);
         mat_set((int) $u['id'], 'ry_enter', time());
         $u['loc'] = 'ry_gate';
@@ -560,10 +560,10 @@ if ($who === 'oldash' && $choice === 'open2') {
     $lv = (int) ($u['lv'] ?? 1);
     if ($lv < 580) {
         flash_set('老灰摇头：灰烬深渊只要580级以上的冒险者，你现在' . $lv . '级。');
-    } elseif ((int) ($u['gold'] ?? 0) < 300000) {
-        flash_set('老灰：进深渊要30万买命钱，灰里刨食不容易。');
+    } elseif (empty(mats_of((int) $u['id'])['as_ticket'])) {
+        flash_set('老灰：进深渊要【灰烬深渊入场券】×1（杀余烬祭坛的余烬暴君 0.5% 掉）。');
     } else {
-        $u['gold'] = (int) $u['gold'] - 300000;
+        add_mat((int) $u['id'], 'as_ticket', -1);
         mat_set((int) $u['id'], 'as_enter', time());
         $u['loc'] = 'as_gate';
         user_save($u);
@@ -879,9 +879,9 @@ if ($who === 'rb_waldon' && (int) $u['quest'] === 80 && !empty(cflags((int) $u['
     echo '<a href="npc.php?who=rb_waldon&choice=crown">加冕！</a><br>';
 }
 if ($who === 'voidwalker') {
-    echo '<a href="npc.php?who=voidwalker&choice=open">进虚空裂隙（600级+，30万买命钱，45分钟）</a><br>';
+    echo '<a href="npc.php?who=voidwalker&choice=open">进虚空裂隙（600级+，消耗【虚空裂隙入场券】×1，45分钟）</a><br>';
 if ($who === 'rockwarden') {
-    echo '<a href="npc.php?who=rockwarden&choice=open">开启副本【岩狱·泰坦】（700~900级，门票30万，45分钟，掉土龙蛋+岩狱套）</a><br>';
+    echo '<a href="npc.php?who=rockwarden&choice=open">开启副本【岩狱·泰坦】（700~900级，消耗【岩狱副本入场券】×1，45分钟，掉土龙蛋+岩狱套）</a><br>';
 }
 }
 if ($who === 'northwind' && in_array((int) $u['quest'], [38, 46], true)) {
@@ -892,11 +892,11 @@ if ($who === 'oldfish') {
 }
 if ($who === 'oldash') {
     echo '<a href="npc.php?who=oldash&choice=open">开启副本【熔心】（580级+，消耗入场券×1，45分钟）</a><br>';
-    echo '<a href="npc.php?who=oldash&choice=open2">开启副本【灰烬深渊】（580级+，30万买命钱，45分钟）</a><br>';
+    echo '<a href="npc.php?who=oldash&choice=open2">开启副本【灰烬深渊】（580级+，消耗【灰烬深渊入场券】×1，45分钟）</a><br>';
 }
 if ($who === 'qingya') {
     echo '雾森往南是火山，火山里住着一位老邻居。你的主线：<a href="quest.php">查看任务</a><br>';
-    echo '<a href="npc.php?who=qingya&choice=open">开启副本【雾森祭坛】（500~620级，供奉20万，45分钟）</a><br>';
+    echo '<a href="npc.php?who=qingya&choice=open">开启副本【雾森祭坛】（500~620级，消耗【雾森祭坛入场券】×1，45分钟）</a><br>';
 }
 if ($who === 'watcher') {
     if ((int) $u['quest'] === 75 && empty(cflags((int) $u['id'])['doyle_met'])) {
@@ -915,7 +915,7 @@ if ($who === 'soulmaster') {
     }
 }
 if ($who === 'spider') {
-    echo '<a href="npc.php?who=spider&choice=open2">开启副本【傀儡回廊】（300~460级，门票5万，45分钟）</a><br>';
+    echo '<a href="npc.php?who=spider&choice=open2">开启副本【傀儡回廊】（300~460级，消耗【傀儡回廊入场券】×1，45分钟）</a><br>';
 }
 if (in_array($who, ['bounty_boss', 'bounty_elder', 'bounty_frost'], true)) {
     echo '今日悬赏：<br>';

@@ -70,9 +70,44 @@ $people = [
     'soulmaster' => ['name' => '神魂师·墨老', 'loc' => 'silver_sq', 'text' => '神魂碎片十个一合，天地人三级看命。神魂无等级限制，戴上就加真伤。我这能升级，I级起，X级顶，越往上越吃碎片。'],
     'bounty_boss' => ['name' => '榜爷', 'loc' => 'bounty_hall', 'text' => '每天三单，杀够数领钱领药。单子天天有，命只有一条。'],    'bounty_elder' => ['name' => '树皮榜', 'loc' => 'elder_tree', 'text' => '悬赏单贴在树皮上，风一吹哗哗响。杀够数，找榜爷领——树皮只管贴，不管发。'],
     'bounty_frost' => ['name' => '榜爷学徒', 'loc' => 'frostburg_sq', 'text' => '师父在悬赏大厅，我在广场摆摊。单子一样，钱一样，杀够数就行。'],
+    // ===== 大区域副本门口引路人（对话后才能进入；进副本消耗本区入场券）=====
+    'rd_sky' => ['name' => '引路人·云岫', 'loc' => 'sky_gale_shrine', 'text' => '风之母的龛后藏着【苍穹回廊】。想进去？先提着【苍穹回廊入场券】来——那是斩杀本岛最终BOSS「苍穹之主·瓦洛」才掉的东西（0.5%）。45分钟，回廊会自己关门。'],
+    'rd_sunk' => ['name' => '引路人·潮螺', 'loc' => 'sunk_queen', 'text' => '海妖王座底下还有座【溺海神龛】。门票【溺海神龛入场券】，杀本区最终BOSS「深渊鲸主」0.5%才掉。45分钟，水压会替你计时。'],
+    'rd_forge' => ['name' => '引路人·炉引', 'loc' => 'forge_throne', 'text' => '王座后面是【永燃锻炉】。要【永燃锻炉入场券】——宰了本区最终BOSS「巨炉泰坦」才出（0.5%）。45分钟，炉火不等人。'],
+    'rd_verd' => ['name' => '引路人·苔引', 'loc' => 'verd_crown', 'text' => '古藤冠顶下压着【万藤古祠】。门票【万藤古祠入场券】，斩本区最终BOSS「空心巨树」0.5%掉。45分钟，藤会把路合上。'],
+    'rd_crypt' => ['name' => '引路人·霜引', 'loc' => 'crypt_bell', 'text' => '丧钟之下是【霜魄陵寝】。带【霜魄陵寝入场券】来，杀本区最终BOSS「巫妖王·丧钟」0.5%掉。45分钟，钟响就封门。'],
+    'rd_star' => ['name' => '引路人·星引', 'loc' => 'star_titan_seat', 'text' => '泰坦星座压着【陨星坑】。门票【陨星坑入场券】，本区最终BOSS「星陨泰坦」0.5%掉。45分钟，坑会自己合拢。'],
+    'rd_magma' => ['name' => '引路人·焰引', 'loc' => 'magma_lord_hall', 'text' => '熔潮君王殿尽头是【熔潮深渊】。要【熔潮深渊入场券】——本区最终BOSS「熔渊利维坦」0.5%掉。45分钟，潮一退就关门。'],
+    'rd_chrono' => ['name' => '引路人·晷引', 'loc' => 'chrono_paradox_core', 'text' => '悖论之核后面是【凝固时刻】。门票【凝固时刻入场券】，斩本区最终BOSS「悖论之核」0.5%掉。45分钟，多一秒都算你偷的。'],
+    'rd_divine' => ['name' => '引路人·云阶', 'loc' => 'divine_end', 'text' => '神墟归墟里还供着【墟心圣殿】。带【墟心圣殿入场券】来，本区最终BOSS「神墟终焉」0.5%掉。45分钟，神殿只借你一段。'],
 ];
+// 大区域副本引路人：who => 副本 rk
+$rdNpc = ['rd_sky' => 'sky', 'rd_sunk' => 'sunk', 'rd_forge' => 'forge', 'rd_verd' => 'verd', 'rd_crypt' => 'crypt', 'rd_star' => 'star', 'rd_magma' => 'magma', 'rd_chrono' => 'chrono', 'rd_divine' => 'divine'];
 if (!isset($people[$who]) || $people[$who]['loc'] !== $cur) {
     flash_set('这个人不在这里。');
+    header('Location: home.php');
+    exit;
+}
+
+// ===== 大区域副本引路人：进入副本（消耗本区入场券×1，45分钟）=====
+if (isset($rdNpc[$who]) && $choice === 'enter') {
+    $rk = $rdNpc[$who];
+    $U = (int) $u['id'];
+    $R = region_dungeon_specs()[$rk];
+    $t = region_dungeon_ticket_map()[$rk];
+    $gate = 'rd_' . $rk . '_gate';
+    $needLv = (int) $R['min_lv'];
+    if ((int) ($u['lv'] ?? 1) < $needLv) {
+        flash_set($people[$who]['name'] . '摇头：这副本要' . $needLv . '级，你还差点火候。');
+    } elseif (empty(mats_of($U)[$t['mat']])) {
+        flash_set($people[$who]['name'] . '：进【' . $R['name'] . '】要【' . $t['name'] . '】×1（本区最终BOSS 0.5%掉），你身上没有。');
+    } else {
+        add_mat($U, $t['mat'], -1);
+        unset($_SESSION['battle']);
+        $u['loc'] = $gate;
+        user_save($u);
+        flash_set($people[$who]['name'] . '推开副本之门：' . $R['name'] . '，45分钟，活着回来。');
+    }
     header('Location: home.php');
     exit;
 }
@@ -787,6 +822,21 @@ if ($npcFlash !== '') {
     echo '<div class="warn">' . h($npcFlash) . '</div><div class="hr">--------</div>';
 }
 echo '<div class="muted">' . h($people[$who]['text']) . '</div><div class="hr">--------</div>';
+if (isset($rdNpc[$who])) {
+    $rk = $rdNpc[$who];
+    $R = region_dungeon_specs()[$rk];
+    $t = region_dungeon_ticket_map()[$rk];
+    $have = (int) (mats_of((int) $u['id'])[$t['mat']] ?? 0);
+    echo '副本：<b>' . h($R['name']) . '</b>（' . (int) $R['min_lv'] . '级+，限时45分钟）<br>';
+    echo '门票：<b>' . h($t['name']) . '</b>×1（持有：' . $have . '）<br>';
+    if ((int) ($u['lv'] ?? 1) < (int) $R['min_lv']) {
+        echo '<span class="warn">等级不足（需' . (int) $R['min_lv'] . '级，你现在' . (int) ($u['lv'] ?? 1) . '级）</span><br>';
+    } elseif ($have < 1) {
+        echo '<span class="warn">缺少门票——击杀本区最终BOSS 0.5%掉落。</span><br>';
+    } else {
+        echo '<a href="npc.php?who=' . h($who) . '&choice=enter">进入【' . h($R['name']) . '】（消耗门票×1）</a><br>';
+    }
+}
 if ($who === 'augustus' && (int) $u['quest'] === 10) {
     echo '<a href="npc.php?who=augustus&choice=accept">接受矿坑调查委托</a><br>';
 }

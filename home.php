@@ -33,6 +33,12 @@ if ($to !== '' && isset(locations()[$to])) {
                     header('Location: home.php');
                     exit;
                 }
+                // 从野外走进副本入口：必须先在门口和引路人对话（由他消耗门票开启）
+                if (region_dungeon_of((string) $u['loc']) === '') {
+                    flash_set('这扇副本之门由门口的引路人开启——去找他对话，凭本区入场券进入。');
+                    header('Location: home.php');
+                    exit;
+                }
             }
         }
         if ($to === 'dsw_throne' && dsw_stage((int) $u['id']) < 5) {
@@ -173,6 +179,16 @@ $npcLinks = [
     'ember_foothill' => [['oldash', '探火人·老灰']],
     'frostburg_sq' => [['rockwarden', '岩狱守门人·磐石']],
     'volcano_heart' => [['watcher', '熔火守望者'], ['voidwalker', '虚空行者']],
+    // 大区域副本门口引路人
+    'sky_gale_shrine' => [['rd_sky', '引路人·云岫']],
+    'sunk_queen' => [['rd_sunk', '引路人·潮螺']],
+    'forge_throne' => [['rd_forge', '引路人·炉引']],
+    'verd_crown' => [['rd_verd', '引路人·苔引']],
+    'crypt_bell' => [['rd_crypt', '引路人·霜引']],
+    'star_titan_seat' => [['rd_star', '引路人·星引']],
+    'magma_lord_hall' => [['rd_magma', '引路人·焰引']],
+    'chrono_paradox_core' => [['rd_chrono', '引路人·晷引']],
+    'divine_end' => [['rd_divine', '引路人·云阶']],
 ];
 $npcHere = 0;
 foreach ($npcLinks[$cur] ?? [] as [$npcId, $npcName]) {

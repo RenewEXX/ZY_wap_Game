@@ -541,3 +541,42 @@ function region_dungeon_prefix_of(string $shortName): string
     }
     return '';
 }
+
+// ===== 副本门票：每区最终BOSS 0.5% 掉（由 game.php 的 roll_region_ticket 结算）=====
+// rk => ['boss'=>该区最终BOSS mid, 'mat'=>门票材料key, 'name'=>门票名]
+function region_dungeon_ticket_map(): array
+{
+    $final = [
+        'sky'    => 'sky_sovereign',
+        'sunk'   => 'abyss_whale',
+        'forge'  => 'forge_titan',
+        'verd'   => 'verd_hollow',
+        'crypt'  => 'crypt_lichking',
+        'star'   => 'star_titan',
+        'magma'  => 'magma_leviathan',
+        'chrono' => 'chrono_paradox',
+        'divine' => 'divine_ruin',
+    ];
+    $specs = region_dungeon_specs();
+    $out = [];
+    foreach ($final as $rk => $boss) {
+        $nm = (string) ($specs[$rk]['name'] ?? $rk);
+        $out[$rk] = ['boss' => $boss, 'mat' => 'rd_ticket_' . $rk, 'name' => $nm . '入场券'];
+    }
+    return $out;
+}
+
+// 门票材料 key（按副本 rk）
+function region_dungeon_ticket_mat(string $rk): string
+{
+    return 'rd_ticket_' . $rk;
+}
+
+// 入口门 loc（rd_<rk>_gate）反查 rk；非副本入口返回空串
+function region_dungeon_key_of_gate(string $loc): string
+{
+    if (preg_match('/^rd_(.+)_gate$/', $loc, $m) && isset(region_dungeon_specs()[$m[1]])) {
+        return (string) $m[1];
+    }
+    return '';
+}

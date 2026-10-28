@@ -3652,7 +3652,8 @@ function quest_mats(): array
     return ['blackcoin' => '不断下坠的黑币', 'aiden_badge' => '艾登·灰叶的铭牌', 'investigation_record' => '调查队记录', 'augustus_letter' => '镇长的信', 'dsw_ticket' => '黑暗沼泽副本入场券', 'dsw_item1' => '幽暗黏液', 'dsw_item2' => '沼泽之核', 'dsw_item3' => '腐泥之心', 'dsw_item4' => '王座徽记', 'abx_ticket' => '影蚀深渊入场券', 'abx_item1' => '蚀影尘', 'abx_item2' => '影蚀徽记', 'abx_item3' => '低语残章', 'abx_item4' => '王座蚀印', 'capital_badge' => '王都徽章', 'puppet_eye' => '傀儡之眼', 'ch3_proof' => '第三章通关证明', 'mx_ticket' => '银丝母巢入场券', 'mx_item1' => '黏丝束', 'mx_item2' => '茧壳碎片', 'mx_item3' => '织线梭', 'mx_item4' => '蛾翼磷粉', 'mx_item5' => '守望之瞳', 'mx_item6' => '育巢摇篮曲', 'farm_coin' => '农场币', 'seed_green' => '青菜种子', 'seed_radish' => '萝卜种子', 'seed_melon' => '南瓜种子', 'seed_tomato' => '番茄种子', 'seed_strawberry' => '草莓种子',
  'ice_badge' => '冰原徽章', 'frost_heart' => '霜王之心', 'ch4_proof' => '第四章通关证明', 'fr_ticket' => '冰渊副本入场券', 'fr_item1' => '渊底冰核', 'fr_item2' => '利维坦之牙',
  'forest_badge' => '森语徽章', 'south_flame_token' => '南炎信物', 'ch5_proof' => '第五章通关证明', 'rb2_proof' => '2觉证明', 'em_ticket' => '熔心副本入场券', 'pz_ticket' => '傀儡回廊入场券', 'tt_ticket' => '岩狱副本入场券', 'sen_ticket' => '雾森祭坛入场券', 'em_item1' => '熔核碎片', 'em_item2' => '熔心之血',
- 'soul_shard' => '神魂碎片'];
+ 'soul_shard' => '神魂碎片',
+ 'rd_ticket_sky' => '苍穹回廊入场券', 'rd_ticket_sunk' => '溺海神龛入场券', 'rd_ticket_forge' => '永燃锻炉入场券', 'rd_ticket_verd' => '万藤古祠入场券', 'rd_ticket_crypt' => '霜魄陵寝入场券', 'rd_ticket_star' => '陨星坑入场券', 'rd_ticket_magma' => '熔潮深渊入场券', 'rd_ticket_chrono' => '凝固时刻入场券', 'rd_ticket_divine' => '墟心圣殿入场券'];
 }
 
 function skill_catalog(): array
@@ -7820,6 +7821,11 @@ function battle_round(array &$u, array &$b, string $mode): array
                 $b['drops'][] = $mx;
                 $log .= '掉落【' . $mx . '】！';
             }
+            $rtk = roll_region_ticket((int) $u['id'], (string) ($b['id'] ?? ''));
+            if ($rtk !== '') {
+                $b['drops'][] = $rtk;
+                $log .= '掉落【' . $rtk . '】！';
+            }
             $mq = roll_mx_quest((int) $u['id'], (string) ($b['id'] ?? ''));
             if ($mq !== '') {
                 $b['drops'][] = $mq;
@@ -7887,6 +7893,10 @@ function battle_round(array &$u, array &$b, string $mode): array
         $mx = roll_mx_ticket((int) $u['id'], (string) ($b['id'] ?? ''));
         if ($mx !== '') {
             $b['drops'][] = $mx;
+        }
+        $rtk = roll_region_ticket((int) $u['id'], (string) ($b['id'] ?? ''));
+        if ($rtk !== '') {
+            $b['drops'][] = $rtk;
         }
         $mq = roll_mx_quest((int) $u['id'], (string) ($b['id'] ?? ''));
         if ($mq !== '') {
@@ -8870,6 +8880,33 @@ function roll_dsw_ticket(int $uid, string $mid): string
     }
     add_mat($uid, 'dsw_ticket', 1);
     return '黑暗沼泽副本入场券';
+}
+
+// ===== 区域副本门票掉落：每区最终BOSS 0.5% =====
+// 返回 mid => [mat, name]。0.5% 概率命中则发一张门票并返回其在战报里的名字。
+function region_final_ticket_drops(): array
+{
+    $m = [];
+    if (function_exists('region_dungeon_ticket_map')) {
+        foreach (region_dungeon_ticket_map() as $t) {
+            $m[(string) $t['boss']] = [(string) $t['mat'], (string) $t['name']];
+        }
+    }
+    return $m;
+}
+
+function roll_region_ticket(int $uid, string $mid): string
+{
+    $map = region_final_ticket_drops();
+    if (!isset($map[$mid])) {
+        return '';
+    }
+    if (mt_rand(1, 1000) > 5) { // 0.5%
+        return '';
+    }
+    [$mat, $name] = $map[$mid];
+    add_mat($uid, $mat, 1);
+    return $name;
 }
 
 function roll_dungeon_quest(int $uid, string $mid): string

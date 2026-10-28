@@ -43,11 +43,18 @@ ck56('购买后解锁含anime', in_array('anime:warrior', avatar_unlocked_ids($u
 avatar_set($uid,'anime:warrior'); $u=user_by_id($uid);
 ck56('可切到二次元头像', avatar_of($u)==='anime:warrior', avatar_of($u));
 
-// 跨职业：战士买法师的二次元头像也能用
+// 本职业专属：战士即使买了法师的二次元头像也不能用
 avatar_anime_grant($uid,'mage'); $u=user_by_id($uid);
-ck56('跨职业anime解锁', in_array('anime:mage', avatar_unlocked_ids($u)));
+ck56('跨职业anime不解锁', !in_array('anime:mage', avatar_unlocked_ids($u)));
 avatar_set($uid,'anime:mage'); $u=user_by_id($uid);
-ck56('战士可用法师二次元头像', avatar_of($u)==='anime:mage', avatar_of($u));
+ck56('战士不能用法师二次元头像', avatar_of($u)!=='anime:mage', avatar_of($u));
+
+// 二次元头像渲染为 Q版 SVG 少女；职业/转职头像仍是徽章字形
+$animeHtml = avatar_render('anime:warrior', 40);
+ck56('二次元渲染为SVG', str_contains($animeHtml,'<svg') && str_contains($animeHtml,'linearGradient'));
+ck56('SVG含大眼高光', str_contains($animeHtml,'#ffffff'));
+$badgeHtml = avatar_render('job:warrior', 40);
+ck56('职业头像仍为徽章(非SVG)', !str_contains($badgeHtml,'<svg') && str_contains($badgeHtml,'display:inline-flex'));
 
 // 恢复默认 → 回到当前二觉
 avatar_set($uid,''); $u=user_by_id($uid);

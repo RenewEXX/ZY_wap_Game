@@ -128,7 +128,7 @@ function avatar_default_id(array $u): string
 //   - 本职业初始头像 job:<job> 永远解锁；
 //   - 一觉头像 rb1:<job>：完成 1 觉后解锁；
 //   - 转职分支头像 rb2:<key>：只有选了该 2 觉方向才解锁；
-//   - 二次元头像 anime:<job>：在商城付费购买后解锁（跨职业可用）。
+//   - 二次元头像 anime:<job>：在商城付费购买后解锁（**本职业专属**，不能跨职业使用）。
 function avatar_unlocked_ids(array $u): array
 {
     $ids = [];
@@ -146,10 +146,9 @@ function avatar_unlocked_ids(array $u): array
     if ($rb2 !== '' && isset(avatar_catalog()['rb2:' . $rb2]) && (avatar_catalog()['rb2:' . $rb2]['job'] ?? '') === $job) {
         $ids[] = 'rb2:' . $rb2;
     }
-    foreach (avatar_classes() as $j) {
-        if (isset(avatar_catalog()['anime:' . $j]) && avatar_anime_owned($uid, $j)) {
-            $ids[] = 'anime:' . $j;
-        }
+    // 二次元头像：本职业专属（只解锁自己职业那一个）
+    if (isset(avatar_catalog()['anime:' . $job]) && avatar_anime_owned($uid, $job)) {
+        $ids[] = 'anime:' . $job;
     }
     return $ids;
 }
@@ -167,11 +166,91 @@ function avatar_of(array $u): string
     return avatar_default_id($u);
 }
 
+// 二次元头像：内联 Q 版动漫少女（纯 SVG，无需图片文件），按职业区分发色/瞳孔/服饰/配饰
+function avatar_chibi_svg(string $job, int $size = 40): string
+{
+    static $seq = 0;
+    $seq++;
+    $gid = 'av' . $seq;
+    $p = [
+        'warrior'  => ['bg1' => '#ffd6e0', 'bg2' => '#ff8fb0', 'hair' => '#ff6b4a', 'hair2' => '#c63a1f', 'eye' => '#e8462a', 'skin' => '#ffe3cc', 'outfit' => '#7a1f2a', 'ribbon' => '#ffe14d', 'acc' => 'sword'],
+        'mage'     => ['bg1' => '#d9efff', 'bg2' => '#93c6ff', 'hair' => '#8fb8ff', 'hair2' => '#5f7fe0', 'eye' => '#3f6fd0', 'skin' => '#ffe8da', 'outfit' => '#2a3f8a', 'ribbon' => '#ffe14d', 'acc' => 'star'],
+        'hunter'   => ['bg1' => '#dcffd8', 'bg2' => '#93e88c', 'hair' => '#7be08a', 'hair2' => '#3aa04a', 'eye' => '#2a8a3a', 'skin' => '#ffe3cc', 'outfit' => '#1f5a2a', 'ribbon' => '#ffe14d', 'acc' => 'leaf'],
+        'priest'   => ['bg1' => '#fff2c6', 'bg2' => '#ffd76a', 'hair' => '#ffe08a', 'hair2' => '#e0b03a', 'eye' => '#c99a2a', 'skin' => '#ffe8d0', 'outfit' => '#8a7a20', 'ribbon' => '#ff9ec4', 'acc' => 'halo'],
+        'summoner' => ['bg1' => '#eed9ff', 'bg2' => '#b98aff', 'hair' => '#c58aff', 'hair2' => '#8a3adf', 'eye' => '#8a3adf', 'skin' => '#f1ddff', 'outfit' => '#3a1a5a', 'ribbon' => '#ffe14d', 'acc' => 'horns'],
+    ][$job] ?? null;
+    if ($p === null) {
+        $p = ['bg1' => '#eee', 'bg2' => '#bbb', 'hair' => '#666', 'hair2' => '#444', 'eye' => '#333', 'skin' => '#ffe0c8', 'outfit' => '#555', 'ribbon' => '#f5c', 'acc' => 'star'];
+    }
+    $r = $size >= 32 ? 10 : 8;
+    $s = '';
+    $s .= '<svg width="' . $size . '" height="' . $size . '" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="display:block;border-radius:' . $r . 'px">';
+    $s .= '<defs><linearGradient id="' . $gid . '" x1="0" y1="0" x2="1" y2="1">'
+        . '<stop offset="0" stop-color="' . $p['bg1'] . '"/><stop offset="1" stop-color="' . $p['bg2'] . '"/></linearGradient></defs>';
+    $s .= '<rect width="100" height="100" rx="' . ($r + 4) . '" fill="url(#' . $gid . ')"/>';
+    // 身体/衣领
+    $s .= '<path d="M16 100 Q26 72 50 72 Q74 72 84 100 Z" fill="' . $p['outfit'] . '"/>';
+    $s .= '<path d="M40 74 L50 86 L60 74 Z" fill="' . $p['ribbon'] . '" opacity="0.85"/>';
+    // 脖子
+    $s .= '<rect x="44" y="60" width="12" height="16" rx="5" fill="' . $p['skin'] . '"/>';
+    // 后发
+    $s .= '<ellipse cx="50" cy="46" rx="34" ry="35" fill="' . $p['hair2'] . '"/>';
+    // 脸
+    $s .= '<ellipse cx="50" cy="48" rx="25" ry="26" fill="' . $p['skin'] . '"/>';
+    // 耳朵
+    $s .= '<circle cx="26" cy="50" r="5" fill="' . $p['skin'] . '"/><circle cx="74" cy="50" r="5" fill="' . $p['skin'] . '"/>';
+    // 刘海
+    $s .= '<path d="M24 46 Q26 16 50 16 Q74 16 76 46 Q71 33 62 30 Q54 28 50 33 Q46 28 38 30 Q29 33 24 46 Z" fill="' . $p['hair'] . '"/>';
+    // 两侧发丝
+    $s .= '<path d="M24 46 Q20 62 26 76 Q30 62 30 50 Z" fill="' . $p['hair'] . '"/>';
+    $s .= '<path d="M76 46 Q80 62 74 76 Q70 62 70 50 Z" fill="' . $p['hair'] . '"/>';
+    // 眼睛（大眼 + 白眼球 + 彩色虹膜 + 高光）
+    foreach ([38, 62] as $ex) {
+        $s .= '<ellipse cx="' . $ex . '" cy="52" rx="6.2" ry="7.6" fill="#ffffff"/>';
+        $s .= '<ellipse cx="' . $ex . '" cy="53" rx="4.2" ry="5.6" fill="' . $p['eye'] . '"/>';
+        $s .= '<ellipse cx="' . $ex . '" cy="54.4" rx="1.9" ry="2.4" fill="#1a1020"/>';
+        $s .= '<circle cx="' . ($ex - 2.0) . '" cy="49.6" r="1.7" fill="#ffffff"/>';
+    }
+    // 刘海高光
+    $s .= '<path d="M33 27 Q41 23 52 25" stroke="#ffffff" stroke-width="2" opacity="0.45" fill="none" stroke-linecap="round"/>';
+    // 腮红
+    $s .= '<ellipse cx="32" cy="62" rx="5.2" ry="3.1" fill="#ff8aa0" opacity="0.55"/>';
+    $s .= '<ellipse cx="68" cy="62" rx="5.2" ry="3.1" fill="#ff8aa0" opacity="0.55"/>';
+    // 嘴（微笑）
+    $s .= '<path d="M46 66 Q50 70.5 54 66" stroke="#c8577a" stroke-width="2" fill="none" stroke-linecap="round"/>';
+    // 配饰（职业区分）
+    switch ($p['acc']) {
+        case 'sword':
+            $s .= '<g transform="translate(80,12) rotate(38)"><rect x="-2.2" y="0" width="4.4" height="24" rx="2" fill="#e6eefc"/><rect x="-7" y="21" width="14" height="4" rx="2" fill="' . $p['ribbon'] . '"/><rect x="-2.2" y="25" width="4.4" height="8" rx="2" fill="#8a5a2a"/></g>';
+            break;
+        case 'star':
+            $s .= '<g transform="translate(75,22) scale(0.95)"><path d="M0,-8 L2.35,-2.47 L8,-2.47 L3.53,1 L5.35,6.47 L0,3 L-5.35,6.47 L-3.53,1 L-8,-2.47 L-2.35,-2.47 Z" fill="' . $p['ribbon'] . '" stroke="#fff8d0" stroke-width="0.8"/></g>';
+            break;
+        case 'leaf':
+            $s .= '<path d="M70 20 Q82 10 92 18 Q82 30 70 20 Z" fill="#4ac06a"/><path d="M71 20 Q82 19 90 18" stroke="#2a8a3a" stroke-width="1.4" fill="none"/>';
+            break;
+        case 'halo':
+            $s .= '<ellipse cx="50" cy="13" rx="16" ry="4.2" fill="none" stroke="' . $p['ribbon'] . '" stroke-width="3" opacity="0.95"/>';
+            break;
+        case 'horns':
+            $s .= '<path d="M30 26 Q24 12 33 9 Q34 20 39 24 Z" fill="' . $p['ribbon'] . '"/>';
+            $s .= '<path d="M70 26 Q76 12 67 9 Q66 20 61 24 Z" fill="' . $p['ribbon'] . '"/>';
+            break;
+    }
+    $s .= '</svg>';
+    return $s;
+}
+
 // 直接按头像 id 渲染徽章（不校验解锁，供选择页展示用）
 function avatar_render(string $id, int $size = 40): string
 {
     $cat = avatar_catalog();
     $a = $cat[$id] ?? $cat['job:warrior'];
+    // 二次元头像：渲染 Q 版动漫少女
+    if (!empty($a['shop'])) {
+        return '<span title="' . h((string) $a['name']) . '" style="display:inline-block;vertical-align:middle;line-height:0">'
+            . avatar_chibi_svg((string) ($a['job'] ?? 'warrior'), $size) . '</span>';
+    }
     $fs = (int) round($size * 0.5);
     $glyph = h((string) $a['glyph']);
     return '<span title="' . h((string) $a['name']) . '" style="display:inline-flex;align-items:center;justify-content:center;'

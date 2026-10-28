@@ -20,7 +20,7 @@ if ($flash !== '') {
 
 echo '【选择头像】<br>';
 echo '当前：' . avatar_html($u, 48) . '<br>';
-echo '<div class="muted">默认头像随「职业 → 一觉 → 二觉」自动升级；也可在已解锁头像里自选。二次元头像在商城付费解锁。</div>';
+echo '<div class="muted">默认头像随「职业 → 一觉 → 二觉」自动升级；也可在已解锁头像里自选。二次元头像（Q版动漫少女）在商城付费解锁，本职业专属。</div>';
 echo '<div class="hr">--------</div>';
 
 $cur = avatar_of($u);
@@ -55,9 +55,9 @@ foreach ($cat as $id => $a) {
     }
 }
 
-// ===== 二次元头像（商城）=====
+// ===== 二次元头像（商城 · 本职业专属）=====
 echo '<div class="hr">--------</div>';
-echo '<b>二次元头像（商城付费解锁 · 跨职业可用）</b><br>';
+echo '<b>二次元头像（Q版动漫少女 · 商城付费 · 本职业专属）</b><br>';
 $anime = function_exists('avatar_anime_goods') ? avatar_anime_goods() : [];
 if ($anime !== []) {
     foreach ($anime as $gk => $gv) {
@@ -65,12 +65,17 @@ if ($anime !== []) {
         if (!isset($cat[$id])) {
             continue;
         }
+        if ((string) $gv['job'] !== $job) {
+            echo '<span style="opacity:.4;filter:grayscale(1);display:inline-block;vertical-align:middle">' . avatar_render($id, 30) . '</span>';
+            echo ' <span class="muted">' . h((string) $cat[$id]['name']) . '（他职业专属）</span><br>';
+            continue;
+        }
         $owned = function_exists('avatar_anime_owned') ? avatar_anime_owned((int) $u['id'], (string) $gv['job']) : false;
         if ($owned) {
             $render_row($id, $cat[$id]);
         } else {
-            echo '<span style="opacity:.4;filter:grayscale(1);display:inline-block;vertical-align:middle">' . avatar_render($id, 30) . '</span>';
-            echo ' <span class="muted">' . h((string) $cat[$id]['name']) . '</span> · <a href="mall.php?m=' . h($gk) . '">去商城购买</a><br>';
+            echo '<span style="opacity:.5;filter:grayscale(0.6);display:inline-block;vertical-align:middle">' . avatar_render($id, 30) . '</span>';
+            echo ' ' . h((string) $cat[$id]['name']) . ' · <a href="mall.php?m=' . h($gk) . '">去商城购买</a><br>';
         }
     }
 }

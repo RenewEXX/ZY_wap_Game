@@ -6937,6 +6937,68 @@ function dmg_to_monster(array $u, array $m = []): int
 
 // 怪物打玩家：同样走浮动管线（档位重击/完美一击）。返回 [伤害, 标记]。
 // 怪没有装备暴击（critRate=0），精准用玩家的——玩家堆精准也提高承伤稳定性。
+// ===== 玩家承受的减益（怪物/BOSS 施加）：眩晕/沉默/减速 =====
+// 存在战斗状态 $b 里（随战斗结束/换怪清空）。
+//   眩晕 stun  ：出手整轮落空（跳过本回合攻击）
+//   沉默 silence：本回合无法放技能，只能普攻
+//   减速 slow  ：出手伤害降低 pct%
+// 控制抗性 control_resist 抵消眩晕/沉默，减速抗性 slow_resist 抵消减速：
+//   - 先按抗性%概率直接免疫；
+//   - 免疫失败则每约 34% 抗性缩短 1 轮（至少 1 轮）。
+function player_debuff_names(): array
+{
+    return ['stun' => '眩晕', 'silence' => '沉默', 'slow' => '减速'];
+}
+
+// 施加一个玩家减益，返回战报片段（含被抗性抵消/中招轮数）。
+function player_debuff_apply(array &$b, string $key, int $turns, int $pct, array $u): string
+{
+    if (!isset(player_debuff_names()[$key]) || $turns <= 0) {
+        return '';
+    }
+    $gs = gear_stats((int) ($u['id'] ?? 0));
+    $res = $key === 'slow' ? (float) ($gs['slow_resist'] ?? 0) : (float) ($gs['control_resist'] ?? 0);
+    $res = min(90.0, max(0.0, $res));
+    if ($res > 0 && mt_rand(1, 100) <= (int) $res) {
+        return '(抗性抵消·' . player_debuff_names()[$key] . ')';
+    }
+    $turns = max(1, $turns - (int) floor($res / 34));
+    $bk = 'p_' . $key;
+    $b[$bk] = max((int) ($b[$bk] ?? 0), $turns);
+    if ($key === 'slow') {
+        $b['p_slow_pct'] = max((int) ($b['p_slow_pct'] ?? 0), $pct);
+    }
+    return '(中' . player_debuff_names()[$key] . $turns . '轮)';
+}
+
+// 本轮开始读取玩家减益并推进轮数（读时生效、随后递减：施加的下一轮发威）。
+function player_debuff_begin(array &$b): array
+{
+    $out = ['stun' => false, 'silence' => false, 'slow_pct' => 0.0];
+    if ((int) ($b['p_stun'] ?? 0) > 0) {
+        $out['stun'] = true;
+        $b['p_stun'] = (int) $b['p_stun'] - 1;
+    }
+    if ((int) ($b['p_silence'] ?? 0) > 0) {
+        $out['silence'] = true;
+        $b['p_silence'] = (int) $b['p_silence'] - 1;
+    }
+    if ((int) ($b['p_slow'] ?? 0) > 0) {
+        $out['slow_pct'] = (float) ($b['p_slow_pct'] ?? 0);
+        $b['p_slow'] = (int) $b['p_slow'] - 1;
+        if ((int) $b['p_slow'] <= 0) {
+            unset($b['p_slow'], $b['p_slow_pct']);
+        }
+    }
+    return $out;
+}
+
+// 换怪/战斗结束：清空玩家减益
+function player_debuff_clear(array &$b): void
+{
+    unset($b['p_stun'], $b['p_silence'], $b['p_slow'], $b['p_slow_pct']);
+}
+
 function dmg_to_player(array $u, array $m): array
 {
     $gs = gear_stats((int) ($u['id'] ?? 0));
@@ -6989,6 +7051,11 @@ function battle_round(array &$u, array &$b, string $mode): array
     // 尼德霍格的残鳞：每轮按层数重算最大生命（战斗中被 user_save 落库）
     if (job_id_of($u) === 'summoner') {
         summoner_legend_rescale_apply($u);
+    }
+    // 玩家减益：眩晕/沉默→本回合无法用技能（只走普攻，眩晕末尾伤害清零）；减速→降输出。
+    $pDbf = player_debuff_begin($b);
+    if ($pDbf['stun'] || $pDbf['silence']) {
+        $mode = 'hit';
     }
     $pd = dmg_to_monster($u, $b);
     if ($mode !== 'hit') { unset($GLOBALS['_melee_el_tag']); }
@@ -7521,6 +7588,20 @@ function battle_round(array &$u, array &$b, string $mode): array
         }
     }
     $__isCrit = isset($vTag) && strpos((string) $vTag, '暴击') !== false;
+    // ===== 玩家减益结算：眩晕整轮落空、减速按百分比降伤 =====
+    $pDbfTag = '';
+    if (!empty($pDbf['stun'])) {
+        $pd = 0;
+        $pDbfTag = '(眩晕·出手被打断)';
+    } else {
+        if (!empty($pDbf['silence'])) {
+            $pDbfTag .= '(沉默)';
+        }
+        if ($pDbf['slow_pct'] > 0 && $pd > 0) {
+            $pd = max(1, (int) round($pd * (1 - $pDbf['slow_pct'] / 100)));
+            $pDbfTag .= '(减速-' . (int) $pDbf['slow_pct'] . '%)';
+        }
+    }
     $b['hp'] = (int) $b['hp'] - $pd;
     // 命中后：影牙/破甲真伤附加、不死鸟暴击回血
     if ($pd > 0 && function_exists('legend_relic_on_hit')) {
@@ -7624,7 +7705,11 @@ function battle_round(array &$u, array &$b, string $mode): array
     // 1觉·猎手标记：目标易伤10%（剩余轮数在受伤时结算）
     if ($pd > 0 && !empty($b['mark']) && ($b['hp'] ?? 1) > 0) { $pd = (int)($pd * 1.1); $b['hp'] = (int)$b['hp'] - (int)($pd * 0.1); $b['mark'] = (int)$b['mark'] - 1; $logHeal .= '(易伤)'; }
     $verb = $skillName === '拳击' ? '你挥出一拳，造成' : ($isSkill ? '你放出' . $skillName . '，造成' : '你劈出');
-    $log = $pd === 0 ? '你的攻击被' . $b['name'] . '闪避了。' : $verb . $pd . '点。' . $logHeal . $logNoMp . $profMsg . $tankMp;
+    if ($pd === 0) {
+        $log = !empty($pDbf['stun']) ? '你被眩晕，出手被打断。' : ('你的攻击被' . $b['name'] . '闪避了。');
+    } else {
+        $log = $verb . $pd . '点。' . $logHeal . $pDbfTag . $logNoMp . $profMsg . $tankMp;
+    }
     $gs = gear_stats((int) ($u['id'] ?? 0));
     if ($pd > 0 && $gs['lifesteal'] > 0) {
         $hl = max(1, (int) ($pd * $gs['lifesteal'] / 100));
@@ -8249,6 +8334,8 @@ function battle_round(array &$u, array &$b, string $mode): array
     }
     if (!empty($b['eye_weak'])) {
         $md = (int) ($md * 0.9);
+        $b['eye_weak'] = (int) $b['eye_weak'] - 1;
+        $log .= $b['name'] . '攻势迟滞。';
     }
     // 怪物出手：先结算你身上的怪DOT，再看放普攻还是专属技能，战报里写清楚
     $skRes = monster_skill_turn($u, $b, (int) $md);

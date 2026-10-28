@@ -16,6 +16,10 @@ declare(strict_types=1);
 //   guard  可选：轮数，怪架盾 N 轮（期间受伤-40%），下一轮你的出手日志里会提示
 //   adds   可选：只数，召唤小怪加入围殴（left+1，经验金币正常结算，不掉装备）
 //   rush   可选：true，这轮怪打两次（第二下只有一半）——BOSS 压血线专用
+//   psilence 可选：沉默玩家 N 轮（本回合无法放技能，只能普攻；吃控制抗性）
+//   pstun   可选：眩晕玩家 N 轮（出手整轮落空；吃控制抗性）
+//   pslow   可选：[轮数, 降低出手伤害%]，减速玩家（吃减速抗性）
+//   weak    可选：N 轮，怪自曝破绽（自身出手伤害-10%，如万眼开阖后致盲）
 
 function monster_skills(): array
 {
@@ -89,13 +93,13 @@ function monster_skills(): array
         'apostle' => [
             'atk' => '蚀影鞭挞',
             'skills' => [
-                ['name' => '使徒低语', 'rate' => 25, 'mult' => 1.6, 'dot' => [3, 2]],
+                ['name' => '使徒低语', 'rate' => 25, 'mult' => 1.6, 'dot' => [3, 2], 'psilence' => 1],
             ],
         ],
         'guardian' => [
             'atk' => '巨拳碾压',
             'skills' => [
-                ['name' => '巨像践踏', 'rate' => 25, 'mult' => 2.0],
+                ['name' => '巨像践踏', 'rate' => 25, 'mult' => 2.0, 'pstun' => 1],
                 ['name' => '符文护壳', 'rate' => 15, 'mult' => 0.5, 'guard' => 2],
             ],
         ],
@@ -120,7 +124,7 @@ function monster_skills(): array
             'atk' => '凝视灼烧',
             'skills' => [
                 ['name' => '深渊凝视', 'rate' => 30, 'mult' => 2.0, 'dot' => [2, 4]],
-                ['name' => '万眼开阖', 'rate' => 15, 'mult' => 1.6, 'rush' => true],
+                ['name' => '万眼开阖', 'rate' => 15, 'mult' => 1.6, 'rush' => true, 'weak' => 2],
             ],
         ],
         // —— BOSS·影蚀君王阿巴顿 ——
@@ -141,7 +145,7 @@ function monster_skills(): array
         'string_puller' => [
             'atk' => '提线切割',
             'skills' => [
-                ['name' => '提线木偶戏', 'rate' => 30, 'mult' => 2.0, 'dot' => [3, 2]],
+                ['name' => '提线木偶戏', 'rate' => 30, 'mult' => 2.0, 'dot' => [3, 2], 'psilence' => 1],
                 ['name' => '傀儡入场', 'rate' => 15, 'mult' => 1.0, 'adds' => 1],
             ],
         ],
@@ -149,7 +153,7 @@ function monster_skills(): array
         'silk_mother' => [
             'atk' => '蛛丝绞杀',
             'skills' => [
-                ['name' => '万丝缠身', 'rate' => 30, 'mult' => 2.0, 'dot' => [3, 3]],
+                ['name' => '万丝缠身', 'rate' => 30, 'mult' => 2.0, 'dot' => [3, 3], 'psilence' => 1],
                 ['name' => '育巢孵化', 'rate' => 15, 'mult' => 1.0, 'adds' => 2],
             ],
         ],
@@ -157,20 +161,20 @@ function monster_skills(): array
         'blizzard_shaman' => [
             'atk' => '冰锥连射',
             'skills' => [
-                ['name' => '暴风雪幕', 'rate' => 25, 'mult' => 1.7, 'el' => 'ice'],
+                ['name' => '暴风雪幕', 'rate' => 25, 'mult' => 1.7, 'el' => 'ice', 'pslow' => [2, 15]],
             ],
         ],
         'frost_giant' => [
             'atk' => '冰霜巨拳',
             'skills' => [
-                ['name' => '冰川崩塌', 'rate' => 25, 'mult' => 2.0, 'el' => 'ice'],
+                ['name' => '冰川崩塌', 'rate' => 25, 'mult' => 2.0, 'el' => 'ice', 'pslow' => [2, 20]],
             ],
         ],
         // —— BOSS·凛冬之王 ——
         'winter_king' => [
             'atk' => '寒霜王剑',
             'skills' => [
-                ['name' => '凛冬审判', 'rate' => 30, 'mult' => 2.4, 'el' => 'ice'],
+                ['name' => '凛冬审判', 'rate' => 30, 'mult' => 2.4, 'el' => 'ice', 'pstun' => 1],
                 ['name' => '永冻王座', 'rate' => 15, 'mult' => 0.5, 'guard' => 2],
                 ['name' => '冰河葬礼', 'rate' => 10, 'mult' => 1.5, 'dot' => [3, 4]],
             ],
@@ -193,7 +197,7 @@ function monster_skills(): array
         'ash_wyrm' => [
             'atk' => '灰烬吐息',
             'skills' => [
-                ['name' => '烬风吐息', 'rate' => 25, 'mult' => 1.8, 'dot' => [3, 3]],
+                ['name' => '烬风吐息', 'rate' => 25, 'mult' => 1.8, 'dot' => [3, 3], 'pslow' => [2, 15]],
             ],
         ],
         'ancient_ruin_golem' => [
@@ -216,7 +220,7 @@ function monster_skills(): array
         'em_heart' => [
             'atk' => '熔心脉冲',
             'skills' => [
-                ['name' => '熔心爆裂', 'rate' => 30, 'mult' => 2.6, 'el' => 'fire'],
+                ['name' => '熔心爆裂', 'rate' => 30, 'mult' => 2.6, 'el' => 'fire', 'pstun' => 1],
                 ['name' => '岩浆灌注', 'rate' => 15, 'mult' => 1.2, 'dot' => [4, 3]],
             ],
         ],
@@ -224,7 +228,7 @@ function monster_skills(): array
         'echo_rayne' => [
             'atk' => '回响低语',
             'skills' => [
-                ['name' => '回响侵蚀', 'rate' => 25, 'mult' => 1.6, 'dot' => [2, 3]],
+                ['name' => '回响侵蚀', 'rate' => 25, 'mult' => 1.6, 'dot' => [2, 3], 'psilence' => 1],
             ],
         ],
         'pz_master' => [
@@ -250,20 +254,20 @@ function monster_skills(): array
         'brass_bishop' => [
             'atk' => '黄铜权杖',
             'skills' => [
-                ['name' => '赦令神罚', 'rate' => 30, 'mult' => 2.2, 'el' => 'light'],
+                ['name' => '赦令神罚', 'rate' => 30, 'mult' => 2.2, 'el' => 'light', 'psilence' => 1],
                 ['name' => '圣铜壁垒', 'rate' => 15, 'mult' => 0.5, 'guard' => 2],
             ],
         ],
         'tundra_wanderer' => [
             'atk' => '苔原长矛',
             'skills' => [
-                ['name' => '风雪远行', 'rate' => 25, 'mult' => 1.8, 'el' => 'ice'],
+                ['name' => '风雪远行', 'rate' => 25, 'mult' => 1.8, 'el' => 'ice', 'pslow' => [2, 15]],
             ],
         ],
         'avalanche_titan' => [
             'atk' => '雪崩巨掌',
             'skills' => [
-                ['name' => '雪崩倾泻', 'rate' => 30, 'mult' => 2.4, 'el' => 'ice'],
+                ['name' => '雪崩倾泻', 'rate' => 30, 'mult' => 2.4, 'el' => 'ice', 'pslow' => [2, 20]],
             ],
         ],
         'obsidian_colossus' => [
@@ -291,7 +295,7 @@ function monster_skills(): array
         'god_emperor' => [
             'atk' => '堕天魔剑',
             'skills' => [
-                ['name' => '堕天断罪', 'rate' => 30, 'mult' => 2.6, 'el' => 'dark'],
+                ['name' => '堕天断罪', 'rate' => 30, 'mult' => 2.6, 'el' => 'dark', 'pstun' => 1],
                 ['name' => '路西法之晨星', 'rate' => 15, 'mult' => 2.0, 'rush' => true],
                 ['name' => '深渊王座', 'rate' => 12, 'mult' => 0.8, 'drain' => 150],
             ],
@@ -309,7 +313,7 @@ function monster_skills(): array
             'atk' => '虚空之握',
             'skills' => [
                 ['name' => '虚空吞噬', 'rate' => 28, 'mult' => 2.5, 'el' => 'dark', 'drain' => 100],
-                ['name' => '维度裂隙', 'rate' => 18, 'mult' => 1.8, 'rush' => true],
+                ['name' => '维度裂隙', 'rate' => 18, 'mult' => 1.8, 'rush' => true, 'pstun' => 1],
                 ['name' => '暴君律令', 'rate' => 12, 'mult' => 1.2, 'adds' => 2],
                 ['name' => '虚空壁垒', 'rate' => 10, 'mult' => 0.5, 'guard' => 2],
             ],
@@ -416,6 +420,23 @@ function monster_skill_turn(array &$u, array &$b, int $base): array
         $b['mdot'] = ['name' => $sname, 'turns' => (int) $picked['dot'][0], 'pct' => (float) $picked['dot'][1]];
         $log .= '你中了【' . $sname . '】，持续掉血！';
     }
+    // 玩家减益：沉默/眩晕/减速（按控制抗性/减速抗性决定是否中招与轮数）
+    if (function_exists('player_debuff_apply')) {
+        if (!empty($picked['psilence'])) {
+            $log .= player_debuff_apply($b, 'silence', (int) $picked['psilence'], 0, $u);
+        }
+        if (!empty($picked['pstun'])) {
+            $log .= player_debuff_apply($b, 'stun', (int) $picked['pstun'], 0, $u);
+        }
+        if (!empty($picked['pslow']) && is_array($picked['pslow'])) {
+            $log .= player_debuff_apply($b, 'slow', (int) $picked['pslow'][0], (int) ($picked['pslow'][1] ?? 0), $u);
+        }
+    }
+    // 怪物自曝破绽（如万眼开阖后的致盲）：自身出手伤害-10%
+    if (!empty($picked['weak'])) {
+        $b['eye_weak'] = max((int) ($b['eye_weak'] ?? 0), (int) $picked['weak']);
+        $log .= $mname . '露出破绽，攻势一滞。';
+    }
     // 架盾
     if (!empty($picked['guard'])) {
         $b['m_guard'] = (int) $picked['guard'];
@@ -475,4 +496,7 @@ function monster_guard_cut(array &$b, int $pd): array
 function monster_skill_clear(array &$b): void
 {
     unset($b['mdot'], $b['m_guard']);
+    if (function_exists('player_debuff_clear')) {
+        player_debuff_clear($b);
+    }
 }

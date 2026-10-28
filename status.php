@@ -5,6 +5,30 @@ require __DIR__ . '/includes/bootstrap.php';
 $u = require_login();
 sin_sync_hp((int) $u['id']);
 $u = user_by_id((int) $u['id']);
+// 加点/全加/洗点/改名等写操作必须在任何输出之前处理：
+// 本页前面已 echo 大量内容，若此时再 header('Location') 会因“headers already sent”失败，
+// 随后 exit 把页面截断，底部导航和下半屏按钮就全丢了。
+$stAct = (string) ($_GET['a'] ?? '');
+if ($stAct === 'alloc') {
+    flash_set(alloc_stat((int) $u['id'], (string) ($_GET['k'] ?? '')));
+    header('Location: status.php?a=all');
+    exit;
+}
+if ($stAct === 'allocall') {
+    flash_set(alloc_all_stat((int) $u['id'], (string) ($_GET['k'] ?? '')));
+    header('Location: status.php?a=all');
+    exit;
+}
+if ($stAct === 'reset') {
+    flash_set(use_reset_potion((int) $u['id']));
+    header('Location: status.php?a=all');
+    exit;
+}
+if ($stAct === 'renamedo' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    flash_set(use_rename_card((int) $u['id'], (string) ($_POST['newname'] ?? '')));
+    header('Location: status.php');
+    exit;
+}
 $here = loc((string) $u['loc']);
 
 wap_start('状态');
@@ -49,26 +73,6 @@ if ($rsN > 0) {
 }
 echo '转生条件：' . h(rs_require_text((int) $u['id'])) . '<br>';
 echo '<a href="rank.php?tab=rs">转生榜</a> · <a href="rank.php?tab=rs&view=tree">源罪技能树</a><br>';
-if ((string) ($_GET['a'] ?? '') === 'alloc') {
-    flash_set(alloc_stat((int) $u['id'], (string) ($_GET['k'] ?? '')));
-    header('Location: status.php?a=all');
-    exit;
-}
-if ((string) ($_GET['a'] ?? '') === 'allocall') {
-    flash_set(alloc_all_stat((int) $u['id'], (string) ($_GET['k'] ?? '')));
-    header('Location: status.php?a=all');
-    exit;
-}
-if ((string) ($_GET['a'] ?? '') === 'reset') {
-    flash_set(use_reset_potion((int) $u['id']));
-    header('Location: status.php?a=all');
-    exit;
-}
-if ((string) ($_GET['a'] ?? '') === 'renamedo' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-    flash_set(use_rename_card((int) $u['id'], (string) ($_POST['newname'] ?? '')));
-    header('Location: status.php');
-    exit;
-}
 $stFlash = flash_get();
 if ($stFlash !== '') {
     echo '<div class="warn">' . h($stFlash) . '</div>';

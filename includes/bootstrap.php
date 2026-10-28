@@ -4,6 +4,9 @@ declare(strict_types=1);
 date_default_timezone_set('Asia/Shanghai');
 session_start();
 header('Content-Type: text/html; charset=utf-8');
+// 全局输出缓冲：确保各页面在已经 echo 之后调用 header('Location') 重定向仍然有效，
+// 否则会出现“headers already sent”导致重定向失败、页面在 exit 处被截断（下半屏按钮消失）。
+ob_start();
 
 define('ROOT', dirname(__DIR__));
 // 测试脚本（dhtest*.php）走独立库，绝不碰玩家的真实存档

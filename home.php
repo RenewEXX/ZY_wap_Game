@@ -107,7 +107,7 @@ $cur = (string) $u['loc'];
 $all = locations();
 
 wap_start('行动');
-echo avatar_html($u, 26) . ' 你是 <span class="gold">' . h($u['username']) . '</span>';
+echo '你是 <span class="gold">' . h($u['username']) . '</span>';
 $jobs = jobs();
 $jid = job_id_of($u);
 if (isset($jobs[$jid])) {

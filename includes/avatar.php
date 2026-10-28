@@ -9,13 +9,17 @@ declare(strict_types=1);
 //
 // 头像来源：
 //   - 每个职业(5) 有 1 个初始头像；
+//   - 每个一觉(1转，5 个) 有 1 个专属头像；
 //   - 每个转职分支(2觉，10 个) 各有 1 个专属头像；
-//   - 玩家默认头像 = 当前职业（未 2 觉）或当前转职（已 2 觉）的头像；
-//   - 玩家可手动挑选任何"已解锁"的头像（本职业 + 已转职分支），存 users.avatar。
+//   - 五大职业的"二次元头像"在商城付费解锁（跨职业可用）；
+//   - 玩家默认头像 = 当前 2觉 > 1觉 > 职业 的头像；
+//   - 玩家可手动挑选任何"已解锁"的头像（本职业 + 已转职分支 + 已购二次元），存 users.avatar。
 //
 // 头像 id 约定：
 //   job:<jobId>        五大职业初始头像（warrior/mage/hunter/priest/summoner）
+//   rb1:<jobId>        一觉头像（5 个，1 觉后解锁）
 //   rb2:<rb2Key>       转职分支头像（berserker/aegis/... 共 10 个）
+//   anime:<jobId>      二次元头像（商城付费解锁，5 个，跨职业可用）
 // ============================================================
 
 // 头像全表：id => [name, glyph, bg(渐变), fg(前景色), ring(描边色), job(归属职业，用于解锁/筛选)]
@@ -28,6 +32,13 @@ function avatar_catalog(): array
         'job:hunter'   => ['name' => '猎手·追风', 'glyph' => '➹', 'bg' => 'linear-gradient(135deg,#1f3a24,#3f8a4a)', 'fg' => '#d6ffd9', 'ring' => '#54cf6a', 'job' => 'hunter'],
         'job:priest'   => ['name' => '牧师·圣恩', 'glyph' => '✚', 'bg' => 'linear-gradient(135deg,#4a4a1e,#c9b23a)', 'fg' => '#fff7d0', 'ring' => '#e6cf4a', 'job' => 'priest'],
         'job:summoner' => ['name' => '召唤·深渊', 'glyph' => '⟁', 'bg' => 'linear-gradient(135deg,#2a1b3a,#7a3fae)', 'fg' => '#ecd8ff', 'ring' => '#a45fdf', 'job' => 'summoner'],
+
+        // —— 一觉（一转）专属头像：更鲜艳、带辉光 ——
+        'rb1:warrior'  => ['name' => '一觉·狂战士', 'glyph' => '⚔', 'bg' => 'radial-gradient(circle at 30% 20%,#ff7a4a,#3a0808)', 'fg' => '#ffe6d0', 'ring' => '#ff4a2a', 'job' => 'warrior'],
+        'rb1:mage'     => ['name' => '一觉·元素使', 'glyph' => '✵', 'bg' => 'radial-gradient(circle at 30% 20%,#7ad0ff,#0a1a4a)', 'fg' => '#eaf6ff', 'ring' => '#3fa0ff', 'job' => 'mage'],
+        'rb1:hunter'   => ['name' => '一觉·追猎者', 'glyph' => '➹', 'bg' => 'radial-gradient(circle at 30% 20%,#8affa0,#0a3a1a)', 'fg' => '#e8ffe8', 'ring' => '#3aff7a', 'job' => 'hunter'],
+        'rb1:priest'   => ['name' => '一觉·圣光牧师', 'glyph' => '✟', 'bg' => 'radial-gradient(circle at 30% 20%,#fff0a0,#4a3a08)', 'fg' => '#fffce0', 'ring' => '#ffdf3a', 'job' => 'priest'],
+        'rb1:summoner' => ['name' => '一觉·缚魂使', 'glyph' => '⟁', 'bg' => 'radial-gradient(circle at 30% 20%,#d09aff,#2a0a4a)', 'fg' => '#f4e6ff', 'ring' => '#b04aff', 'job' => 'summoner'],
 
         // —— 战士转职 ——
         'rb2:berserker' => ['name' => '狂战士·血怒', 'glyph' => '⚒', 'bg' => 'linear-gradient(135deg,#4a0f0f,#c62d2d)', 'fg' => '#ffd0d0', 'ring' => '#ff5a5a', 'job' => 'warrior'],
@@ -48,15 +59,63 @@ function avatar_catalog(): array
         // —— 召唤师转职 ——
         'rb2:necro'  => ['name' => '死灵之拥·亡军', 'glyph' => '⚰', 'bg' => 'linear-gradient(135deg,#1a2a14,#4a7a2a)', 'fg' => '#d6f0c0', 'ring' => '#7ec24a', 'job' => 'summoner'],
         'rb2:plague' => ['name' => '痛苦盛宴·腐宴', 'glyph' => '❖', 'bg' => 'linear-gradient(135deg,#2a0f1a,#7a2a4a)', 'fg' => '#f0c0d8', 'ring' => '#d24a7a', 'job' => 'summoner'],
+
+        // —— 二次元头像（商城付费解锁，跨职业也能用）——
+        'anime:warrior'  => ['name' => '二次元·战士', 'glyph' => '★', 'bg' => 'linear-gradient(135deg,#ff9ec4,#ff5e7e,#7a2bd0)', 'fg' => '#ffffff', 'ring' => '#ff9ec4', 'job' => 'warrior', 'shop' => true],
+        'anime:mage'     => ['name' => '二次元·法师', 'glyph' => '☆', 'bg' => 'linear-gradient(135deg,#a0f6ff,#5fd0ff,#6a6aff)', 'fg' => '#ffffff', 'ring' => '#a0f6ff', 'job' => 'mage', 'shop' => true],
+        'anime:hunter'   => ['name' => '二次元·猎手', 'glyph' => '✿', 'bg' => 'linear-gradient(135deg,#d6ffb0,#7ee06a,#22b06a)', 'fg' => '#ffffff', 'ring' => '#b6ff7a', 'job' => 'hunter', 'shop' => true],
+        'anime:priest'   => ['name' => '二次元·牧师', 'glyph' => '♥', 'bg' => 'linear-gradient(135deg,#ffe6a0,#ffd05f,#ff7ab0)', 'fg' => '#ffffff', 'ring' => '#ffe0a0', 'job' => 'priest', 'shop' => true],
+        'anime:summoner' => ['name' => '二次元·召唤', 'glyph' => '✧', 'bg' => 'linear-gradient(135deg,#e0c0ff,#b07aff,#6a3aff)', 'fg' => '#ffffff', 'ring' => '#d0a0ff', 'job' => 'summoner', 'shop' => true],
     ];
 }
 
-// 当前角色对应的"默认头像 id"：2觉后跟随转职，否则跟随五大职业
+// 商城二次元头像是否已购买（存 mats：avatar_anime_<job>）
+function avatar_anime_owned(int $uid, string $job): bool
+{
+    return (int) (mats_of((int) $uid)['avatar_anime_' . $job] ?? 0) > 0;
+}
+
+// 五大职业 id 列表（用于二次元头像）
+function avatar_classes(): array
+{
+    return ['warrior', 'mage', 'hunter', 'priest', 'summoner'];
+}
+
+// 商城二次元头像商品表：商品 key => [name, job, price(魔钻)]
+function avatar_anime_goods(): array
+{
+    $names = ['warrior' => '战士', 'mage' => '法师', 'hunter' => '猎手', 'priest' => '牧师', 'summoner' => '召唤师'];
+    $out = [];
+    foreach (avatar_classes() as $j) {
+        $out['avatar_anime_' . $j] = [
+            'name' => '二次元头像·' . ($names[$j] ?? $j),
+            'job' => $j,
+            'price' => 200,
+        ];
+    }
+    return $out;
+}
+
+// 授予某个二次元头像（购买后调用）
+function avatar_anime_grant(int $uid, string $job): void
+{
+    if (!in_array($job, avatar_classes(), true)) {
+        return;
+    }
+    mat_set((int) $uid, 'avatar_anime_' . $job, 1);
+}
+
+// 当前角色对应的"默认头像 id"：2觉 → 1觉 → 五大职业，逐级回退
 function avatar_default_id(array $u): string
 {
-    $rb2 = (string) (cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '');
+    $flags = cflags((int) ($u['id'] ?? 0));
+    $rb2 = (string) ($flags['rb2_job'] ?? '');
     if ($rb2 !== '' && isset(avatar_catalog()['rb2:' . $rb2])) {
         return 'rb2:' . $rb2;
+    }
+    $rb1 = (string) ($flags['rb1_job'] ?? '');
+    if ($rb1 !== '' && isset(avatar_catalog()['rb1:' . $rb1])) {
+        return 'rb1:' . $rb1;
     }
     $job = job_id_of($u);
     if (isset(avatar_catalog()['job:' . $job])) {
@@ -67,17 +126,30 @@ function avatar_default_id(array $u): string
 
 // 该角色已解锁的头像 id 列表：
 //   - 本职业初始头像 job:<job> 永远解锁；
-//   - 转职分支头像 rb2:<key> 只有在玩家真正选了该 2 觉方向后才解锁。
+//   - 一觉头像 rb1:<job>：完成 1 觉后解锁；
+//   - 转职分支头像 rb2:<key>：只有选了该 2 觉方向才解锁；
+//   - 二次元头像 anime:<job>：在商城付费购买后解锁（跨职业可用）。
 function avatar_unlocked_ids(array $u): array
 {
     $ids = [];
+    $uid = (int) ($u['id'] ?? 0);
+    $flags = cflags($uid);
     $job = job_id_of($u);
     if (isset(avatar_catalog()['job:' . $job])) {
         $ids[] = 'job:' . $job;
     }
-    $rb2 = (string) (cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '');
+    $rb1 = (string) ($flags['rb1_job'] ?? '');
+    if ($rb1 !== '' && isset(avatar_catalog()['rb1:' . $rb1])) {
+        $ids[] = 'rb1:' . $rb1;
+    }
+    $rb2 = (string) ($flags['rb2_job'] ?? '');
     if ($rb2 !== '' && isset(avatar_catalog()['rb2:' . $rb2]) && (avatar_catalog()['rb2:' . $rb2]['job'] ?? '') === $job) {
         $ids[] = 'rb2:' . $rb2;
+    }
+    foreach (avatar_classes() as $j) {
+        if (isset(avatar_catalog()['anime:' . $j]) && avatar_anime_owned($uid, $j)) {
+            $ids[] = 'anime:' . $j;
+        }
     }
     return $ids;
 }

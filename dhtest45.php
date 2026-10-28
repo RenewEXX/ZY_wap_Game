@@ -5,16 +5,16 @@ error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
 $ok=0;$bad=0;
 function ck45($l,$c,$d=''){global $ok,$bad;if($c){$ok++;}else{$bad++;echo "FAIL $l $d\n";}}
 
-// 1) 目录：5职业初始 + 10转职分支 = 15
+// 1) 目录：5职业初始 + 5一觉 + 10转职分支 + 5二次元 = 25
 $cat = avatar_catalog();
-ck45('头像总数=15', count($cat)===15, (string)count($cat));
+ck45('头像总数=25', count($cat)===25, (string)count($cat));
 $byJob = [];
 foreach ($cat as $id=>$a){ $byJob[$a['job']][] = $id; }
 foreach (['warrior','mage','hunter','priest','summoner'] as $j){
     ck45("职业$j有job头像", isset($byJob[$j]) && in_array("job:$j",$byJob[$j],true));
 }
-// 每个职业 = 1初始 + 2转职 = 3
-foreach ($byJob as $j=>$ids){ ck45("职业$j共3个头像", count($ids)===3, (string)count($ids)); }
+// 每个职业 = 1初始 + 1一觉 + 2转职 + 1二次元 = 5
+foreach ($byJob as $j=>$ids){ ck45("职业$j共5个头像", count($ids)===5, (string)count($ids)); }
 // 10个转职分支头像齐全
 $rb2all = ['berserker','aegis','wintermage','wildfire','ranger','assassin','shadowbishop','holybishop','necro','plague'];
 foreach ($rb2all as $r){ ck45("有转职头像rb2:$r", isset($cat['rb2:'.$r])); }

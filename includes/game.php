@@ -478,6 +478,12 @@ function mall_goods(): array
     // 下架：$g['title_silver'] = ['name' => '称号·秘银冒险者', 'price' => 150, 'unit' => 1];
     // 下架：$g['title_gold'] = ['name' => '称号·精金传说', 'price' => 300, 'unit' => 1];
     // 下架：$g['tent'] = ['name' => '随身帐篷', 'price' => 100, 'unit' => 1];
+    // 二次元头像（付费解锁，永久）
+    if (function_exists('avatar_anime_goods')) {
+        foreach (avatar_anime_goods() as $gk => $gv) {
+            $g[$gk] = ['name' => $gv['name'], 'price' => $gv['price'], 'unit' => 1];
+        }
+    }
     return $g;
 }
 

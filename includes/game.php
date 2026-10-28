@@ -2882,6 +2882,12 @@ function equip_set_id(string $shortName): string
     if (str_starts_with($shortName, '岩狱·')) {
         return 'rockjail';
     }
+    if (str_starts_with($shortName, '冰渊·')) {
+        return 'binyuan';
+    }
+    if (str_starts_with($shortName, '灰烬·')) {
+        return 'huijin';
+    }
     if (str_starts_with($shortName, '蚀心·')) {
         return 'shixing';
     }
@@ -2950,6 +2956,12 @@ function equip_set_pieces(string $set): array
     if ($set === 'shixing') {
         return ['蚀心·猎弓', '蚀心·箭袋', '蚀心·噬心袍', '蚀心·瞑目兜帽', '蚀心·缚足胫', '蚀心·引弦手', '蚀心·疾影靴', '蚀心·束魂带', '蚀心·蚀空披', '蚀心·蚀骨戒', '蚀心·噬魂链'];
     }
+    if ($set === 'binyuan') {
+        return ['冰渊·凝霜手套', '冰渊·寒锋', '冰渊·守望冰甲', '冰渊·恐惧冰披', '冰渊·利维坦之牙'];
+    }
+    if ($set === 'huijin') {
+        return ['灰烬·焦痕手套', '灰烬·踏烬战靴', '灰烬·守望烬甲', '灰烬·惧焰头冠', '灰烬·泰坦烬握'];
+    }
     // 六龙王专属套装
     $dp = function_exists('dragon_set_pieces') ? dragon_set_pieces($set) : [];
     if ($dp !== []) {
@@ -2977,9 +2989,9 @@ function equip_set_owned_count(int $uid, string $set): int
         }
         return min(count($pieces) + 1, $n);
     }
-    if (in_array($set, ['theater', 'frost', 'ember', 'puppet', 'thorn', 'rockjail', 'sin', 'god', 'dusk', 'jimie', 'shiyuan', 'soulpact', 'shixing'], true)) {
-        $mark = ['theater' => '%剧场·%', 'frost' => '%寒霜·%', 'ember' => '%烬焰·%', 'puppet' => '%傀儡·%', 'thorn' => '%荆棘·%', 'rockjail' => '%岩狱·%', 'sin' => '%罪渊·%', 'god' => '%神铸·%', 'dusk' => '%暮影·%', 'jimie' => '%寂灭·%', 'shiyuan' => '%噬渊·%', 'soulpact' => '%魂契·%', 'shixing' => '%蚀心·%'][$set];
-        $cap = ['theater' => 99, 'frost' => 3, 'ember' => 7, 'puppet' => 5, 'thorn' => 4, 'rockjail' => 10, 'sin' => 11, 'god' => 11, 'dusk' => 3, 'jimie' => 5, 'shiyuan' => 5, 'soulpact' => 5, 'shixing' => 11][$set];
+    if (in_array($set, ['theater', 'frost', 'ember', 'puppet', 'thorn', 'rockjail', 'binyuan', 'huijin', 'sin', 'god', 'dusk', 'jimie', 'shiyuan', 'soulpact', 'shixing'], true)) {
+        $mark = ['theater' => '%剧场·%', 'frost' => '%寒霜·%', 'ember' => '%烬焰·%', 'puppet' => '%傀儡·%', 'thorn' => '%荆棘·%', 'rockjail' => '%岩狱·%', 'binyuan' => '%冰渊·%', 'huijin' => '%灰烬·%', 'sin' => '%罪渊·%', 'god' => '%神铸·%', 'dusk' => '%暮影·%', 'jimie' => '%寂灭·%', 'shiyuan' => '%噬渊·%', 'soulpact' => '%魂契·%', 'shixing' => '%蚀心·%'][$set];
+        $cap = ['theater' => 99, 'frost' => 3, 'ember' => 7, 'puppet' => 5, 'thorn' => 4, 'rockjail' => 10, 'binyuan' => 5, 'huijin' => 5, 'sin' => 11, 'god' => 11, 'dusk' => 3, 'jimie' => 5, 'shiyuan' => 5, 'soulpact' => 5, 'shixing' => 11][$set];
         $st = db()->prepare('SELECT COUNT(*) FROM equips WHERE uid=? AND pos="wear" AND name LIKE ?');
         $st->execute([(int) $uid, $mark]);
         return min($cap, (int) $st->fetchColumn());
@@ -3050,6 +3062,12 @@ function equip_set_bonus_text(string $set, int $owned): string
     }
     if ($set === 'rockjail') {
         return '【岩狱套装】已穿' . $owned . '/10：3件血+3000，5件减伤+8%，7件血+8000减伤+12%，10件血+20000减伤+20%、磐岩（承伤再-5%）。';
+    }
+    if ($set === 'binyuan') {
+        return '【冰渊寒潮套装】已穿' . $owned . '/5（凝霜手套/寒锋/守望冰甲/恐惧冰披/利维坦之牙）——2件：法防+150、冰抗+40；3件：减伤+8%、防御+150；5件：元素伤害+100、技能伤害+12%、真伤+等级×10！渊底的冷，冻住的是出手的时机。';
+    }
+    if ($set === 'huijin') {
+        return '【灰烬余烬套装】已穿' . $owned . '/5（焦痕手套/踏烬战靴/守望烬甲/惧焰头冠/泰坦烬握）——2件：物攻+10%、火抗+40；3件：元素伤害+100、暴击+3；5件：真伤+等级×12、技能伤害+15%、减伤+8%！余烬不灭，罪焰重燃。';
     }
     if ($set === 'shixing') {
         return '【蚀心DOT套装】已穿' . $owned . '/11（猎弓/箭袋/噬心袍/瞑目兜帽/缚足胫/引弦手/疾影靴/束魂带/蚀空披/蚀骨戒/噬魂链）——每件：物攻+2%、暴击+1；3件：技伤+8%、暴击+5%、持续伤害+50%；5件：暴伤+20%、吸血+4%、物攻+6%、持续伤害+100%；7件：物攻+10%、暴伤+25%、真伤+等级×15、减伤+8%、持续伤害+150%；11件毕业：物攻+15%、暴击+8、暴伤+30%、技伤+15%、真伤+等级×30、全属性+等级×3、减伤+12%、持续伤害+250%！猎人DOT流唯一终点（堕天阶掉落）。';
@@ -3176,11 +3194,11 @@ function monster_drops(string $mid): array
         'glacier_colossus' => ['slot' => 'body', 'base' => '冰河重铠'],
         'star_puppet' => ['slot' => 'belt', 'base' => '剧场·束腰', 'rate' => 0.06, 'q' => [0, 30, 50, 20, 0]],
         'winter_king' => ['slot' => 'head', 'base' => '凛冬王冠', 'rate' => 0.3, 'q' => [0, 0, 20, 50, 30], 'legendary' => ['base' => '凛冬王冠·永冻', 'extra' => ['k' => 'damage_reduction', 'v' => 3.0]]],
-        'fr_crawler' => ['slot' => 'gloves', 'base' => '冰渊手套'],
-        'fr_stalker' => ['slot' => 'shoes', 'base' => '渊底无声靴'],
-        'fr_warden' => ['slot' => 'body', 'base' => '守望者冰甲'],
-        'fr_horror' => ['slot' => 'back', 'base' => '恐惧冰披'],
-        'fr_leviathan' => ['slot' => 'necklace', 'base' => '利维坦之牙', 'rate' => 0.3, 'q' => [0, 0, 20, 50, 30], 'legendary' => ['base' => '利维坦之牙·深渊', 'extra' => ['k' => 'lifesteal', 'v' => 2.0]]],
+        'fr_crawler' => ['slot' => 'gloves', 'base' => '冰渊·凝霜手套', 'rate' => 0.12, 'q' => [0, 20, 50, 30, 0]],
+        'fr_stalker' => ['slot' => 'weapon', 'base' => '冰渊·寒锋', 'rate' => 0.12, 'q' => [0, 20, 50, 30, 0]],
+        'fr_warden' => ['slot' => 'body', 'base' => '冰渊·守望冰甲', 'rate' => 0.12, 'q' => [0, 20, 50, 30, 0]],
+        'fr_horror' => ['slot' => 'back', 'base' => '冰渊·恐惧冰披', 'rate' => 0.12, 'q' => [0, 20, 50, 30, 0]],
+        'fr_leviathan' => ['slot' => 'necklace', 'base' => '冰渊·利维坦之牙', 'rate' => 0.3, 'q' => [0, 0, 20, 50, 30], 'legendary' => ['base' => '利维坦之牙·深渊', 'extra' => ['k' => 'lifesteal', 'v' => 2.0]]],
         // 第五章·雾森与火山
         'mist_treant' => ['slot' => 'body', 'base' => '雾森树皮甲'],
         'spore_colony' => ['slot' => 'head', 'base' => '孢子冠'],
@@ -3239,6 +3257,12 @@ function monster_drops(string $mid): array
         'vx_knight' => ['slot' => 'body', 'base' => '烬焰·守卫铠'],
         'vx_herald' => ['slot' => 'necklace', 'base' => '烬焰·余火链'],
         'vx_tyrant' => ['slot' => 'ring', 'base' => '虚空暴君之戒', 'rate' => 0.3, 'q' => [0, 0, 20, 50, 30], 'legendary' => ['base' => '虚空暴君·终焉', 'extra' => ['k' => 'skill_damage', 'v' => 8.0]]],
+        // 灰烬深渊·灰烬余烬套装（2觉 600~680）
+        'cinder_crawler' => ['slot' => 'gloves', 'base' => '灰烬·焦痕手套', 'rate' => 0.12, 'q' => [0, 20, 50, 30, 0]],
+        'cinder_stalker' => ['slot' => 'shoes', 'base' => '灰烬·踏烬战靴', 'rate' => 0.12, 'q' => [0, 20, 50, 30, 0]],
+        'cinder_warden' => ['slot' => 'body', 'base' => '灰烬·守望烬甲', 'rate' => 0.12, 'q' => [0, 20, 50, 30, 0]],
+        'cinder_horror' => ['slot' => 'head', 'base' => '灰烬·惧焰头冠', 'rate' => 0.12, 'q' => [0, 20, 50, 30, 0]],
+        'ash_titan' => ['slot' => 'weapon', 'base' => '灰烬·泰坦烬握', 'rate' => 0.3, 'q' => [0, 0, 20, 50, 30]],
     ] + world_expansion_drops() + region_dungeon_drops())[$mid] ?? [];
 }
 
@@ -5494,6 +5518,21 @@ function gear_stats(int $uid): array
     if ($rock >= 5) { $s['damage_reduction'] += 8; }
     if ($rock >= 7) { $s['hp'] += 8000; $s['damage_reduction'] += 12; }
     if ($rock >= 10) { $s['hp'] += 20000; $s['damage_reduction'] += 20; }
+    // 冰渊寒潮套装(5) / 灰烬余烬套装(5)
+    $binyuan = 0; $huijin = 0;
+    foreach ($worn as $wn) {
+        if (str_starts_with($wn, '冰渊·')) { $binyuan++; }
+        if (str_starts_with($wn, '灰烬·')) { $huijin++; }
+    }
+    if ($binyuan >= 1 || $huijin >= 1) {
+        $setLv = max(1, (int) (db()->query('SELECT lv FROM users WHERE id=' . (int) $uid)->fetchColumn() ?: 1));
+        if ($binyuan >= 2) { $s['mdef'] += 150; $s['res_ice'] += 40; }
+        if ($binyuan >= 3) { $s['damage_reduction'] += 8; $s['def'] += 150; }
+        if ($binyuan >= 5) { $s['element'] += 100; $s['skill_damage'] += 12; $s['truedmg'] += $setLv * 10; }
+        if ($huijin >= 2) { $s['atk_pct'] += 10; $s['res_fire'] += 40; }
+        if ($huijin >= 3) { $s['element'] += 100; $s['crit'] += 3; }
+        if ($huijin >= 5) { $s['truedmg'] += $setLv * 12; $s['skill_damage'] += 15; $s['damage_reduction'] += 8; }
+    }
     // —— 六龙王专属套装（西风·北寒·东雷·深渊·中央）——
     $dlv = max(1, (int) (db()->query('SELECT lv FROM users WHERE id=' . (int) $uid)->fetchColumn() ?: 1));
     $drgSets = ['firedragon' => '烈炎·', 'azure' => '苍岚·', 'glacier' => '永冻·', 'thunder' => '天谴·', 'ruin' => '终焉·', 'judgment' => '圣裁·'];

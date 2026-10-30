@@ -6,7 +6,7 @@ error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
 $ok = 0; $bad = 0;
 function ck61(string $l, bool $c, string $d = '') { global $ok, $bad; if ($c) { $ok++; } else { $bad++; echo "FAIL $l $d\n"; } }
 $season = arena_season();
-$zone = 'zt61';
+$zone = 'arena';
 
 function cleanArena61(string $zone, array $uids): void {
     foreach ($uids as $uid) {

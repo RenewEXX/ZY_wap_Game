@@ -115,7 +115,7 @@ ck43('保底奖励随段位单调不减', $mono);
 
 // ---------- [天梯] 机器人动态刷新 ----------
 echo "\n[6] 机器人动态刷新（爬榜/补位/跟随玩家）\n";
-$zone='z1';
+$zone='arena';
 db()->exec('DELETE FROM arena_rank WHERE zone='.db()->quote($zone));
 db()->exec("DELETE FROM sys_kv WHERE k LIKE 'arena_bot_tick_%'");
 arena_ensure($zone);

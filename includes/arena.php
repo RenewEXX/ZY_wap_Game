@@ -31,6 +31,12 @@ function arena_day_idx(): int
 }
 
 // 竞技场规模：假人总数 + 真人初始名次（需与 arena_dummy_power_for / arena_dummy_lv_for 的曲线上限一致）。
+// 竞技场是跨大区的：所有真实玩家（含未来新增大区）共用同一个竞技场池，假人也只维护一份。
+function arena_zone(): string
+{
+    return 'arena';
+}
+
 function arena_bot_count(): int
 {
     return 1000;
@@ -250,6 +256,21 @@ function arena_season_settle_week(string $zone): void
 
 function arena_ensure(string $zone): void
 {
+    // 跨大区竞技场一次性迁移：历史各分大区的真人并入统一竞技场，清理旧分大区假人。
+    try {
+        $done = (int) (db()->query("SELECT num FROM sys_kv WHERE k='mig_arena_global'")->fetchColumn() ?: 0);
+    } catch (Throwable $e) {
+        $done = 0;
+    }
+    if ($done === 0) {
+        try {
+            db()->exec("UPDATE arena_rank SET zone='arena' WHERE is_dummy=0");
+            db()->exec("DELETE FROM arena_rank WHERE is_dummy=1 AND zone<>'arena'");
+            db()->exec("INSERT OR REPLACE INTO sys_kv (k, num) VALUES ('mig_arena_global', 1)");
+        } catch (Throwable $e) {
+        }
+    }
+
     $season = arena_season();
 
     // 赛季兜底自愈：arena_rank 主键是 (uid, zone)，假人 uid 固定为负数(按名次)。
@@ -440,7 +461,7 @@ function arena_bots_attack_players(string $zone): void
                     send_mail((int) $target['uid'], '竞技场', 'arena', '你被挑战了', '【' . $bot['name'] . '】在竞技场把你打下去了，你的名次从第' . $tRank . '名降到第' . $botRank . '名。打回来！', []);
                 } catch (Throwable $e) {}
             }
-            arena_announce($zone, '【竞技场】机器人' . $bot['name'] . '挑战' . $target['name'] . '成功，排名上升至第' . $tRank . '名。');
+            arena_announce((string) ($tu['zone'] ?? 'z1'), '【竞技场】机器人' . $bot['name'] . '挑战' . $target['name'] . '成功，排名上升至第' . $tRank . '名。');
             // 更新本地内存里的名次，避免同一轮重复用旧名次
             foreach ($players as &$p) { if ((int) $p['uid'] === (int) $target['uid']) { $p['rank'] = $botRank; } }
             unset($p);
@@ -487,7 +508,7 @@ function arena_my(int $uid): ?array
     if (!$u) {
         return null;
     }
-    $zone = (string) ($u['zone'] ?? 'z1');
+    $zone = arena_zone();
     arena_ensure($zone);
     // 机器人动态刷新（节流到每3分钟一次）：战力跟随玩家 + 爬榜 + 补位
     if (function_exists('arena_bots_tick')) {
@@ -509,7 +530,7 @@ function arena_join(int $uid): string
     if ((int) ($u['lv'] ?? 1) < 80) {
         return '80级才能进竞技场，你现在' . (int) $u['lv'] . '级。';
     }
-    $zone = (string) ($u['zone'] ?? 'z1');
+    $zone = arena_zone();
     arena_ensure($zone);
     $season = arena_season();
     $st = db()->prepare('SELECT * FROM arena_rank WHERE uid=? AND zone=? AND season=?');
@@ -531,7 +552,7 @@ function arena_refresh_power(int $uid): void
     if (!$u) {
         return;
     }
-    $zone = (string) ($u['zone'] ?? 'z1');
+    $zone = arena_zone();
     db()->prepare('UPDATE arena_rank SET name=?, job=?, lv=?, power=? WHERE uid=? AND zone=? AND season=?')->execute([(string) $u['username'], job_name_of($u), (int) $u['lv'], power_score($u), (int) $uid, $zone, arena_season()]);
 }
 
@@ -814,7 +835,7 @@ function arena_buy_chances(int $uid, string $kind): string
 
 function arena_targets(array $my): array
 {
-    $zone = (string) ($my['zone'] ?? 'z1');
+    $zone = (string) ($my['zone'] ?? arena_zone());
     $season = (string) ($my['season'] ?? arena_season());
     $r = (int) $my['rank'];
     $lo = max(1, $r - 34);
@@ -870,7 +891,7 @@ function arena_fight(int $uid, int $foeRank): array
     if (!$u) {
         return [false, ['角色不存在。'], 0, 0, 0];
     }
-    $zone = (string) ($my['zone'] ?? 'z1');
+    $zone = (string) ($my['zone'] ?? arena_zone());
     $season = (string) ($my['season'] ?? arena_season());
     $myRank = (int) $my['rank'];
     if ($foeRank >= $myRank || $foeRank < max(1, $myRank - 34)) {
@@ -1018,7 +1039,7 @@ function arena_tick(): void
             return;
         }
     }
-    foreach (array_keys(zones()) as $zone) {
+    $zone = arena_zone();
         arena_ensure($zone);
         $season = arena_season();
         $rows = db()->query('SELECT * FROM arena_rank WHERE zone=' . db()->quote($zone) . ' AND season=' . db()->quote($season) . ' AND is_dummy=0 ORDER BY rank ASC')->fetchAll();
@@ -1038,7 +1059,6 @@ function arena_tick(): void
         }
         // 每周滚动已移到 arena_season_settle_week()：由 arena_ensure 在任意访问/结算时按赛季变化触发，
         // 不再依赖「周一这一天的 tick 恰好跑到」。这里只保留每日结算。
-    }
 }
 
 function arena_shop(): array

@@ -20,7 +20,7 @@ if ($a === 'join') {
 }
 // 查看类页面未加入也能看（不然按钮点进去是空的）
 if (in_array($a, ['rank', 'prize', 'def', 'shop', 'shopbuy'], true)) {
-    $zone = (string) ($me['zone'] ?? $u['zone'] ?? 'z1');
+    $zone = arena_zone();
     $season = (string) ($me['season'] ?? arena_season());
     $coin = (int) (mats_of($uid)['arena_coin'] ?? 0);
     if ($a === 'rank') {
@@ -76,7 +76,8 @@ if (in_array($a, ['rank', 'prize', 'def', 'shop', 'shopbuy'], true)) {
             echo '<span class="muted">还没有人挑战过你。</span><br>';
         }
         foreach ($rows as $row) {
-            echo date('m-d H:i', (int) $row['created_at']) . ' 被' . h($row['attacker_name']) . '挑战，你' . ((int) $row['win'] === 1 ? '胜利，排名不变' : '失败，排名降至第' . (int) $row['new_rank'] . '名') . '。<br>';
+            $win = (int) $row['win'] === 1;
+            echo date('m-d H:i', (int) $row['created_at']) . ' 被' . h($row['attacker_name']) . '挑战，你' . ($win ? '<span style="color:#7cf3d0">胜利，排名不变</span>' : '<span style="color:#ff6b6b">失败，排名降至第' . (int) $row['new_rank'] . '名</span>') . '。<br>';
         }
         echo '<a href="arena.php">返回</a>';
         nav_line();
@@ -127,8 +128,25 @@ if ($a === 'buy_diamond') {
 }
 if ($a === 'fight') {
     [$win, $log, $foeRank, $myOld, $myNew] = arena_fight($uid, (int) ($_GET['rank'] ?? 0));
-    echo '【战 斗】<br>' . h(implode('<br>', $log)) . '<br>';
+    echo '【战 斗】<br>';
+    foreach ($log as $line) {
+        $escaped = h($line);
+        if (str_starts_with($line, '【大招】')) {
+            echo '<span style="color:#ffcf40">' . $escaped . '</span><br>';
+        } elseif (str_starts_with($line, '战斗结束')) {
+            echo '<b style="color:' . ($win ? '#7cf3d0' : '#ff6b6b') . '">' . $escaped . '</b><br>';
+        } elseif (str_starts_with($line, '你的队伍') || str_starts_with($line, '对手队伍')) {
+            echo '<span class="muted">' . $escaped . '</span><br>';
+        } else {
+            echo $escaped . '<br>';
+        }
+    }
     echo '<div class="hr">--------</div>';
+    if ($win) {
+        echo '<span style="color:#7cf3d0">排名 ' . (int) $myOld . ' → ' . (int) $myNew . '</span><br>';
+    } else {
+        echo '<span class="muted">排名不变（第' . (int) $myOld . '名）</span><br>';
+    }
     echo '<a href="arena.php?a=targets">继续挑战</a> <a href="arena.php">返回</a>';
     nav_line();
     wap_end(false);

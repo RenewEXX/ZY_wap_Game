@@ -574,12 +574,52 @@ if ($a === 'answer') {
 if ($a === 'silence') {
     $bb = $_SESSION['battle'] ?? null;
     if (is_array($bb) && ($bb['id'] ?? '') === 'abyss_eye') {
-        $bb['eye_weak'] = true;
+        $bb['eye_weak'] = 3;
+        $bb['eye_answered'] = 'silence';
         $bb['log'] = '你保持沉默。深渊之眼动摇了，它打你-10%。';
+        if (!isset($bb['history']) || !is_array($bb['history'])) {
+            $bb['history'] = [];
+        }
+        $bb['history'][] = '你保持沉默。深渊之眼动摇了，攻势迟滞（持续3回合）。';
+        $bb['history'] = array_slice($bb['history'], -20);
         $bb['last'] = time();
         $_SESSION['battle'] = $bb;
     }
     header('Location: fight.php');
+    exit;
+}
+if ($a === 'eyechoice') {
+    // 深渊之眼“回答/沉默”按钮：走 AJAX，立刻给反馈，避免和2秒自动轮询打架、避免整页跳转丢失状态
+    header('Content-Type: application/json; charset=utf-8');
+    $bb = $_SESSION['battle'] ?? null;
+    $c = (string) ($_GET['c'] ?? '');
+    if (!is_array($bb) || ($bb['id'] ?? '') !== 'abyss_eye') {
+        echo json_encode(['done' => false, 'log' => '深渊之眼已经不在了。']);
+        exit;
+    }
+    if ($c === 'answer') {
+        unset($_SESSION['battle']);
+        $pen = death_penalty($u);
+        user_save($u);
+        echo json_encode(['done' => true, 'redirect' => 'home.php', 'flash' => '你回答了。你的影子站起来，穿上了你。' . $pen, 'log' => '你回答了……影子把你吞了进去。']);
+        exit;
+    }
+    $bb['eye_weak'] = 3;
+    $bb['eye_answered'] = 'silence';
+    $bb['last'] = time();
+    if (!isset($bb['history']) || !is_array($bb['history'])) {
+        $bb['history'] = [];
+    }
+    $bb['history'][] = '你保持沉默。深渊之眼动摇了，攻势迟滞（持续3回合）。';
+    $bb['history'] = array_slice($bb['history'], -20);
+    $_SESSION['battle'] = $bb;
+    echo json_encode([
+        'done' => false,
+        'log' => '你保持沉默，深渊之眼攻势迟滞（3回合）。',
+        'uhp' => (int) $u['hp'], 'umax' => (int) $u['maxhp'],
+        'bhp' => (int) $bb['hp'], 'bmax' => (int) $bb['maxhp'],
+        'histhtml' => array_map('battle_log_html', array_slice($bb['history'], -3)),
+    ]);
     exit;
 }
 
@@ -650,7 +690,13 @@ foreach ($fsum as $si => $ss) {
 }
 echo '</div>';
 if (($b['id'] ?? '') === 'abyss_eye') {
-    echo '<div class="warn">深渊之眼呼唤你的名字：“回答我……” <a href="fight.php?a=answer">回答</a> <a href="fight.php?a=silence">沉默</a></div>';
+    if (!empty($b['eye_answered'])) {
+        $weakLeft = (int) ($b['eye_weak'] ?? 0);
+        echo '<div class="warn" id="eyePrompt">深渊之眼还在等你的名字……你已保持沉默，它攻势迟滞'
+            . ($weakLeft > 0 ? '（再持续' . $weakLeft . '回合）' : '') . '。</div>';
+    } else {
+        echo '<div class="warn" id="eyePrompt">深渊之眼呼唤你的名字：“回答我……” <button type="button" class="eyeChoice" data-c="answer">回答</button> <button type="button" class="eyeChoice" data-c="silence">沉默</button></div>';
+    }
 }
 echo '<div class="muted">自动战斗中：每1秒默认放[' . h(job_of($u)['skill']) . ']，战报每2秒刷新。切到别的画面战斗也会在后台继续。</div>';
 echo '<div class="hr">--------</div>';
@@ -708,6 +754,23 @@ document.querySelectorAll(".drinkBtn").forEach(function(btn){
       }
     }catch(e){}
     btn.disabled=false;
+  };
+});
+document.querySelectorAll(".eyeChoice").forEach(function(btn){
+  btn.onclick=async()=>{
+    const c=btn.getAttribute("data-c");
+    document.querySelectorAll(".eyeChoice").forEach(b=>b.disabled=true);
+    try{
+      const r=await fetch("fight.php?a=eyechoice&c="+encodeURIComponent(c)+"&ajax=1",{headers:{"X-Requested-With":"fetch"},credentials:"same-origin"});
+      const d=await r.json();
+      if(d.done){ location.href=d.redirect||"home.php"; return; }
+      if(d.bhp!==undefined){ const bh=document.getElementById("bhp"); if(bh) bh.innerText="敌生命"+d.bhp+"/"+d.bmax; }
+      if(d.uhp!==undefined){ const uh=document.getElementById("uhp"); if(uh) uh.innerText="我"+d.uhp+"/"+d.umax; }
+      const box=document.getElementById("blog");
+      if(d.histhtml&&d.histhtml.length&&box){ box.innerHTML=renderHist(d.histhtml); }
+      const p=document.getElementById("eyePrompt");
+      if(p){ p.innerHTML="你保持沉默。深渊之眼动摇了，攻势迟滞（3回合）。"; }
+    }catch(e){ document.querySelectorAll(".eyeChoice").forEach(b=>b.disabled=false); }
   };
 });
 // 每2秒打一轮并同步刷新血量+战报（同一tick，无延迟）

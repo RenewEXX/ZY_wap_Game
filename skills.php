@@ -63,11 +63,14 @@ foreach (skill_books() as $bid => $b) {
     }
     $any = true;
     $bjob = skill_catalog()[$b['skill']]['job'] ?? '';
+    $bNeedLv = skill_book_min_lv($bid);
     echo '·' . h($b['name']) . 'x' . $mats[$bid];
-    if ($bjob === $job) {
-        echo ' <a href="bag.php?a=usebook&id=' . h($bid) . '">使用</a>';
-    } else {
+    if ($bjob !== $job) {
         echo '（' . h(job_of(['job' => $bjob])['name']) . '用）';
+    } elseif ((int) ($u['lv'] ?? 1) < $bNeedLv) {
+        echo ' <span class="muted">（需' . $bNeedLv . '级，当前' . (int) ($u['lv'] ?? 1) . '级）</span>';
+    } else {
+        echo ' <a href="bag.php?a=usebook&id=' . h($bid) . '">使用</a>';
     }
     echo '<br>';
 }

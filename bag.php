@@ -312,7 +312,14 @@ if ($tab === 'equip') {
             continue;
         }
         $hasBook = true;
-        echo '·' . h($b['name']) . 'x' . $mats[$bid] . ' <a href="bag.php?a=usebook&id=' . h($bid) . '">使用</a> <a href="bag.php?a=drop&id=' . h($bid) . '&tab=book">扔</a><br>';
+        $bNeedLv = skill_book_min_lv($bid);
+        echo '·' . h($b['name']) . 'x' . $mats[$bid];
+        if ((int) ($u['lv'] ?? 1) < $bNeedLv) {
+            echo ' <span class="muted">（需' . $bNeedLv . '级）</span>';
+        } else {
+            echo ' <a href="bag.php?a=usebook&id=' . h($bid) . '">使用</a>';
+        }
+        echo ' <a href="bag.php?a=drop&id=' . h($bid) . '&tab=book">扔</a><br>';
     }
     if (!$hasBook) {
         echo '<span class="muted">空。</span>';

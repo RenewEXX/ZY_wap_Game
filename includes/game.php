@@ -3945,6 +3945,22 @@ function tier_prof_need(int $tier): int
     return [1 => 0, 2 => 100, 3 => 250, 4 => 500, 5 => 900, 6 => 1400, 7 => 2000, 8 => 2700, 9 => 3500, 10 => 4500][$tier] ?? 999999;
 }
 
+// 各阶技能的最低角色等级：与对应技能书掉落的地图等级对齐（五个职业同阶同门槛）
+// 1阶起步/2阶黑暗沼泽(10)/3阶影蚀深渊(50)/4阶银丝母巢(150)/5·6阶余烬·灰烬(580)/7·8阶虚空裂隙(600)/9阶罪渊(700)
+function skill_tier_min_lv(int $tier): int
+{
+    return [1 => 1, 2 => 10, 3 => 50, 4 => 150, 5 => 580, 6 => 580, 7 => 600, 8 => 600, 9 => 700][$tier] ?? 1;
+}
+
+function skill_book_min_lv(string $book): int
+{
+    $sid = (string) (skill_books()[$book]['skill'] ?? '');
+    if ($sid === '') {
+        return 1;
+    }
+    return skill_tier_min_lv((int) substr($sid, 1));
+}
+
 function my_skills(int $uid): array
 {
     $st = db()->prepare('SELECT * FROM skills WHERE uid=? ORDER BY skill');
@@ -4080,6 +4096,10 @@ function use_skill_book(int $uid, string $book): string
     if ($needRb2 !== '' && (cflags($uid)['rb2_job'] ?? '') !== $needRb2) {
         return '这是2觉【' . rebirth2_name($needRb2) . '】的群攻秘籍，先599级2觉再学。';
     }
+    $needLv = skill_book_min_lv($book);
+    if ((int) ($u['lv'] ?? 1) < $needLv) {
+        return '这本【' . (string) $books[$book]['name'] . '】要 ' . $needLv . ' 级才能学（你现在' . (int) ($u['lv'] ?? 1) . '级）。';
+    }
     $mats = mats_of($uid);
     if (empty($mats[$book])) {
         return '你没有这本技能书。';
@@ -4088,21 +4108,6 @@ function use_skill_book(int $uid, string $book): string
     $st->execute([$uid, $sid]);
     $s = $st->fetch();
     if (!$s) {
-        $set = job_skillset($cat['job']);
-        if ($sid === $set[1]) {
-            $st2 = db()->prepare('SELECT * FROM skills WHERE uid=? AND skill=?');
-            $st2->execute([$uid, $set[0]]);
-            if (!$st2->fetch()) {
-                return '先学会【' . (skill_catalog()[$set[0]]['name'] ?? '基础技能') . '】，再学这本进阶技能书。';
-            }
-        }
-        if (($set[2] ?? '') === $sid) {
-            $st2 = db()->prepare('SELECT * FROM skills WHERE uid=? AND skill=?');
-            $st2->execute([$uid, $set[1]]);
-            if (!$st2->fetch()) {
-                return '先学会【' . (skill_catalog()[$set[1]]['name'] ?? '进阶技能') . '】，再学这本终极技能书（血肉筑城需先有招魂引）。';
-            }
-        }
         add_mat($uid, $book, -1);
         learn_skill($uid, $sid);
         return '学会【' . $cat['name'] . '】！已设为默认技能。';

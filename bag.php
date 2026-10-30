@@ -268,8 +268,8 @@ if ($tab === 'equip') {
 } elseif ($tab === 'mat') {
     $mats = mats_of((int) $u['id']);
     $qmats = quest_mats();
+    $dragonMats = function_exists('dragon_mats') ? dragon_mats() : [];
     $any = false;
-    $junk = [];
     foreach ($mats as $mid => $num) {
         if (isset($qmats[$mid]) || isset(mall_tanks()[$mid]) || mat_hidden($mid) || is_usable_item($mid)) {
             continue;
@@ -278,30 +278,28 @@ if ($tab === 'equip') {
         if (in_array($mid, ['tent', 'dummy_num', 'dummy_on', 'dummy_time', 'dummy_acc', 'dummy_last', 'dummy_total', 'offline_on', 'offline_time', 'pet_autorev', 'title_wear', 'seen_last', 'exp_card_until', 'bag_ext5_used', 'bag_ext10_used', 'autosell_on', 'autosell_time', 'autosell_q', 'autosell_earned'], true) || str_starts_with($mid, 'autosell_') || str_starts_with($mid, 'hatch_')) {
             continue;
         }
-        if (!is_craft_mat($mid)) {
-            $junk[$mid] = $num;
+        // 龙材料（龙魂/龙玉/龙王精华）仍有用：照常显示，但不给「扔」，避免误丢转生材料
+        $isDragon = isset($dragonMats[$mid]);
+        // 孤儿杂物（既非锻造材料也非龙材料）：直接系统隐藏，既不给显示也不给扔
+        if (!is_craft_mat($mid) && !$isDragon) {
             continue;
         }
         $any = true;
-        echo '·' . h(mat_name($mid)) . 'x' . $num . ' <a href="bag.php?a=drop&id=' . h($mid) . '&tab=mat">扔</a>';
-        if (my_guild((int) $u['id']) && is_tradable_mat($mid)) {
-            echo ' <a href="guild.php?a=wput&kind=mat&mid=' . h($mid) . '&n=' . $num . '">全存公会</a>';
-        }
-        $et = enchant_mat_tier($mid);
-        if ($et !== '' && (enchant_tiers()[$et]['next'] ?? '') !== '' && $num >= enchant_tiers()[$et]['need']) {
-            echo ' <a href="bag.php?a=synth&id=' . h($mid) . '">合成' . h(enchant_tiers()[enchant_tiers()[$et]['next']]['name']) . '</a>';
+        echo '·' . h(mat_name($mid)) . 'x' . $num;
+        if (!$isDragon) {
+            echo ' <a href="bag.php?a=drop&id=' . h($mid) . '&tab=mat">扔</a>';
+            if (my_guild((int) $u['id']) && is_tradable_mat($mid)) {
+                echo ' <a href="guild.php?a=wput&kind=mat&mid=' . h($mid) . '&n=' . $num . '">全存公会</a>';
+            }
+            $et = enchant_mat_tier($mid);
+            if ($et !== '' && (enchant_tiers()[$et]['next'] ?? '') !== '' && $num >= enchant_tiers()[$et]['need']) {
+                echo ' <a href="bag.php?a=synth&id=' . h($mid) . '">合成' . h(enchant_tiers()[enchant_tiers()[$et]['next']]['name']) . '</a>';
+            }
         }
         echo '<br>';
     }
     if (!$any) {
         echo '<span class="muted">空。刷怪会掉材料。</span>';
-    }
-    if ($junk !== []) {
-        echo '<div class="hr">--------</div>';
-        echo '<span class="muted">旧物杂物（已绝版，无用途，可扔）：</span><br>';
-        foreach ($junk as $mid => $num) {
-            echo '<span class="muted">·' . h(mat_name($mid)) . 'x' . $num . '</span> <a href="bag.php?a=drop&id=' . h($mid) . '&tab=mat">扔</a><br>';
-        }
     }
 } elseif ($tab === 'book') {
     $mats = mats_of((int) $u['id']);

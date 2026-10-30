@@ -128,26 +128,35 @@ if ($a === 'buy_diamond') {
 }
 if ($a === 'fight') {
     [$win, $log, $foeRank, $myOld, $myNew] = arena_fight($uid, (int) ($_GET['rank'] ?? 0));
-    echo '【战 斗】<br>';
+    // 逐行慢慢输出（像打怪战报那样一行一行显现）
+    $lines = [];
     foreach ($log as $line) {
         $escaped = h($line);
         if (str_starts_with($line, '【大招】')) {
-            echo '<span style="color:#ffcf40">' . $escaped . '</span><br>';
+            $lines[] = '<span style="color:#ffcf40">' . $escaped . '</span>';
         } elseif (str_starts_with($line, '战斗结束')) {
-            echo '<b style="color:' . ($win ? '#7cf3d0' : '#ff6b6b') . '">' . $escaped . '</b><br>';
+            $lines[] = '<b style="color:' . ($win ? '#7cf3d0' : '#ff6b6b') . '">' . $escaped . '</b>';
         } elseif (str_starts_with($line, '你的队伍') || str_starts_with($line, '对手队伍')) {
-            echo '<span class="muted">' . $escaped . '</span><br>';
+            $lines[] = '<span class="muted">' . $escaped . '</span>';
         } else {
-            echo $escaped . '<br>';
+            $lines[] = $escaped;
         }
     }
     echo '<div class="hr">--------</div>';
-    if ($win) {
-        echo '<span style="color:#7cf3d0">排名 ' . (int) $myOld . ' → ' . (int) $myNew . '</span><br>';
-    } else {
-        echo '<span class="muted">排名不变（第' . (int) $myOld . '名）</span><br>';
+    echo '<div id="arenablog">';
+    foreach ($lines as $html) {
+        echo '<div class="abline" style="display:none">' . $html . '</div>';
     }
-    echo '<a href="arena.php?a=targets">继续挑战</a> <a href="arena.php">返回</a>';
+    echo '</div>';
+    $endHtml = '<div class="hr">--------</div>'
+        . ($win
+            ? '<span style="color:#7cf3d0">排名 ' . (int) $myOld . ' → ' . (int) $myNew . '</span><br>'
+            : '<span class="muted">排名不变（第' . (int) $myOld . '名）</span><br>')
+        . '<a href="arena.php?a=targets">继续挑战</a> <a href="arena.php">返回</a>';
+    echo '<div id="abend" style="display:none">' . $endHtml . '</div>';
+    // 无 JS 时退化为一次性全部显示
+    echo '<noscript><style>#arenablog .abline{display:block!important}#abend{display:block!important}</style></noscript>';
+    echo '<script>(function(){var ls=document.querySelectorAll("#arenablog .abline"),i=0;var t=setInterval(function(){if(i<ls.length){ls[i].style.display="block";i++;}else{clearInterval(t);var e=document.getElementById("abend");if(e)e.style.display="block";}},360);})();</script>';
     nav_line();
     wap_end(false);
     exit;

@@ -4093,14 +4093,14 @@ function use_skill_book(int $uid, string $book): string
             $st2 = db()->prepare('SELECT * FROM skills WHERE uid=? AND skill=?');
             $st2->execute([$uid, $set[0]]);
             if (!$st2->fetch()) {
-                return '先学会基础技能，再学进阶。';
+                return '先学会【' . (skill_catalog()[$set[0]]['name'] ?? '基础技能') . '】，再学这本进阶技能书。';
             }
         }
         if (($set[2] ?? '') === $sid) {
             $st2 = db()->prepare('SELECT * FROM skills WHERE uid=? AND skill=?');
             $st2->execute([$uid, $set[1]]);
             if (!$st2->fetch()) {
-                return '先学会进阶技能，再学终极。';
+                return '先学会【' . (skill_catalog()[$set[1]]['name'] ?? '进阶技能') . '】，再学这本终极技能书（血肉筑城需先有招魂引）。';
             }
         }
         add_mat($uid, $book, -1);

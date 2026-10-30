@@ -16,6 +16,10 @@ foreach (my_skills((int) $u['id']) as $s) {
 }
 
 wap_start('技能');
+$skFlash = flash_get();
+if ($skFlash !== '') {
+    echo '<div class="warn">' . h($skFlash) . '</div>';
+}
 echo h(job_of($u)['name']) . '技能　<span style="color:#6cf">魔力 ' . (int) ($u['mp'] ?? 0) . '/' . (int) ($u['maxmp'] ?? 0) . '</span><br>';
 echo '<span class="muted">用一次涨1熟练度，同职业技能书可升级（最高20级）。</span><br>';
 echo '<a href="skill_codex.php">查看技能图鉴（分职业）→</a><br>';

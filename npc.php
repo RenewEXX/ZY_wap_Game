@@ -182,9 +182,9 @@ if ($who === 'gykeeper' && $choice === 'enter') {
     if ((int) ($u['lv'] ?? 1) < 1) {
         flash_set('你的等级不够。');
     } else {
-        $curMonth = date('Y-m');
+        $curMonth = (int) date('Ym');
         $mats = mats_of((int) $u['id']);
-        if ((string) ($mats['gy_month'] ?? '') === $curMonth) {
+        if ((int) ($mats['gy_month'] ?? 0) === $curMonth) {
             flash_set('渡罪摇头：这个月你已经进去过了。下个月再来。');
         } else {
             mat_set((int) $u['id'], 'gy_month', $curMonth);
@@ -258,9 +258,9 @@ if ($who === 'yzkeeper' && $choice === 'enter') {
     if ((int) ($u['lv'] ?? 1) < 700) {
         flash_set('缄默：你太干净了。源罪渊只接待罪人，700级再来。');
     } else {
-        $ym = date('Y-m');
+        $ym = (int) date('Ym');
         $ymats = mats_of((int) $u['id']);
-        if ((string) ($ymats['yz_month'] ?? '') === $ym) {
+        if ((int) ($ymats['yz_month'] ?? 0) === $ym) {
             flash_set('缄默：这个月你已经见过它了。它记得你的脸。下个月再来。');
         } else {
             mat_set((int) $u['id'], 'yz_month', $ym);
@@ -1044,8 +1044,8 @@ if ($who === 'fallenguide') {
     echo '<a href="npc.php?who=fallenguide&choice=enter">进入堕天阶（消耗堕天阶入场券，45分钟）</a><br>';
 }
 if ($who === 'yzkeeper') {
-    $ym = date('Y-m');
-    $used = (string) (mats_of((int) $u['id'])['yz_month'] ?? '') === $ym;
+    $ym = (int) date('Ym');
+    $used = (int) (mats_of((int) $u['id'])['yz_month'] ?? 0) === $ym;
     if ((int) ($u['lv'] ?? 1) < 700) {
         echo '<span class="muted">需要700级。</span><br>';
     } elseif ($used) {
@@ -1066,8 +1066,8 @@ if ($who === 'godmerchant') {
     echo '<a href="npc.php?who=godmerchant&choice=heal">圣愿（花50000铜回满血魔）</a><br>';
 }
 if ($who === 'gykeeper') {
-    $curMonth = date('Y-m');
-    $used = (string) (mats_of((int) $u['id'])['gy_month'] ?? '') === $curMonth;
+    $curMonth = (int) date('Ym');
+    $used = (int) (mats_of((int) $u['id'])['gy_month'] ?? 0) === $curMonth;
     if ($used) {
         echo '<span class="muted">本月已挑战过错渊，下个月再来。</span><br>';
     } else {

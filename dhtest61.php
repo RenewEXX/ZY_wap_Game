@@ -15,9 +15,11 @@ function cleanArena61(string $zone, array $uids): void {
         db()->prepare('DELETE FROM mats WHERE uid=?')->execute([$uid]);
         db()->prepare('DELETE FROM skills WHERE uid=?')->execute([$uid]);
         db()->prepare('DELETE FROM arena_rank WHERE uid=?')->execute([$uid]);
+        db()->prepare('DELETE FROM mails WHERE uid=?')->execute([$uid]);
     }
     db()->prepare('DELETE FROM arena_rank WHERE zone=?')->execute([$zone]);
     db()->prepare('DELETE FROM sys_kv WHERE k=?')->execute(['arena_bot_tick_' . $zone]);
+    db()->prepare('DELETE FROM sys_kv WHERE k=?')->execute(['arena_season_roll_' . $zone]);
 }
 cleanArena61($zone, []);
 
@@ -75,6 +77,30 @@ $msg = arena_join($uid3);
 $st = db()->prepare('SELECT COUNT(*) FROM arena_rank WHERE uid=? AND zone=? AND season=?');
 $st->execute([$uid3, $zone, $season]);
 ck61('新玩家join成功入场', (int) $st->fetchColumn() === 1 && str_contains($msg, '欢迎'), $msg);
+
+// 8) 每周滚动兜底（不依赖周一）：kv 记录落后时，ensure 立刻结算——真人回100名起、假人重排1..200、kv推进当前赛季
+$kvKey = 'arena_season_roll_' . $zone;
+db()->prepare('INSERT OR REPLACE INTO sys_kv (k,num) VALUES (?,?)')->execute([$kvKey, 20000101]);
+arena_ensure($zone);
+$st = db()->prepare('SELECT rank FROM arena_rank WHERE zone=? AND season=? AND is_dummy=0 ORDER BY rank ASC');
+$st->execute([$zone, $season]);
+$realRanks = array_map('intval', array_column($st->fetchAll(), 'rank'));
+ck61('赛季滚动:真人数=3', count($realRanks) === 3, (string) count($realRanks));
+ck61('赛季滚动:真人从第100名起连续', $realRanks === range(100, 100 + count($realRanks) - 1), implode(',', $realRanks));
+$st = db()->prepare('SELECT num FROM sys_kv WHERE k=?');
+$st->execute([$kvKey]);
+$curKey = (int) str_replace('-', '', $season);
+ck61('赛季滚动:kv推进到当前赛季', (int) $st->fetchColumn() === $curKey, (string) $st->fetchColumn());
+$st = db()->prepare('SELECT rank FROM arena_rank WHERE zone=? AND season=? AND is_dummy=1 ORDER BY rank ASC');
+$st->execute([$zone, $season]);
+$br = array_map('intval', array_column($st->fetchAll(), 'rank'));
+ck61('赛季滚动:假人仍1..200连续', $br === range(1, 200));
+// 再调一次不应重复结算（kv 已是当前赛季，真人名次保持不变）
+arena_ensure($zone);
+$st = db()->prepare('SELECT rank FROM arena_rank WHERE zone=? AND season=? AND is_dummy=0 ORDER BY rank ASC');
+$st->execute([$zone, $season]);
+$again = array_map('intval', array_column($st->fetchAll(), 'rank'));
+ck61('重复访问不重复结算', $again === $realRanks, implode(',', $again));
 
 cleanArena61($zone, [$uid, $uid2, $uid3]);
 echo "OK=$ok FAIL=$bad\n";

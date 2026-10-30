@@ -181,6 +181,60 @@ function arena_dummy_lv(int $rank): int
     return 50 + intdiv(2000 - $rank, 100);
 }
 
+// 每周滚动（不依赖周一当天是否有人访问）：用 sys_kv 记住本区已滚到哪个赛季（存 YYYYMMDD 整数），
+// 只要 arena_season() 变了，就在「之后第一次访问/结算」时滚一次：
+//   给上赛季真人补发一份排名结算奖励 → 真人回 100 名起步、假人按战力重排 1..200。
+// 首次运行（kv 为空）只记基线，不追溯老数据，避免突然群发邮件/大洗牌。
+function arena_season_settle_week(string $zone): void
+{
+    $cur = arena_season();
+    $curKey = (int) str_replace('-', '', $cur);
+    $key = 'arena_season_roll_' . $zone;
+    try {
+        $rec = (int) (db()->query('SELECT num FROM sys_kv WHERE k=' . db()->quote($key))->fetchColumn() ?: 0);
+    } catch (Throwable $e) {
+        return; // 还没有 sys_kv 表就跳过，等 tick 建好再来
+    }
+    if ($rec === 0) {
+        try { db()->prepare('INSERT OR REPLACE INTO sys_kv (k, num) VALUES (?, ?)')->execute([$key, $curKey]); } catch (Throwable $e) {}
+        return;
+    }
+    if ($rec === $curKey) {
+        return;
+    }
+    // —— 赛季已推进：先按「上赛季最终名次」给真人补发一份周结算奖励 ——
+    $rows = db()->query('SELECT * FROM arena_rank WHERE zone=' . db()->quote($zone) . ' AND season=' . db()->quote($cur) . ' AND is_dummy=0 ORDER BY rank ASC')->fetchAll();
+    foreach ($rows as $r) {
+        [$gold, $coin] = arena_rewards((int) $r['rank']);
+        $tier = arena_tier((int) $r['rank']);
+        [$bg, $bc] = arena_tier_bonus($tier[0]);
+        $gold += $bg;
+        $coin += $bc;
+        $att = [['t' => 'mat', 'id' => 'arena_coin', 'n' => $coin]];
+        if ($gold > 0) {
+            $att[] = ['t' => 'gold', 'n' => $gold];
+        }
+        if (function_exists('send_mail')) {
+            try {
+                send_mail((int) $r['uid'], '竞技场', 'arena', '竞技场赛季结算：上周' . $tier[1] . '段位·第' . $r['rank'] . '名', '新赛季开始，你的排名回到初始状态。上赛季第' . $r['rank'] . '名（' . $tier[1] . '段位）的结算奖励请查收。', $att);
+            } catch (Throwable $e) {}
+        }
+    }
+    // —— 真人回初始位（100 名起），假人按战力重排 1..200 ——
+    $rk = 100;
+    foreach ($rows as $r) {
+        db()->prepare('UPDATE arena_rank SET rank=? WHERE uid=? AND zone=? AND season=?')->execute([$rk, (int) $r['uid'], $zone, $cur]);
+        $rk++;
+    }
+    $dummies = db()->query('SELECT rowid FROM arena_rank WHERE zone=' . db()->quote($zone) . ' AND season=' . db()->quote($cur) . ' AND is_dummy=1 ORDER BY power DESC')->fetchAll();
+    $dr = 1;
+    foreach ($dummies as $d) {
+        db()->prepare('UPDATE arena_rank SET rank=? WHERE rowid=?')->execute([$dr, (int) $d['rowid']]);
+        $dr++;
+    }
+    try { db()->prepare('INSERT OR REPLACE INTO sys_kv (k, num) VALUES (?, ?)')->execute([$key, $curKey]); } catch (Throwable $e) {}
+}
+
 function arena_ensure(string $zone): void
 {
     $season = arena_season();
@@ -193,6 +247,9 @@ function arena_ensure(string $zone): void
     if ($stale > 0) {
         db()->prepare('UPDATE arena_rank SET season=? WHERE zone=? AND season<>?')->execute([$season, $zone, $season]);
     }
+
+    // 每周滚动兜底：跨赛季后第一次被访问就结算（发奖+重排名次），不依赖周一那次 tick。
+    arena_season_settle_week($zone);
 
     $n = (int) db()->query('SELECT COUNT(*) FROM arena_rank WHERE zone=' . db()->quote($zone) . ' AND is_dummy=1 AND season=' . db()->quote($season))->fetchColumn();
     if ($n >= 200) {
@@ -908,7 +965,6 @@ function arena_tick(): void
             return;
         }
     }
-    $isMonday = date('N', $today5) === '1';
     foreach (array_keys(zones()) as $zone) {
         arena_ensure($zone);
         $season = arena_season();
@@ -927,36 +983,8 @@ function arena_tick(): void
             }
             send_mail((int) $r['uid'], '竞技场', 'arena', '竞技场每日奖励：' . $tier[1] . '段位·第' . $r['rank'] . '名', '今日排名第' . $r['rank'] . '名（' . $tier[1] . '段位），奖励：' . fmt_money($gold) . '、竞技场币x' . $coin . '。请查收附件。', $att);
         }
-        if ($isMonday) {
-            // 上周额外奖励：按段位加成后的名次奖励再发一份
-            foreach ($rows as $r) {
-                [$gold, $coin, $stones] = arena_rewards((int) $r['rank']);
-                $tier = arena_tier((int) $r['rank']);
-                [$bg, $bc] = arena_tier_bonus($tier[0]);
-                $gold += $bg; $coin += $bc;
-                $att = [['t' => 'mat', 'id' => 'arena_coin', 'n' => $coin]];
-                if ($gold > 0) {
-                    $att[] = ['t' => 'gold', 'n' => $gold];
-                }
-                send_mail((int) $r['uid'], '竞技场', 'arena', '竞技场赛季重置：上周' . $tier[1] . '段位·第' . $r['rank'] . '名', '新赛季开始，你的排名回到初始状态。上周第' . $r['rank'] . '名（' . $tier[1] . '段位）的额外奖励请查收。', $att);
-            }
-            // 真人回初始位，假人回初始位置
-            $players = db()->query('SELECT uid FROM arena_rank WHERE zone=' . db()->quote($zone) . ' AND season=' . db()->quote($season) . ' AND is_dummy=0 ORDER BY rank ASC')->fetchAll();
-            $newSeason = date('Y-m-d', $today5);
-            db()->prepare('UPDATE arena_rank SET season=? WHERE zone=? AND season=?')->execute([$newSeason, $zone, $season]);
-            $rk = 100;
-            foreach ($players as $p) {
-                db()->prepare('UPDATE arena_rank SET rank=? WHERE uid=? AND zone=? AND season=?')->execute([$rk, (int) $p['uid'], $zone, $newSeason]);
-                $rk++;
-            }
-            // 假人重排1..2000
-            $dummies = db()->query('SELECT rowid FROM arena_rank WHERE zone=' . db()->quote($zone) . ' AND season=' . db()->quote($newSeason) . ' AND is_dummy=1 ORDER BY power DESC')->fetchAll();
-            $dr = 1;
-            foreach ($dummies as $d) {
-                db()->prepare('UPDATE arena_rank SET rank=? WHERE rowid=?')->execute([$dr, (int) $d['rowid']]);
-                $dr++;
-            }
-        }
+        // 每周滚动已移到 arena_season_settle_week()：由 arena_ensure 在任意访问/结算时按赛季变化触发，
+        // 不再依赖「周一这一天的 tick 恰好跑到」。这里只保留每日结算。
     }
 }
 

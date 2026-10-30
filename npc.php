@@ -89,6 +89,72 @@ if (!isset($people[$who]) || $people[$who]['loc'] !== $cur) {
     exit;
 }
 
+// ===== 组队开本：带队伍时先校验全队门票；都有才各扣1张、整队传送，缺票则全队不开 =====
+if (my_party((int) $u['id']) && $choice !== '') {
+    // key => [门票mat, 门票名, 进场地图, 进度标记(mat=>值|'now'), 进本前要清的道具, 最低级, 最高级]
+    $dgOpen = [
+        'alice|open'      => ['dsw_ticket', '黑暗沼泽副本入场券', 'dsw_gate', ['dsw_stage' => 1, 'dsw_enter' => 'now'], ['dsw_item1', 'dsw_item2', 'dsw_item3', 'dsw_item4'], 10, 30],
+        'vera|open'       => ['abx_ticket', '影蚀深渊入场券', 'abx_gate', ['abx_stage' => 1, 'abx_enter' => 'now'], ['abx_item1', 'abx_item2', 'abx_item3', 'abx_item4'], 50, 120],
+        'spider|open'     => ['mx_ticket', '银丝母巢入场券', 'mx_gate', ['mx_stage' => 1, 'mx_enter' => 'now'], ['mx_item1', 'mx_item2', 'mx_item3', 'mx_item4', 'mx_item5', 'mx_item6'], 150, 340],
+        'spider|open2'    => ['pz_ticket', '傀儡回廊入场券', 'pz_gate', ['pz_stage' => 1, 'pz_enter' => 'now'], [], 300, 460],
+        'qingya|open'     => ['sen_ticket', '雾森祭坛入场券', 'sen_gate', ['sen_stage' => 1, 'sen_enter' => 'now'], [], 500, 620],
+        'voidwalker|open' => ['vx_ticket', '虚空裂隙入场券', 'vx_gate', ['vx_enter' => 'now'], [], 600, 999],
+        'rockwarden|open' => ['tt_ticket', '岩狱副本入场券', 'ry_gate', ['ry_stage' => 1, 'ry_enter' => 'now'], [], 700, 900],
+        'oldfish|open'    => ['fr_ticket', '冰渊副本入场券', 'fr_gate', ['fr_stage' => 1, 'fr_enter' => 'now'], ['fr_item1', 'fr_item2'], 350, 999],
+        'oldash|open'     => ['em_ticket', '熔心副本入场券', 'em_gate', ['em_stage' => 1, 'em_enter' => 'now'], ['em_item1', 'em_item2'], 580, 999],
+        'oldash|open2'    => ['as_ticket', '灰烬深渊入场券', 'as_gate', ['as_enter' => 'now'], [], 580, 999],
+    ];
+    $dgKey = $who . '|' . $choice;
+    if (isset($dgOpen[$dgKey])) {
+        [$tMat, $tName, $gLoc, $gFlags, $gItems, $gMin, $gMax] = $dgOpen[$dgKey];
+        $gLv = (int) ($u['lv'] ?? 1);
+        if ($gLv < $gMin || $gLv > $gMax) {
+            flash_set($people[$who]['name'] . '摇头：这副本只要' . $gMin . '~' . $gMax . '级的冒险者，你现在' . $gLv . '级。');
+            header('Location: home.php');
+            exit;
+        }
+        $gRet = party_open_dungeon((int) $u['id'], $tMat, $tName, function (int $mu) use ($gLoc, $gFlags, $gItems) {
+            foreach ($gItems as $it) {
+                db()->prepare('DELETE FROM mats WHERE uid=? AND mat=?')->execute([$mu, $it]);
+            }
+            foreach ($gFlags as $fk => $fv) {
+                mat_set($mu, (string) $fk, $fv === 'now' ? time() : (int) $fv);
+            }
+            $v = user_by_id($mu);
+            if ($v) {
+                $v['loc'] = $gLoc;
+                user_save($v);
+            }
+        });
+        unset($_SESSION['battle']);
+        flash_set($gRet['ok'] ? ($people[$who]['name'] . '：' . $gRet['msg']) : ($people[$who]['name'] . '：' . $gRet['msg']));
+        header('Location: home.php');
+        exit;
+    }
+    if (isset($rdNpc[$who]) && $choice === 'enter') {
+        $rk = $rdNpc[$who];
+        $R = region_dungeon_specs()[$rk];
+        $t = region_dungeon_ticket_map()[$rk];
+        $gate = 'rd_' . $rk . '_gate';
+        if ((int) ($u['lv'] ?? 1) < (int) $R['min_lv']) {
+            flash_set($people[$who]['name'] . '摇头：这副本要' . (int) $R['min_lv'] . '级，你还差点火候。');
+            header('Location: home.php');
+            exit;
+        }
+        $gRet = party_open_dungeon((int) $u['id'], $t['mat'], $t['name'], function (int $mu) use ($gate) {
+            $v = user_by_id($mu);
+            if ($v) {
+                $v['loc'] = $gate;
+                user_save($v);
+            }
+        });
+        unset($_SESSION['battle']);
+        flash_set($gRet['ok'] ? ($people[$who]['name'] . '推开副本之门：' . $R['name'] . '，45分钟，活着回来。' . $gRet['msg']) : $gRet['msg']);
+        header('Location: home.php');
+        exit;
+    }
+}
+
 // ===== 大区域副本引路人：进入副本（消耗本区入场券×1，45分钟）=====
 if (isset($rdNpc[$who]) && $choice === 'enter') {
     $rk = $rdNpc[$who];

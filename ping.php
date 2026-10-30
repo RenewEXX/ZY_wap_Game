@@ -12,6 +12,8 @@ if (empty($_SESSION['uid'])) {
 $uid = (int) $_SESSION['uid'];
 session_write_close();
 try {
+    // 心跳维持“在线”状态（组队离线判定用；不跑 tick，只轻量更新时间）
+    db()->prepare('UPDATE users SET last_seen=? WHERE id=?')->execute([time(), $uid]);
     $st = db()->prepare('SELECT mat, num FROM mats WHERE uid=? AND mat IN ("dummy_on","dummy_time")');
     $st->execute([$uid]);
     $m = [];

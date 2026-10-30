@@ -124,6 +124,10 @@ function require_login(): array
     }
     $u['last_seen'] = $nowA;
     user_save($u);
+    // 离线队伍清理：队长离线解散、队员离线退队（last_seen 由 ping.php/页面刷新维持）
+    if (function_exists('party_sweep_offline')) {
+        party_sweep_offline();
+    }
     // 每周有效游玩时间（传教神父兑魔钻用，自然周一刷新）
     $wid = date('oW');
     $mats = mats_of((int) $u['id']);

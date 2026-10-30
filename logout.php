@@ -1,6 +1,10 @@
 <?php
 declare(strict_types=1);
 require __DIR__ . '/includes/bootstrap.php';
+// 离线即处理队伍：队员退队、队长解散
+if (!empty($_SESSION['uid']) && function_exists('party_on_offline')) {
+    party_on_offline((int) $_SESSION['uid']);
+}
 
 if ((string) ($_GET['a'] ?? '') === 'char' && !empty($_SESSION['account'])) {
     unset($_SESSION['uid']);

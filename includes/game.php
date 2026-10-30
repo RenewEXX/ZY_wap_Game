@@ -1218,12 +1218,111 @@ function party_bonus_mult(int $uid): float
     if (!$u) {
         return 1.0;
     }
+    $myReg = loc_big_region((string) ($u['loc'] ?? ''));
     foreach (party_mates((int) $p['id'], $uid) as $m) {
-        if (($m['loc'] ?? '') === ($u['loc'] ?? '')) {
+        if (loc_big_region((string) ($m['loc'] ?? '')) === $myReg) {
             return 1.1;
         }
     }
     return 1.0;
+}
+
+// 大区域判定：同一“大区域”即算同区（野外按 map_regions 分组；副本按整张副本分组）
+function loc_big_region(string $loc): string
+{
+    static $map = null;
+    if ($map === null) {
+        $map = [];
+        foreach (map_regions() as $region => $ids) {
+            foreach ($ids as $id) {
+                if (!isset($map[$id])) {
+                    $map[$id] = 'region:' . $region;
+                }
+            }
+        }
+        $dg = [
+            'dsw' => dsw_maps(), 'abx' => abx_maps(), 'mx' => mx_maps(), 'fr' => fr_maps(),
+            'em' => em_maps(), 'pz' => pz_maps(), 'sen' => sen_maps(), 'as' => as_maps(),
+            'vx' => vx_maps(), 'ry' => ry_maps(), 'gy' => gy_maps(), 'gf' => gf_maps(), 'yz' => yz_maps(),
+        ];
+        if (function_exists('region_dungeon_build')) {
+            foreach (region_dungeon_build()['maps'] as $rk => $list) {
+                $dg['rd_' . $rk] = $list;
+            }
+        }
+        foreach ($dg as $k => $list) {
+            foreach ($list as $id) {
+                if (!isset($map[$id])) {
+                    $map[$id] = 'dg:' . $k;
+                }
+            }
+        }
+    }
+    return $map[$loc] ?? ('loc:' . $loc);
+}
+
+// 队伍副本开门：校验全队都有门票；都有则每名队员各扣 1 张，并对每人执行 $enterOne。
+// 返回 ['ok'=>bool, 'msg'=>string]。缺票时不扣任何票、不传送。
+function party_open_dungeon(int $leaderUid, string $ticketMat, string $ticketName, callable $enterOne): array
+{
+    $p = my_party($leaderUid);
+    $uids = [(int) $leaderUid];
+    if ($p) {
+        $st = db()->prepare('SELECT uid FROM party_members WHERE pid=? ORDER BY joined_at');
+        $st->execute([(int) $p['id']]);
+        $uids = array_map(static fn($r) => (int) $r['uid'], $st->fetchAll());
+        if ($uids === []) {
+            $uids = [(int) $leaderUid];
+        }
+    }
+    $missing = [];
+    foreach ($uids as $mu) {
+        if (empty(mats_of($mu)[$ticketMat])) {
+            $muU = user_by_id($mu);
+            $missing[] = (string) ($muU['username'] ?? ('#' . $mu));
+        }
+    }
+    if ($missing !== []) {
+        return ['ok' => false, 'msg' => '队伍里「' . implode('」「', $missing) . '」没有【' . $ticketName . '】，全队都不能开本。先让 TA 搞到票再来。'];
+    }
+    foreach ($uids as $mu) {
+        add_mat($mu, $ticketMat, -1);
+        $enterOne($mu);
+    }
+    $n = count($uids);
+    return ['ok' => true, 'msg' => $n > 1 ? ('全队 ' . $n . ' 人各扣【' . $ticketName . '】×1，一起传送进副本！') : ('【' . $ticketName . '】-1，传送进副本！')];
+}
+
+// 玩家离线（登出/切号）时：队员退队，队长解散队伍
+function party_on_offline(int $uid): void
+{
+    $p = my_party($uid);
+    if (!$p) {
+        return;
+    }
+    if ((int) $p['leader_uid'] === $uid) {
+        db()->prepare('DELETE FROM party_members WHERE pid=?')->execute([(int) $p['id']]);
+        db()->prepare('DELETE FROM parties WHERE id=?')->execute([(int) $p['id']]);
+    } else {
+        db()->prepare('DELETE FROM party_members WHERE uid=? AND pid=?')->execute([$uid, (int) $p['id']]);
+    }
+}
+
+// 扫描“离线”队员（超过 $timeout 秒没有活跃）：队长离线→解散；队员离线→退队
+function party_sweep_offline(int $timeout = 120): void
+{
+    $cut = time() - $timeout;
+    $st = db()->prepare('SELECT p.id FROM parties p JOIN users u ON u.id=p.leader_uid WHERE u.last_seen < ?');
+    $st->execute([$cut]);
+    foreach ($st->fetchAll(PDO::FETCH_COLUMN) as $pid) {
+        db()->prepare('DELETE FROM party_members WHERE pid=?')->execute([(int) $pid]);
+        db()->prepare('DELETE FROM parties WHERE id=?')->execute([(int) $pid]);
+    }
+    $st = db()->prepare('SELECT m.uid FROM party_members m JOIN users u ON u.id=m.uid JOIN parties p ON p.id=m.pid WHERE u.last_seen < ? AND m.uid<>p.leader_uid');
+    $st->execute([$cut]);
+    foreach ($st->fetchAll(PDO::FETCH_COLUMN) as $mu) {
+        db()->prepare('DELETE FROM party_members WHERE uid=?')->execute([(int) $mu]);
+    }
 }
 
 function chat_post(int $uid, string $channel, int $target, string $text): string
@@ -8004,9 +8103,15 @@ function battle_round(array &$u, array &$b, string $mode): array
             $g = (int) round($g * rs_gold_mult((int) ($u['id'] ?? 0)));
         }
         $u['gold'] = (int) $u['gold'] + $g;
-        $rawExp = (int) (((int) ($b['wexp'] ?? 0) + exp_gain_for($u, (string) ($b['id'] ?? ''), (int) ($b['elite'] ?? 0))) * guild_exp_mult((int) $u['id']) * party_bonus_mult((int) $u['id']));
+        $expBase = (int) (((int) ($b['wexp'] ?? 0) + exp_gain_for($u, (string) ($b['id'] ?? ''), (int) ($b['elite'] ?? 0))) * guild_exp_mult((int) $u['id']));
+        $partyMult = party_bonus_mult((int) $u['id']);
+        $rawExp = (int) ($expBase * $partyMult);
+        $partyExtra = $rawExp - $expBase;
         war_add_score((int) $u['id'], (string) ($b['id'] ?? ''));
         $msg = ($msg ?? '') . gain_exp($u, $rawExp);
+        if ($partyExtra > 0) {
+            $msg .= '（队伍同区经验+10%，额外+' . $partyExtra . '经验）';
+        }
         if (str_starts_with((string) ($b['id'] ?? ''), 'gy_')) {
             sin_gain_typed($u, 'gy');
             $gyMsg = gy_kill_drop((int) ($u['id'] ?? 0), (string) ($b['id'] ?? ''));

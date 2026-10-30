@@ -13,7 +13,7 @@ if ($a === 'create') {
         db()->prepare('INSERT INTO parties (leader_uid, zone, created_at) VALUES (?, ?, ?)')->execute([$uid, (string) ($u['zone'] ?? 'z1'), time()]);
         $pid = (int) db()->lastInsertId();
         db()->prepare('INSERT INTO party_members (uid, pid, joined_at) VALUES (?, ?, ?)')->execute([$uid, $pid, time()]);
-        flash_set('建队成功，你是队长。叫人来同张地图，经验+10%。');
+        flash_set('建队成功，你是队长。叫人来同一大区域，经验+10%。');
     }
     header('Location: party.php');
     exit;
@@ -77,7 +77,7 @@ if ($flash !== '') {
 $p = my_party($uid);
 if ($p) {
     echo '【我的队伍】队长：' . h((user_by_id((int) $p['leader_uid'])['username'] ?? '?')) . '<br>';
-    echo '队员（同图经验+10%）：<br>';
+    echo '队员（同大区域经验+10%）：<br>';
     foreach (party_mates((int) $p['id'], $uid) as $m) {
         echo '·' . h($m['username']) . (int) $m['lv'] . '级@' . h(loc($m['loc'])['name'] ?? $m['loc']);
         if ((int) $p['leader_uid'] === $uid) {
@@ -89,9 +89,9 @@ if ($p) {
     echo '<a href="party.php?a=leave">离队</a><br>';
 } else {
     echo '<a href="party.php?a=create">创建队伍</a><br>';
-    echo '<div class="hr">--------</div>【附近队伍】<br>';
-    $st = db()->prepare('SELECT p.id, u.username AS lname, (SELECT COUNT(*) FROM party_members m WHERE m.pid=p.id) AS num FROM parties p JOIN users u ON u.id=p.leader_uid WHERE p.zone=? ORDER BY p.id DESC LIMIT 20');
-    $st->execute([(string) ($u['zone'] ?? 'z1')]);
+    echo '<div class="hr">--------</div>【附近队伍·本图】<br>';
+    $st = db()->prepare('SELECT p.id, u.username AS lname, (SELECT COUNT(*) FROM party_members m WHERE m.pid=p.id) AS num FROM parties p JOIN users u ON u.id=p.leader_uid WHERE p.zone=? AND EXISTS (SELECT 1 FROM party_members m2 JOIN users u2 ON u2.id=m2.uid WHERE m2.pid=p.id AND u2.loc=?) ORDER BY p.id DESC LIMIT 20');
+    $st->execute([(string) ($u['zone'] ?? 'z1'), (string) $u['loc']]);
     $n = 0;
     while ($r = $st->fetch()) {
         $n++;

@@ -6,9 +6,15 @@ $ok = 0; $bad = 0;
 function ck31(string $l, bool $c, string $d = '') { global $ok,$bad; if ($c) { $ok++; } else { $bad++; echo "FAIL $l $d\n"; } }
 
 // 1) 之前泄漏到「旧物杂物」的系统标记，现在必须是 hidden
-foreach (['legend_fixed', 'rs_summ_hp', 'rs_point', 'exp_card_mult', 'gy_month', 'yz_month'] as $m) {
+foreach (['legend_fixed', 'rs_summ_hp', 'rs_point', 'exp_card_mult', 'gy_month', 'yz_month', 'twohand_fixed', 'avatar_anime_summoner', 'avatar_anime_mage'] as $m) {
     ck31("[$m] 被隐藏", mat_hidden($m) === true, '');
 }
+
+// 1.5) 有用途的道具不能当杂物（清罪丹/改名卡/龙鳞宝箱等）
+foreach (['qingzui_dan', 'rename_card', 'dragon_box', 'dragon_pill'] as $m) {
+    ck31("[$m] 判定为可用道具", is_usable_item($m) === true, '');
+}
+ck31('矿工铭牌仍是可扔旧物（不隐藏/不可用）', mat_hidden('mine_badge') === false && is_usable_item('mine_badge') === false, '');
 
 // 2) 真实锻造材料/进度标记仍按规则处理，不能被误隐藏或误判
 ck31('enhance_t1 不被隐藏', mat_hidden('enhance_t1') === false, '');

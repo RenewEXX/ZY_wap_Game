@@ -2327,19 +2327,19 @@ function is_usable_item(string $mid): bool
     if (isset(skill_books()[$mid]) || isset(pet_eggs()[$mid]) || isset(mall_tanks()[$mid]) || isset(pct_potions()[$mid])) {
         return true;
     }
-    return in_array($mid, ['exp_card100', 'reset_potion', 'bag_ext5', 'bag_ext10', 'pet_food', 'pet_revive_potion', 'dragon_pill'], true);
+    return in_array($mid, ['exp_card100', 'reset_potion', 'bag_ext5', 'bag_ext10', 'pet_food', 'pet_revive_potion', 'dragon_pill', 'qingzui_dan', 'rename_card', 'dragon_box'], true);
 }
 
 function mat_hidden(string $mid): bool
 {
-    if (str_starts_with($mid, 'code_') || str_starts_with($mid, 'dummy_') || str_starts_with($mid, 'hatch_') || str_starts_with($mid, 'soul_lv_') || str_starts_with($mid, 'pet_sat_')) {
+    if (str_starts_with($mid, 'code_') || str_starts_with($mid, 'dummy_') || str_starts_with($mid, 'hatch_') || str_starts_with($mid, 'soul_lv_') || str_starts_with($mid, 'pet_sat_') || str_starts_with($mid, 'avatar_anime_')) {
         return true;
     }
     // 副本进度标记（计时/阶段）是系统字段，永不进背包显示
     if (str_ends_with($mid, '_enter') || str_ends_with($mid, '_stage')) {
         return true;
     }
-    return in_array($mid, ['offline_on', 'offline_time', 'seen_last', 'exp_card_until', 'bag_ext5_used', 'bag_ext10_used', 'dummy_total', 'tank_cd_hp', 'tank_cd_mp', 'peak_force', 'peak_duel_from', 'peak_storm_t', 'peak_buff_atk', 'peak_buff_def', 'peak_buff_heal', 'peak_zone', 'arena_day', 'arena_used', 'arena_bought', 'active_wid', 'active_week', 'priest_wid', 'fr_enter', 'fr_stage', 'em_enter', 'em_stage', 'pz_enter', 'pz_stage', 'sen_enter', 'sen_stage', 'vx_enter', 'wb_claimed', 'legend_fixed', 'rs_summ_hp', 'rs_point', 'exp_card_mult', 'gy_month', 'yz_month'], true);
+    return in_array($mid, ['offline_on', 'offline_time', 'seen_last', 'exp_card_until', 'bag_ext5_used', 'bag_ext10_used', 'dummy_total', 'tank_cd_hp', 'tank_cd_mp', 'peak_force', 'peak_duel_from', 'peak_storm_t', 'peak_buff_atk', 'peak_buff_def', 'peak_buff_heal', 'peak_zone', 'arena_day', 'arena_used', 'arena_bought', 'active_wid', 'active_week', 'priest_wid', 'fr_enter', 'fr_stage', 'em_enter', 'em_stage', 'pz_enter', 'pz_stage', 'sen_enter', 'sen_stage', 'vx_enter', 'wb_claimed', 'legend_fixed', 'twohand_fixed', 'rs_summ_hp', 'rs_point', 'exp_card_mult', 'gy_month', 'yz_month'], true);
 }
 
 // 当前版本真正有用的锻造材料：强化石 + 属性石/晶石/珠/神石

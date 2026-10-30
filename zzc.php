@@ -1,1 +1,0 @@
-<?php define('DH_TEST_MODE',1); require 'includes/bootstrap.php'; foreach([12972,12973] as $u){ db()->prepare('DELETE FROM users WHERE id=?')->execute([$u]); db()->prepare('DELETE FROM equips WHERE uid=?')->execute([$u]); db()->prepare('DELETE FROM mats WHERE uid=?')->execute([$u]); db()->prepare('DELETE FROM party_members WHERE uid=?')->execute([$u]); } echo 'cleaned';

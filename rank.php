@@ -33,7 +33,7 @@ echo '<div class="hr">--------</div>';
 $rows = [];
 if ($tab === 'power') {
     echo '【' . ($job !== '' ? h(jobs()[$job]['name']) : '全职业') . '战力榜·' . h(zones()[$u['zone'] ?? 'z1']['name'] ?? '') . '】（攻击×2+防御×1.5+生命/10+魔力/5+等级×5，本大区）<br>';
-    $sql = 'SELECT * FROM users WHERE zone=:zone' . ($job !== '' ? ' AND job=:job' : '') . ' ORDER BY lv DESC LIMIT 200';
+    $sql = 'SELECT * FROM users WHERE zone=:zone AND is_test=0' . ($job !== '' ? ' AND job=:job' : '') . ' ORDER BY lv DESC LIMIT 200';
     $st = db()->prepare($sql);
     if ($job !== '') {
         $st->execute(['zone' => (string) ($u['zone'] ?? 'z1'), 'job' => $job]);
@@ -54,7 +54,7 @@ if ($tab === 'power') {
     }
 } elseif ($tab === 'active') {
     echo '【活跃榜·' . h(zones()[$u['zone'] ?? 'z1']['name'] ?? '') . '】（累计在线时长，本大区）<br>';
-    $st = db()->prepare('SELECT username, job, lv, active_secs FROM users WHERE zone=? AND active_secs>0 ORDER BY active_secs DESC LIMIT 20');
+    $st = db()->prepare('SELECT username, job, lv, active_secs FROM users WHERE zone=? AND is_test=0 AND active_secs>0 ORDER BY active_secs DESC LIMIT 20');
     $st->execute([(string) ($u['zone'] ?? 'z1')]);
     $i = 0;
     while ($r = $st->fetch()) {
@@ -63,7 +63,7 @@ if ($tab === 'power') {
     }
 } elseif ($tab === 'spend') {
     echo '【消费榜·' . h(zones()[$u['zone'] ?? 'z1']['name'] ?? '') . '】（累计消费魔钻：商城/拍卖成交/赛马，本大区）<br>';
-    $st = db()->prepare('SELECT username, job, lv, diamonds_spent FROM users WHERE zone=? AND diamonds_spent>0 ORDER BY diamonds_spent DESC LIMIT 20');
+    $st = db()->prepare('SELECT username, job, lv, diamonds_spent FROM users WHERE zone=? AND is_test=0 AND diamonds_spent>0 ORDER BY diamonds_spent DESC LIMIT 20');
     $st->execute([(string) ($u['zone'] ?? 'z1')]);
     $i = 0;
     while ($r = $st->fetch()) {
@@ -72,7 +72,7 @@ if ($tab === 'power') {
     }
 } elseif ($tab === 'pet') {
     echo '【宠物榜·' . h(zones()[$u['zone'] ?? 'z1']['name'] ?? '') . '】（宠物战力=攻击×3+防御×2+生命/5+速度×2+等级×5，本大区）<br>';
-    $st = db()->prepare('SELECT p.*, u.username FROM pets p JOIN users u ON u.id=p.uid WHERE u.zone=? ORDER BY p.level DESC LIMIT 100');
+    $st = db()->prepare('SELECT p.*, u.username FROM pets p JOIN users u ON u.id=p.uid WHERE u.zone=? AND u.is_test=0 ORDER BY p.level DESC LIMIT 100');
     $st->execute([(string) ($u['zone'] ?? 'z1')]);
     $all = $st->fetchAll();
     $rows = [];
@@ -90,7 +90,7 @@ if ($tab === 'power') {
     }
 } else {
     echo '【赛马榜·' . h(zones()[$u['zone'] ?? 'z1']['name'] ?? '') . '】（累计赌马盈利，本大区）<br>';
-    $st = db()->prepare('SELECT username, job, lv, horse_won FROM users WHERE zone=? AND horse_won>0 ORDER BY horse_won DESC LIMIT 20');
+    $st = db()->prepare('SELECT username, job, lv, horse_won FROM users WHERE zone=? AND is_test=0 AND horse_won>0 ORDER BY horse_won DESC LIMIT 20');
     $st->execute([(string) ($u['zone'] ?? 'z1')]);
     $i = 0;
     while ($r = $st->fetch()) {

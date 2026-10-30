@@ -39,11 +39,20 @@ if (in_array($a, ['rank', 'prize', 'def', 'shop', 'shopbuy'], true)) {
     if ($a === 'prize') {
         echo '【奖 励】每日凌晨5点结算（邮件），每周一赛季重置（上周奖励再发一份）。<br>';
         echo '—— 段位（按名次）——<br>';
-        foreach ([1 => '王者', 3 => '大师', 10 => '钻石', 30 => '铂金', 70 => '黄金', 150 => '白银', 400 => '青铜', 999999 => '黑铁'] as $top => $nm) {
-            $tier = arena_tier($top === 1 ? 1 : ($top === 3 ? 3 : $top));
+        $prevMax = 0;
+        foreach (arena_tier_bounds() as $max => $tier) {
             [$bg, $bc] = arena_tier_bonus($tier[0]);
-            $range = $top === 999999 ? '400名以后' : '前' . $top . '名';
-            echo '<span style="color:' . $tier[2] . '">[' . $tier[1] . ']</span> ' . $range . '：名次奖励 + 段位保底(金' . $bg . '/币' . $bc . ')<br>';
+            if ($max >= PHP_INT_MAX) {
+                $range = '第' . ($prevMax + 1) . '名以后';
+            } elseif ($prevMax + 1 >= $max) {
+                $range = '第' . $max . '名';
+            } else {
+                $range = '第' . ($prevMax + 1) . '~' . $max . '名';
+            }
+            echo '<span style="color:' . $tier[2] . '">[' . $tier[1] . ']</span> ' . $range . '：段位保底(金' . $bg . '/币' . $bc . ')<br>';
+            if ($max < PHP_INT_MAX) {
+                $prevMax = $max;
+            }
         }
         echo '—— 名次奖励档位 ——<br>';
         foreach ([1, 2, 3, 10, 50, 100, 300, 1000, 999999] as $top) {

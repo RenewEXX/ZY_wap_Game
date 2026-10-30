@@ -103,7 +103,7 @@ clean43($ua); clean43($ub);
 
 // ---------- [天梯] 段位 & 保底 ----------
 echo "\n[5] 天梯段位\n";
-$cases=[[1,'王者'],[2,'大师'],[10,'钻石'],[30,'铂金'],[70,'黄金'],[150,'白银'],[400,'青铜'],[5000,'黑铁']];
+$cases=[[1,'王者'],[4,'大师'],[15,'钻石'],[50,'铂金'],[120,'黄金'],[300,'白银'],[650,'青铜'],[5000,'黑铁']];
 foreach($cases as [$rk,$want]){ $t=arena_tier($rk); ck43("第{$rk}名→{$want}", $t[1]===$want, $t[1]); }
 // 段位越高保底越多
 $lo=arena_tier_bonus('iron'); $hi=arena_tier_bonus('king');
@@ -121,7 +121,7 @@ db()->exec("DELETE FROM sys_kv WHERE k LIKE 'arena_bot_tick_%'");
 arena_ensure($zone);
 $season=arena_season();
 $cnt=(int)db()->query('SELECT COUNT(*) FROM arena_rank WHERE zone='.db()->quote($zone).' AND season='.db()->quote($season).' AND is_dummy=1')->fetchColumn();
-ck43('生成200机器人', $cnt===200, (string)$cnt);
+ck43('生成1000机器人', $cnt===arena_bot_count(), (string)$cnt);
 $topBefore=(int)db()->query('SELECT power FROM arena_rank WHERE zone='.db()->quote($zone).' AND season='.db()->quote($season).' AND rank=1')->fetchColumn();
 // 放一个高战力真玩家，触发锚点抬升 + 多次刷新收敛
 $ubig=(int)user_create('big'.mt_rand(1,999999),'x','warrior','z1',true,'tmp'); $_SESSION['uid']=$ubig;

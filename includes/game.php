@@ -6426,6 +6426,11 @@ function wear_equip(int $uid, int $eid): string
     $before = gear_stats($uid)['hp'];
     $mBefore = gear_stats($uid)['energy'];
     if ($eq['slot'] === 'ring') {
+        // 不允许同时穿戴两枚同名戒指
+        $same = (int) db()->query('SELECT COUNT(*) FROM equips WHERE uid=' . $uid . ' AND slot="ring" AND pos="wear" AND name=' . db()->quote((string) $eq['name']))->fetchColumn();
+        if ($same > 0) {
+            return '不能同时装备两枚同名戒指【' . $eq['name'] . '】。';
+        }
         $cnt = (int) db()->query('SELECT COUNT(*) FROM equips WHERE uid=' . $uid . ' AND slot="ring" AND pos="wear"')->fetchColumn();
         if ($cnt >= 2) {
             db()->exec('UPDATE equips SET pos="" WHERE id=(SELECT id FROM equips WHERE uid=' . $uid . ' AND slot="ring" AND pos="wear" ORDER BY id LIMIT 1)');

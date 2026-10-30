@@ -30,6 +30,17 @@ function arena_day_idx(): int
     return intdiv(strtotime(date('Y-m-d', $t) . ' 05:00'), 86400);
 }
 
+// 竞技场规模：假人总数 + 真人初始名次（需与 arena_dummy_power_for / arena_dummy_lv_for 的曲线上限一致）。
+function arena_bot_count(): int
+{
+    return 1000;
+}
+
+function arena_start_rank(): int
+{
+    return 1000;
+}
+
 // 竞技场假人名：模仿真实游戏排行榜里玩家的昵称习惯。
 // 观察到的真实构词模式（来自中文手游/端游常见昵称）：
 //   1) 汉语网感短语：「春树与小树」这种"两个字+与+两个字"
@@ -123,7 +134,8 @@ function arena_pop_anchor(string $zone): array
 // 第 4 名起回落到最强真人的 0.95 倍，再线性滑到榜尾，形成一道“前几名的墙”。
 function arena_dummy_power_for(int $rank, array $anchor): int
 {
-    $r = max(1, min(200, $rank));
+    $n = arena_bot_count();
+    $r = max(1, min($n, $rank));
     $maxPlayer = (int) ($anchor['maxpower'] ?? 0);
     $bottom = (int) $anchor['bottom_power'];
     if ($maxPlayer > 0) {
@@ -134,19 +146,20 @@ function arena_dummy_power_for(int $rank, array $anchor): int
         // 第 4 名起：从 0.95×最强真人 线性滑到榜尾
         $startR = 4;
         $startPower = (int) round($maxPlayer * 0.95);
-        $f = (200 - $r) / max(1, (200 - $startR)); // r=4→1, r=200→0
+        $f = ($n - $r) / max(1, ($n - $startR)); // r=4→1, r=$n→0
         $f = max(0.0, min(1.0, $f));
         return (int) round($bottom + ($startPower - $bottom) * $f);
     }
-    // 没有真人：旧默认曲线
+    // 没有真人：默认曲线
     $top = (int) $anchor['top_power'];
-    $f = (200 - $r) / 199.0;
+    $f = ($n - $r) / max(1, ($n - 1));
     return (int) round($bottom + ($top - $bottom) * $f);
 }
 
 function arena_dummy_lv_for(int $rank, array $anchor): int
 {
-    $r = max(1, min(200, $rank));
+    $n = arena_bot_count();
+    $r = max(1, min($n, $rank));
     $maxLv = (int) ($anchor['maxlv'] ?? 0);
     $bottom = 50;
     // 前 3 名机器人等级也压过最强真人一点（封顶 400）
@@ -154,7 +167,7 @@ function arena_dummy_lv_for(int $rank, array $anchor): int
         return min(400, $maxLv + (4 - $r) * 3);
     }
     $top = $maxLv > 0 ? max(100, min(300, $maxLv)) : 100;
-    $f = (200 - $r) / 199.0;
+    $f = ($n - $r) / max(1, ($n - 1));
     return (int) round($bottom + ($top - $bottom) * $f);
 }
 
@@ -220,8 +233,8 @@ function arena_season_settle_week(string $zone): void
             } catch (Throwable $e) {}
         }
     }
-    // —— 真人回初始位（100 名起），假人按战力重排 1..200 ——
-    $rk = 100;
+    // —— 真人回初始位（1000 名起），假人按战力重排 1..N ——
+    $rk = arena_start_rank();
     foreach ($rows as $r) {
         db()->prepare('UPDATE arena_rank SET rank=? WHERE uid=? AND zone=? AND season=?')->execute([$rk, (int) $r['uid'], $zone, $cur]);
         $rk++;
@@ -252,7 +265,8 @@ function arena_ensure(string $zone): void
     arena_season_settle_week($zone);
 
     $n = (int) db()->query('SELECT COUNT(*) FROM arena_rank WHERE zone=' . db()->quote($zone) . ' AND is_dummy=1 AND season=' . db()->quote($season))->fetchColumn();
-    if ($n >= 200) {
+    $botN = arena_bot_count();
+    if ($n >= $botN) {
         return;
     }
     $pool = arena_name_pool();
@@ -263,7 +277,7 @@ function arena_ensure(string $zone): void
     $minUid = (int) db()->query('SELECT MIN(uid) FROM arena_rank WHERE zone=' . db()->quote($zone) . ' AND is_dummy=1')->fetchColumn();
     $nextUid = ($minUid < 0 ? $minUid : 0) - 1;
     $st = db()->prepare('INSERT OR IGNORE INTO arena_rank (uid, zone, rank, name, job, lv, power, is_dummy, season) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)');
-    for ($rank = $n + 1; $rank <= 200; $rank++) {
+    for ($rank = $n + 1; $rank <= $botN; $rank++) {
         // 名字池有限，重试有限次 + 数字后缀兜底，避免池子耗尽时死循环。
         $nm = '';
         for ($try = 0; $try < 60; $try++) {
@@ -504,7 +518,7 @@ function arena_join(int $uid): string
         return '你已经在竞技场了。';
     }
     $players = (int) db()->query('SELECT COUNT(*) FROM arena_rank WHERE zone=' . db()->quote($zone) . ' AND season=' . db()->quote($season) . ' AND is_dummy=0')->fetchColumn();
-    $rank = 100 + $players;
+    $rank = arena_start_rank() + $players;
     // 把该名次及以下的人整体往下挤一位
     db()->prepare('UPDATE arena_rank SET rank=rank+1 WHERE zone=? AND season=? AND rank>=?')->execute([$zone, $season, $rank]);
     db()->prepare('INSERT INTO arena_rank (uid, zone, rank, name, job, lv, power, is_dummy, season) VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)')->execute([(int) $uid, $zone, $rank, (string) $u['username'], job_name_of($u), (int) $u['lv'], power_score($u), $season]);
@@ -917,17 +931,30 @@ function arena_rewards(int $rank): array
     return [500, 5, []];
 }
 
+// 天梯段位分档：名次上限 => [key, 中文, 代表色]（按名次从小到大）。
+// 竞技场已是 1000 名规模（真人从第 1000 名起爬），档位相应拉宽，冲榜更有层次。
+function arena_tier_bounds(): array
+{
+    return [
+        1 => ['king', '王者', '#ffcf40'],
+        5 => ['master', '大师', '#c56bff'],
+        20 => ['diamond', '钻石', '#5ad1ff'],
+        60 => ['platinum', '铂金', '#7cf3d0'],
+        150 => ['gold', '黄金', '#ffd84d'],
+        350 => ['silver', '白银', '#c9d4e0'],
+        700 => ['bronze', '青铜', '#c8895a'],
+        PHP_INT_MAX => ['iron', '黑铁', '#8a8a8a'],
+    ];
+}
+
 // 天梯段位：按排名划分。名次越小段位越高。
 function arena_tier(int $rank): array
 {
-    // [key, 中文, 代表色]
-    if ($rank <= 1)   { return ['king', '王者', '#ffcf40']; }
-    if ($rank <= 3)   { return ['master', '大师', '#c56bff']; }
-    if ($rank <= 10)  { return ['diamond', '钻石', '#5ad1ff']; }
-    if ($rank <= 30)  { return ['platinum', '铂金', '#7cf3d0']; }
-    if ($rank <= 70)  { return ['gold', '黄金', '#ffd84d']; }
-    if ($rank <= 150) { return ['silver', '白银', '#c9d4e0']; }
-    if ($rank <= 400) { return ['bronze', '青铜', '#c8895a']; }
+    foreach (arena_tier_bounds() as $max => $tier) {
+        if ($rank <= $max) {
+            return $tier;
+        }
+    }
     return ['iron', '黑铁', '#8a8a8a'];
 }
 

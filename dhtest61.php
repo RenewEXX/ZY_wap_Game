@@ -27,13 +27,13 @@ cleanArena61($zone, []);
 arena_ensure($zone);
 $st = db()->prepare('SELECT COUNT(*) FROM arena_rank WHERE zone=? AND season=? AND is_dummy=1');
 $st->execute([$zone, $season]);
-ck61('首次播种200假人', (int) $st->fetchColumn() === 200);
+ck61('首次播种1000假人', (int) $st->fetchColumn() === arena_bot_count());
 
 // 2) 名次 1..200 连续
 $st = db()->prepare('SELECT rank FROM arena_rank WHERE zone=? AND season=? AND is_dummy=1 ORDER BY rank ASC');
 $st->execute([$zone, $season]);
 $rr = array_map('intval', array_column($st->fetchAll(), 'rank'));
-ck61('假人名次1..200连续', $rr === range(1, 200));
+ck61('假人名次1..1000连续', $rr === range(1, arena_bot_count()));
 
 // 3) 赛季卡住：整区置为旧赛季，ensure 应把 200 假人迁到当前赛季（而非插不进去）
 db()->prepare('UPDATE arena_rank SET season=? WHERE zone=?')->execute(['2000-01-01', $zone]);
@@ -43,7 +43,7 @@ ck61('迁移前当前赛季为0', (int) $cntSt->fetchColumn() === 0);
 arena_ensure($zone);
 $cntSt->execute([$zone, $season]);
 $cnt = (int) $cntSt->fetchColumn();
-ck61('ensure自愈后当前赛季=200', $cnt === 200, (string) $cnt);
+ck61('ensure自愈后当前赛季=1000', $cnt === arena_bot_count(), (string) $cnt);
 
 // 4) 真人跨赛季不消失
 $uid = (int) user_create('ta61' . mt_rand(100000, 999999), 'x', 'warrior', 'z1', true, 'tmp');
@@ -86,7 +86,7 @@ $st = db()->prepare('SELECT rank FROM arena_rank WHERE zone=? AND season=? AND i
 $st->execute([$zone, $season]);
 $realRanks = array_map('intval', array_column($st->fetchAll(), 'rank'));
 ck61('赛季滚动:真人数=3', count($realRanks) === 3, (string) count($realRanks));
-ck61('赛季滚动:真人从第100名起连续', $realRanks === range(100, 100 + count($realRanks) - 1), implode(',', $realRanks));
+ck61('赛季滚动:真人从第1000名起连续', $realRanks === range(arena_start_rank(), arena_start_rank() + count($realRanks) - 1), implode(',', $realRanks));
 $st = db()->prepare('SELECT num FROM sys_kv WHERE k=?');
 $st->execute([$kvKey]);
 $curKey = (int) str_replace('-', '', $season);
@@ -94,7 +94,7 @@ ck61('赛季滚动:kv推进到当前赛季', (int) $st->fetchColumn() === $curKe
 $st = db()->prepare('SELECT rank FROM arena_rank WHERE zone=? AND season=? AND is_dummy=1 ORDER BY rank ASC');
 $st->execute([$zone, $season]);
 $br = array_map('intval', array_column($st->fetchAll(), 'rank'));
-ck61('赛季滚动:假人仍1..200连续', $br === range(1, 200));
+ck61('赛季滚动:假人仍1..1000连续', $br === range(1, arena_bot_count()));
 // 再调一次不应重复结算（kv 已是当前赛季，真人名次保持不变）
 arena_ensure($zone);
 $st = db()->prepare('SELECT rank FROM arena_rank WHERE zone=? AND season=? AND is_dummy=0 ORDER BY rank ASC');

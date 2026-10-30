@@ -208,6 +208,11 @@ function db_init(): void
         db()->exec('ALTER TABLE users ADD COLUMN avatar TEXT NOT NULL DEFAULT ""');
     } catch (Throwable $e) {
     }
+    // 测试账号标记：DH_TEST_MODE 下创建的账号记为 is_test=1，排行榜等处自动排除，避免测试数据污染真实榜单
+    try {
+        db()->exec('ALTER TABLE users ADD COLUMN is_test INTEGER NOT NULL DEFAULT 0');
+    } catch (Throwable $e) {
+    }
     try {
         db()->exec("UPDATE users SET account=username WHERE account=''");
     } catch (Throwable $e) {
@@ -816,10 +821,10 @@ function user_create(string $name, string $pass, string $job = '', string $zone 
 {
     $j = jobs()[$job] ?? jobs()['warrior'];
     $st = db()->prepare(
-        'INSERT INTO users (username, pass, lv, exp, hp, maxhp, mp, maxmp, atk, def, gold, loc, weapon, armor, potion, job, quest, zone, account, created_at) VALUES (?, ?, 1, 0, ?, ?, ?, ?, ?, ?, 20, "smithy", "", "", 0, ?, 0, ?, ?, ?)'
+        'INSERT INTO users (username, pass, lv, exp, hp, maxhp, mp, maxmp, atk, def, gold, loc, weapon, armor, potion, job, quest, zone, account, created_at, is_test) VALUES (?, ?, 1, 0, ?, ?, ?, ?, ?, ?, 20, "smithy", "", "", 0, ?, 0, ?, ?, ?, ?)'
     );
     // 新建1级：物攻法攻基础全0（武器给起步伤害，防具给起步防御）
-    $st->execute([$name, $hashed ? $pass : password_hash($pass, PASSWORD_DEFAULT), $j['hp'], $j['hp'], $j['mp'] ?? 30, $j['mp'] ?? 30, (int) $j['atk'], (int) $j['def'], $job, $zone, $account !== '' ? $account : $name, time()]);
+    $st->execute([$name, $hashed ? $pass : password_hash($pass, PASSWORD_DEFAULT), $j['hp'], $j['hp'], $j['mp'] ?? 30, $j['mp'] ?? 30, (int) $j['atk'], (int) $j['def'], $job, $zone, $account !== '' ? $account : $name, time(), defined('DH_TEST_MODE') ? 1 : 0]);
     $id = (int) db()->lastInsertId();
     // 出身加点：战士力量5，法师智慧8，猎手力量3坚毅2，牧师智慧5体质2（法师从创建就不长物理）
     // 出身点已含在职业底攻(jobs())里，属性面板保持0，特色直接体现在攻/防/血/魔

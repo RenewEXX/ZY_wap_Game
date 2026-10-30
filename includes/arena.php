@@ -821,15 +821,41 @@ function arena_targets(array $my): array
     $st = db()->prepare('SELECT * FROM arena_rank WHERE zone=? AND season=? AND rank>=? AND rank<? ORDER BY rank ASC LIMIT 60');
     $st->execute([$zone, $season, $lo, $r]);
     $all = $st->fetchAll();
-    // 挑5个 spread 开的对手
-    if (count($all) <= 5) {
-        return $all;
+    // 优先把真人对手挑出来（让真实玩家在列表里可见），其余用 spread 补机器人到 5 个
+    $real = [];
+    $bots = [];
+    foreach ($all as $t) {
+        if ((int) ($t['is_dummy'] ?? 0) === 0) {
+            $real[] = $t;
+        } else {
+            $bots[] = $t;
+        }
     }
-    $out = [$all[0]];
-    $step = (count($all) - 1) / 4;
-    for ($i = 1; $i <= 4; $i++) {
-        $out[] = $all[(int) round($i * $step)];
+    $out = [];
+    foreach ($real as $t) {
+        if (count($out) >= 5) {
+            break;
+        }
+        $out[] = $t;
     }
+    if (count($out) < 5 && $bots !== []) {
+        $need = 5 - count($out);
+        if (count($bots) <= $need) {
+            foreach ($bots as $b) {
+                if (count($out) >= 5) {
+                    break;
+                }
+                $out[] = $b;
+            }
+        } else {
+            $out[] = $bots[0];
+            $step = (count($bots) - 1) / max(1, ($need - 1));
+            for ($i = 1; $i < $need; $i++) {
+                $out[] = $bots[(int) round($i * $step)];
+            }
+        }
+    }
+    usort($out, fn($a, $b) => (int) $a['rank'] <=> (int) $b['rank']);
     return $out;
 }
 

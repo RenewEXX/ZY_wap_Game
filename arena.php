@@ -140,8 +140,15 @@ echo '当前：第' . (int) $me['rank'] . '名 <span style="color:' . $myTier[2]
 echo '[<a href="arena.php?a=targets">挑战对手</a>] [<a href="arena.php?a=rank">查看排名</a>] [<a href="arena.php?a=prize">查看奖励</a>] [<a href="arena.php?a=def">防守记录</a>] [<a href="arena.php?a=shop">竞技场商店</a>]<br>';
 if ($a === 'targets') {
     echo '<div class="hr">--------</div>【选 择 对 手】可挑战范围：第' . max(1, (int) $me['rank'] - 34) . '名到第' . ((int) $me['rank'] - 1) . '名<br>';
+    $realCnt = 0;
+    try {
+        $realCnt = (int) db()->query('SELECT COUNT(*) FROM arena_rank WHERE zone=' . db()->quote((string) $me['zone']) . ' AND season=' . db()->quote((string) $me['season']) . ' AND is_dummy=0')->fetchColumn();
+    } catch (Throwable $e) {
+    }
+    echo '本大区真人玩家：' . $realCnt . ' 人（含你）' . ($realCnt <= 1 ? '，<span class="muted">暂无其他真人对手</span>' : '') . '<br>';
     foreach (arena_targets($me) as $t) {
-        echo '第' . (int) $t['rank'] . '名：' . h($t['name']) . ' Lv' . (int) $t['lv'] . ' 战力' . (int) $t['power'] . ' <a href="arena.php?a=fight&rank=' . (int) $t['rank'] . '">挑战</a><br>';
+        $tag = ((int) ($t['is_dummy'] ?? 0) === 0) ? '【真人】' : '';
+        echo '第' . (int) $t['rank'] . '名：' . $tag . h($t['name']) . ' Lv' . (int) $t['lv'] . ' 战力' . (int) $t['power'] . ' <a href="arena.php?a=fight&rank=' . (int) $t['rank'] . '">挑战</a><br>';
     }
     echo '额外：<a href="arena.php?a=buy_gold">10金买1次</a> <a href="arena.php?a=buy_diamond">1魔钻买5次</a><br>';
 }

@@ -184,20 +184,30 @@ function arena_dummy_lv(int $rank): int
 function arena_ensure(string $zone): void
 {
     $season = arena_season();
+
+    // 赛季兜底自愈：arena_rank 主键是 (uid, zone)，假人 uid 固定为负数(按名次)。
+    // 若某周「周一结算 arena_tick」没跑到（服务器正好没人/错过05:00），旧赛季的假人和真人会卡在上一季；
+    // 此时再按同一批 uid 播种会全部撞主键被忽略，导致「竞技场一个人都没有」。这里先把本区其它赛季的行
+    // 整体并入当前赛季（保留 uid，改 season 即可，不撞主键），再按需补齐假人。
+    $stale = (int) db()->query('SELECT COUNT(*) FROM arena_rank WHERE zone=' . db()->quote($zone) . ' AND season<>' . db()->quote($season))->fetchColumn();
+    if ($stale > 0) {
+        db()->prepare('UPDATE arena_rank SET season=? WHERE zone=? AND season<>?')->execute([$season, $zone, $season]);
+    }
+
     $n = (int) db()->query('SELECT COUNT(*) FROM arena_rank WHERE zone=' . db()->quote($zone) . ' AND is_dummy=1 AND season=' . db()->quote($season))->fetchColumn();
     if ($n >= 200) {
         return;
     }
-    if ($n > 0) { return; }
     $pool = arena_name_pool();
     $jobs = ['战士', '法师', '猎手', '牧师', '召唤师'];
-    $pets = ['影猫', '石灵', '幽灵', '幼龙', '深渊魔龙'];
     $used = [];
     $anchor = arena_pop_anchor($zone);
+    // 新假人的 uid 从现有最小 uid 再往下分配，绝不与本区已有行撞主键
+    $minUid = (int) db()->query('SELECT MIN(uid) FROM arena_rank WHERE zone=' . db()->quote($zone) . ' AND is_dummy=1')->fetchColumn();
+    $nextUid = ($minUid < 0 ? $minUid : 0) - 1;
     $st = db()->prepare('INSERT OR IGNORE INTO arena_rank (uid, zone, rank, name, job, lv, power, is_dummy, season) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)');
-    for ($r = 1; $r <= 200; $r++) {
-        // 名字池有限，200个假人必然要重复取样；用有限次重试 + 数字后缀兜底，
-        // 避免 do-while 在池子耗尽后死循环。
+    for ($rank = $n + 1; $rank <= 200; $rank++) {
+        // 名字池有限，重试有限次 + 数字后缀兜底，避免池子耗尽时死循环。
         $nm = '';
         for ($try = 0; $try < 60; $try++) {
             $cand = $pool[array_rand($pool)];
@@ -205,7 +215,6 @@ function arena_ensure(string $zone): void
                 $nm = $cand;
                 break;
             }
-            // 池子吃紧就带随机数字，几乎不会撞
             $cand .= random_int(2, 9999);
             if (!isset($used[$cand])) {
                 $nm = $cand;
@@ -213,11 +222,14 @@ function arena_ensure(string $zone): void
             }
         }
         if ($nm === '') {
-            $nm = $pool[array_rand($pool)] . '_' . $r;
+            $nm = $pool[array_rand($pool)] . '_' . $rank;
         }
         $used[$nm] = true;
-        // 假人uid用负数（表主键是uid+zone，全0会撞键）
-        try { $st->execute([-$r, $zone, $r, $nm, $jobs[array_rand($jobs)], arena_dummy_lv_for($r, $anchor), arena_dummy_power_for($r, $anchor), $season]); } catch (Throwable $e) { break; }
+        try {
+            $st->execute([$nextUid--, $zone, $rank, $nm, $jobs[array_rand($jobs)], arena_dummy_lv_for($rank, $anchor), arena_dummy_power_for($rank, $anchor), $season]);
+        } catch (Throwable $e) {
+            break;
+        }
     }
 }
 

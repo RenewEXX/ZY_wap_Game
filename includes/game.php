@@ -9372,11 +9372,12 @@ function auto_sell_check(int $uid, int $q): string
     if (empty($mats['autosell_on']) || empty($mats['autosell_time'])) { return ''; }
     $lv = (int) ($mats['autosell_q'] ?? 2);
     if ($q > $lv) { return ''; }
-    $del = db()->query('SELECT id FROM equips WHERE uid=' . $uid . ' AND quality=' . $q . ' ORDER BY id DESC LIMIT 1')->fetchColumn();
+    // 只卖未穿戴、未强化的装备，避免误卖身上的/加过强的
+    $del = db()->query('SELECT id FROM equips WHERE uid=' . $uid . ' AND quality=' . $q . ' AND pos="" AND IFNULL(enhance_level,0)=0 ORDER BY id DESC LIMIT 1')->fetchColumn();
     if ($del) { db()->prepare('DELETE FROM equips WHERE id=?')->execute([(int) $del]); }
     add_mat($uid, 'autosell_time', -60);
     if ((mats_of($uid)['autosell_time'] ?? 0) <= 0) { db()->prepare('DELETE FROM mats WHERE uid=? AND mat=?')->execute([$uid, 'autosell_on']); }
-    $price = [0 => 5, 1 => 12, 2 => 30][$q] ?? 5;
+    $price = [0 => 5, 1 => 12, 2 => 30, 3 => 75][$q] ?? 5;
     $u = user_by_id($uid);
     if ($u) { $u['gold'] = (int) $u['gold'] + $price; user_save($u); }
     return '（自动售卖+' . $price . '铜）';

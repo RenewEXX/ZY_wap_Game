@@ -144,7 +144,7 @@ if ($a === 'autosell') {
     $v = (string) ($_GET['v'] ?? '');
     if ($v === '1') { mat_set((int) $u['id'], 'autosell_on', 1); flash_set('自动售卖开了。'); }
     elseif ($v === '0') { db()->prepare('DELETE FROM mats WHERE uid=? AND mat=?')->execute([(int) $u['id'], 'autosell_on']); flash_set('自动售卖关了。'); }
-    else { $qq = (int) ($_GET['q'] ?? 2); if (!in_array($qq, [0, 1, 2], true)) { $qq = 2; } mat_set((int) $u['id'], 'autosell_q', $qq); flash_set('自动售卖只卖' . ['低劣', '普通', '优秀'][$qq] . '及以下。'); }
+    else { $qq = (int) ($_GET['q'] ?? 2); if (!in_array($qq, [0, 1, 2], true)) { $qq = 2; } mat_set((int) $u['id'], 'autosell_q', $qq); flash_set('自动售卖只卖' . equip_qualities()[$qq] . '及以下。'); }
     header('Location: bag.php?tab=func');
     exit;
 }
@@ -408,7 +408,7 @@ if ($tab === 'equip') {
     $am = mats_of((int) $u['id']);
     echo '自动售卖：' . (!empty($am['autosell_on']) ? '开(剩' . h(dummy_fmt((int) ($am['autosell_time'] ?? 0))) . ') <a href="bag.php?a=autosell&v=0">关</a>' : (empty($am['autosell_time']) ? '没时间，去<a href="mall.php">商城功能栏</a>买' : '<a href="bag.php?a=autosell&v=1">开</a>'));
     $aq = (int) ($am['autosell_q'] ?? 2);
-    echo ' 卖：' . ($aq === 0 ? '<b>低劣</b>' : '<a href="bag.php?a=autosell&q=0">低劣</a>') . ' ' . ($aq === 1 ? '<b>普通及以下</b>' : '<a href="bag.php?a=autosell&q=1">普通及以下</a>') . ' ' . ($aq === 2 ? '<b>优秀及以下</b>' : '<a href="bag.php?a=autosell&q=2">优秀及以下</a>') . '<br>';
+    echo ' 卖：' . ($aq === 0 ? '<b>低劣</b>' : '<a href="bag.php?a=autosell&q=0">低劣</a>') . ' ' . ($aq === 1 ? '<b>普通及以下</b>' : '<a href="bag.php?a=autosell&q=1">普通及以下</a>') . ' ' . ($aq === 2 ? '<b>稀有及以下</b>' : '<a href="bag.php?a=autosell&q=2">稀有及以下</a>') . '<br>';
     $cardLeft = (int) ($mats['exp_card_until'] ?? 0) - time();
     if ($cardLeft > 0) {
         $func = true;

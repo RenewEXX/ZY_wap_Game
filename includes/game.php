@@ -5852,8 +5852,8 @@ function roll_drop(int $uid, string $mid, int $elite = 0): string
     if (function_exists('region_dungeon_boss_set_piece')) {
         $sp = region_dungeon_boss_set_piece($mid);
         if ($sp !== null) {
-            // 25% 概率额外掉一件（封顶史诗）—— 套装件主要来源，但不宜过高避免刷爆
-            if (mt_rand(1, 100) <= 25) {
+            // 55% 概率额外掉一件（封顶史诗）
+            if (mt_rand(1, 100) <= 55) {
                 $spBase = (string) $sp['base'];
                 $spSlot = (string) $sp['slot'];
                 // 若是职业武器，按玩家职业换成对应武器

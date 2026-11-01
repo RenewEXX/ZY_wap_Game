@@ -94,10 +94,17 @@ if ($a === 'start' && isset($allm[$mid])) {
         $m['gold'] = (int) $m['gold'] * 2;
     }
     $old = $_SESSION['battle'] ?? null;
+    $isBossMid = ($mid === boss_of_map((string) $u['loc']));
     if (is_array($old) && ($old['id'] ?? '') === $mid && (int) ($old['left'] ?? 0) > 0 && (int) ($old['elite'] ?? 0) === $elite) {
-        $old['num'] = (int) ($old['num'] ?? 0) + $n;
-        $old['left'] = (int) ($old['left'] ?? 0) + $n;
-        $old['log'] = '又有' . $n . '只' . $m['name'] . '加入围殴！(场上剩' . $old['left'] . '只)';
+        // BOSS 是单体，绝不应叠加数量（否则 HP 归零后会"满血再打一次"，掉落翻倍）
+        if (!$isBossMid) {
+            $old['num'] = (int) ($old['num'] ?? 0) + $n;
+            $old['left'] = (int) ($old['left'] ?? 0) + $n;
+            $old['log'] = '又有' . $n . '只' . $m['name'] . '加入围殴！(场上剩' . $old['left'] . '只)';
+        } else {
+            $old['num'] = 1;
+            $old['left'] = 1;
+        }
         $_SESSION['battle'] = $old;
         header('Location: fight.php');
         exit;

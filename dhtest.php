@@ -60,7 +60,10 @@ chk('不够时报错', rs_mat_pay(1, 'soul_', 99) !== '', true);
 mat_set(1, 'jade_fire', 0);
 mat_set(1, 'jade_dark', 0);
 mat_set(1, 'soul_fire', 0);
-// 斩龙 → 一个月锁 + 公屏播报
+// 斩龙 → 一个月锁 + 公屏播报（先确保这条龙处于存活态，保证断言确定）
+drg_kv_set('wb_done_aetherine', 0);
+drg_kv_set('wb_hp_aetherine', drg_max_hp('aetherine'));
+drg_kv_set('wb_next_aetherine', 0);
 $before = (int) db()->query("SELECT COUNT(*) FROM chat_msgs WHERE username='六圣柱'")->fetchColumn();
 drg_kill(1, 'aetherine');
 chk('斩龙标记', drg_done('aetherine'), 1);

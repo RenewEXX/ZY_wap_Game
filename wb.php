@@ -112,11 +112,11 @@ if ($a === 'hit') {
     // 龙王对自身属性完全免疫：用同属性打它 = 挠痒
     $immune = $atkEl !== '' && $atkEl === (string) $d['el'];
     $real = drg_damage_vs((string) $d['el'], $atkEl, $pd);
+    // 扣血 + 记排行；只有把血打空且抢到击杀权时才会判死并发奖
+    $killed = false;
     if ($real > 0) {
-        drg_hurt($mid, $real);
-        drg_add_dmg($uid, (string) $u['username'], $mid, $real);
+        $killed = drg_apply_damage($uid, (string) $u['username'], $mid, $real);
     }
-    $hpLeft = drg_status($mid)['hp'];
     $log = '你放出' . $skillName;
     if ($atkEl !== '') {
         $log .= '（' . element_name($atkEl) . '属性）';
@@ -129,9 +129,7 @@ if ($a === 'hit') {
         $log .= $d['short'] . '对' . element_name((string) $d['el']) . '伤完全免疫——它的力量就是你的力量。';
     }
 
-    if ($hpLeft <= 0 && drg_done($mid) !== 1) {
-        drg_kill($uid, $mid);
-        drg_rewards($mid);
+    if ($killed) {
         user_save($u);
         flash_set($log . $d['name'] . '倒下了！全服已收到公告，它将沉睡一个月。奖励按伤害排行发邮件：' . $d['set_name'] . '、传奇' . $d['short'] . '蛋、' . element_name((string) $d['el']) . '龙魂龙玉。');
         header('Location: wb.php?d=' . urlencode($mid));

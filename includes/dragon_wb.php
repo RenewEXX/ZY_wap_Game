@@ -84,6 +84,7 @@ function drg_tick(): void
             drg_kv_set('wb_hp_' . $mid, drg_max_hp($mid));
             drg_kv_set('wb_done_' . $mid, 0);
             drg_kv_set('wb_next_' . $mid, 0);
+            drg_kv_set('wb_rewarded_' . $mid, 0);
             continue;
         }
         if (drg_done($mid) === 1 && drg_respawn_left($mid) <= 0) {
@@ -97,6 +98,7 @@ function drg_respawn(string $mid): void
     drg_kv_set('wb_hp_' . $mid, drg_max_hp($mid));
     drg_kv_set('wb_done_' . $mid, 0);
     drg_kv_set('wb_next_' . $mid, 0);
+    drg_kv_set('wb_rewarded_' . $mid, 0);
     db()->prepare('DELETE FROM wb_dmg WHERE mid=?')->execute([(string) $mid]);
     $d = dragon($mid);
     if ($d !== []) {
@@ -129,11 +131,17 @@ function drg_world_chat(string $text, string $who = '六圣柱'): void
         ->execute([$who, $text, time()]);
 }
 
-// 斩龙：血量归零、标记已讨伐、锁定一个月复生、全服播报
-function drg_kill(int $uid, string $mid): void
+// 斩龙：原子抢占（只有把 wb_done 从 0 改到 1 的请求算击杀者）→ 血量归零、锁定一个月、全服播报。
+// 返回 true 表示本次调用真正完成了击杀（负责后续发奖），false 表示已被别人击杀或本就没死。
+function drg_kill(int $uid, string $mid): bool
 {
+    db()->prepare('INSERT OR IGNORE INTO sys_kv (k, num) VALUES (?, 0)')->execute(['wb_done_' . $mid]);
+    $st = db()->prepare('UPDATE sys_kv SET num=1 WHERE k=? AND num=0');
+    $st->execute(['wb_done_' . $mid]);
+    if ($st->rowCount() < 1) {
+        return false;
+    }
     drg_kv_set('wb_hp_' . $mid, 0);
-    drg_kv_set('wb_done_' . $mid, 1);
     drg_kv_set('wb_next_' . $mid, time() + drg_respawn_secs());
     $d = dragon($mid);
     if ($d !== []) {
@@ -144,6 +152,26 @@ function drg_kill(int $uid, string $mid): void
             '六圣柱'
         );
     }
+    return true;
+}
+
+// 结算一次对龙王的伤害：扣血 + 记排行；只有把血打空且抢到击杀权时，才判死并发奖。
+// 保证「BOSS 死后才分配奖励」且同一场讨伐只发一次。
+function drg_apply_damage(int $uid, string $name, string $mid, int $dmg): bool
+{
+    if ($dmg <= 0 || drg_done($mid) === 1) {
+        return false;
+    }
+    $left = drg_hurt($mid, $dmg);
+    drg_add_dmg($uid, $name, $mid, $dmg);
+    if ($left > 0) {
+        return false;
+    }
+    if (!drg_kill($uid, $mid)) {
+        return false;
+    }
+    drg_rewards($mid);
+    return true;
 }
 
 // ---------- 伤害排行（每条龙各一份）----------
@@ -197,6 +225,8 @@ function drg_atk_el(?array $sk): string
 }
 
 // 龙王当前状态：血量/是否今日已讨伐/百分比
+// 注意：这里的「hp<=0 但没标 done 时回满」只为展示兜底；击杀判定请用 drg_hurt() 的返回值 / drg_apply_damage()，
+// 不要用本函数判断是否死亡，否则会把「刚被打空」误判成满血。
 function drg_status(string $mid): array
 {
     $max = drg_max_hp($mid);
@@ -315,6 +345,13 @@ function drg_rewards(string $mid): void
     }
     $rank = drg_rank($mid);
     if ($rank === []) {
+        return;
+    }
+    // 同一次讨伐只发一次奖：wb_rewarded_<mid> 原子置 1，重复调用直接返回
+    db()->prepare('INSERT OR IGNORE INTO sys_kv (k, num) VALUES (?, 0)')->execute(['wb_rewarded_' . $mid]);
+    $guardStmt = db()->prepare('UPDATE sys_kv SET num=1 WHERE k=? AND num=0');
+    $guardStmt->execute(['wb_rewarded_' . $mid]);
+    if ($guardStmt->rowCount() < 1) {
         return;
     }
     $pieces = dragon_set_pieces((string) $d['set']);

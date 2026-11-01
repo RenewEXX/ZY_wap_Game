@@ -37,7 +37,7 @@ if (in_array($a, ['rank', 'prize', 'def', 'shop', 'shopbuy'], true)) {
         exit;
     }
     if ($a === 'prize') {
-        echo '【奖 励】名次奖励每日凌晨5点结算（邮件）；段位奖励每2周结算一次（邮件）。<br>';
+        echo '【奖 励】（1金=100银=10000铜）名次奖励每日凌晨5点结算（邮件）；段位奖励每2周结算一次（邮件）。<br>';
         echo '—— 段位奖励（每2周，按当时名次段位）——<br>';
         $prevMax = 0;
         foreach (arena_tier_bounds() as $max => $tier) {
@@ -49,7 +49,8 @@ if (in_array($a, ['rank', 'prize', 'def', 'shop', 'shopbuy'], true)) {
             } else {
                 $range = '第' . ($prevMax + 1) . '~' . $max . '名';
             }
-            echo '<span style="color:' . $tier[2] . '">[' . $tier[1] . ']</span> ' . $range . '：' . h(fmt_money($bg)) . '/竞技场币x' . $bc . '<br>';
+            $pay = ($bg <= 0 && $bc <= 0) ? '无' : (h(fmt_money($bg)) . '/竞技场币x' . $bc);
+            echo '<span style="color:' . $tier[2] . '">[' . $tier[1] . ']</span> ' . $range . '：' . $pay . '<br>';
             if ($max < PHP_INT_MAX) {
                 $prevMax = $max;
             }

@@ -1812,6 +1812,7 @@ function pet_species(): array
         'mist_fox' => ['name' => '雾狐', 'quality' => 'rare', 'growth' => 1.35, 'atk' => 11, 'def' => 5, 'hp' => 60, 'spd' => 22, 'crit' => 7, 'cd' => 160, 'active' => '雾隐突袭', 'mult' => 1.5, 'passive' => '雾隐：闪避+3%', 'source' => '商城砸蛋'],
         'thunder_bird' => ['name' => '雷鸟', 'quality' => 'rare', 'growth' => 1.35, 'atk' => 12, 'def' => 4, 'hp' => 55, 'spd' => 24, 'crit' => 8, 'cd' => 165, 'active' => '落雷', 'mult' => 1.6, 'passive' => '雷速：出手更快', 'source' => '商城砸蛋'],
         'abyss_witch' => ['name' => '魔女阿比希尔', 'quality' => 'legend', 'growth' => 2.4, 'atk' => 38, 'def' => 12, 'hp' => 120, 'spd' => 20, 'crit' => 12, 'cd' => 175, 'active' => '魔女低语', 'mult' => 1.7, 'passive' => '月之庇佑：低语偷取敌人5%生命', 'source' => '限时活动掉落'],
+        'pumpkin_jack' => ['name' => '南瓜灯魔·杰克', 'quality' => 'legend', 'growth' => 2.4, 'atk' => 37, 'def' => 13, 'hp' => 128, 'spd' => 19, 'crit' => 12, 'cd' => 178, 'active' => '南瓜爆裂', 'mult' => 1.72, 'passive' => '惊魂夜：爆裂灼烧并偷取敌人5%生命', 'source' => '万圣节限时抽取'],
         'earth_dragon' => ['name' => '土龙岳柱幼体', 'quality' => 'legend', 'growth' => 2.1, 'atk' => 16, 'def' => 24, 'hp' => 380, 'spd' => 10, 'crit' => 5, 'cd' => 190, 'active' => '岳柱镇压', 'mult' => 1.2, 'passive' => '磐岩：承伤-25%', 'source' => '岩狱泰坦掉落'],
     ] + dragon_pets();
 }
@@ -1835,6 +1836,7 @@ function pet_eggs(): array
         'egg_fox' => ['species' => 'mist_fox', 'name' => '雾狐蛋'],
         'egg_bird' => ['species' => 'thunder_bird', 'name' => '雷鸟蛋'],
         'witch_egg' => ['species' => 'abyss_witch', 'name' => '魔女之茧（限时）'],
+        'pumpkin_jack_egg' => ['species' => 'pumpkin_jack', 'name' => '南瓜灯魔蛋（限时）'],
         'frost_egg' => ['species' => 'frost_wolf_pup', 'name' => '霜狼幼崽蛋'],
         'earth_dragon_egg' => ['species' => 'earth_dragon', 'name' => '土龙岳柱幼体蛋'],
         // 六龙王世界BOSS幼体蛋：名字跟 pets 里的「XX幼体」对齐
@@ -1857,9 +1859,23 @@ function witch_event_active(): bool
 
 function shop_egg_pool(): array
 {
-    // 传奇宠物不直购：蛋池只到史诗（幼龙/霜狼幼崽），魔女传奇只能活动掉落
+    // 传奇宠物不直购：蛋池只到史诗（幼龙/霜狼幼崽），传奇只能活动掉落/限时抽取
     $pool = ['egg_slime' => 500, 'egg_stone' => 200, 'egg_ember' => 120, 'egg_ghost' => 80, 'egg_fox' => 40, 'egg_bird' => 30, 'egg_dragon' => 20, 'frost_egg' => 8];
+    // 万圣节活动季：南瓜灯魔·杰克（传说）限时加入砸蛋随机池，超低权重
+    if (halloween_pool_active()) {
+        $pool = ['pumpkin_jack_egg' => 6] + $pool;
+    }
     return $pool;
+}
+
+// 万圣节活动季（抽取池限定宠物的窗口）：每年 10/24 ~ 11/07；测试可 $GLOBALS['__halloween_pool'] 强制
+function halloween_pool_active(): bool
+{
+    if (isset($GLOBALS['__halloween_pool'])) {
+        return (bool) $GLOBALS['__halloween_pool'];
+    }
+    $md = date('m-d');
+    return $md >= '10-24' && $md <= '11-07';
 }
 
 function pet_stats(array $p): array
@@ -1894,6 +1910,11 @@ function pet_stats(array $p): array
     if ($p['species'] === 'abyss_witch') {
         $s['atk'] = (int) ($s['atk'] * 1.3);
         $s['maxhp'] = (int) ($s['maxhp'] * 0.7);
+    }
+    if ($p['species'] === 'pumpkin_jack') {
+        $s['atk'] = (int) ($s['atk'] * 1.28);
+        $s['def'] = (int) ($s['def'] * 1.1);
+        $s['maxhp'] = (int) ($s['maxhp'] * 0.72);
     }
     // 火龙多伊尔幼体：龙威 攻击+20%、承伤-10%（承伤在 pet_hurt 里算）
     if ($p['species'] === 'fire_drake') {
@@ -2015,6 +2036,12 @@ function pet_attack(array &$u, array &$b): string
             $u['hp'] = min((int) $u['maxhp'], (int) $u['hp'] + $steal);
             $dmg = (int) ($dmg * (float) $sp['mult']);
             $tag = '（魔女低语，偷取' . $steal . '点生命）';
+        } elseif ($p['species'] === 'pumpkin_jack' && mt_rand(1, 100) <= 25 && (int) ($b['hp'] ?? 0) > 0) {
+            $burn = max(1, (int) ((int) $b['hp'] * 0.05));
+            $b['hp'] = (int) $b['hp'] - $burn;
+            $u['hp'] = min((int) $u['maxhp'], (int) $u['hp'] + $burn);
+            $dmg = (int) ($dmg * (float) $sp['mult']);
+            $tag = '（南瓜爆裂，灼烧偷取' . $burn . '点生命）';
         } elseif ($p['species'] === 'ghost') {
             $b['fear'] = 3;
             $dmg = (int) ($dmg * (float) $sp['mult']);

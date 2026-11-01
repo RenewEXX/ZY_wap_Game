@@ -143,6 +143,9 @@ function require_login(): array
     if (function_exists('festival_mail_tick')) {
         festival_mail_tick($u);
     }
+    if (function_exists('equip_expire_tick')) {
+        equip_expire_tick($u);
+    }
     background_battle($u);
     offline_tick($u);
     dummy_tick($u);

@@ -5820,6 +5820,9 @@ function gear_stats(int $uid): array
     $st = db()->prepare('SELECT * FROM equips WHERE uid=? AND pos="wear"');
     $st->execute([$uid]);
     while ($row = $st->fetch()) {
+        if ((int) ($row['expires_at'] ?? 0) > 0 && (int) $row['expires_at'] < time()) {
+            continue;
+        }
         $mult = enhance_rate($row);
         $aff = json_decode((string) $row['affixes'], true);
         if (!is_array($aff)) {
@@ -9614,14 +9617,14 @@ function title_bonus(string $tid): array
 {
     return ['title_ch1' => ['atk' => 30.0, 'hp' => 500.0], 'title_ch2' => ['def' => 30.0, 'hp' => 800.0], 'title_ch3' => ['crit' => 1.0, 'atk' => 50.0], 'title_ch4' => ['mdef' => 40.0, 'hp' => 1200.0], 'title_ch5' => ['matk' => 50.0, 'hp' => 1500.0], 'title_rb2' => ['skill_damage' => 3.0, 'hp' => 2000.0], 'title_dragon1' => ['critdmg' => 5.0, 'hp' => 1500.0], 'title_dragon2' => ['atk' => 100.0, 'matk' => 100.0], 'title_dragon3' => ['skill_damage' => 8.0, 'truedmg' => 200.0], 'title_god' => ['skill_damage' => 12.0, 'truedmg' => 500.0, 'hp' => 5000.0], 'title_rs_god' => ['skill_damage' => 20.0, 'truedmg' => 1000.0, 'all_attr' => 100.0], 'title_rs_lord' => ['skill_damage' => 16.0, 'truedmg' => 700.0, 'all_attr' => 70.0], 'title_rs_king' => ['skill_damage' => 13.0, 'truedmg' => 500.0, 'all_attr' => 50.0], 'title_rs_gen' => ['skill_damage' => 10.0, 'truedmg' => 300.0, 'all_attr' => 30.0], 'title_halloween' => ['critdmg' => 3.0, 'hp' => 800.0], 'title_national' => ['atk' => 40.0, 'hp' => 1000.0], 'title_newyear' => ['spd' => 5.0, 'hp' => 800.0], 'title_spring' => ['atk' => 50.0, 'def' => 20.0], 'title_christmas' => ['hp' => 1200.0, 'crit' => 2.0], 'title_labor' => ['def' => 30.0, 'hp' => 900.0]][$tid] ?? [];
 }
-function give_title(int $uid, string $tid, int $req = 100): bool
+function give_title(int $uid, string $tid, int $req = 100, int $expires = 0): bool
 {
     $names = title_ids();
     if (!isset($names[$tid])) { return false; }
     // 允许重复获得（不再吞掉第二个）
     $aff = [];
     foreach (title_bonus($tid) as $k => $v) { $aff[] = ['id' => $k, 'v' => $v, 'legend' => true]; }
-    db()->prepare('INSERT INTO equips (uid, slot, name, quality, affixes, pos, req_lv) VALUES (?, "title", ?, 4, ?, "", ?)')->execute([$uid, $names[$tid], json_encode($aff, JSON_UNESCAPED_UNICODE), $req]);
+    db()->prepare('INSERT INTO equips (uid, slot, name, quality, affixes, pos, req_lv, expires_at) VALUES (?, "title", ?, 4, ?, "", ?, ?)')->execute([$uid, $names[$tid], json_encode($aff, JSON_UNESCAPED_UNICODE), $req, $expires]);
     return true;
 }
 function title_list(int $uid): array
@@ -11538,7 +11541,7 @@ function festivals(): array
             'md' => '10-01',
             'sender' => '节日使者',
             'mail_title' => '国庆节快乐！金龙献瑞',
-            'mail_body' => "国庆节快乐，冒险者！\n10月1日-7日是【国庆·金龙献瑞】：\n· 刷怪击杀有几率掉落【红旗】\n· 集满 20 面红旗\n· 去 任务 → 活动任务 领取：随机宠物蛋×2 + 限定称号【金龙献瑞】+ 10 魔钻\n山河无恙，愿你征途坦荡！",
+            'mail_body' => "国庆节快乐，冒险者！\n10月1日-7日是【国庆·金龙献瑞】：\n· 刷怪击杀有几率掉落【红旗】\n· 集满 140 面红旗\n· 去 任务 → 活动任务 领取：随机宠物蛋×14 + 限定称号【金龙献瑞】+ 20 魔钻\n山河无恙，愿你征途坦荡！",
             'att' => [],
             'mat' => 'flag', 'mat_name' => '红旗', 'mat_need' => 20,
             'diamonds' => 10,
@@ -11551,7 +11554,7 @@ function festivals(): array
             'md' => '12-31',
             'sender' => '节日使者',
             'mail_title' => '新年快乐！烟花精灵降临',
-            'mail_body' => "新年快乐，冒险者！\n12月31日-1月2日是【元旦·烟花精灵】：\n· 刷怪击杀有几率掉落【烟花】\n· 集满 15 个烟花\n· 去 任务 → 活动任务 领取：随机宠物蛋×2 + 限定称号【新年快乐】+ 10 魔钻\n新岁启封，愿你所求皆如愿！",
+            'mail_body' => "新年快乐，冒险者！\n12月31日-1月2日是【元旦·烟花精灵】：\n· 刷怪击杀有几率掉落【烟花】\n· 集满 60 个烟花\n· 去 任务 → 活动任务 领取：随机宠物蛋×6 + 限定称号【新年快乐】+ 10 魔钻\n新岁启封，愿你所求皆如愿！",
             'att' => [],
             'mat' => 'firework', 'mat_name' => '烟花', 'mat_need' => 15,
             'diamonds' => 10,
@@ -11564,7 +11567,7 @@ function festivals(): array
             'md' => $spring[0],
             'sender' => '节日使者',
             'mail_title' => '春节快乐！年兽驱邪',
-            'mail_body' => "春节快乐，冒险者！\n春节活动期间是【春节·年兽驱邪】：\n· 刷怪击杀有几率掉落【红包】\n· 集满 20 个红包\n· 去 任务 → 活动任务 领取：随机宠物蛋×2 + 限定称号【年兽驱邪】+ 10 魔钻\n辞旧迎新，诸事顺遂！",
+            'mail_body' => "春节快乐，冒险者！\n春节活动期间是【春节·年兽驱邪】：\n· 刷怪击杀有几率掉落【红包】\n· 集满 300 个红包\n· 去 任务 → 活动任务 领取：随机宠物蛋×30 + 限定称号【年兽驱邪】+ 70 魔钻\n辞旧迎新，诸事顺遂！",
             'att' => [],
             'mat' => 'redpacket', 'mat_name' => '红包', 'mat_need' => 20,
             'diamonds' => 10,
@@ -11577,7 +11580,7 @@ function festivals(): array
             'md' => '12-24',
             'sender' => '节日使者',
             'mail_title' => '圣诞快乐！圣夜祝福',
-            'mail_body' => "圣诞快乐，冒险者！\n12月24日-26日是【圣诞·圣夜祝福】：\n· 刷怪击杀有几率掉落【铃铛】\n· 集满 15 个铃铛\n· 去 任务 → 活动任务 领取：随机宠物蛋×2 + 限定称号【圣夜祝福】+ 10 魔钻\n愿你被温柔以待，岁岁平安！",
+            'mail_body' => "圣诞快乐，冒险者！\n12月24日-26日是【圣诞·圣夜祝福】：\n· 刷怪击杀有几率掉落【铃铛】\n· 集满 60 个铃铛\n· 去 任务 → 活动任务 领取：随机宠物蛋×6 + 限定称号【圣夜祝福】+ 10 魔钻\n愿你被温柔以待，岁岁平安！",
             'att' => [],
             'mat' => 'bell', 'mat_name' => '铃铛', 'mat_need' => 15,
             'diamonds' => 10,
@@ -11590,7 +11593,7 @@ function festivals(): array
             'md' => '05-01',
             'sender' => '节日使者',
             'mail_title' => '劳动节快乐！勤劳之魂',
-            'mail_body' => "劳动节快乐，冒险者！\n5月1日-5日是【劳动节·勤劳之魂】：\n· 刷怪击杀有几率掉落【劳动星】\n· 集满 10 个劳动星\n· 去 任务 → 活动任务 领取：随机宠物蛋×2 + 限定称号【勤劳之魂】+ 10 魔钻\n致敬每一份努力，愿你所得配得上付出！",
+            'mail_body' => "劳动节快乐，冒险者！\n5月1日-5日是【劳动节·勤劳之魂】：\n· 刷怪击杀有几率掉落【劳动星】\n· 集满 100 个劳动星\n· 去 任务 → 活动任务 领取：随机宠物蛋×10 + 限定称号【勤劳之魂】+ 20 魔钻\n致敬每一份努力，愿你所得配得上付出！",
             'att' => [],
             'mat' => 'laborstar', 'mat_name' => '劳动星', 'mat_need' => 10,
             'diamonds' => 10,
@@ -11606,6 +11609,30 @@ function festival_date_in_range(string $md, string $start, string $end): bool
         return $md >= $start && $md <= $end;
     }
     return $md >= $start || $md <= $end;
+}
+
+// 节日持续天数（含首尾，跨年回绕）
+function festival_days(string $fid): int
+{
+    $f = festivals()[$fid] ?? null;
+    if (!$f) {
+        return 1;
+    }
+    $start = (string) $f['start'];
+    $end = (string) $f['end'];
+    // build list of MM-DD from start to end (wrap)
+    $days = 0;
+    $cur = $start;
+    for ($i = 0; $i < 366; $i++) {
+        $days++;
+        if ($cur === $end) {
+            break;
+        }
+        // next day
+        $ts = strtotime('2024-' . $cur);
+        $cur = date('m-d', $ts + 86400);
+    }
+    return max(1, $days);
 }
 
 function festival_active(string $fid): bool
@@ -11662,20 +11689,25 @@ function festival_task_claim(int $uid, string $fid): string
     if ((int) ($cf[$mark] ?? 0) === $year) {
         return '';
     }
+    $days = festival_days($fid);
+    $matNeed = 20 * $days;
+    $eggCount = 2 * $days;
+    $diamonds = 10 + ($days > 3 ? 10 : 0) + ($fid === 'spring' ? 50 : 0);
+
     $have = (int) (mats_of($uid)[$f['mat']] ?? 0);
-    if ($have < (int) $f['mat_need']) {
-        return $f['mat_name'] . '不够（' . $have . '/' . $f['mat_need'] . '），活动期间刷怪可掉。';
+    if ($have < $matNeed) {
+        return $f['mat_name'] . '不够（' . $have . '/' . $matNeed . '），活动期间刷怪可掉。';
     }
-    add_mat($uid, $f['mat'], -(int) $f['mat_need']);
-    $egg = random_pet_egg_reward($uid, 2);
-    give_title($uid, (string) $f['title'], 1);
+    add_mat($uid, $f['mat'], -$matNeed);
+    $egg = random_pet_egg_reward($uid, $eggCount);
+    give_title($uid, (string) $f['title'], 1, time() + 10 * 86400);
     $u = user_by_id($uid);
     if ($u) {
-        $u['diamonds'] = (int) ($u['diamonds'] ?? 0) + (int) ($f['diamonds'] ?? 0);
+        $u['diamonds'] = (int) ($u['diamonds'] ?? 0) + $diamonds;
         user_save($u);
     }
     cflag_set($uid, $mark, $year);
-    return $f['name'] . '任务完成！' . $egg . '，获得称号【' . (title_ids()[$f['title']] ?? $f['title']) . '】与 ' . (int) $f['diamonds'] . ' 魔钻。';
+    return $f['name'] . '任务完成！' . $egg . '，获得称号【' . (title_ids()[$f['title']] ?? $f['title']) . '】与 ' . $diamonds . ' 魔钻。';
 }
 
 function roll_festival_mat(int $uid, string $fid): string
@@ -11736,6 +11768,52 @@ function festival_mail_tick(array $u): void
     if ($ok) {
         cflag_set($uid, $mark, (int) date('Y'));
     }
+}
+
+// ========== 装备限时系统 ==========
+// 过期装备在登录时清理：删除并邮件通知
+function equip_expire_tick(array $u): void
+{
+    $uid = (int) ($u['id'] ?? 0);
+    if ($uid <= 0) {
+        return;
+    }
+    $now = time();
+    $st = db()->prepare('SELECT id, name, slot FROM equips WHERE uid=? AND expires_at>0 AND expires_at<=?');
+    $st->execute([$uid, $now]);
+    $expired = $st->fetchAll();
+    if (!$expired) {
+        return;
+    }
+    $names = [];
+    foreach ($expired as $r) {
+        $names[] = (string) $r['name'];
+        db()->prepare('DELETE FROM equips WHERE id=?')->execute([(int) $r['id']]);
+    }
+    if (function_exists('_gear_uncache')) {
+        _gear_uncache($uid);
+    }
+    $body = "以下限时装备已到期并从背包消失：\n" . implode("\n", $names) . "\n可通过节日活动重新获取。";
+    send_mail($uid, '装备管理', 'expire', '装备已过期', $body, [], 0);
+}
+
+// 装备剩余时间文本（秒）；0=永久
+function equip_expire_text(int $expiresAt): string
+{
+    if ($expiresAt <= 0) {
+        return '永久';
+    }
+    $rem = $expiresAt - time();
+    if ($rem <= 0) {
+        return '已过期';
+    }
+    $days = (int) floor($rem / 86400);
+    $hours = (int) floor(($rem % 86400) / 3600);
+    if ($days > 0) {
+        return $days . '天' . $hours . '小时';
+    }
+    $mins = (int) floor(($rem % 3600) / 60);
+    return $hours . '小时' . $mins . '分钟';
 }
 
 function quest_progress2_text(int $uid, array $qs): string

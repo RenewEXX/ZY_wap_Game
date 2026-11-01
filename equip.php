@@ -36,6 +36,7 @@ echo '品级：' . h($qname) . '<br>';
 echo '穿戴要求：' . h(equip_req_text($e)) . '<br>';
 echo '物品等级：' . (int) ($e['item_level'] ?? 1) . '<br>';
 echo '状态：' . (($e['pos'] === 'wear' ? '已穿戴' : '背包')) . '<br>';
+echo '有效期：' . h(equip_expire_text((int) ($e['expires_at'] ?? 0))) . '<br>';
 $elv = (int) ($e['enhance_level'] ?? 0);
 if (($e['slot'] ?? '') === 'title') { echo '称号不可强化。<br>'; } else {
 echo '强化：' . enhance_tag_html($elv) . '（主属性×' . rtrim(rtrim(number_format(enhance_rate($e), 2, '.', ''), '0'), '.') . '）<br>';

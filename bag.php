@@ -256,6 +256,10 @@ if ($tab === 'equip') {
         if ((int) ($e['req_lv'] ?? 1) > 1 || (int) ($e['req_str'] ?? 0) > 0 || (int) ($e['req_agi'] ?? 0) > 0) {
             echo '（' . h(equip_req_text($e)) . '）';
         }
+        $expAt = (int) ($e['expires_at'] ?? 0);
+        if ($expAt > 0) {
+            echo ' <span class="muted">[剩' . h(equip_expire_text($expAt)) . ']</span>';
+        }
         echo ' <a href="bag.php?a=wear&id=' . $e['id'] . '">穿</a> <a href="bag.php?a=sell&id=' . $e['id'] . '">卖' . h(fmt_money(equip_sell_price((int) $e['quality']))) . '</a> <a href="bag.php?a=dropequip&id=' . $e['id'] . '">扔</a>';
         if (my_guild((int) $u['id'])) {
             echo ' <a href="guild.php?a=wput&kind=equip&eid=' . $e['id'] . '">存公会</a>';

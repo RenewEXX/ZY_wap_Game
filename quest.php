@@ -167,15 +167,19 @@ if ($tab === 'doing') {
         $mark = (string) ($f['mark'] ?? ('fest_done_' . $fid));
         $fDone = (int) (cflags((int) $u['id'])[$mark] ?? 0) === (int) date('Y');
         $fMat = (int) (mats_of((int) $u['id'])[$f['mat']] ?? 0);
-        $fNeed = (int) $f['mat_need'];
+        $fDays = festival_days($fid);
+        $fNeed = 20 * $fDays;
+        $fEggs = 2 * $fDays;
+        $fDiamonds = 10 + ($fDays > 3 ? 10 : 0) + ($fid === 'spring' ? 50 : 0);
+        $fTitleName = title_ids()[$f['title']] ?? $f['title'];
         echo '·<b><span style="color:#f84">【' . h($f['name']) . '】</span></b> ';
         if ($fDone) {
             echo '<span style="color:#6f6">[已完成]</span> 今年的称号与奖励已领取。<br>';
         } elseif ($fMat >= $fNeed) {
-            echo '<span class="warn">[可领取]</span> ' . h($f['mat_name']) . '已集满！领取：随机宠物蛋×2 + 称号【' . h(title_ids()[$f['title']] ?? $f['title']) . '】+ ' . (int) $f['diamonds'] . '魔钻。<br>';
+            echo '<span class="warn">[可领取]</span> ' . h($f['mat_name']) . '已集满！领取：随机宠物蛋×' . $fEggs . ' + 称号【' . h($fTitleName) . '】+ ' . $fDiamonds . '魔钻。<br>';
             echo '<a href="quest.php?a=claim_fest&fid=' . h($fid) . '">领取' . h($f['name']) . '奖励</a><br>';
         } else {
-            echo '<span class="muted">[进行中]</span> 活动期间刷怪掉【' . h($f['mat_name']) . '】（约8%）。收集 ' . $fNeed . ' 个即可领取：随机宠物蛋×2 + 称号【' . h(title_ids()[$f['title']] ?? $f['title']) . '】+ ' . (int) $f['diamonds'] . '魔钻。<br>';
+            echo '<span class="muted">[进行中]</span> 活动期间刷怪掉【' . h($f['mat_name']) . '】（约8%）。收集 ' . $fNeed . ' 个即可领取：随机宠物蛋×' . $fEggs . ' + 称号【' . h($fTitleName) . '】+ ' . $fDiamonds . '魔钻。<br>';
             echo h($f['mat_name']) . '：<b>' . $fMat . '</b>/' . $fNeed . '<br>';
         }
     }

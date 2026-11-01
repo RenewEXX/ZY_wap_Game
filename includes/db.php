@@ -279,10 +279,11 @@ function db_init(): void
             affixes TEXT NOT NULL,
             pos TEXT NOT NULL DEFAULT "",
             enchant_el TEXT NOT NULL DEFAULT "",
-            enchant_val INTEGER NOT NULL DEFAULT 0
+            enchant_val INTEGER NOT NULL DEFAULT 0,
+            expires_at INTEGER NOT NULL DEFAULT 0
         )'
     );
-    foreach (['item_level' => 'INTEGER NOT NULL DEFAULT 1', 'enhance_level' => 'INTEGER NOT NULL DEFAULT 0', 'enhance_fail' => 'INTEGER NOT NULL DEFAULT 0', 'broken' => 'INTEGER NOT NULL DEFAULT 0', 'enchant_el' => 'TEXT NOT NULL DEFAULT ""', 'enchant_val' => 'INTEGER NOT NULL DEFAULT 0', 'req_lv' => 'INTEGER NOT NULL DEFAULT 1', 'req_str' => 'INTEGER NOT NULL DEFAULT 0', 'req_agi' => 'INTEGER NOT NULL DEFAULT 0'] as $col => $definition) {
+    foreach (['item_level' => 'INTEGER NOT NULL DEFAULT 1', 'enhance_level' => 'INTEGER NOT NULL DEFAULT 0', 'enhance_fail' => 'INTEGER NOT NULL DEFAULT 0', 'broken' => 'INTEGER NOT NULL DEFAULT 0', 'enchant_el' => 'TEXT NOT NULL DEFAULT ""', 'enchant_val' => 'INTEGER NOT NULL DEFAULT 0', 'req_lv' => 'INTEGER NOT NULL DEFAULT 1', 'req_str' => 'INTEGER NOT NULL DEFAULT 0', 'req_agi' => 'INTEGER NOT NULL DEFAULT 0', 'expires_at' => 'INTEGER NOT NULL DEFAULT 0'] as $col => $definition) {
         try {
             db()->exec("ALTER TABLE equips ADD COLUMN {$col} {$definition}");
         } catch (Throwable $e) {

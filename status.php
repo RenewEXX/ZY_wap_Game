@@ -115,6 +115,11 @@ if ((string) ($_GET['a'] ?? '') === 'all') {
         }
         echo h(affix_fmt($k, (float) $gs[$k])) . '<br>';
     }
+    // 持续伤害(DOT)加成：散件传说 dot 总和 + 蚀心套装 + 游侠2觉，独立于 gear_stats 结算
+    if (function_exists('hunter_dot_mult')) {
+        $dotPct = (hunter_dot_mult($u) - 1) * 100;
+        echo '持续伤害+' . rtrim(rtrim(number_format($dotPct, 1, '.', ''), '0'), '.') . '%' . '<br>';
+    }
     echo '属性攻击(附魔，技能对应属性生效)：';
     $els = [];
     foreach (['light', 'dark', 'fire', 'wind', 'ice', 'thunder'] as $eel) {

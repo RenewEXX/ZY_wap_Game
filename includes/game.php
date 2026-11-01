@@ -5327,7 +5327,7 @@ function roll_summoner_box(int $uid, string $mid): string
     if ($lv < 20) {
         return '';
     }
-    $m = 1 + $lv * 0.02 + min(200, gear_stats($uid)['magic_find']) / 100;
+    $m = (1 + $lv * 0.02) * (1 + min(200, gear_stats($uid)['magic_find']) / 100);
     if (mt_rand() / mt_getrandmax() > 0.05 * $m) {
         return '';
     }
@@ -5753,8 +5753,9 @@ function roll_drop_base(int $uid, string $mid, int $elite = 0): string
     $mlv = monster_lv($mid);
     // 副本小怪：套件/装备基础掉率固定 1%，只吃寻宝与转生加成，不再随怪物等级暴涨
     $isDunMob = is_dungeon_mob($mid);
-    $m = $isDunMob ? 1 : (1 + $mlv * 0.03);
-    $m += min(200, gear_stats($uid)['magic_find']) / 100;
+    $base = $isDunMob ? 1 : (1 + $mlv * 0.03);
+    // 魔法发现按百分比乘算：+200% 魔法发现 = 掉率 ×3（而非加法稀释）
+    $m = $base * (1 + min(200, gear_stats($uid)['magic_find']) / 100);
     // 转生：掉落率+20%
     if (function_exists('rs_drop_mult')) { $m *= rs_drop_mult($uid); }
     if (is_boss_mid($mid)) {

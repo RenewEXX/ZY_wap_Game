@@ -4356,6 +4356,9 @@ function mat_name(string $id): string
     if ($id === 'wh_cap') {
         return '仓库扩容(累计)';
     }
+    if ($id === 'pumpkin') {
+        return '南瓜';
+    }
     if ($id === 'dummy_time') {
         return '挂机时间(秒)';
     }
@@ -8140,6 +8143,11 @@ function battle_round(array &$u, array &$b, string $mode): array
                 $b['drops'][] = $peg;
                 $log .= '掉落【' . $peg . '】！';
             }
+            $pk = roll_halloween_pumpkin((int) $u['id'], (string) ($b['id'] ?? ''));
+            if ($pk !== '') {
+                $b['drops'][] = $pk;
+                $log .= '掉落【' . $pk . '】！';
+            }
             $dq = roll_dungeon_quest((int) $u['id'], (string) ($b['id'] ?? ''));
             if ($dq !== '') {
                 $b['drops'][] = $dq;
@@ -9496,20 +9504,20 @@ function open_dragon_box(int $uid): string
 // 称号走装备背包（slot=title）
 function title_ids(): array
 {
-    return ['title_ch1' => '称号·灰雾行者', 'title_ch2' => '称号·白银守望', 'title_ch3' => '称号·王都破局者', 'title_ch4' => '称号·凛冬行者', 'title_ch5' => '称号·南炎见证', 'title_rb2' => '称号·虚空征服者', 'title_dragon1' => '称号·龙鳞初醒', 'title_dragon2' => '称号·龙血沸騰', 'title_dragon3' => '称号·灭世龙威', 'title_god' => '称号·神界主宰', 'title_rs_god' => '称号·源罪之神', 'title_rs_lord' => '称号·源罪之主', 'title_rs_king' => '称号·源罪之王', 'title_rs_gen' => '称号·源罪之将'];
+    return ['title_ch1' => '称号·灰雾行者', 'title_ch2' => '称号·白银守望', 'title_ch3' => '称号·王都破局者', 'title_ch4' => '称号·凛冬行者', 'title_ch5' => '称号·南炎见证', 'title_rb2' => '称号·虚空征服者', 'title_dragon1' => '称号·龙鳞初醒', 'title_dragon2' => '称号·龙血沸騰', 'title_dragon3' => '称号·灭世龙威', 'title_god' => '称号·神界主宰', 'title_rs_god' => '称号·源罪之神', 'title_rs_lord' => '称号·源罪之主', 'title_rs_king' => '称号·源罪之王', 'title_rs_gen' => '称号·源罪之将', 'title_halloween' => '称号·万圣惊魂'];
 }
 function title_bonus(string $tid): array
 {
-    return ['title_ch1' => ['atk' => 30.0, 'hp' => 500.0], 'title_ch2' => ['def' => 30.0, 'hp' => 800.0], 'title_ch3' => ['crit' => 1.0, 'atk' => 50.0], 'title_ch4' => ['mdef' => 40.0, 'hp' => 1200.0], 'title_ch5' => ['matk' => 50.0, 'hp' => 1500.0], 'title_rb2' => ['skill_damage' => 3.0, 'hp' => 2000.0], 'title_dragon1' => ['critdmg' => 5.0, 'hp' => 1500.0], 'title_dragon2' => ['atk' => 100.0, 'matk' => 100.0], 'title_dragon3' => ['skill_damage' => 8.0, 'truedmg' => 200.0], 'title_god' => ['skill_damage' => 12.0, 'truedmg' => 500.0, 'hp' => 5000.0], 'title_rs_god' => ['skill_damage' => 20.0, 'truedmg' => 1000.0, 'all_attr' => 100.0], 'title_rs_lord' => ['skill_damage' => 16.0, 'truedmg' => 700.0, 'all_attr' => 70.0], 'title_rs_king' => ['skill_damage' => 13.0, 'truedmg' => 500.0, 'all_attr' => 50.0], 'title_rs_gen' => ['skill_damage' => 10.0, 'truedmg' => 300.0, 'all_attr' => 30.0]][$tid] ?? [];
+    return ['title_ch1' => ['atk' => 30.0, 'hp' => 500.0], 'title_ch2' => ['def' => 30.0, 'hp' => 800.0], 'title_ch3' => ['crit' => 1.0, 'atk' => 50.0], 'title_ch4' => ['mdef' => 40.0, 'hp' => 1200.0], 'title_ch5' => ['matk' => 50.0, 'hp' => 1500.0], 'title_rb2' => ['skill_damage' => 3.0, 'hp' => 2000.0], 'title_dragon1' => ['critdmg' => 5.0, 'hp' => 1500.0], 'title_dragon2' => ['atk' => 100.0, 'matk' => 100.0], 'title_dragon3' => ['skill_damage' => 8.0, 'truedmg' => 200.0], 'title_god' => ['skill_damage' => 12.0, 'truedmg' => 500.0, 'hp' => 5000.0], 'title_rs_god' => ['skill_damage' => 20.0, 'truedmg' => 1000.0, 'all_attr' => 100.0], 'title_rs_lord' => ['skill_damage' => 16.0, 'truedmg' => 700.0, 'all_attr' => 70.0], 'title_rs_king' => ['skill_damage' => 13.0, 'truedmg' => 500.0, 'all_attr' => 50.0], 'title_rs_gen' => ['skill_damage' => 10.0, 'truedmg' => 300.0, 'all_attr' => 30.0], 'title_halloween' => ['critdmg' => 3.0, 'hp' => 800.0]][$tid] ?? [];
 }
-function give_title(int $uid, string $tid): bool
+function give_title(int $uid, string $tid, int $req = 100): bool
 {
     $names = title_ids();
     if (!isset($names[$tid])) { return false; }
     // 允许重复获得（不再吞掉第二个）
     $aff = [];
     foreach (title_bonus($tid) as $k => $v) { $aff[] = ['id' => $k, 'v' => $v, 'legend' => true]; }
-    db()->prepare('INSERT INTO equips (uid, slot, name, quality, affixes, pos, req_lv) VALUES (?, "title", ?, 4, ?, "", 100)')->execute([$uid, $names[$tid], json_encode($aff, JSON_UNESCAPED_UNICODE)]);
+    db()->prepare('INSERT INTO equips (uid, slot, name, quality, affixes, pos, req_lv) VALUES (?, "title", ?, 4, ?, "", ?)')->execute([$uid, $names[$tid], json_encode($aff, JSON_UNESCAPED_UNICODE), $req]);
     return true;
 }
 function title_list(int $uid): array
@@ -11358,6 +11366,56 @@ function activity_task_claim(int $uid, string $task): string
         return random_pet_egg_reward($uid, 2);
     }
     return '';
+}
+
+// ========== 万圣节限时活动（每年10月31日当天） ==========
+function halloween_active(): bool
+{
+    if (defined('DH_TEST_MODE')) {
+        return true;
+    }
+    return date('m-d') === '10-31';
+}
+
+// 活动当天杀怪掉南瓜（约8%）。返回掉落名或空串（供战斗结算记录）。
+function roll_halloween_pumpkin(int $uid, string $mid): string
+{
+    if (!halloween_active()) {
+        return '';
+    }
+    if (mt_rand(1, 100) > 8) {
+        return '';
+    }
+    add_mat((int) $uid, 'pumpkin', 1);
+    return '南瓜';
+}
+
+// 万圣节任务：集满20南瓜领取，奖励 随机宠物蛋×2 + 称号·万圣惊魂 + 10魔钻。每年一次。
+function halloween_task_claim(int $uid): string
+{
+    $uid = (int) $uid;
+    if (!halloween_active()) {
+        return '万圣节活动每年10月31日开启。';
+    }
+    $year = (int) date('Y');
+    $f = cflags($uid);
+    if ((int) ($f['halloween_done'] ?? 0) === $year) {
+        return '';
+    }
+    $have = (int) (mats_of($uid)['pumpkin'] ?? 0);
+    if ($have < 20) {
+        return '南瓜不够（' . $have . '/20），万圣节当天刷怪可掉南瓜。';
+    }
+    add_mat($uid, 'pumpkin', -20);
+    $egg = random_pet_egg_reward($uid, 2);
+    give_title($uid, 'title_halloween', 1);
+    $u = user_by_id($uid);
+    if ($u) {
+        $u['diamonds'] = (int) ($u['diamonds'] ?? 0) + 10;
+        user_save($u);
+    }
+    cflag_set($uid, 'halloween_done', $year);
+    return '万圣节任务完成！' . $egg . '，获得称号【万圣惊魂】与 10 魔钻。';
 }
 
 function quest_progress2_text(int $uid, array $qs): string

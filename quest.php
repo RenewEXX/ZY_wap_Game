@@ -23,6 +23,11 @@ if ($a === 'claim_gw') {
     header('Location: quest.php?tab=activity');
     exit;
 }
+if ($a === 'claim_halloween') {
+    flash_set(halloween_task_claim((int) $u['id']));
+    header('Location: quest.php?tab=activity');
+    exit;
+}
 $q = (int) ($u['quest'] ?? 0);
 $newSteps = [
     0 => ['t' => '麦田驱逐', 'd' => '雾谷麦田打哥布林。'],
@@ -148,6 +153,22 @@ if ($tab === 'doing') {
 } elseif ($tab === 'activity') {
     echo '<b>活动任务（可与主线同时进行）</b><br>';
     $af = cflags((int) $u['id']);
+    // 0) 万圣节限时活动（每年10月31日当天）
+    if (halloween_active()) {
+        $hYear = (int) date('Y');
+        $hDone = (int) ($af['halloween_done'] ?? 0) === $hYear;
+        $hPump = (int) (mats_of((int) $u['id'])['pumpkin'] ?? 0);
+        echo '·<b><span style="color:#f84">【万圣节·南瓜惊魂夜】</span></b> ';
+        if ($hDone) {
+            echo '<span style="color:#6f6">[已完成]</span> 今年的称号与奖励已领取。<br>';
+        } elseif ($hPump >= 20) {
+            echo '<span class="warn">[可领取]</span> 南瓜已集满！领取：随机宠物蛋×2 + 称号【万圣惊魂】+ 10魔钻。<br>';
+            echo '<a href="quest.php?a=claim_halloween">领取万圣节奖励</a><br>';
+        } else {
+            echo '<span class="muted">[进行中]</span> 万圣节当天刷怪掉【南瓜】（约8%）。收集 20 个即可领取：随机宠物蛋×2 + 称号【万圣惊魂】+ 10魔钻。<br>';
+            echo '南瓜：<b>' . $hPump . '</b>/20<br>';
+        }
+    }
     // 1) 竞技场征召
     $done = !empty($af['arena_guide_done']);
     echo '·<b>【竞技场征召】</b> ';

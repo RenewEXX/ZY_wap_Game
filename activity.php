@@ -19,6 +19,15 @@ if ($a === 'peak') {
 }
 
 $u = user_by_id($uid);
+// 竞技场引导：80级+、主线 quest=28、未完成 → 奖励20银（原 arena_m NPC 的引导任务，NPC 下沉后迁移到这里）
+if ((int) ($u['lv'] ?? 1) >= 80 && empty(cflags($uid)['arena_guide_done']) && (int) ($u['quest'] ?? 0) === 28) {
+    cflag_set($uid, 'arena_guide_done', 1);
+    $u['gold'] = (int) ($u['gold'] ?? 0) + 2000;
+    user_save($u);
+    $u = user_by_id($uid);
+    flash_set('雷横拍了拍你的肩：好，80级了，有胆！竞技场欢迎你。任务完成，奖励20银！');
+}
+
 wap_start('活动中心');
 $flash = flash_get();
 if ($flash !== '') {

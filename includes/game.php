@@ -2388,11 +2388,12 @@ function idle_fight_once(array &$u, array &$b, int $roundCap = 300): array
         }
     }
     unset($_SESSION['battle']);
-    if ($r['status'] === 'victory') {
-        // 挂机续航：胜利后回满血。挂机是无人值守铺量打怪，靠"每场回满"避免脆皮职业
-        // （尤其召唤师：本体血量全场最低、召唤兽血量又按本体算、且无自愈）被跨场累计
-        // 的溢出伤害慢慢耗死。仅影响陪练人偶/离线，不影响实时手动战斗。
-        $u['hp'] = max(1, (int) ($u['maxhp'] ?? 1));
+    if ($r['status'] === 'victory' && job_id_of($u) === 'summoner') {
+        // 挂机续航：仅召唤师胜利后回 5% 最大生命。召唤师本体血量全场最低、召唤兽血量
+        // 又按本体算、且无自愈，挂机时容易被跨场累计的溢出伤害慢慢耗死；回一点点血兜底。
+        // 其他职业不回血；仅影响陪练人偶/离线，不影响实时手动战斗。
+        $maxhp = max(1, (int) ($u['maxhp'] ?? 1));
+        $u['hp'] = min($maxhp, (int) ($u['hp'] ?? 0) + (int) ($maxhp * 0.05));
     }
     return $r;
 }

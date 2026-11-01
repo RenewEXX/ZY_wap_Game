@@ -485,37 +485,12 @@ if ($who === 'rb_waldon' && $choice === 'start2' && (int) $u['quest'] === 76 && 
     exit;
 }
 if ($who === 'rb_waldon' && $choice === 'crown' && (int) $u['quest'] === 80 && !empty(cflags((int) $u['id'])['rb2_job'])) {
-    if (empty(cflags((int) $u['id'])['rb2_done'])) {
-        cflag_set((int) $u['id'], 'rb2_done', 1);
-        $u['gold'] = (int) ($u['gold'] ?? 0) + 1000000;
-        user_save($u);
-        add_mat((int) $u['id'], 'reset_potion', 1);
-        add_mat((int) $u['id'], 'soul_shard', 20);
-        add_mat((int) $u['id'], 'rb2_proof', 1);
-        $job = (string) (cflags((int) $u['id'])['rb2_job'] ?? '');
-        send_mail((int) $u['id'], '总会长', 'rebirth', '2觉', rebirth2_name($job) . '加冕！群攻之路完成，得100万+洗点药+神魂碎片×20。去虚空裂隙/灰烬深渊刷你的群攻秘籍吧！', []);
-        flash_set('加冕完成！2觉证明+100万+洗点药+碎片×20已发放，去刷群攻秘籍吧！');
-        $u = user_by_id((int) $u['id']);
-        $u['quest'] = 81;
-        user_save($u);
-    }
+    flash_set(rb2_crown((int) $u['id']));
     header('Location: npc.php?who=rb_waldon');
     exit;
 }
 if ($who === 'rb_waldon' && (int) $u['quest'] === 79 && in_array($choice, ['berserker', 'aegis', 'wintermage', 'wildfire', 'ranger', 'assassin', 'shadowbishop', 'holybishop', 'necro', 'plague'], true) && empty(cflags((int) $u['id'])['rb2_job'])) {
-    $base = ['berserker' => 'warrior', 'aegis' => 'warrior', 'wintermage' => 'mage', 'wildfire' => 'mage', 'ranger' => 'hunter', 'assassin' => 'hunter', 'shadowbishop' => 'priest', 'holybishop' => 'priest', 'necro' => 'summoner', 'plague' => 'summoner'][$choice];
-    if ($base !== job_id_of($u)) {
-        flash_set('这不是你的路。');
-    } else {
-        cflag_set((int) $u['id'], 'rb2_job', $choice);
-        $sk = rebirth2_skill($choice);
-        if ($sk !== '') {
-            add_mat((int) $u['id'], 'book_' . $sk, 1);
-        }
-        flash_set('你选择了【' . rebirth2_name($choice) . '】！获得群攻秘籍，找瓦尔顿加冕！');
-        $u['quest'] = 80;
-        user_save($u);
-    }
+    flash_set(rb2_choose_branch((int) $u['id'], $choice));
     header('Location: npc.php?who=rb_waldon');
     exit;
 }
@@ -692,38 +667,6 @@ if ($who === 'rb_hawk' && in_array($choice, ['tree', 'vale', 'grass'], true) && 
     elseif ($choice === 'grass') { cflag_set((int) $u['id'], 'rb1_hun_wait', time() + 300); flash_set('你趴进草丛……五分钟后再来找我。'); }
     else { cflag_set((int) $u['id'], 'rb1_hun', 1); $u['gold'] = (int)($u['gold'] ?? 0) + 5000; user_save($u); flash_set('树冠突袭成功！猎手试炼通过！奖励5银。'); }
     header('Location: npc.php?who=rb_hawk'); exit;
-if ($who === 'rb_samuel' && $choice === 'give' && in_array((int) $u['quest'], [40, 41], true)) {
-    $f = cflags((int) $u['id']);
-    $pick = array_map('intval', explode(',', (string)($_GET['p'] ?? '')));
-    if (!empty($f['rb1_pri']) || (job_id_of($u) === 'summoner' && $choice === 'summoner' && empty($f['rb1_sum']))) { flash_set('塞缪尔：你已经做过取舍了。'); }
-    elseif ($pick === []) { flash_set('先选人再交给我。'); }
-    else {
-        $need = [1,1,1,2,2,2,2,3,3,5]; $cost = 0; $saved = 0;
-        foreach ($pick as $pi) { if ($pi >= 1 && $pi <= 10) { $cost += $need[$pi - 1]; $saved++; } }
-        $pick = array_values(array_unique($pick)); $cost = 0; $saved = 0;
-        foreach ($pick as $pi) { if ($pi >= 1 && $pi <= 10) { $cost += $need[$pi - 1]; $saved++; } }
-        if ($cost > 10) { flash_set($cost . '份药不够分，只有十份。'); }
-        elseif ($saved >= 6) { cflag_set((int) $u['id'], 'rb1_pri', 1); $u['gold'] = (int)($u['gold'] ?? 0) + 5000; user_save($u); $m = '塞缪尔：救下' . $saved . '人！牧师试炼通过！奖励5银。'; flash_set($m); }
-        else { $m2 = '只救下' . $saved . '人，不到六人。再想想（先救药少的人）。'; flash_set($m2); }
-    }
-    header('Location: npc.php?who=rb_samuel'); exit;
-}
-if ($who === 'rb_waldon' && in_array($choice, ['warrior','mage','hunter','priest','summoner'], true) && (int) $u['quest'] === 45) {
-    $f = cflags((int) $u['id']);
-    if (empty($f['rb1_war']) || empty($f['rb1_mag']) || empty($f['rb1_hun']) || empty($f['rb1_pri']) || (job_id_of($u) === 'summoner' && $choice === 'summoner' && empty($f['rb1_sum']))) { flash_set('瓦尔顿：四重试炼还没完，别急。'); }
-    elseif (!empty($f['rb1_job'])) { flash_set('路已经选了，走下去吧。'); }
-    else {
-        cflag_set((int) $u['id'], 'rb1_job', $choice);
-        $u['quest'] = 46; $u['gold'] = (int)($u['gold'] ?? 0) + 20000; user_save($u);
-        $sk = ['warrior' => 'w3', 'mage' => 'm3', 'hunter' => 'h3', 'priest' => 'p3', 'summoner' => 's3'][$choice] ?? '';
-        if ($sk !== "") { $bk = "book_" . $sk; add_mat((int) $u["id"], $bk, 1); }
-        $rn = rebirth1_names()[$choice] ?? $choice; $pd2 = rebirth1_passive_desc($choice);
-        send_mail((int) $u['id'], '总会长', 'rebirth', '1觉', $rn . $pd2, []);
-        $rn2 = rebirth1_names()[$choice] ?? $choice;
-        flash_set('1觉完成' . $rn2);
-    }
-    header('Location: npc.php?who=rb_waldon'); exit;
-}
 }
 if ($who === 'rb_hawk' && $choice === 'back' && in_array((int) $u['quest'], [40, 41], true)) {
     $f = cflags((int) $u['id']);
@@ -732,6 +675,7 @@ if ($who === 'rb_hawk' && $choice === 'back' && in_array((int) $u['quest'], [40,
     elseif (!empty($f['rb1_hun_wait'])) { cflag_set((int) $u['id'], 'rb1_hun', 1); $u['gold'] = (int)($u['gold'] ?? 0) + 5000; user_save($u); flash_set('你跟着白鹿到了林间空地！猎手试炼通过！奖励5银。'); }
     else { flash_set('先选一条路再回来。'); }
     header('Location: npc.php?who=rb_hawk'); exit;
+}
 if ($who === 'rb_samuel' && $choice === 'give' && in_array((int) $u['quest'], [40, 41], true)) {
     $f = cflags((int) $u['id']);
     $pick = array_map('intval', explode(',', (string)($_GET['p'] ?? '')));
@@ -749,22 +693,8 @@ if ($who === 'rb_samuel' && $choice === 'give' && in_array((int) $u['quest'], [4
     header('Location: npc.php?who=rb_samuel'); exit;
 }
 if ($who === 'rb_waldon' && in_array($choice, ['warrior','mage','hunter','priest','summoner'], true) && (int) $u['quest'] === 45) {
-    $f = cflags((int) $u['id']);
-    if (empty($f['rb1_war']) || empty($f['rb1_mag']) || empty($f['rb1_hun']) || empty($f['rb1_pri']) || (job_id_of($u) === 'summoner' && $choice === 'summoner' && empty($f['rb1_sum']))) { flash_set('瓦尔顿：四重试炼还没完，别急。'); }
-    elseif (!empty($f['rb1_job'])) { flash_set('路已经选了，走下去吧。'); }
-    else {
-        cflag_set((int) $u['id'], 'rb1_job', $choice);
-        $u['quest'] = 46; $u['gold'] = (int)($u['gold'] ?? 0) + 20000; user_save($u);
-        $sk = ['warrior' => 'w3', 'mage' => 'm3', 'hunter' => 'h3', 'priest' => 'p3', 'summoner' => 's3'][$choice] ?? '';
-        if ($sk !== "") { $bk = "book_" . $sk; add_mat((int) $u["id"], $bk, 1); }
-        $rn = rebirth1_names()[$choice] ?? $choice; $pd2 = rebirth1_passive_desc($choice);
-        $body = "rb1:" . $rn . "|" . $pd2;
-        send_mail((int) $u["id"], "w2", "rebirth", "t2", $body, []);
-        $rn2 = rebirth1_names()[$choice] ?? $choice;
-        flash_set("rb1done:" . $rn2);
-    }
+    flash_set(rb1_choose_job((int) $u['id'], $choice));
     header('Location: npc.php?who=rb_waldon'); exit;
-}
 }
 if ($who === 'waldon' && $choice === 'start' && (int) $u['quest'] === 28) {
     $u['quest'] = 30;

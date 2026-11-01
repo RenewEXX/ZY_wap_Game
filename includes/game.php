@@ -10439,6 +10439,85 @@ function cflag_set(int $uid, string $k, $v): void
     $d[$k] = $v;
     db()->prepare('UPDATE users SET chapter_flags=? WHERE id=?')->execute([json_encode($d, JSON_UNESCAPED_UNICODE), (int) $uid]);
 }
+
+// ===== 1觉 / 2觉 转职选择（供 npc.php 与测试调用）=====
+function rb1_choose_job(int $uid, string $choice): string
+{
+    $u = user_by_id($uid);
+    if (!$u) {
+        return '角色不存在。';
+    }
+    $f = cflags($uid);
+    if (empty($f['rb1_war']) || empty($f['rb1_mag']) || empty($f['rb1_hun']) || empty($f['rb1_pri']) || (job_id_of($u) === 'summoner' && $choice === 'summoner' && empty($f['rb1_sum']))) {
+        return '瓦尔顿：四重试炼还没完，别急。';
+    }
+    if (!empty($f['rb1_job'])) {
+        return '路已经选了，走下去吧。';
+    }
+    cflag_set($uid, 'rb1_job', $choice);
+    $u['quest'] = 46;
+    $u['gold'] = (int) ($u['gold'] ?? 0) + 20000;
+    user_save($u);
+    $sk = ['warrior' => 'w3', 'mage' => 'm3', 'hunter' => 'h3', 'priest' => 'p3', 'summoner' => 's3'][$choice] ?? '';
+    if ($sk !== '') {
+        add_mat($uid, 'book_' . $sk, 1);
+    }
+    $rn = rebirth1_names()[$choice] ?? $choice;
+    $pd2 = rebirth1_passive_desc($choice);
+    send_mail($uid, '总会长', 'rebirth', '1觉', $rn . $pd2, []);
+    return '1觉完成' . (rebirth1_names()[$choice] ?? $choice);
+}
+
+function rb2_choose_branch(int $uid, string $choice): string
+{
+    $u = user_by_id($uid);
+    if (!$u) {
+        return '角色不存在。';
+    }
+    $base = ['berserker' => 'warrior', 'aegis' => 'warrior', 'wintermage' => 'mage', 'wildfire' => 'mage', 'ranger' => 'hunter', 'assassin' => 'hunter', 'shadowbishop' => 'priest', 'holybishop' => 'priest', 'necro' => 'summoner', 'plague' => 'summoner'][$choice] ?? '';
+    if ($base === '' || $base !== job_id_of($u)) {
+        return '这不是你的路。';
+    }
+    $f = cflags($uid);
+    if (!empty($f['rb2_job'])) {
+        return '路已经选了，走下去吧。';
+    }
+    cflag_set($uid, 'rb2_job', $choice);
+    $u['quest'] = 80;
+    user_save($u);
+    $sk = rebirth2_skill($choice);
+    if ($sk !== '') {
+        add_mat($uid, 'book_' . $sk, 1);
+    }
+    return '你选择了【' . rebirth2_name($choice) . '】！获得群攻秘籍，找瓦尔顿加冕！';
+}
+
+function rb2_crown(int $uid): string
+{
+    $u = user_by_id($uid);
+    if (!$u) {
+        return '角色不存在。';
+    }
+    $f = cflags($uid);
+    if (empty($f['rb2_job'])) {
+        return '还没选路。';
+    }
+    if (!empty($f['rb2_done'])) {
+        return '已经加冕过了。';
+    }
+    cflag_set($uid, 'rb2_done', 1);
+    $u['gold'] = (int) ($u['gold'] ?? 0) + 1000000;
+    user_save($u);
+    add_mat($uid, 'reset_potion', 1);
+    add_mat($uid, 'soul_shard', 20);
+    add_mat($uid, 'rb2_proof', 1);
+    $job = (string) ($f['rb2_job'] ?? '');
+    send_mail($uid, '总会长', 'rebirth', '2觉', rebirth2_name($job) . '加冕！群攻之路完成，得100万+洗点药+神魂碎片×20。去虚空裂隙/灰烬深渊刷你的群攻秘籍吧！', []);
+    $u = user_by_id($uid);
+    $u['quest'] = 81;
+    user_save($u);
+    return '加冕完成！2觉证明+100万+洗点药+碎片×20已发放，去刷群攻秘籍吧！';
+}
 // ===== 罪值系统 =====
 // 罪值：怪物击杀累积；>100可被任何玩家强制PK，<10时生命上限+20%
 function sin_name_html(string $name, int $sin): string

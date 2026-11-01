@@ -5327,7 +5327,7 @@ function roll_summoner_box(int $uid, string $mid): string
     if ($lv < 20) {
         return '';
     }
-    $m = (1 + $lv * 0.02) * (1 + min(200, gear_stats($uid)['magic_find']) / 100);
+    $m = 1 + $lv * 0.02 + min(200, gear_stats($uid)['magic_find']) / 100;
     if (mt_rand() / mt_getrandmax() > 0.05 * $m) {
         return '';
     }

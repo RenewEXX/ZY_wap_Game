@@ -2611,10 +2611,15 @@ function redeem_repeatable(): array
 {
     return ['TEST1000'];
 }
-function monster_gold_reward(int $base): int
+function monster_gold_reward(int $base, int $uid = 0): int
 {
     // 怪物金币是铜币；压低挂机产出并封顶，避免高等级怪随等级无限膨胀。
-    return max(1, min(10, (int) ceil(max(0, $base) * 0.005)));
+    $g = max(1, min(10, (int) ceil(max(0, $base) * 0.005)));
+    if ($uid > 0) {
+        $gg = (float) (gear_stats($uid)['gold_gain'] ?? 0);
+        if ($gg > 0) { $g = (int) max(1, round($g * (1 + $gg / 100))); }
+    }
+    return $g;
 }
 
 function fmt_money(int $copper): string
@@ -7196,6 +7201,8 @@ function exp_gain_for(array $u, string $mid, int $elite = 0): int
     } elseif ($mid === boss_of_map((string) ($u['loc'] ?? ''))) {
         $v *= 8;
     }
+    $eg = (float) (gear_stats((int) ($u['id'] ?? 0))['exp_gain'] ?? 0);
+    if ($eg > 0) { $v *= (1 + $eg / 100); }
     return max(1, (int) $v);
 }
 
@@ -7626,7 +7633,7 @@ function player_debuff_clear(array &$b): void
 function dmg_to_player(array $u, array $m): array
 {
     $gs = gear_stats((int) ($u['id'] ?? 0));
-    $dodge = $gs['dodge'] + hunter_assassin_dodge((int) ($u['id'] ?? 0));
+    $dodge = $gs['dodge'] + hunter_assassin_dodge((int) ($u['id'] ?? 0)) + (float) ($gs['move_speed'] ?? 0) * 0.5;
     if (function_exists('legend_relic_bonus_dodge')) {
         $dodge += legend_relic_bonus_dodge($u);
     }
@@ -7648,7 +7655,12 @@ function dmg_to_player(array $u, array $m): array
         $pres = (float) ($gs['res_' . $mel] ?? 0) + enchant_el_res((int) ($u['id'] ?? 0), $mel);
         $mag = (int) ($mag * (1 - min(80, max(0, $pres)) / 100));
     }
+    // 装备伤害减免，单独封顶，避免堆叠后完全免伤。
     [$md, $tag] = dmg_pipeline(max(1, $phys + $mag), 0.0, 0.0, (float) ($gs['precision'] ?? 0));
+    $dr = min(60.0, max(0.0, (float) ($gs['damage_reduction'] ?? 0)));
+    if ($dr > 0 && $md > 0) {
+        $md = max(1, (int) round($md * (1 - $dr / 100)));
+    }
     return [$md, $tag];
 }
 
@@ -7730,7 +7742,11 @@ function battle_round(array &$u, array &$b, string $mode): array
             $skillName = job_of($u)['skill'];
         } elseif ((int) ($u['mp'] ?? 0) >= (int) $sk['mp']) {
             $isSkill = true;
-            $u['mp'] = (int) $u['mp'] - (int) $sk['mp'];
+            // 技能冷却缩减（cooldown）：本作无CD，折算为技能法力消耗减免
+            $mpCost = (int) $sk['mp'];
+            $cdr = min(50.0, (float) (gear_stats((int) ($u['id'] ?? 0))['cooldown'] ?? 0));
+            if ($cdr > 0) { $mpCost = (int) max(0, round($mpCost * (1 - $cdr / 100))); }
+            $u['mp'] = (int) $u['mp'] - $mpCost;
             $skillName = (string) $sk['name'];
             $sid = (string) $sk['skill'];
             $profMsg = add_skill_prof((int) ($u['id'] ?? 0), $sid);
@@ -8139,7 +8155,7 @@ function battle_round(array &$u, array &$b, string $mode): array
                     $b['splash'] = (int) $b['splash'] - (int) $b['maxhp'];
                     $b['left'] = (int) $b['left'] - 1;
                     $b['wexp'] = (int) ($b['wexp'] ?? 0) + exp_gain_for($u, (string) ($b['id'] ?? ''), (int) ($b['elite'] ?? 0));
-                    $b['wgold'] = (int) ($b['wgold'] ?? 0) + monster_gold_reward((int) $b['gold']);
+                    $b['wgold'] = (int) ($b['wgold'] ?? 0) + monster_gold_reward((int) $b['gold'], (int) ($u['id'] ?? 0));
                     $logHeal .= '(余波震死一只！剩' . (int) $b['left'] . ')';
                 }
             }
@@ -8204,6 +8220,22 @@ function battle_round(array &$u, array &$b, string $mode): array
     if ($pd > 0) {
         $gsV = gear_stats((int) ($u['id'] ?? 0));
         $rb2cV = (string) (cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '');
+        // 全伤害加成（skill_damage）：装备/套装统一加成的全部伤害
+        $sdp = (float) ($gsV['skill_damage'] ?? 0);
+        if ($sdp > 0) { $pd = (int) round($pd * (1 + $sdp / 100)); }
+        // 护甲穿透（penetration）：按比例回补被怪物物防+半法防吃掉的部分
+        $penP = (float) ($gsV['penetration'] ?? 0);
+        if ($penP > 0) {
+            $mdefTotal = monster_pdef($b) + (int) (monster_mdef($b) / 2);
+            $ignore = (int) round($mdefTotal * min(100.0, $penP) / 100);
+            if ($ignore > 0) { $pd += $ignore; }
+        }
+        // 处决伤害（execute）：目标残血(<30%)时增伤
+        $exeP = (float) ($gsV['execute'] ?? 0);
+        if ($exeP > 0 && (int) ($b['maxhp'] ?? 0) > 0 && (int) ($b['hp'] ?? 0) < (int) $b['maxhp'] * 0.30) {
+            $pd = (int) round($pd * (1 + $exeP / 100));
+            $logHeal .= '(处决+' . (int) $exeP . '%)';
+        }
         // 游侠不再加暴击（改走DOT加成），刺客靠高闪避而非暴击
         $critRate = $forceCrit ? 10000 : ($gsV['crit'] + $lgCritAdd);
         [$pd, $vTag] = dmg_pipeline($pd, $critRate, $gsV['critdmg'], (float) ($gsV['precision'] ?? 0));
@@ -8377,7 +8409,7 @@ function battle_round(array &$u, array &$b, string $mode): array
         $killed = (int) ($b['num'] ?? 1) - (int) ($b['left'] ?? 1) + 1;
         if ((int) ($b['left'] ?? 1) > 1) {
             $b['wexp'] = (int) ($b['wexp'] ?? 0) + exp_gain_for($u, (string) ($b['id'] ?? ''), (int) ($b['elite'] ?? 0));
-            $b['wgold'] = (int) ($b['wgold'] ?? 0) + monster_gold_reward((int) $b['gold']);
+            $b['wgold'] = (int) ($b['wgold'] ?? 0) + monster_gold_reward((int) $b['gold'], (int) ($u['id'] ?? 0));
             $b['left'] = (int) $b['left'] - 1;
             $b['hp'] = (int) $b['maxhp'];
             hunter_dot_clear($b); // 换下一只：上一只身上的DOT层清空
@@ -8574,7 +8606,7 @@ function battle_round(array &$u, array &$b, string $mode): array
             user_save($u);
             $msg = ($msg ?? '') . '。沼泽之王倒下，你被传回白石镇广场';
         }
-        $g = (int) ($b['wgold'] ?? 0) + monster_gold_reward((int) $b['gold']);
+        $g = (int) ($b['wgold'] ?? 0) + monster_gold_reward((int) $b['gold'], (int) ($u['id'] ?? 0));
         // 转生：金币获取+30%
         if (function_exists('rs_gold_mult')) {
             $g = (int) round($g * rs_gold_mult((int) ($u['id'] ?? 0)));
@@ -9071,7 +9103,7 @@ function battle_round(array &$u, array &$b, string $mode): array
     // 战士·狂战/防战：累计本场损血作为狂战燃料（数值，非百分比），并按防御触发荆棘反击
     if ($md > 0) {
         warr_add_hp_lost($b, $md);
-        if (job_id_of($u) === 'warrior') {
+        if (job_id_of($u) === 'warrior' || (int) (gear_stats((int) ($u['id'] ?? 0))['thorns'] ?? 0) > 0) {
             // 铁壁反击是防战被动：只要你是战士，挨打就按（物防+法防）等比例反打。
             // 把防战技能（tank）设为当前技能可再放大反击，狂战技能(rage)则不放大。
             $thMult = 1.0;
@@ -9079,7 +9111,8 @@ function battle_round(array &$u, array &$b, string $mode): array
             if (!empty($actSk['tank'])) {
                 $thMult = ((int) ($actSk['tier'] ?? 0) >= 10 ? 1.3 : 1.0) * ((int) ($actSk['level'] ?? 0) >= 20 ? 1.3 : 1.0);
             }
-            $thorns = warr_thorns($u, $thMult);
+            $thorns = job_id_of($u) === 'warrior' ? warr_thorns($u, $thMult) : 0;
+            $thorns += (int) (gear_stats((int) ($u['id'] ?? 0))['thorns'] ?? 0); // 装备荆棘反伤：全职业都可触发
             if (function_exists('legend_relic_counter')) {
                 $__cl = '';
                 $thorns = legend_relic_counter($u, $b, (int) $thorns, $__cl);
@@ -9127,6 +9160,12 @@ function battle_round(array &$u, array &$b, string $mode): array
         if (mt_rand(1, 100) <= 5) { $u['hp'] = (int)$u['hp'] + (int)($md * 0.4); $md = (int)($md * 0.6); $log .= '(圣光庇护)'; }
         $rh = min((int)$u['maxhp'] - (int)$u['hp'], (int)((int)$u['maxhp'] * 0.03));
         if ($rh > 0) { $u['hp'] = (int)$u['hp'] + $rh; $log .= '(圣光+' . $rh . ')'; }
+    }
+    // 装备生命回复（regen）：每回合按最大生命百分比回血
+    $regenPct = (float) (gear_stats((int) ($u['id'] ?? 0))['regen'] ?? 0);
+    if ($regenPct > 0 && (int) $u['hp'] > 0) {
+        $rgh = min((int) $u['maxhp'] - (int) $u['hp'], (int) round((int) $u['maxhp'] * $regenPct / 100));
+        if ($rgh > 0) { $u['hp'] = (int) $u['hp'] + $rgh; $log .= '(回复+' . $rgh . ')'; }
     }
     $tankHp = tank_auto($u, 'hp');
     $log .= $tankHp;

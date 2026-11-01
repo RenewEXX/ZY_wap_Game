@@ -354,7 +354,7 @@ function arena_bots_tick(string $zone): void
         }
     }
     // 2) 机器人往上爬：随机挑 1~3 个机器人，若目标名次被别的机器人占着，就互换（模拟爬榜）
-    $climb = random_int(1, 3);
+    $climb = random_int(2, 4);
     for ($i = 0; $i < $climb; $i++) {
         $from = $rows[array_rand($rows)];
         $fromRank = (int) $from['rank'];
@@ -378,6 +378,35 @@ function arena_bots_tick(string $zone): void
         }
         db()->prepare('UPDATE arena_rank SET rank=? WHERE rowid=?')->execute([$toRank, (int) $from['rowid']]);
         db()->prepare('UPDATE arena_rank SET rank=? WHERE rowid=?')->execute([$fromRank, (int) $occ['rowid']]);
+    }
+    // 2.5) 机器人互殴：随机挑几对机器人战斗，胜者往上爬一格，败者往下滑一格，让榜单更活跃。
+    if (count($rows) >= 2) {
+        $pairs = random_int(2, 4);
+        for ($i = 0; $i < $pairs; $i++) {
+            $a = $rows[array_rand($rows)];
+            $b = $rows[array_rand($rows)];
+            if ((int) $a['rowid'] === (int) $b['rowid']) {
+                continue;
+            }
+            $ra = (int) $a['rank'];
+            $rb = (int) $b['rank'];
+            if ($ra === $rb) {
+                continue;
+            }
+            // 战力加噪声决定胜负
+            $pa = (int) $a['power'] + random_int(-80, 80);
+            $pb = (int) $b['power'] + random_int(-80, 80);
+            $worse = $ra > $rb ? $a : $b;
+            $better = $ra > $rb ? $b : $a;
+            $worsePow = $ra > $rb ? $pa : $pb;
+            $betterPow = $ra > $rb ? $pb : $pa;
+            if ($worsePow > $betterPow) {
+                $worseRank = (int) $worse['rank'];
+                $betterRank = (int) $better['rank'];
+                db()->prepare('UPDATE arena_rank SET rank=? WHERE rowid=?')->execute([$betterRank, (int) $worse['rowid']]);
+                db()->prepare('UPDATE arena_rank SET rank=? WHERE rowid=?')->execute([$worseRank, (int) $better['rowid']]);
+            }
+        }
     }
     // 3) 机器人主动挑战真人：有输有赢，赢了就抢真人的名次。
     arena_bots_attack_players($zone);

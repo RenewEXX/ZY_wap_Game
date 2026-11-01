@@ -459,7 +459,14 @@ function arena_bots_attack_players(string $zone): void
         }
         $defTeam = arena_my_team($tu);  // 真人战队（含 _power）
         $atkTeam = arena_bot_team_against($bot, $defTeam); // 机器人战队：按战力比对真人缩放，顶级机器人确实更强
-        [$botWin, $log] = arena_sim($atkTeam, $defTeam);
+        $botPow = max(1, (int) ($bot['power'] ?? 1));
+        $defPow = max(1, (int) ($defTeam['_power'] ?? 0));
+        // 战力要讲究事实：机器人战力低于玩家时，不能靠随机把玩家干败。
+        if ($botPow < $defPow) {
+            $botWin = false;
+        } else {
+            [$botWin, $log] = arena_sim($atkTeam, $defTeam);
+        }
         $botRank = (int) $bot['rank'];
         if ($botWin) {
             // 机器人胜：互换名次，真人掉到机器人原位

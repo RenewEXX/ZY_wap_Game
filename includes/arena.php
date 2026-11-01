@@ -409,14 +409,13 @@ function arena_bots_attack_players(string $zone): void
             $target = $players[array_rand($players)];
         }
         $tRank = (int) $target['rank'];
-        if ($tRank <= 1) {
-            continue; // 第1名不打，留点面子/避免榜首真人被无限薅
-        }
-        // 找名次刚好在真人前面（更靠前）的机器人，模拟“它来挑战你”
+        // 名次靠前的真人也可以被紧邻其后的机器人挑战（机器人从下方往上爬），
+        // 这样榜首/榜二也不会永远没人来打。
+        // 找名次刚好在真人后面（更靠后）的机器人，模拟“它来挑战你”
         $cands = [];
         foreach ($bots as $b) {
             $br = (int) $b['rank'];
-            if ($br < $tRank && $br >= max(1, $tRank - 30)) {
+            if ($br > $tRank && $br <= $tRank + 30) {
                 $cands[] = $b;
             }
         }

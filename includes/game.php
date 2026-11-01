@@ -737,6 +737,7 @@ function peak_enter(int $uid, string $arena): string
     $u['mp'] = (int) ($u['maxmp'] ?? 0);
     user_save($u);
     mat_set((int) $uid, 'peak_force', time());
+    cflag_set((int) $uid, 'act_peak_joined', 1);
     return '进入【' . loc($arena)['name'] . '】！伤势尽复，活到最后就是巅峰。';
 }
 
@@ -1168,6 +1169,7 @@ function war_add_score(int $uid, string $mid): void
     if (!$w) {
         return;
     }
+    cflag_set((int) $uid, 'act_gw_joined', 1);
     $col = ((int) $w['a_gid'] === (int) $g['id']) ? 'a_score' : 'b_score';
     db()->prepare('UPDATE wars SET ' . $col . '=' . $col . '+? WHERE id=?')->execute([monster_lv($mid), (int) $w['id']]);
 }
@@ -11305,6 +11307,57 @@ function arena_guide_claim(int $uid): string
     $u['gold'] = (int) ($u['gold'] ?? 0) + 2000;
     user_save($u);
     return '雷横拍了拍你的肩：好，80级了，有胆！竞技场欢迎你。任务完成，奖励20银！';
+}
+
+// 随机宠物蛋奖励（加权蛋池，排除传奇/未开放），发 n 个进背包
+function random_pet_egg_reward(int $uid, int $n = 2): string
+{
+    $pool = shop_egg_pool();
+    $tot = array_sum($pool);
+    $eggs = pet_eggs();
+    $names = [];
+    for ($i = 0; $i < max(1, $n); $i++) {
+        $r = mt_rand(1, max(1, $tot));
+        $pick = 'egg_slime';
+        foreach ($pool as $mid => $w) {
+            $r -= $w;
+            if ($r <= 0) {
+                $pick = $mid;
+                break;
+            }
+        }
+        add_mat((int) $uid, $pick, 1);
+        $names[] = (string) ($eggs[$pick]['name'] ?? $pick);
+    }
+    return '随机宠物蛋×' . max(1, $n) . '：' . implode('、', $names) . '（已进背包）';
+}
+
+// 活动任务领取：peak=巅峰之战（进场一次）、guildwar=公会战（参与一次战功）
+function activity_task_claim(int $uid, string $task): string
+{
+    $uid = (int) $uid;
+    $f = cflags($uid);
+    if ($task === 'peak') {
+        if (!empty($f['act_peak_claimed'])) {
+            return '';
+        }
+        if (empty($f['act_peak_joined'])) {
+            return '你还没参加过巅峰之战（每晚22:30~23:00）。';
+        }
+        cflag_set($uid, 'act_peak_claimed', 1);
+        return random_pet_egg_reward($uid, 2);
+    }
+    if ($task === 'guildwar') {
+        if (!empty($f['act_gw_claimed'])) {
+            return '';
+        }
+        if (empty($f['act_gw_joined'])) {
+            return '你还没参加过公会战（公会宣战期间刷怪涨战功）。';
+        }
+        cflag_set($uid, 'act_gw_claimed', 1);
+        return random_pet_egg_reward($uid, 2);
+    }
+    return '';
 }
 
 function quest_progress2_text(int $uid, array $qs): string

@@ -13,6 +13,16 @@ if ($a === 'claim_arena') {
     header('Location: quest.php?tab=activity');
     exit;
 }
+if ($a === 'claim_peak') {
+    flash_set(activity_task_claim((int) $u['id'], 'peak'));
+    header('Location: quest.php?tab=activity');
+    exit;
+}
+if ($a === 'claim_gw') {
+    flash_set(activity_task_claim((int) $u['id'], 'guildwar'));
+    header('Location: quest.php?tab=activity');
+    exit;
+}
 $q = (int) ($u['quest'] ?? 0);
 $newSteps = [
     0 => ['t' => '麦田驱逐', 'd' => '雾谷麦田打哥布林。'],
@@ -137,15 +147,41 @@ if ($tab === 'doing') {
     }
 } elseif ($tab === 'activity') {
     echo '<b>活动任务（可与主线同时进行）</b><br>';
-    $done = !empty(cflags((int) $u['id'])['arena_guide_done']);
+    $af = cflags((int) $u['id']);
+    // 1) 竞技场征召
+    $done = !empty($af['arena_guide_done']);
     echo '·<b>【竞技场征召】</b> ';
     if ($done) {
         echo '<span style="color:#6f6">[已完成]</span> 雷横的20银已领取。<br>';
     } elseif ((int) ($u['lv'] ?? 1) < 80) {
         echo '<span class="muted">[未解锁]</span> 需80级。参加竞技场的引导任务，奖励20银。<br>';
     } else {
-        echo '<span class="warn">[可领取]</span> 80级了！点下方领取奖励（或直接去【活动】参加竞技场）。<br>';
+        echo '<span class="warn">[可领取]</span> 80级了！参加竞技场，奖励20银。<br>';
         echo '<a href="quest.php?a=claim_arena">领取20银奖励</a><br>';
+    }
+    // 2) 巅峰之战
+    $peakJoined = !empty($af['act_peak_joined']);
+    $peakClaimed = !empty($af['act_peak_claimed']);
+    echo '·<b>【巅峰之战】</b> ';
+    if ($peakClaimed) {
+        echo '<span style="color:#6f6">[已完成]</span> 奖励已领取。<br>';
+    } elseif (!$peakJoined) {
+        echo '<span class="muted">[进行中]</span> 参加一次巅峰之战（每晚22:30~23:00，底部【活动】进场），完成后奖励随机宠物蛋×2。<br>';
+    } else {
+        echo '<span class="warn">[可领取]</span> 已参加巅峰之战，领取奖励。<br>';
+        echo '<a href="quest.php?a=claim_peak">领取随机宠物蛋×2</a><br>';
+    }
+    // 3) 公会战
+    $gwJoined = !empty($af['act_gw_joined']);
+    $gwClaimed = !empty($af['act_gw_claimed']);
+    echo '·<b>【公会战】</b> ';
+    if ($gwClaimed) {
+        echo '<span style="color:#6f6">[已完成]</span> 奖励已领取。<br>';
+    } elseif (!$gwJoined) {
+        echo '<span class="muted">[进行中]</span> 公会战期间（宣战后24h）刷怪涨战功，参与一次。完成后奖励随机宠物蛋×2。<br>';
+    } else {
+        echo '<span class="warn">[可领取]</span> 已参加公会战，领取奖励。<br>';
+        echo '<a href="quest.php?a=claim_gw">领取随机宠物蛋×2</a><br>';
     }
     // 预留：后续活动任务可在此追加
 } elseif ($tab === 'done') {

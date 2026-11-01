@@ -110,15 +110,21 @@ if ((string) ($_GET['a'] ?? '') === 'all') {
     echo '魔力' . (int) ($u['maxmp'] ?? 0) . '<br>';
     echo '四维：力' . (int) ($u['str'] ?? 0) . ' 毅' . (int) ($u['agi'] ?? 0) . ' 体' . (int) ($u['vit'] ?? 0) . ' 智' . (int) ($u['int'] ?? 0) . '<br>';
     foreach (['atk_pct', 'matk_pct', 'precision', 'summon_power', 'summon_hp', 'matk', 'mdef', 'truedmg', 'crit', 'critdmg', 'speed', 'element', 'lifesteal', 'penetration', 'skill_damage', 'execute', 'damage_reduction', 'resist', 'thorns', 'regen', 'energy', 'cooldown', 'hit', 'exp_gain', 'dodge', 'move_speed', 'control_resist', 'slow_resist', 'all_attr', 'gold_gain', 'magic_find', 'res_light', 'res_dark', 'res_fire', 'res_wind', 'res_ice', 'res_thunder', 'allres', 'bagcap'] as $k) {
-        if ($k !== 'magic_find' && (float) ($gs[$k] ?? 0) == 0.0) {
-            continue;
-        }
-        echo h(affix_fmt($k, (float) $gs[$k])) . '<br>';
+        echo h(affix_fmt($k, (float) ($gs[$k] ?? 0))) . '<br>';
     }
     // 持续伤害(DOT)加成：散件传说 dot 总和 + 蚀心套装 + 游侠2觉，独立于 gear_stats 结算
     if (function_exists('hunter_dot_mult')) {
         $dotPct = (hunter_dot_mult($u) - 1) * 100;
         echo '持续伤害+' . rtrim(rtrim(number_format($dotPct, 1, '.', ''), '0'), '.') . '%' . '<br>';
+    }
+    // 遗物攻击/防御加成（独立于 gear_stats 结算）
+    if (function_exists('legend_relic_eff_sum')) {
+        $ra = legend_relic_eff_sum((int) $u['id'], 'atk_pct');
+        $rd = legend_relic_eff_sum((int) $u['id'], 'def_pct');
+        if ($ra != 0) echo '遗物攻击+' . rtrim(rtrim(number_format($ra, 1, '.', ''), '0'), '.') . '%' . '<br>';
+        if ($rd != 0) echo '遗物防御+' . rtrim(rtrim(number_format($rd, 1, '.', ''), '0'), '.') . '%' . '<br>';
+        $sc = legend_relic_eff_sum((int) $u['id'], 'summon_cap');
+        if ($sc > 0) echo '召唤上限+' . (int) $sc . '<br>';
     }
     echo '属性攻击(附魔，技能对应属性生效)：';
     $els = [];

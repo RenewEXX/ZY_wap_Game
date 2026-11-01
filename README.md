@@ -31,7 +31,7 @@ php -S localhost:8080
 ## 更新日志（新的在上）
 
 ### 2026-11-01-万圣节传说宠物（南瓜灯魔·杰克）
-- 新增传说宠物 `pumpkin_jack`（强度对标魔女阿比希尔：growth 2.4、技能「南瓜爆裂」灼烧偷取5%生命、atk*1.28/def*1.1/maxhp*0.72），蛋 `pumpkin_jack_egg`。
+- 新增传说宠物 `pumpkin_jack`（强度对标魔女阿比希尔：growth 2.4、主动技能「南瓜爆裂」mult 1.72 + 南瓜瘴气中毒3层（3%×3），宠物技能不与魔女重复），蛋 `pumpkin_jack_egg`。
 - 万圣节活动季（10/24~11/07，`halloween_pool_active()`）限时以低权重加入砸蛋随机池 `shop_egg_pool()`；`dhtest72` 覆盖。
 
 ### 2026-10-31-节日祝福邮件

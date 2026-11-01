@@ -1812,7 +1812,7 @@ function pet_species(): array
         'mist_fox' => ['name' => '雾狐', 'quality' => 'rare', 'growth' => 1.35, 'atk' => 11, 'def' => 5, 'hp' => 60, 'spd' => 22, 'crit' => 7, 'cd' => 160, 'active' => '雾隐突袭', 'mult' => 1.5, 'passive' => '雾隐：闪避+3%', 'source' => '商城砸蛋'],
         'thunder_bird' => ['name' => '雷鸟', 'quality' => 'rare', 'growth' => 1.35, 'atk' => 12, 'def' => 4, 'hp' => 55, 'spd' => 24, 'crit' => 8, 'cd' => 165, 'active' => '落雷', 'mult' => 1.6, 'passive' => '雷速：出手更快', 'source' => '商城砸蛋'],
         'abyss_witch' => ['name' => '魔女阿比希尔', 'quality' => 'legend', 'growth' => 2.4, 'atk' => 38, 'def' => 12, 'hp' => 120, 'spd' => 20, 'crit' => 12, 'cd' => 175, 'active' => '魔女低语', 'mult' => 1.7, 'passive' => '月之庇佑：低语偷取敌人5%生命', 'source' => '限时活动掉落'],
-        'pumpkin_jack' => ['name' => '南瓜灯魔·杰克', 'quality' => 'legend', 'growth' => 2.4, 'atk' => 37, 'def' => 13, 'hp' => 128, 'spd' => 19, 'crit' => 12, 'cd' => 178, 'active' => '南瓜爆裂', 'mult' => 1.72, 'passive' => '惊魂夜：爆裂灼烧并偷取敌人5%生命', 'source' => '万圣节限时抽取'],
+        'pumpkin_jack' => ['name' => '南瓜灯魔·杰克', 'quality' => 'legend', 'growth' => 2.4, 'atk' => 37, 'def' => 13, 'hp' => 128, 'spd' => 19, 'crit' => 12, 'cd' => 178, 'active' => '南瓜爆裂', 'mult' => 1.72, 'passive' => '惊魂夜：爆裂释放南瓜瘴气，中毒持续灼烧', 'source' => '万圣节限时抽取'],
         'earth_dragon' => ['name' => '土龙岳柱幼体', 'quality' => 'legend', 'growth' => 2.1, 'atk' => 16, 'def' => 24, 'hp' => 380, 'spd' => 10, 'crit' => 5, 'cd' => 190, 'active' => '岳柱镇压', 'mult' => 1.2, 'passive' => '磐岩：承伤-25%', 'source' => '岩狱泰坦掉落'],
     ] + dragon_pets();
 }
@@ -2037,11 +2037,14 @@ function pet_attack(array &$u, array &$b): string
             $dmg = (int) ($dmg * (float) $sp['mult']);
             $tag = '（魔女低语，偷取' . $steal . '点生命）';
         } elseif ($p['species'] === 'pumpkin_jack' && mt_rand(1, 100) <= 25 && (int) ($b['hp'] ?? 0) > 0) {
-            $burn = max(1, (int) ((int) $b['hp'] * 0.05));
-            $b['hp'] = (int) $b['hp'] - $burn;
-            $u['hp'] = min((int) $u['maxhp'], (int) $u['hp'] + $burn);
+            if (!isset($b['poison']) || (int) $b['poison'] <= 0) {
+                $b['poison'] = 3;
+                $b['poison_pct'] = 3.0;
+            } else {
+                $b['poison'] = (int) $b['poison'] + 1;
+            }
             $dmg = (int) ($dmg * (float) $sp['mult']);
-            $tag = '（南瓜爆裂，灼烧偷取' . $burn . '点生命）';
+            $tag = '（南瓜爆裂，南瓜瘴气中毒3层）';
         } elseif ($p['species'] === 'ghost') {
             $b['fear'] = 3;
             $dmg = (int) ($dmg * (float) $sp['mult']);

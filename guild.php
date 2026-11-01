@@ -443,7 +443,7 @@ foreach (guild_rank((string) ($u['zone'] ?? 'z1')) as $r) {
 if ($g) {
     echo '<div class="hr">--------</div>';
     echo '<a href="guild.php">总览</a> <a href="guild.php?tab=wh">仓库(' . guild_warehouse_count((int) $g['id']) . '/' . guild_warehouse_cap((int) $g['level']) . ')</a><br>';
-    echo '【我的公会】' . h($g['name']) . ' ' . (int) $g['level'] . '级（经验' . (int) $g['exp'] . '/' . guild_level_need((int) $g['level']) . '）<br>';
+    echo '【我的公会】' . h($g['name']) . ' ' . (int) $g['level'] . '级（经验' . h(fmt_money((int) $g['exp'])) . '/' . h(fmt_money(guild_level_need((int) $g['level']))) . '）<br>';
     echo '身份：' . h(guild_role_name((string) ($g['role'] ?? 'member'))) . '　贡献：' . (int) $g['contrib'] . '金　仓库金：' . fmt_money((int) ($g['gold'] ?? 0)) . '<br>';
     echo '公告：' . h($g['notice'] === '' ? '暂无' : $g['notice']) . '<br>';
     echo '加成：全员打怪经验+' . guild_exp_bonus((int) $g['level']) . '%　仓库' . guild_warehouse_cap((int) $g['level']) . '格<br>';

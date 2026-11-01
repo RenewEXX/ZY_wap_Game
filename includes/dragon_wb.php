@@ -292,6 +292,21 @@ function drg_boss_move(string $mid_or_el): array
 }
 
 // ---------- 掉落：按排行发奖 ----------
+// 世界BOSS名次奖励：[金币(铜), 魔钻(内部=0.1钻)]；与邮件文案（500银/100魔钻…）一致
+function drg_place_reward(int $place): array
+{
+    if ($place === 1) {
+        return [50000, 1000];
+    }
+    if ($place <= 3) {
+        return [20000, 500];
+    }
+    if ($place <= 10) {
+        return [8000, 200];
+    }
+    return [0, 50];
+}
+
 function drg_rewards(string $mid): void
 {
     $d = dragon($mid);
@@ -309,6 +324,7 @@ function drg_rewards(string $mid): void
     foreach ($rank as $i => $row) {
         $uid = (int) $row['uid'];
         $place = $i + 1;
+        [$rg, $rd] = drg_place_reward($place);
         // 每位参与者都拿龙魂+龙玉（保证转生材料可累积）
         add_mat($uid, (string) $d['soul'], 1);
         add_mat($uid, (string) $d['jade'], 1);
@@ -319,8 +335,8 @@ function drg_rewards(string $mid): void
             make_equip($uid, $slots[$pc1] ?? 'weapon', $pc1, 4, 700);
             $u = user_by_id($uid);
             if ($u) {
-                $u['diamonds'] = (int) ($u['diamonds'] ?? 0) + 100;
-                $u['gold'] = (int) ($u['gold'] ?? 0) + 5000000;
+                $u['diamonds'] = (int) ($u['diamonds'] ?? 0) + $rd;
+                $u['gold'] = (int) ($u['gold'] ?? 0) + $rg;
                 user_save($u);
             }
             add_mat($uid, 'soul_shard', 30);
@@ -330,8 +346,8 @@ function drg_rewards(string $mid): void
             make_equip($uid, $slots[$pc] ?? 'weapon', $pc, 3, 680);
             $u = user_by_id($uid);
             if ($u) {
-                $u['diamonds'] = (int) ($u['diamonds'] ?? 0) + 50;
-                $u['gold'] = (int) ($u['gold'] ?? 0) + 2000000;
+                $u['diamonds'] = (int) ($u['diamonds'] ?? 0) + $rd;
+                $u['gold'] = (int) ($u['gold'] ?? 0) + $rg;
                 user_save($u);
             }
             add_mat($uid, 'soul_shard', 20);
@@ -339,8 +355,8 @@ function drg_rewards(string $mid): void
         } elseif ($place <= 10) {
             $u = user_by_id($uid);
             if ($u) {
-                $u['diamonds'] = (int) ($u['diamonds'] ?? 0) + 20;
-                $u['gold'] = (int) ($u['gold'] ?? 0) + 800000;
+                $u['diamonds'] = (int) ($u['diamonds'] ?? 0) + $rd;
+                $u['gold'] = (int) ($u['gold'] ?? 0) + $rg;
                 user_save($u);
             }
             add_mat($uid, 'soul_shard', 10);
@@ -352,7 +368,7 @@ function drg_rewards(string $mid): void
         } else {
             $u = user_by_id($uid);
             if ($u) {
-                $u['diamonds'] = (int) ($u['diamonds'] ?? 0) + 5;
+                $u['diamonds'] = (int) ($u['diamonds'] ?? 0) + $rd;
                 user_save($u);
             }
             add_mat($uid, 'soul_shard', 3);

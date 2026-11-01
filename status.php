@@ -81,7 +81,7 @@ if ((string) ($_GET['a'] ?? '') === 'rename') {
     echo '<div class="hr">--------</div>【改名】当前：' . h($u['username']) . '（本大区唯一）<br>';
     $rc = (int) (mats_of((int) $u['id'])['rename_card'] ?? 0);
     if ($rc <= 0) {
-        echo '<span class="muted">没有改名卡，去<a href="mall.php">商城·功能道具</a>买（100魔钻/张）。</span><br>';
+        echo '<span class="muted">没有改名卡，去<a href="mall.php">商城·功能道具</a>买（' . h(fmt_diamond(100)) . '/张）。</span><br>';
     } else {
         echo '剩改名卡x' . $rc . '<br>';
         echo '<form method="post" action="status.php?a=renamedo">';

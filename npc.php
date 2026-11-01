@@ -652,7 +652,7 @@ if ($who === 'rb_veil' && $choice === 'try' && in_array((int) $u['quest'], [40, 
         else {
             $u['hp'] = (int) ($u['hp'] ?? 1) - $cost;
             cflag_set((int) $u['id'], 'rb1_sum', 1);
-            $u['gold'] = (int)($u['gold'] ?? 0) + 5000;
+            $u['gold'] = (int)($u['gold'] ?? 0) + 500;
             user_save($u);
             flash_set('你割开手掌，血没落地就被黑暗喝掉了。一只深渊小鬼从影子里抬起头，第一次叫你主人。深渊试炼通过！奖励5银。');
         }
@@ -679,8 +679,8 @@ if ($who === 'rb_mori' && $choice === 'quiz' && in_array((int) $u['quest'], [40,
     if (!empty($f['rb1_mag'])) { flash_set('莫里亚蒂：你已经懂了，去别处看看吧。'); }
     elseif ($a1 !== '' && $a2 !== '' && $a3 !== '') {
         if ($a1 === 'light' && $a2 === 'holy' && $a3 === 'arcane') { cflag_set((int) $u['id'], 'rb1_mag', 1); $u['gold'] = (int)($u['gold'] ?? 0) + 5000; user_save($u); flash_set('莫里亚蒂：全对！法师试炼通过！奖励5银。'); }
-        elseif ((int)($u['gold'] ?? 0) < 1000) { flash_set('答错了，重答一次1银，你钱不够。'); }
-        else { $u['gold'] = (int)$u['gold'] - 1000; user_save($u); flash_set('答错了，扣1银，再想想（光/圣光/奥术）。'); }
+        elseif ((int)($u['gold'] ?? 0) < 100) { flash_set('答错了，重答一次1银，你钱不够。'); }
+        else { $u['gold'] = (int)$u['gold'] - 100; user_save($u); flash_set('答错了，扣1银，再想想（光/圣光/奥术）。'); }
     }
     header('Location: npc.php?who=rb_mori'); exit;
 }

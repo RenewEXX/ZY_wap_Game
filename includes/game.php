@@ -467,6 +467,7 @@ function mall_goods(): array
     $g['reset_potion'] = ['name' => '属性洗点药', 'price' => 300, 'unit' => 1];
     $g['bag_ext5'] = ['name' => '5格背包扩充', 'price' => 200, 'unit' => 1];
     $g['bag_ext10'] = ['name' => '10格背包扩充', 'price' => 500, 'unit' => 1];
+    $g['wh_ext5'] = ['name' => '仓库扩容+5', 'price' => 150, 'unit' => 1];
     foreach (['light', 'dark', 'fire', 'wind', 'ice', 'thunder'] as $el) {
         $g['el_' . $el . '_stone'] = ['name' => element_name($el) . '属性石', 'price' => 20, 'unit' => 1];
     }
@@ -2332,7 +2333,7 @@ function mat_hidden(string $mid): bool
     if (str_ends_with($mid, '_enter') || str_ends_with($mid, '_stage')) {
         return true;
     }
-    return in_array($mid, ['offline_on', 'offline_time', 'seen_last', 'exp_card_until', 'bag_ext5_used', 'bag_ext10_used', 'dummy_total', 'tank_cd_hp', 'tank_cd_mp', 'peak_force', 'peak_duel_from', 'peak_storm_t', 'peak_buff_atk', 'peak_buff_def', 'peak_buff_heal', 'peak_zone', 'arena_day', 'arena_used', 'arena_bought', 'arena_coin', 'mine_badge', 'active_wid', 'active_week', 'priest_wid', 'fr_enter', 'fr_stage', 'em_enter', 'em_stage', 'pz_enter', 'pz_stage', 'sen_enter', 'sen_stage', 'vx_enter', 'wb_claimed', 'legend_fixed', 'twohand_fixed', 'rs_summ_hp', 'rs_point', 'exp_card_mult', 'gy_month', 'yz_month'], true);
+    return in_array($mid, ['offline_on', 'offline_time', 'seen_last', 'exp_card_until', 'bag_ext5_used', 'bag_ext10_used', 'dummy_total', 'tank_cd_hp', 'tank_cd_mp', 'peak_force', 'peak_duel_from', 'peak_storm_t', 'peak_buff_atk', 'peak_buff_def', 'peak_buff_heal', 'peak_zone', 'arena_day', 'arena_used', 'arena_bought', 'arena_coin', 'mine_badge', 'active_wid', 'active_week', 'priest_wid', 'fr_enter', 'fr_stage', 'em_enter', 'em_stage', 'pz_enter', 'pz_stage', 'sen_enter', 'sen_stage', 'vx_enter', 'wb_claimed', 'legend_fixed', 'twohand_fixed', 'rs_summ_hp', 'rs_point', 'exp_card_mult', 'gy_month', 'yz_month', 'wh_cap', 'wh_ext5'], true);
 }
 
 // 当前版本真正有用的锻造材料：强化石 + 属性石/晶石/珠/神石
@@ -4347,6 +4348,12 @@ function mat_name(string $id): string
     if ($id === 'bag_ext10') {
         return '10格背包扩充';
     }
+    if ($id === 'wh_ext5') {
+        return '仓库扩容+5';
+    }
+    if ($id === 'wh_cap') {
+        return '仓库扩容(累计)';
+    }
     if ($id === 'dummy_time') {
         return '挂机时间(秒)';
     }
@@ -4740,6 +4747,175 @@ function use_bag_ext(int $uid, string $mid): string
     add_mat((int) $uid, $mid, -1);
     add_mat((int) $uid, $usedKey, 1);
     return '背包扩充+' . $slots . '格！现在' . bag_size((int) $uid) . '格。';
+}
+
+// ========== 个人仓库（存物/存钱） ==========
+// 容量：默认 20 格 + 商城【仓库扩容+5】累计（wh_cap）。每行（一种材料堆 / 一件装备）占 1 格。
+function warehouse_cap_bonus(int $uid): int
+{
+    return max(0, (int) (mats_of((int) $uid)['wh_cap'] ?? 0));
+}
+
+function warehouse_capacity(int $uid): int
+{
+    return 20 + warehouse_cap_bonus((int) $uid);
+}
+
+function warehouse_slots_used(int $uid): int
+{
+    return (int) (db()->query('SELECT COUNT(*) FROM warehouse WHERE uid=' . (int) $uid)->fetchColumn() ?: 0);
+}
+
+// 可入仓的材料：真实道具（锻造/可用/技能书/宠物蛋/药罐/百分比药/龙材/任务物/可交易），且非系统标记
+function warehouse_mat_allowed(string $mid): bool
+{
+    if ($mid === '' || mat_hidden($mid) || str_starts_with($mid, 'autosell_')) {
+        return false;
+    }
+    if (is_craft_mat($mid) || is_usable_item($mid) || isset(skill_books()[$mid]) || isset(pet_eggs()[$mid])
+        || isset(mall_tanks()[$mid]) || isset(pct_potions()[$mid]) || isset(quest_mats()[$mid])
+        || is_tradable_mat($mid)) {
+        return true;
+    }
+    return function_exists('dragon_mats') && isset(dragon_mats()[$mid]);
+}
+
+function warehouse_gold_of(int $uid): int
+{
+    $st = db()->prepare('SELECT amount FROM warehouse_gold WHERE uid=?');
+    $st->execute([(int) $uid]);
+    return (int) ($st->fetchColumn() ?: 0);
+}
+
+function warehouse_store_mat(int $uid, string $mid): string
+{
+    $uid = (int) $uid;
+    if (!warehouse_mat_allowed($mid)) {
+        return '这个不能存仓库。';
+    }
+    $have = (int) (mats_of($uid)[$mid] ?? 0);
+    if ($have <= 0) {
+        return '背包里没有【' . mat_name($mid) . '】。';
+    }
+    $st = db()->prepare('SELECT id FROM warehouse WHERE uid=? AND kind="mat" AND mat_id=?');
+    $st->execute([$uid, $mid]);
+    $wid = (int) ($st->fetchColumn() ?: 0);
+    if ($wid <= 0) {
+        if (warehouse_slots_used($uid) >= warehouse_capacity($uid)) {
+            return '仓库满了（' . warehouse_capacity($uid) . '格），先取出点东西。';
+        }
+        db()->prepare('INSERT INTO warehouse (uid, kind, mat_id, qty, equip_id, created_at) VALUES (?, "mat", ?, ?, 0, ?)')->execute([$uid, $mid, $have, time()]);
+    } else {
+        db()->prepare('UPDATE warehouse SET qty=qty+? WHERE id=?')->execute([$have, $wid]);
+    }
+    mat_del($uid, $mid);
+    return '存入【' . mat_name($mid) . '】x' . $have . '。';
+}
+
+function warehouse_take_mat(int $uid, int $wid): string
+{
+    $uid = (int) $uid;
+    $st = db()->prepare('SELECT * FROM warehouse WHERE id=? AND uid=? AND kind="mat"');
+    $st->execute([(int) $wid, $uid]);
+    $row = $st->fetch();
+    if (!$row) {
+        return '仓库里没有这个。';
+    }
+    $mid = (string) $row['mat_id'];
+    $qty = (int) $row['qty'];
+    add_mat($uid, $mid, $qty);
+    db()->prepare('DELETE FROM warehouse WHERE id=?')->execute([(int) $wid]);
+    return '取出【' . mat_name($mid) . '】x' . $qty . '。';
+}
+
+function warehouse_store_equip(int $uid, int $eid): string
+{
+    $uid = (int) $uid;
+    $st = db()->prepare('SELECT * FROM equips WHERE id=? AND uid=? AND pos=""');
+    $st->execute([(int) $eid, $uid]);
+    $eq = $st->fetch();
+    if (!$eq) {
+        return '穿着的或不在背包里的装备不能存。';
+    }
+    if (warehouse_slots_used($uid) >= warehouse_capacity($uid)) {
+        return '仓库满了（' . warehouse_capacity($uid) . '格），先取出点东西。';
+    }
+    db()->prepare('UPDATE equips SET uid=0, pos="warehouse" WHERE id=?')->execute([(int) $eid]);
+    db()->prepare('INSERT INTO warehouse (uid, kind, mat_id, qty, equip_id, created_at) VALUES (?, "equip", "", 1, ?, ?)')->execute([$uid, (int) $eid, time()]);
+    _gear_uncache($uid);
+    return '存入装备【' . equip_shortname((string) $eq['name']) . '】。';
+}
+
+function warehouse_take_equip(int $uid, int $wid): string
+{
+    $uid = (int) $uid;
+    $st = db()->prepare('SELECT * FROM warehouse WHERE id=? AND uid=? AND kind="equip"');
+    $st->execute([(int) $wid, $uid]);
+    $row = $st->fetch();
+    if (!$row) {
+        return '仓库里没有这件装备。';
+    }
+    if (bag_full($uid)) {
+        return '背包满了，先腾个位置再取。';
+    }
+    $eid = (int) $row['equip_id'];
+    $nm = db()->prepare('SELECT name FROM equips WHERE id=?');
+    $nm->execute([$eid]);
+    $name = (string) ($nm->fetchColumn() ?: '');
+    if ($name === '') {
+        db()->prepare('DELETE FROM warehouse WHERE id=?')->execute([(int) $wid]);
+        return '这件装备已不存在，已从仓库清掉。';
+    }
+    db()->prepare('UPDATE equips SET uid=?, pos="" WHERE id=?')->execute([$uid, $eid]);
+    db()->prepare('DELETE FROM warehouse WHERE id=?')->execute([(int) $wid]);
+    _gear_uncache($uid);
+    return '取出装备【' . equip_shortname($name) . '】。';
+}
+
+function warehouse_store_gold(int $uid, int $amount): string
+{
+    $uid = (int) $uid;
+    $u = user_by_id($uid);
+    if (!$u) {
+        return '角色不存在。';
+    }
+    $amount = min(max(0, (int) $amount), (int) $u['gold']);
+    if ($amount <= 0) {
+        return '身上没有可存的金币。';
+    }
+    $u['gold'] = (int) $u['gold'] - $amount;
+    user_save($u);
+    db()->prepare('INSERT OR IGNORE INTO warehouse_gold (uid, amount) VALUES (?, 0)')->execute([$uid]);
+    db()->prepare('UPDATE warehouse_gold SET amount=amount+? WHERE uid=?')->execute([$amount, $uid]);
+    return '存入 ' . fmt_money($amount) . '。';
+}
+
+function warehouse_take_gold(int $uid, int $amount): string
+{
+    $uid = (int) $uid;
+    $have = warehouse_gold_of($uid);
+    $amount = min(max(0, (int) $amount), $have);
+    if ($amount <= 0) {
+        return '仓库里没有可取的金币。';
+    }
+    db()->prepare('UPDATE warehouse_gold SET amount=amount-? WHERE uid=?')->execute([$amount, $uid]);
+    $u = user_by_id($uid);
+    if ($u) {
+        $u['gold'] = (int) $u['gold'] + $amount;
+        user_save($u);
+    }
+    return '取出 ' . fmt_money($amount) . '。';
+}
+
+function warehouse_use_ext(int $uid): string
+{
+    $uid = (int) $uid;
+    if (empty(mats_of($uid)['wh_ext5'])) {
+        return '你没有仓库扩容道具。';
+    }
+    add_mat($uid, 'wh_ext5', -1);
+    add_mat($uid, 'wh_cap', 5);
+    return '仓库上限+5！现在 ' . warehouse_capacity($uid) . ' 格。';
 }
 
 function ground_tick(): void

@@ -80,6 +80,9 @@ $people = [
     'rd_magma' => ['name' => '引路人·焰引', 'loc' => 'magma_lord_hall', 'text' => '熔潮君王殿尽头是【熔潮深渊】。要【熔潮深渊入场券】——本区最终BOSS「熔渊利维坦」0.5%掉。45分钟，潮一退就关门。'],
     'rd_chrono' => ['name' => '引路人·晷引', 'loc' => 'chrono_paradox_core', 'text' => '悖论之核后面是【凝固时刻】。门票【凝固时刻入场券】，斩本区最终BOSS「悖论之核」0.5%掉。45分钟，多一秒都算你偷的。'],
     'rd_divine' => ['name' => '引路人·云阶', 'loc' => 'divine_end', 'text' => '神墟归墟里还供着【墟心圣殿】。带【墟心圣殿入场券】来，本区最终BOSS「神墟终焉」0.5%掉。45分钟，神殿只借你一段。'],
+    'wh_g' => ['name' => '金库看守·铁匣', 'loc' => 'square', 'text' => '金币和家当都交给我，想存就存、想取就取。每人20格起，买扩容书能再扩。'],
+    'wh_t' => ['name' => '金库看守·铁匣', 'loc' => 'town_sq', 'text' => '金币和家当都交给我，想存就存、想取就取。每人20格起，买扩容书能再扩。'],
+    'wh_s' => ['name' => '金库看守·铁匣', 'loc' => 'silver_sq', 'text' => '金币和家当都交给我，想存就存、想取就取。每人20格起，买扩容书能再扩。'],
 ];
 // 大区域副本引路人：who => 副本 rk
 $rdNpc = ['rd_sky' => 'sky', 'rd_sunk' => 'sunk', 'rd_forge' => 'forge', 'rd_verd' => 'verd', 'rd_crypt' => 'crypt', 'rd_star' => 'star', 'rd_magma' => 'magma', 'rd_chrono' => 'chrono', 'rd_divine' => 'divine'];
@@ -844,6 +847,9 @@ if ($who === 'vera') {
 }
 if ($who === 'gmaster' || $who === 'greg') {
     echo '<a href="guild.php">进入公会大厅（创建/加入/排行/宣战）</a><br>';
+}
+if (in_array($who, ['wh_g', 'wh_t', 'wh_s'], true)) {
+    echo '<a href="warehouse.php">打开个人仓库（存物 / 取物 / 存钱 / 取钱 / 扩容）</a><br>';
 }
 if ($who === 'gwen' && (int) $u['quest'] === 16 && (int) ($u['lv'] ?? 1) >= 30) {
     echo '<a href="npc.php?who=gwen&choice=start">接受委托，开启第二章·影蚀之潮</a><br>';

@@ -57,7 +57,13 @@ if ($a === 'buy') {
             flash_set('离线模块开通并续费' . $n . '小时（独立离线时长，不吃人偶在线时间），人偶已启动。');
         } else {
             add_mat((int) $u['id'], $m, $goods[$m]['unit'] * $n);
-            flash_set($m === 'dummy_time' ? '陪练人偶续费' . $n . '小时，去背包启动。' : '买下' . $n . '个' . $goods[$m]['name'] . '，已进背包材料栏。');
+            if ($m === 'dummy_time') {
+                flash_set('陪练人偶续费' . $n . '小时，去背包启动。');
+            } elseif ($m === 'wh_ext5') {
+                flash_set('买下' . $n . '个【仓库扩容+5】，去个人仓库页（任意城镇·金库看守）点「使用」扩容。');
+            } else {
+                flash_set('买下' . $n . '个' . $goods[$m]['name'] . '，已进背包材料栏。');
+            }
         }
     }
     header('Location: mall.php' . ($m !== '' ? '?m=' . urlencode($m) : ''));
@@ -240,6 +246,9 @@ if ($m !== '' && isset($goods[$m])) {
         echo '<a href="mall.php?a=buy&m=bag_ext5&n=1">买1</a><br>';
         echo '·<b>【10格背包扩充】</b> <b>' . h(fmt_diamond(500)) . '</b>/个(每角色最多用2次) ';
         echo '<a href="mall.php?a=buy&m=bag_ext10&n=1">买1</a><br>';
+        echo '·<b><span style="color:#6cf">【仓库扩容+5】</span></b> <b>' . h(fmt_diamond(150)) . '</b>/个(个人仓库上限+5格，去仓库页使用) ';
+        echo '<a href="mall.php?a=buy&m=wh_ext5&n=1">买1</a> ';
+        echo '<a href="mall.php?a=buy&m=wh_ext5&n=5">买5</a><br>';
         echo '·<b><span style="color:#fc3">【升级卡100型】</span></b> ';
         echo '<b>' . h(fmt_diamond(100)) . '</b>/张(1~100级用，1小时双倍经验) ';
         echo '<a href="mall.php?a=buy&m=exp_card100&n=1">买1</a> ';

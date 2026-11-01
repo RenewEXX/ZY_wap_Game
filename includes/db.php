@@ -714,6 +714,25 @@ function db_init(): void
             PRIMARY KEY (uid, mat)
         )'
     );
+    // 个人仓库：存物（材料/装备）+ 存钱。每行占 1 格；容量=20+wh_cap（商城扩容+5道具）
+    db()->exec(
+        'CREATE TABLE IF NOT EXISTS warehouse (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            uid INTEGER NOT NULL,
+            kind TEXT NOT NULL DEFAULT "mat",
+            mat_id TEXT NOT NULL DEFAULT "",
+            qty INTEGER NOT NULL DEFAULT 0,
+            equip_id INTEGER NOT NULL DEFAULT 0,
+            created_at INTEGER NOT NULL DEFAULT 0
+        )'
+    );
+    db()->exec('CREATE INDEX IF NOT EXISTS idx_warehouse_uid ON warehouse (uid)');
+    db()->exec(
+        'CREATE TABLE IF NOT EXISTS warehouse_gold (
+            uid INTEGER PRIMARY KEY,
+            amount INTEGER NOT NULL DEFAULT 0
+        )'
+    );
     db()->exec(
         'CREATE TABLE IF NOT EXISTS wb_dmg (
             uid INTEGER NOT NULL,

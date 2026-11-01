@@ -209,7 +209,7 @@ if ($d !== []) {
         echo ($i + 1) . '. ' . h((string) $r['name']) . ' ' . number_format((int) $r['dmg']) . '<br>';
     }
     echo '<div class="hr">--------</div>';
-    echo '掉落（按排行邮件发放）：' . h((string) $d['set_name']) . '7件套 / 传奇' . h((string) $d['short']) . '宠物蛋 / ' . element_name((string) $d['el']) . '龙魂·龙玉 / 神魂碎片 / 魔钻·银<br>';
+    echo '掉落（按排行邮件发放）：' . h((string) $d['set_name']) . '7件套 / 传奇' . h((string) $d['short']) . '宠物蛋 / ' . element_name((string) $d['el']) . '龙魂·龙玉 / 神魂碎片 / 魔钻·金币<br>';
     echo '<span class="muted">门：' . h((string) $d['gate_name']) . '（' . h((string) $d['gate']) . '，' . (int) dragon_min_lv($mid) . '级+，可传送）</span><br>';
     nav_line();
     wap_end(false);

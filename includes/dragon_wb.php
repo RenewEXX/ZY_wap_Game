@@ -340,7 +340,7 @@ function drg_rewards(string $mid): void
                 user_save($u);
             }
             add_mat($uid, 'soul_shard', 30);
-            send_mail($uid, '世界BOSS·' . $d['name'], 'wb', '斩龙首功', '你对' . $d['name'] . '造成全服第一的伤害！' . (string) (pet_eggs()[$d['egg']]['name'] ?? ('传奇' . $d['short'] . '宠物蛋')) . '×1、' . $d['set_name'] . '随机1件、' . $elName . '龙魂×1、龙玉×1、100魔钻、500银、神魂碎片×30！', []);
+            send_mail($uid, '世界BOSS·' . $d['name'], 'wb', '斩龙首功', '你对' . $d['name'] . '造成全服第一的伤害！' . (string) (pet_eggs()[$d['egg']]['name'] ?? ('传奇' . $d['short'] . '宠物蛋')) . '×1、' . $d['set_name'] . '随机1件、' . $elName . '龙魂×1、龙玉×1、' . fmt_diamond($rd) . '、' . fmt_money($rg) . '、神魂碎片×30！', []);
         } elseif ($place <= 3) {
             $pc = $pieces[array_rand($pieces)];
             make_equip($uid, $slots[$pc] ?? 'weapon', $pc, 3, 680);
@@ -351,7 +351,7 @@ function drg_rewards(string $mid): void
                 user_save($u);
             }
             add_mat($uid, 'soul_shard', 20);
-            send_mail($uid, '世界BOSS·' . $d['name'], 'wb', '斩龙前三', '第' . $place . '名！' . $d['set_name'] . '随机1件、' . $elName . '龙魂×1、龙玉×1、50魔钻、200银、神魂碎片×20！', []);
+            send_mail($uid, '世界BOSS·' . $d['name'], 'wb', '斩龙前三', '第' . $place . '名！' . $d['set_name'] . '随机1件、' . $elName . '龙魂×1、龙玉×1、' . fmt_diamond($rd) . '、' . fmt_money($rg) . '、神魂碎片×20！', []);
         } elseif ($place <= 10) {
             $u = user_by_id($uid);
             if ($u) {
@@ -364,7 +364,7 @@ function drg_rewards(string $mid): void
                 $pc = $pieces[array_rand($pieces)];
                 make_equip($uid, $slots[$pc] ?? 'weapon', $pc, 2, 650);
             }
-            send_mail($uid, '世界BOSS·' . $d['name'], 'wb', '斩龙有功', '第' . $place . '名！' . $elName . '龙魂×1、龙玉×1、20魔钻、80银、神魂碎片×10（30%概率再掉' . $d['set_name'] . '件）！', []);
+            send_mail($uid, '世界BOSS·' . $d['name'], 'wb', '斩龙有功', '第' . $place . '名！' . $elName . '龙魂×1、龙玉×1、' . fmt_diamond($rd) . '、' . fmt_money($rg) . '、神魂碎片×10（30%概率再掉' . $d['set_name'] . '件）！', []);
         } else {
             $u = user_by_id($uid);
             if ($u) {
@@ -372,7 +372,7 @@ function drg_rewards(string $mid): void
                 user_save($u);
             }
             add_mat($uid, 'soul_shard', 3);
-            send_mail($uid, '世界BOSS·' . $d['name'], 'wb', '见龙有份', '参与奖：' . $elName . '龙魂×1、龙玉×1、5魔钻、神魂碎片×3！', []);
+            send_mail($uid, '世界BOSS·' . $d['name'], 'wb', '见龙有份', '参与奖：' . $elName . '龙魂×1、龙玉×1、' . fmt_diamond($rd) . '、神魂碎片×3！', []);
         }
     }
 }

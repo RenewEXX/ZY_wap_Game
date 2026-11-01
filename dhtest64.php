@@ -37,6 +37,10 @@ if (function_exists('drg_place_reward')) {
     ck64('世界BOSS第3名=200银/50魔钻', drg_place_reward(3) === [20000, 500], json_encode(drg_place_reward(3)));
     ck64('世界BOSS第10名=80银/20魔钻', drg_place_reward(10) === [8000, 200], json_encode(drg_place_reward(10)));
     ck64('世界BOSS参与=5魔钻', drg_place_reward(99) === [0, 50], json_encode(drg_place_reward(99)));
+    // 展示走最大单位：500银=5金，200银=2金，80银=80银
+    ck64('世界BOSS第1名显示5金', fmt_money(drg_place_reward(1)[0]) === '5金', fmt_money(drg_place_reward(1)[0]));
+    ck64('世界BOSS第3名显示2金', fmt_money(drg_place_reward(3)[0]) === '2金', fmt_money(drg_place_reward(3)[0]));
+    ck64('世界BOSS第10名显示80银', fmt_money(drg_place_reward(10)[0]) === '80银', fmt_money(drg_place_reward(10)[0]));
 }
 
 echo "\nOK=$ok FAIL=$bad\n";

@@ -254,6 +254,13 @@ if (in_array($cur, mx_maps(), true)) {
     $need = [1 => '黏丝束×15（银丝蛛）', 2 => '茧壳碎片×15（茧守）', 3 => '织线梭×12（织线者）', 4 => '蛾翼磷粉×12（银丝蛾）', 5 => '守望之瞳×10（巢穴守望）', 6 => '育巢摇篮曲×8（育巢侍女）', 7 => '去母巢之心，杀缠丝之母'][min(7, $stg)];
     echo '<div class="warn">银丝母巢：剩' . gmdate('i:s', max(0, $left)) . '　阶段' . $stg . '/7：' . h($need) . '</div>';
 }
+$rdGate = function_exists('region_dungeon_of') ? region_dungeon_of($cur) : '';
+if ($rdGate !== '') {
+    $left = 2700 - (time() - (int) (mats_of((int) $u['id'])['rd_enter_' . $rdGate] ?? time()));
+    $locs = function_exists('locations') ? locations() : [];
+    $rdName = (string) ($locs[$cur]['name'] ?? '副本');
+    echo '<div class="warn">' . h($rdName) . '：剩' . gmdate('i:s', max(0, $left)) . '</div>';
+}
 if ($cur === 'warfield') {
     echo '<div class="warn">公会战进行中！你本周战功' . war_my_points((int) $u['id']) . '分。杀不同公会的人+1。</div>';
     $foes = war_enemies((int) $u['id']);

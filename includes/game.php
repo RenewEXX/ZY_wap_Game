@@ -10275,10 +10275,6 @@ function quest_state(array $u): array
         return ['name' => '雾散之后', 'step' => '完成', 'todo' => '第一章完成，自由探索。30级后去白银城公会大厅找格温', 'loc' => 'town_sq', 'locname' => '白石镇广场', 'id' => 16, 'ch' => 1, 'need' => []];
     }
     if ($q === 28) {
-        // 80级竞技场引导：找雷横对话完成，得20银（一次性，不挡主线）
-        if ((int) ($u['lv'] ?? 1) >= 80 && empty(cflags((int) ($u['id'] ?? 0))['arena_guide_done'])) {
-            return ['name' => '竞技场征召', 'step' => '引导', 'todo' => '80级了！点底部【活动】进入竞技场，找雷横参加（奖励20银）', 'loc' => 'square', 'locname' => '活动中心', 'id' => 28, 'ch' => 2, 'need' => []];
-        }
         return ['name' => '第三章·傀儡之夜', 'step' => '序', 'todo' => '第二章完成！带着格温的推荐信，去王都中央大道找瓦尔顿', 'loc' => 'avenue', 'locname' => '中央大道', 'id' => 28, 'ch' => 2, 'need' => []];
     }
     if ($q >= 30 && $q <= 37) {
@@ -11290,6 +11286,25 @@ function quest_stuck_fix(array &$u): void
         cflag_set($uid, 'stuck_fixed', 1);
         $u = user_by_id($uid);
     }
+}
+
+function arena_guide_claim(int $uid): string
+{
+    $uid = (int) $uid;
+    $u = user_by_id($uid);
+    if (!$u) {
+        return '角色不存在。';
+    }
+    if (!empty(cflags($uid)['arena_guide_done'])) {
+        return '';
+    }
+    if ((int) ($u['lv'] ?? 1) < 80) {
+        return '需80级才能领取。';
+    }
+    cflag_set($uid, 'arena_guide_done', 1);
+    $u['gold'] = (int) ($u['gold'] ?? 0) + 2000;
+    user_save($u);
+    return '雷横拍了拍你的肩：好，80级了，有胆！竞技场欢迎你。任务完成，奖励20银！';
 }
 
 function quest_progress2_text(int $uid, array $qs): string

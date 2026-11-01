@@ -4,8 +4,14 @@ require __DIR__ . '/includes/bootstrap.php';
 
 $u = require_login();
 $tab = (string) ($_GET['tab'] ?? 'doing');
-if (!in_array($tab, ['done', 'doing', 'todo'], true)) {
+if (!in_array($tab, ['done', 'doing', 'todo', 'activity'], true)) {
     $tab = 'doing';
+}
+$a = (string) ($_GET['a'] ?? '');
+if ($a === 'claim_arena') {
+    flash_set(arena_guide_claim((int) $u['id']));
+    header('Location: quest.php?tab=activity');
+    exit;
 }
 $q = (int) ($u['quest'] ?? 0);
 $newSteps = [
@@ -24,7 +30,8 @@ $ch7 = rebirth2_quests();
 wap_start('任务');
 echo '<a href="quest.php?tab=done">已完成</a> . ';
 echo '<a href="quest.php?tab=doing">进行中</a> . ';
-echo '<a href="quest.php?tab=todo">待接受</a>';
+echo '<a href="quest.php?tab=todo">待接受</a> . ';
+echo '<a href="quest.php?tab=activity">活动任务</a>';
 echo '<div class="hr">--------</div>';
 
 $order = array_merge([0, 1, 2], array_keys($ch1));
@@ -128,6 +135,19 @@ if ($tab === 'doing') {
         }
         echo '<br><a href="map.php?go=' . h($qs['loc']) . '">【立即前往·' . h($qs['locname']) . '】</a>';
     }
+} elseif ($tab === 'activity') {
+    echo '<b>活动任务（可与主线同时进行）</b><br>';
+    $done = !empty(cflags((int) $u['id'])['arena_guide_done']);
+    echo '·<b>【竞技场征召】</b> ';
+    if ($done) {
+        echo '<span style="color:#6f6">[已完成]</span> 雷横的20银已领取。<br>';
+    } elseif ((int) ($u['lv'] ?? 1) < 80) {
+        echo '<span class="muted">[未解锁]</span> 需80级。参加竞技场的引导任务，奖励20银。<br>';
+    } else {
+        echo '<span class="warn">[可领取]</span> 80级了！点下方领取奖励（或直接去【活动】参加竞技场）。<br>';
+        echo '<a href="quest.php?a=claim_arena">领取20银奖励</a><br>';
+    }
+    // 预留：后续活动任务可在此追加
 } elseif ($tab === 'done') {
     if (!$doneIds) {
         echo '<span class="muted">暂无已完成任务。</span>';

@@ -467,7 +467,7 @@ function mall_goods(): array
     $g['reset_potion'] = ['name' => '属性洗点药', 'price' => 300, 'unit' => 1];
     $g['bag_ext5'] = ['name' => '5格背包扩充', 'price' => 200, 'unit' => 1];
     $g['bag_ext10'] = ['name' => '10格背包扩充', 'price' => 500, 'unit' => 1];
-    $g['wh_ext5'] = ['name' => '仓库扩容+5', 'price' => 150, 'unit' => 1];
+    $g['wh_ext5'] = ['name' => '仓库扩容+5', 'price' => 20, 'unit' => 1];
     foreach (['light', 'dark', 'fire', 'wind', 'ice', 'thunder'] as $el) {
         $g['el_' . $el . '_stone'] = ['name' => element_name($el) . '属性石', 'price' => 20, 'unit' => 1];
     }
@@ -683,7 +683,7 @@ function peak_banner(): string
         return '';
     }
     $left = strtotime(date('Y-m-d') . ' 23:00:00') - time();
-    return '【巅峰之战】进行中！剩' . dummy_fmt(max(0, $left)) . '，去灰雾村广场找活动专员参加！';
+    return '【巅峰之战】进行中！剩' . dummy_fmt(max(0, $left)) . '，点底部【活动】参加！';
 }
 
 function peak_arena_for_level(int $lv): string

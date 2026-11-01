@@ -246,7 +246,7 @@ if ($m !== '' && isset($goods[$m])) {
         echo '<a href="mall.php?a=buy&m=bag_ext5&n=1">买1</a><br>';
         echo '·<b>【10格背包扩充】</b> <b>' . h(fmt_diamond(500)) . '</b>/个(每角色最多用2次) ';
         echo '<a href="mall.php?a=buy&m=bag_ext10&n=1">买1</a><br>';
-        echo '·<b><span style="color:#6cf">【仓库扩容+5】</span></b> <b>' . h(fmt_diamond(150)) . '</b>/个(个人仓库上限+5格，去仓库页使用) ';
+        echo '·<b><span style="color:#6cf">【仓库扩容+5】</span></b> <b>' . h(fmt_diamond(20)) . '</b>/个(个人仓库上限+5格，去仓库页使用) ';
         echo '<a href="mall.php?a=buy&m=wh_ext5&n=1">买1</a> ';
         echo '<a href="mall.php?a=buy&m=wh_ext5&n=5">买5</a><br>';
         echo '·<b><span style="color:#fc3">【升级卡100型】</span></b> ';

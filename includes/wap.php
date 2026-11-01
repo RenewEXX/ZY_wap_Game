@@ -209,8 +209,9 @@ function nav_line(): void
     $items = [
         ['home.php', '行动'], ['status.php', '状态'], ['bag.php', '背包'], ['map.php', '地图'],
         ['skills.php', '技能'], ['pet.php', '宠物'], ['quest.php', '任务'], ['mail.php', '邮件' . ($mailN > 0 ? '(' . $mailN . ')' : '')],
-        ['teleport.php', '传送'], ['mall.php', '商城'], ['auction.php', '拍卖'], ['logout.php?a=char', '退出'],
+        ['teleport.php', '传送'], ['mall.php', '商城'], ['auction.php', '拍卖'], ['activity.php', '活动'],
         ['guild.php', '公会'], ['chat.php', '聊天'], ['party.php', '组队'], ['look.php', '观察'],
+        ['logout.php?a=char', '退出'],
     ];
     $cur = basename((string) ($_SERVER['SCRIPT_NAME'] ?? ''));
     echo '<div class="nav">';

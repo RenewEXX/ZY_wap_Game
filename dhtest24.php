@@ -59,7 +59,7 @@ ck24('掉落品质覆盖低劣(0)', isset($seenQ[0]), json_encode($seenQ));
 // 3) BOSS 仍然只可能出传说(4)（对照，确保没被误封顶）
 $row = null;
 $bossLeg = false;
-for ($i = 0; $i < 1500; $i++) {
+for ($i = 0; $i < 10000; $i++) {
     $r = roll_drop((int) $uid, 'sky_sovereign', 0);
     $row = db()->query('SELECT quality FROM equips WHERE uid=' . (int) $uid . ' ORDER BY id DESC LIMIT 1')->fetch();
     db()->exec('DELETE FROM equips WHERE uid=' . (int) $uid);

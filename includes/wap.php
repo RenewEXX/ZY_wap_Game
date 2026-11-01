@@ -140,6 +140,9 @@ function require_login(): array
         add_mat((int) $u['id'], 'active_week', min(300, max(0, $nowA - $lastA)));
     }
     quest_stuck_fix($u);
+    if (function_exists('festival_mail_tick')) {
+        festival_mail_tick($u);
+    }
     background_battle($u);
     offline_tick($u);
     dummy_tick($u);

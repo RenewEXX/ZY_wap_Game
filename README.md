@@ -30,6 +30,11 @@ php -S localhost:8080
 
 ## 更新日志（新的在上）
 
+### 2026-10-31-节日祝福邮件
+- 节日当天玩家登录自动收到一次节日祝福邮件（`festival_mail_tick`，在 `require_login` 触发，按年去重 `fest_mail_<id>`，邮箱满则次日重试）。
+- 配置集中在 `festivals()`：目前 halloween(10-31)，含节日快乐 + 如何参与活动。后续圣诞/元旦/春节在此追加即可。
+- 测试可用 `$GLOBALS['__festival_md']` 指定日期；`dhtest71` 覆盖。
+
 ### 2026-10-31-万圣节限时活动（南瓜惊魂夜）
 - 任务页·活动任务栏新增限时任务【万圣节·南瓜惊魂夜】，仅每年 10 月 31 日当天开启（`halloween_active()`，`DH_TEST_MODE` 强制开启）。
 - 活动当天刷怪约 8% 掉【南瓜】，集满 20 个领取：随机宠物蛋×2 + 限定称号【万圣惊魂】(title_halloween，req_lv=1) + 10 魔钻；每年一次（cflag `halloween_done` 记年份）。

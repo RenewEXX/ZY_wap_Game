@@ -11418,6 +11418,62 @@ function halloween_task_claim(int $uid): string
     return '万圣节任务完成！' . $egg . '，获得称号【万圣惊魂】与 10 魔钻。';
 }
 
+// ========== 节日祝福邮件（节日当天玩家登录时自动发一次） ==========
+// 测试可用 $GLOBALS['__festival_md'] 强行指定日期（如 '10-31'）
+function festival_md(): string
+{
+    if (isset($GLOBALS['__festival_md'])) {
+        return (string) $GLOBALS['__festival_md'];
+    }
+    return date('m-d');
+}
+
+function festivals(): array
+{
+    return [
+        'halloween' => [
+            'md' => '10-31',
+            'sender' => '节日使者',
+            'title' => '万圣节快乐！南瓜惊魂夜开启',
+            'body' => "万圣节快乐，冒险者！\n今天（10月31日）是【万圣节·南瓜惊魂夜】：\n· 刷怪击杀有几率掉落【南瓜】\n· 集满 20 个南瓜\n· 去 任务 → 活动任务 领取：随机宠物蛋×2 + 限定称号【万圣惊魂】+ 10 魔钻\n不给糖就捣蛋，祝你在罪渊里也能过个好节！",
+            'att' => [],
+        ],
+        // 后续节日（圣诞/元旦/春节…）在这里追加即可
+    ];
+}
+
+function festival_today(): ?array
+{
+    $md = festival_md();
+    foreach (festivals() as $fid => $f) {
+        if ($f['md'] === $md) {
+            return ['id' => $fid] + $f;
+        }
+    }
+    return null;
+}
+
+// 节日当天玩家登录时发一次节日祝福邮件（按年去重，软失败可次日重试）
+function festival_mail_tick(array $u): void
+{
+    $f = festival_today();
+    if ($f === null) {
+        return;
+    }
+    $uid = (int) ($u['id'] ?? 0);
+    if ($uid <= 0) {
+        return;
+    }
+    $mark = 'fest_mail_' . $f['id'];
+    if ((int) (cflags($uid)[$mark] ?? 0) === (int) date('Y')) {
+        return;
+    }
+    $ok = send_mail($uid, (string) $f['sender'], 'event', (string) $f['title'], (string) $f['body'], $f['att'] ?? [], 1);
+    if ($ok) {
+        cflag_set($uid, $mark, (int) date('Y'));
+    }
+}
+
 function quest_progress2_text(int $uid, array $qs): string
 {
     if (empty($qs['need'])) {

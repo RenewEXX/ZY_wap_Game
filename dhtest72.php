@@ -13,7 +13,7 @@ ck('今天在万圣节活动季', halloween_pool_active());
 $pool=shop_egg_pool();
 ck('活动季池含南瓜蛋', isset($pool['pumpkin_jack_egg']), 'keys='.implode(',',array_keys($pool)));
 // force off
-$GLOBALS['__halloween_pool']=false;
+$GLOBALS['__festival_pool_halloween']=false;
 $pool2=shop_egg_pool();
 ck('关闭时池不含南瓜蛋', !isset($pool2['pumpkin_jack_egg']));
 unset($GLOBALS['__halloween_pool']);

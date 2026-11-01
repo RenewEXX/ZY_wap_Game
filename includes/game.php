@@ -1813,6 +1813,11 @@ function pet_species(): array
         'thunder_bird' => ['name' => '雷鸟', 'quality' => 'rare', 'growth' => 1.35, 'atk' => 12, 'def' => 4, 'hp' => 55, 'spd' => 24, 'crit' => 8, 'cd' => 165, 'active' => '落雷', 'mult' => 1.6, 'passive' => '雷速：出手更快', 'source' => '商城砸蛋'],
         'abyss_witch' => ['name' => '魔女阿比希尔', 'quality' => 'legend', 'growth' => 2.4, 'atk' => 38, 'def' => 12, 'hp' => 120, 'spd' => 20, 'crit' => 12, 'cd' => 175, 'active' => '魔女低语', 'mult' => 1.7, 'passive' => '月之庇佑：低语偷取敌人5%生命', 'source' => '限时活动掉落'],
         'pumpkin_jack' => ['name' => '南瓜灯魔·杰克', 'quality' => 'legend', 'growth' => 2.4, 'atk' => 37, 'def' => 13, 'hp' => 128, 'spd' => 19, 'crit' => 12, 'cd' => 178, 'active' => '南瓜爆裂', 'mult' => 1.72, 'passive' => '惊魂夜：爆裂释放南瓜瘴气，中毒持续灼烧', 'source' => '万圣节限时抽取'],
+        'golden_dragon' => ['name' => '金龙献瑞·炎龙', 'quality' => 'legend', 'growth' => 2.5, 'atk' => 40, 'def' => 14, 'hp' => 135, 'spd' => 18, 'crit' => 13, 'cd' => 180, 'active' => '金龙献瑞', 'mult' => 1.75, 'passive' => '金龙追击：对残血目标额外爆发', 'source' => '国庆节限时抽取'],
+        'firework_sprite' => ['name' => '烟花精灵·星', 'quality' => 'legend', 'growth' => 2.3, 'atk' => 34, 'def' => 11, 'hp' => 115, 'spd' => 22, 'crit' => 14, 'cd' => 170, 'active' => '烟花绽放', 'mult' => 1.68, 'passive' => '新年祝福：技能命中恢复自身生命', 'source' => '元旦限时抽取'],
+        'nian_beast' => ['name' => '年兽·驱邪', 'quality' => 'legend', 'growth' => 2.6, 'atk' => 42, 'def' => 16, 'hp' => 150, 'spd' => 16, 'crit' => 11, 'cd' => 185, 'active' => '年兽咆哮', 'mult' => 1.8, 'passive' => '驱邪：对高血目标造成额外伤害', 'source' => '春节限时抽取'],
+        'xmas_sprite' => ['name' => '圣夜精灵·雪', 'quality' => 'legend', 'growth' => 2.35, 'atk' => 35, 'def' => 12, 'hp' => 125, 'spd' => 21, 'crit' => 13, 'cd' => 172, 'active' => '圣夜祝福', 'mult' => 1.7, 'passive' => '礼物雨：技能附带生命汲取', 'source' => '圣诞节限时抽取'],
+        'labor_ant' => ['name' => '勤劳之魂·蚁', 'quality' => 'legend', 'growth' => 2.2, 'atk' => 30, 'def' => 18, 'hp' => 140, 'spd' => 17, 'crit' => 10, 'cd' => 165, 'active' => '勤劳之魂', 'mult' => 1.6, 'passive' => '双倍打击：技能连击两次', 'source' => '劳动节限时抽取'],
         'earth_dragon' => ['name' => '土龙岳柱幼体', 'quality' => 'legend', 'growth' => 2.1, 'atk' => 16, 'def' => 24, 'hp' => 380, 'spd' => 10, 'crit' => 5, 'cd' => 190, 'active' => '岳柱镇压', 'mult' => 1.2, 'passive' => '磐岩：承伤-25%', 'source' => '岩狱泰坦掉落'],
     ] + dragon_pets();
 }
@@ -1837,6 +1842,11 @@ function pet_eggs(): array
         'egg_bird' => ['species' => 'thunder_bird', 'name' => '雷鸟蛋'],
         'witch_egg' => ['species' => 'abyss_witch', 'name' => '魔女之茧（限时）'],
         'pumpkin_jack_egg' => ['species' => 'pumpkin_jack', 'name' => '南瓜灯魔蛋（限时）'],
+        'golden_dragon_egg' => ['species' => 'golden_dragon', 'name' => '金龙献瑞蛋（限时）'],
+        'firework_sprite_egg' => ['species' => 'firework_sprite', 'name' => '烟花精灵蛋（限时）'],
+        'nian_beast_egg' => ['species' => 'nian_beast', 'name' => '年兽蛋（限时）'],
+        'xmas_sprite_egg' => ['species' => 'xmas_sprite', 'name' => '圣夜精灵蛋（限时）'],
+        'labor_ant_egg' => ['species' => 'labor_ant', 'name' => '勤劳之魂蛋（限时）'],
         'frost_egg' => ['species' => 'frost_wolf_pup', 'name' => '霜狼幼崽蛋'],
         'earth_dragon_egg' => ['species' => 'earth_dragon', 'name' => '土龙岳柱幼体蛋'],
         // 六龙王世界BOSS幼体蛋：名字跟 pets 里的「XX幼体」对齐
@@ -1861,9 +1871,11 @@ function shop_egg_pool(): array
 {
     // 传奇宠物不直购：蛋池只到史诗（幼龙/霜狼幼崽），传奇只能活动掉落/限时抽取
     $pool = ['egg_slime' => 500, 'egg_stone' => 200, 'egg_ember' => 120, 'egg_ghost' => 80, 'egg_fox' => 40, 'egg_bird' => 30, 'egg_dragon' => 20, 'frost_egg' => 8];
-    // 万圣节活动季：南瓜灯魔·杰克（传说）限时加入砸蛋随机池，超低权重
-    if (halloween_pool_active()) {
-        $pool = ['pumpkin_jack_egg' => 6] + $pool;
+    // 节日活动季：各节日传说宠物限时加入砸蛋随机池，超低权重
+    foreach (festivals() as $fid => $f) {
+        if (festival_pool_active($fid)) {
+            $pool = [(string) $f['pet_egg'] => (int) ($f['pet_pool_weight'] ?? 6)] + $pool;
+        }
     }
     return $pool;
 }
@@ -1871,11 +1883,7 @@ function shop_egg_pool(): array
 // 万圣节活动季（抽取池限定宠物的窗口）：每年 10/24 ~ 11/07；测试可 $GLOBALS['__halloween_pool'] 强制
 function halloween_pool_active(): bool
 {
-    if (isset($GLOBALS['__halloween_pool'])) {
-        return (bool) $GLOBALS['__halloween_pool'];
-    }
-    $md = date('m-d');
-    return $md >= '10-24' && $md <= '11-07';
+    return festival_pool_active('halloween');
 }
 
 function pet_stats(array $p): array
@@ -1915,6 +1923,31 @@ function pet_stats(array $p): array
         $s['atk'] = (int) ($s['atk'] * 1.28);
         $s['def'] = (int) ($s['def'] * 1.1);
         $s['maxhp'] = (int) ($s['maxhp'] * 0.72);
+    }
+    if ($p['species'] === 'golden_dragon') {
+        $s['atk'] = (int) ($s['atk'] * 1.32);
+        $s['def'] = (int) ($s['def'] * 1.12);
+        $s['maxhp'] = (int) ($s['maxhp'] * 0.7);
+    }
+    if ($p['species'] === 'firework_sprite') {
+        $s['atk'] = (int) ($s['atk'] * 1.25);
+        $s['spd'] = (int) ($s['spd'] * 1.15);
+        $s['maxhp'] = (int) ($s['maxhp'] * 0.75);
+    }
+    if ($p['species'] === 'nian_beast') {
+        $s['atk'] = (int) ($s['atk'] * 1.35);
+        $s['def'] = (int) ($s['def'] * 1.15);
+        $s['maxhp'] = (int) ($s['maxhp'] * 0.68);
+    }
+    if ($p['species'] === 'xmas_sprite') {
+        $s['atk'] = (int) ($s['atk'] * 1.27);
+        $s['spd'] = (int) ($s['spd'] * 1.1);
+        $s['maxhp'] = (int) ($s['maxhp'] * 0.73);
+    }
+    if ($p['species'] === 'labor_ant') {
+        $s['atk'] = (int) ($s['atk'] * 1.2);
+        $s['def'] = (int) ($s['def'] * 1.25);
+        $s['maxhp'] = (int) ($s['maxhp'] * 0.78);
     }
     // 火龙多伊尔幼体：龙威 攻击+20%、承伤-10%（承伤在 pet_hurt 里算）
     if ($p['species'] === 'fire_drake') {
@@ -2045,6 +2078,32 @@ function pet_attack(array &$u, array &$b): string
             }
             $dmg = (int) ($dmg * (float) $sp['mult']);
             $tag = '（南瓜爆裂，南瓜瘴气中毒3层）';
+        } elseif ($p['species'] === 'golden_dragon' && mt_rand(1, 100) <= 25 && (int) ($b['hp'] ?? 0) > 0) {
+            $missing = max(0, (int) ($b['maxhp'] ?? $b['hp']) - (int) $b['hp']);
+            $bonus = max(1, (int) ($missing * 0.08));
+            $b['hp'] = (int) $b['hp'] - $bonus;
+            $dmg = (int) ($dmg * (float) $sp['mult']);
+            $tag = '（金龙献瑞，追击' . $bonus . '点）';
+        } elseif ($p['species'] === 'firework_sprite' && mt_rand(1, 100) <= 30 && (int) ($b['hp'] ?? 0) > 0) {
+            $heal = max(1, (int) ((int) $u['maxhp'] * 0.08));
+            $u['hp'] = min((int) $u['maxhp'], (int) $u['hp'] + $heal);
+            $dmg = (int) ($dmg * (float) $sp['mult']);
+            $tag = '（烟花绽放，恢复' . $heal . '点生命）';
+        } elseif ($p['species'] === 'nian_beast' && mt_rand(1, 100) <= 25 && (int) ($b['hp'] ?? 0) > 0) {
+            $extra = max(1, (int) ((int) ($b['maxhp'] ?? $b['hp']) * 0.06));
+            $b['hp'] = (int) $b['hp'] - $extra;
+            $dmg = (int) ($dmg * (float) $sp['mult']);
+            $tag = '（年兽咆哮，驱邪' . $extra . '点）';
+        } elseif ($p['species'] === 'xmas_sprite' && mt_rand(1, 100) <= 25 && (int) ($b['hp'] ?? 0) > 0) {
+            $steal = max(1, (int) ($dmg * 0.25));
+            $u['hp'] = min((int) $u['maxhp'], (int) $u['hp'] + $steal);
+            $dmg = (int) ($dmg * (float) $sp['mult']);
+            $tag = '（圣夜祝福，汲取' . $steal . '点生命）';
+        } elseif ($p['species'] === 'labor_ant' && mt_rand(1, 100) <= 35 && (int) ($b['hp'] ?? 0) > 0) {
+            $dmg2 = (int) ($dmg * (float) $sp['mult']);
+            $b['hp'] = (int) $b['hp'] - $dmg2;
+            $dmg = (int) ($dmg * (float) $sp['mult']);
+            $tag = '（勤劳之魂，连击两次）';
         } elseif ($p['species'] === 'ghost') {
             $b['fear'] = 3;
             $dmg = (int) ($dmg * (float) $sp['mult']);
@@ -4388,6 +4447,21 @@ function mat_name(string $id): string
     }
     if ($id === 'pumpkin') {
         return '南瓜';
+    }
+    if ($id === 'flag') {
+        return '红旗';
+    }
+    if ($id === 'firework') {
+        return '烟花';
+    }
+    if ($id === 'redpacket') {
+        return '红包';
+    }
+    if ($id === 'bell') {
+        return '铃铛';
+    }
+    if ($id === 'laborstar') {
+        return '劳动星';
     }
     if ($id === 'dummy_time') {
         return '挂机时间(秒)';
@@ -8173,10 +8247,10 @@ function battle_round(array &$u, array &$b, string $mode): array
                 $b['drops'][] = $peg;
                 $log .= '掉落【' . $peg . '】！';
             }
-            $pk = roll_halloween_pumpkin((int) $u['id'], (string) ($b['id'] ?? ''));
-            if ($pk !== '') {
-                $b['drops'][] = $pk;
-                $log .= '掉落【' . $pk . '】！';
+            $fmats = roll_festival_mats((int) $u['id']);
+            foreach ($fmats as $fm) {
+                $b['drops'][] = $fm;
+                $log .= '掉落【' . $fm . '】！';
             }
             $dq = roll_dungeon_quest((int) $u['id'], (string) ($b['id'] ?? ''));
             if ($dq !== '') {
@@ -9534,11 +9608,11 @@ function open_dragon_box(int $uid): string
 // 称号走装备背包（slot=title）
 function title_ids(): array
 {
-    return ['title_ch1' => '称号·灰雾行者', 'title_ch2' => '称号·白银守望', 'title_ch3' => '称号·王都破局者', 'title_ch4' => '称号·凛冬行者', 'title_ch5' => '称号·南炎见证', 'title_rb2' => '称号·虚空征服者', 'title_dragon1' => '称号·龙鳞初醒', 'title_dragon2' => '称号·龙血沸騰', 'title_dragon3' => '称号·灭世龙威', 'title_god' => '称号·神界主宰', 'title_rs_god' => '称号·源罪之神', 'title_rs_lord' => '称号·源罪之主', 'title_rs_king' => '称号·源罪之王', 'title_rs_gen' => '称号·源罪之将', 'title_halloween' => '称号·万圣惊魂'];
+    return ['title_ch1' => '称号·灰雾行者', 'title_ch2' => '称号·白银守望', 'title_ch3' => '称号·王都破局者', 'title_ch4' => '称号·凛冬行者', 'title_ch5' => '称号·南炎见证', 'title_rb2' => '称号·虚空征服者', 'title_dragon1' => '称号·龙鳞初醒', 'title_dragon2' => '称号·龙血沸騰', 'title_dragon3' => '称号·灭世龙威', 'title_god' => '称号·神界主宰', 'title_rs_god' => '称号·源罪之神', 'title_rs_lord' => '称号·源罪之主', 'title_rs_king' => '称号·源罪之王', 'title_rs_gen' => '称号·源罪之将', 'title_halloween' => '称号·万圣惊魂', 'title_national' => '称号·金龙献瑞', 'title_newyear' => '称号·新年快乐', 'title_spring' => '称号·年兽驱邪', 'title_christmas' => '称号·圣夜祝福', 'title_labor' => '称号·勤劳之魂'];
 }
 function title_bonus(string $tid): array
 {
-    return ['title_ch1' => ['atk' => 30.0, 'hp' => 500.0], 'title_ch2' => ['def' => 30.0, 'hp' => 800.0], 'title_ch3' => ['crit' => 1.0, 'atk' => 50.0], 'title_ch4' => ['mdef' => 40.0, 'hp' => 1200.0], 'title_ch5' => ['matk' => 50.0, 'hp' => 1500.0], 'title_rb2' => ['skill_damage' => 3.0, 'hp' => 2000.0], 'title_dragon1' => ['critdmg' => 5.0, 'hp' => 1500.0], 'title_dragon2' => ['atk' => 100.0, 'matk' => 100.0], 'title_dragon3' => ['skill_damage' => 8.0, 'truedmg' => 200.0], 'title_god' => ['skill_damage' => 12.0, 'truedmg' => 500.0, 'hp' => 5000.0], 'title_rs_god' => ['skill_damage' => 20.0, 'truedmg' => 1000.0, 'all_attr' => 100.0], 'title_rs_lord' => ['skill_damage' => 16.0, 'truedmg' => 700.0, 'all_attr' => 70.0], 'title_rs_king' => ['skill_damage' => 13.0, 'truedmg' => 500.0, 'all_attr' => 50.0], 'title_rs_gen' => ['skill_damage' => 10.0, 'truedmg' => 300.0, 'all_attr' => 30.0], 'title_halloween' => ['critdmg' => 3.0, 'hp' => 800.0]][$tid] ?? [];
+    return ['title_ch1' => ['atk' => 30.0, 'hp' => 500.0], 'title_ch2' => ['def' => 30.0, 'hp' => 800.0], 'title_ch3' => ['crit' => 1.0, 'atk' => 50.0], 'title_ch4' => ['mdef' => 40.0, 'hp' => 1200.0], 'title_ch5' => ['matk' => 50.0, 'hp' => 1500.0], 'title_rb2' => ['skill_damage' => 3.0, 'hp' => 2000.0], 'title_dragon1' => ['critdmg' => 5.0, 'hp' => 1500.0], 'title_dragon2' => ['atk' => 100.0, 'matk' => 100.0], 'title_dragon3' => ['skill_damage' => 8.0, 'truedmg' => 200.0], 'title_god' => ['skill_damage' => 12.0, 'truedmg' => 500.0, 'hp' => 5000.0], 'title_rs_god' => ['skill_damage' => 20.0, 'truedmg' => 1000.0, 'all_attr' => 100.0], 'title_rs_lord' => ['skill_damage' => 16.0, 'truedmg' => 700.0, 'all_attr' => 70.0], 'title_rs_king' => ['skill_damage' => 13.0, 'truedmg' => 500.0, 'all_attr' => 50.0], 'title_rs_gen' => ['skill_damage' => 10.0, 'truedmg' => 300.0, 'all_attr' => 30.0], 'title_halloween' => ['critdmg' => 3.0, 'hp' => 800.0], 'title_national' => ['atk' => 40.0, 'hp' => 1000.0], 'title_newyear' => ['spd' => 5.0, 'hp' => 800.0], 'title_spring' => ['atk' => 50.0, 'def' => 20.0], 'title_christmas' => ['hp' => 1200.0, 'crit' => 2.0], 'title_labor' => ['def' => 30.0, 'hp' => 900.0]][$tid] ?? [];
 }
 function give_title(int $uid, string $tid, int $req = 100): bool
 {
@@ -11401,51 +11475,19 @@ function activity_task_claim(int $uid, string $task): string
 // ========== 万圣节限时活动（每年10月31日当天） ==========
 function halloween_active(): bool
 {
-    if (defined('DH_TEST_MODE')) {
-        return true;
-    }
-    return date('m-d') === '10-31';
+    return festival_active('halloween');
 }
 
 // 活动当天杀怪掉南瓜（约8%）。返回掉落名或空串（供战斗结算记录）。
 function roll_halloween_pumpkin(int $uid, string $mid): string
 {
-    if (!halloween_active()) {
-        return '';
-    }
-    if (mt_rand(1, 100) > 8) {
-        return '';
-    }
-    add_mat((int) $uid, 'pumpkin', 1);
-    return '南瓜';
+    return roll_festival_mat($uid, 'halloween');
 }
 
 // 万圣节任务：集满20南瓜领取，奖励 随机宠物蛋×2 + 称号·万圣惊魂 + 10魔钻。每年一次。
 function halloween_task_claim(int $uid): string
 {
-    $uid = (int) $uid;
-    if (!halloween_active()) {
-        return '万圣节活动每年10月31日开启。';
-    }
-    $year = (int) date('Y');
-    $f = cflags($uid);
-    if ((int) ($f['halloween_done'] ?? 0) === $year) {
-        return '';
-    }
-    $have = (int) (mats_of($uid)['pumpkin'] ?? 0);
-    if ($have < 20) {
-        return '南瓜不够（' . $have . '/20），万圣节当天刷怪可掉南瓜。';
-    }
-    add_mat($uid, 'pumpkin', -20);
-    $egg = random_pet_egg_reward($uid, 2);
-    give_title($uid, 'title_halloween', 1);
-    $u = user_by_id($uid);
-    if ($u) {
-        $u['diamonds'] = (int) ($u['diamonds'] ?? 0) + 10;
-        user_save($u);
-    }
-    cflag_set($uid, 'halloween_done', $year);
-    return '万圣节任务完成！' . $egg . '，获得称号【万圣惊魂】与 10 魔钻。';
+    return festival_task_claim($uid, 'halloween');
 }
 
 // ========== 节日祝福邮件（节日当天玩家登录时自动发一次） ==========
@@ -11458,18 +11500,210 @@ function festival_md(): string
     return date('m-d');
 }
 
+function spring_festival_window(): array
+{
+    $y = (int) date('Y');
+    $table = [
+        2026 => ['02-10', '02-24'],
+        2027 => ['01-30', '02-13'],
+        2028 => ['02-09', '02-23'],
+        2029 => ['01-28', '02-11'],
+        2030 => ['02-06', '02-20'],
+    ];
+    return $table[$y] ?? ['02-10', '02-24'];
+}
+
 function festivals(): array
 {
+    $spring = spring_festival_window();
     return [
         'halloween' => [
+            'name' => '万圣节',
+            'start' => '10-31', 'end' => '10-31',
             'md' => '10-31',
             'sender' => '节日使者',
-            'title' => '万圣节快乐！南瓜惊魂夜开启',
-            'body' => "万圣节快乐，冒险者！\n今天（10月31日）是【万圣节·南瓜惊魂夜】：\n· 刷怪击杀有几率掉落【南瓜】\n· 集满 20 个南瓜\n· 去 任务 → 活动任务 领取：随机宠物蛋×2 + 限定称号【万圣惊魂】+ 10 魔钻\n不给糖就捣蛋，祝你在罪渊里也能过个好节！",
+            'mail_title' => '万圣节快乐！南瓜惊魂夜开启',
+            'mail_body' => "万圣节快乐，冒险者！\n今天（10月31日）是【万圣节·南瓜惊魂夜】：\n· 刷怪击杀有几率掉落【南瓜】\n· 集满 20 个南瓜\n· 去 任务 → 活动任务 领取：随机宠物蛋×2 + 限定称号【万圣惊魂】+ 10 魔钻\n不给糖就捣蛋，祝你在罪渊里也能过个好节！",
             'att' => [],
+            'mat' => 'pumpkin', 'mat_name' => '南瓜', 'mat_need' => 20,
+            'diamonds' => 10,
+            'mark' => 'halloween_done',
+            'title' => 'title_halloween',
+            'pet' => 'pumpkin_jack', 'pet_egg' => 'pumpkin_jack_egg', 'pet_pool_weight' => 6,
+            'pet_pool_start' => '10-24', 'pet_pool_end' => '11-07',
         ],
-        // 后续节日（圣诞/元旦/春节…）在这里追加即可
+        'national_day' => [
+            'name' => '国庆节',
+            'start' => '10-01', 'end' => '10-07',
+            'md' => '10-01',
+            'sender' => '节日使者',
+            'mail_title' => '国庆节快乐！金龙献瑞',
+            'mail_body' => "国庆节快乐，冒险者！\n10月1日-7日是【国庆·金龙献瑞】：\n· 刷怪击杀有几率掉落【红旗】\n· 集满 20 面红旗\n· 去 任务 → 活动任务 领取：随机宠物蛋×2 + 限定称号【金龙献瑞】+ 10 魔钻\n山河无恙，愿你征途坦荡！",
+            'att' => [],
+            'mat' => 'flag', 'mat_name' => '红旗', 'mat_need' => 20,
+            'diamonds' => 10,
+            'title' => 'title_national',
+            'pet' => 'golden_dragon', 'pet_egg' => 'golden_dragon_egg', 'pet_pool_weight' => 6,
+        ],
+        'new_year' => [
+            'name' => '元旦',
+            'start' => '12-31', 'end' => '01-02',
+            'md' => '12-31',
+            'sender' => '节日使者',
+            'mail_title' => '新年快乐！烟花精灵降临',
+            'mail_body' => "新年快乐，冒险者！\n12月31日-1月2日是【元旦·烟花精灵】：\n· 刷怪击杀有几率掉落【烟花】\n· 集满 15 个烟花\n· 去 任务 → 活动任务 领取：随机宠物蛋×2 + 限定称号【新年快乐】+ 10 魔钻\n新岁启封，愿你所求皆如愿！",
+            'att' => [],
+            'mat' => 'firework', 'mat_name' => '烟花', 'mat_need' => 15,
+            'diamonds' => 10,
+            'title' => 'title_newyear',
+            'pet' => 'firework_sprite', 'pet_egg' => 'firework_sprite_egg', 'pet_pool_weight' => 6,
+        ],
+        'spring' => [
+            'name' => '春节',
+            'start' => $spring[0], 'end' => $spring[1],
+            'md' => $spring[0],
+            'sender' => '节日使者',
+            'mail_title' => '春节快乐！年兽驱邪',
+            'mail_body' => "春节快乐，冒险者！\n春节活动期间是【春节·年兽驱邪】：\n· 刷怪击杀有几率掉落【红包】\n· 集满 20 个红包\n· 去 任务 → 活动任务 领取：随机宠物蛋×2 + 限定称号【年兽驱邪】+ 10 魔钻\n辞旧迎新，诸事顺遂！",
+            'att' => [],
+            'mat' => 'redpacket', 'mat_name' => '红包', 'mat_need' => 20,
+            'diamonds' => 10,
+            'title' => 'title_spring',
+            'pet' => 'nian_beast', 'pet_egg' => 'nian_beast_egg', 'pet_pool_weight' => 6,
+        ],
+        'christmas' => [
+            'name' => '圣诞节',
+            'start' => '12-24', 'end' => '12-26',
+            'md' => '12-24',
+            'sender' => '节日使者',
+            'mail_title' => '圣诞快乐！圣夜祝福',
+            'mail_body' => "圣诞快乐，冒险者！\n12月24日-26日是【圣诞·圣夜祝福】：\n· 刷怪击杀有几率掉落【铃铛】\n· 集满 15 个铃铛\n· 去 任务 → 活动任务 领取：随机宠物蛋×2 + 限定称号【圣夜祝福】+ 10 魔钻\n愿你被温柔以待，岁岁平安！",
+            'att' => [],
+            'mat' => 'bell', 'mat_name' => '铃铛', 'mat_need' => 15,
+            'diamonds' => 10,
+            'title' => 'title_christmas',
+            'pet' => 'xmas_sprite', 'pet_egg' => 'xmas_sprite_egg', 'pet_pool_weight' => 6,
+        ],
+        'labor' => [
+            'name' => '劳动节',
+            'start' => '05-01', 'end' => '05-05',
+            'md' => '05-01',
+            'sender' => '节日使者',
+            'mail_title' => '劳动节快乐！勤劳之魂',
+            'mail_body' => "劳动节快乐，冒险者！\n5月1日-5日是【劳动节·勤劳之魂】：\n· 刷怪击杀有几率掉落【劳动星】\n· 集满 10 个劳动星\n· 去 任务 → 活动任务 领取：随机宠物蛋×2 + 限定称号【勤劳之魂】+ 10 魔钻\n致敬每一份努力，愿你所得配得上付出！",
+            'att' => [],
+            'mat' => 'laborstar', 'mat_name' => '劳动星', 'mat_need' => 10,
+            'diamonds' => 10,
+            'title' => 'title_labor',
+            'pet' => 'labor_ant', 'pet_egg' => 'labor_ant_egg', 'pet_pool_weight' => 6,
+        ],
     ];
+}
+
+function festival_date_in_range(string $md, string $start, string $end): bool
+{
+    if ($start <= $end) {
+        return $md >= $start && $md <= $end;
+    }
+    return $md >= $start || $md <= $end;
+}
+
+function festival_active(string $fid): bool
+{
+    if (isset($GLOBALS['__festival_active_' . $fid])) {
+        return (bool) $GLOBALS['__festival_active_' . $fid];
+    }
+    if ($fid === 'halloween' && isset($GLOBALS['__halloween_active'])) {
+        return (bool) $GLOBALS['__halloween_active'];
+    }
+    if (defined('DH_TEST_MODE')) {
+        return true;
+    }
+    $f = festivals()[$fid] ?? null;
+    if (!$f) {
+        return false;
+    }
+    return festival_date_in_range(date('m-d'), (string) $f['start'], (string) $f['end']);
+}
+
+function festival_pool_active(string $fid): bool
+{
+    if (isset($GLOBALS['__festival_pool_' . $fid])) {
+        return (bool) $GLOBALS['__festival_pool_' . $fid];
+    }
+    if ($fid === 'halloween' && isset($GLOBALS['__halloween_pool'])) {
+        return (bool) $GLOBALS['__halloween_pool'];
+    }
+    if (defined('DH_TEST_MODE')) {
+        return true;
+    }
+    $f = festivals()[$fid] ?? null;
+    if (!$f) {
+        return false;
+    }
+    $ps = (string) ($f['pet_pool_start'] ?? $f['start']);
+    $pe = (string) ($f['pet_pool_end'] ?? $f['end']);
+    return festival_date_in_range(date('m-d'), $ps, $pe);
+}
+
+function festival_task_claim(int $uid, string $fid): string
+{
+    $uid = (int) $uid;
+    $f = festivals()[$fid] ?? null;
+    if (!$f) {
+        return '未知节日。';
+    }
+    if (!festival_active($fid)) {
+        return $f['name'] . '活动未开启。';
+    }
+    $year = (int) date('Y');
+    $mark = (string) ($f['mark'] ?? ('fest_done_' . $fid));
+    $cf = cflags($uid);
+    if ((int) ($cf[$mark] ?? 0) === $year) {
+        return '';
+    }
+    $have = (int) (mats_of($uid)[$f['mat']] ?? 0);
+    if ($have < (int) $f['mat_need']) {
+        return $f['mat_name'] . '不够（' . $have . '/' . $f['mat_need'] . '），活动期间刷怪可掉。';
+    }
+    add_mat($uid, $f['mat'], -(int) $f['mat_need']);
+    $egg = random_pet_egg_reward($uid, 2);
+    give_title($uid, (string) $f['title'], 1);
+    $u = user_by_id($uid);
+    if ($u) {
+        $u['diamonds'] = (int) ($u['diamonds'] ?? 0) + (int) ($f['diamonds'] ?? 0);
+        user_save($u);
+    }
+    cflag_set($uid, $mark, $year);
+    return $f['name'] . '任务完成！' . $egg . '，获得称号【' . (title_ids()[$f['title']] ?? $f['title']) . '】与 ' . (int) $f['diamonds'] . ' 魔钻。';
+}
+
+function roll_festival_mat(int $uid, string $fid): string
+{
+    if (!festival_active($fid)) {
+        return '';
+    }
+    $f = festivals()[$fid] ?? null;
+    if (!$f) {
+        return '';
+    }
+    if (mt_rand(1, 100) > 8) {
+        return '';
+    }
+    add_mat((int) $uid, $f['mat'], 1);
+    return (string) $f['mat_name'];
+}
+
+function roll_festival_mats(int $uid): array
+{
+    $out = [];
+    foreach (festivals() as $fid => $f) {
+        $m = roll_festival_mat($uid, $fid);
+        if ($m !== '') {
+            $out[] = $m;
+        }
+    }
+    return $out;
 }
 
 function festival_today(): ?array
@@ -11498,7 +11732,7 @@ function festival_mail_tick(array $u): void
     if ((int) (cflags($uid)[$mark] ?? 0) === (int) date('Y')) {
         return;
     }
-    $ok = send_mail($uid, (string) $f['sender'], 'event', (string) $f['title'], (string) $f['body'], $f['att'] ?? [], 1);
+    $ok = send_mail($uid, (string) $f['sender'], 'event', (string) ($f['mail_title'] ?? $f['title']), (string) ($f['mail_body'] ?? $f['body']), $f['att'] ?? [], 1);
     if ($ok) {
         cflag_set($uid, $mark, (int) date('Y'));
     }

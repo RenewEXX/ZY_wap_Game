@@ -3654,6 +3654,163 @@ function equip_can_wear(array $u, array $e): string
     return '';
 }
 
+// ========== 装备掉落实时监督：保证每种小怪至少掉 8 种不同装备（3 武器 + 5 防具）==========
+
+// 等级分档：每档 8 件（3 武器 + 5 防具），名字按档位+部位生成，避免重复
+function level_equip_band(int $lv): int
+{
+    if ($lv < 50) return 0;
+    if ($lv < 100) return 1;
+    if ($lv < 200) return 2;
+    if ($lv < 300) return 3;
+    if ($lv < 420) return 4;
+    if ($lv < 500) return 5;
+    if ($lv < 600) return 6;
+    if ($lv < 700) return 7;
+    if ($lv < 800) return 8;
+    return 9;
+}
+
+function level_equip_band_name(int $band): string
+{
+    $names = ['初阶', '学徒', '中阶', '进阶', '高阶', '精英', '大师', '宗师', '传说', '神话'];
+    return $names[$band] ?? '神话';
+}
+
+// 每档 3 把武器（战士/法师/猎人）+ 5 件防具（头/胸/腿/手/靴）
+function level_equip_pool(int $lv): array
+{
+    $band = level_equip_band($lv);
+    $prefix = level_equip_band_name($band);
+    $out = [];
+    // 武器
+    $weapons = [
+        ['weapon', $prefix . '·战剑', 'blade'],
+        ['weapon', $prefix . '·法杖', 'staff'],
+        ['weapon', $prefix . '·猎弓', 'bow'],
+    ];
+    foreach ($weapons as [$slot, $base]) {
+        $out[] = ['slot' => $slot, 'base' => $base, 'rate' => 0.05, 'q' => [40, 40, 15, 5, 0]];
+    }
+    // 防具
+    $armors = [
+        ['head', $prefix . '·头盔'],
+        ['body', $prefix . '·胸甲'],
+        ['legs', $prefix . '·护腿'],
+        ['gloves', $prefix . '·手套'],
+        ['shoes', $prefix . '·战靴'],
+    ];
+    foreach ($armors as [$slot, $base]) {
+        $out[] = ['slot' => $slot, 'base' => $base, 'rate' => 0.05, 'q' => [40, 40, 15, 5, 0]];
+    }
+    return $out;
+}
+
+// 监督函数：返回某怪的掉落实时池（至少 8 件：3 武器 + 5 防具）
+function monster_drop_pool(string $mid): array
+{
+    // 六圣柱小怪：不掉普通装备，只走龙魂/精华
+    $dm = dragon_monster($mid);
+    if ($dm !== []) {
+        return [];
+    }
+    $existing = monster_drops($mid);
+    $lv = monster_lv($mid);
+    $pool = [];
+    $seen = [];
+    $wCount = 0;
+    $aCount = 0;
+    // 先放入原有掉落
+    if (is_array($existing) && !empty($existing['slot']) && !empty($existing['base'])) {
+        $key = $existing['slot'] . '|' . $existing['base'];
+        if (!isset($seen[$key])) {
+            $pool[] = $existing;
+            $seen[$key] = true;
+            if (in_array($existing['slot'], ['weapon', 'offhand'], true)) {
+                $wCount++;
+            } else {
+                $aCount++;
+            }
+        }
+    }
+    // 等级档位池：武器/防具分开补齐，目标 3 武器 + 5 防具
+    $levelPool = level_equip_pool($lv);
+    // 先补武器到 3
+    foreach ($levelPool as $entry) {
+        if ($wCount >= 3) {
+            break;
+        }
+        if (!in_array($entry['slot'], ['weapon', 'offhand'], true)) {
+            continue;
+        }
+        $key = $entry['slot'] . '|' . $entry['base'];
+        if (isset($seen[$key])) {
+            continue;
+        }
+        $pool[] = $entry;
+        $seen[$key] = true;
+        $wCount++;
+    }
+    // 再补防具到 5
+    foreach ($levelPool as $entry) {
+        if ($aCount >= 5) {
+            break;
+        }
+        if (in_array($entry['slot'], ['weapon', 'offhand'], true)) {
+            continue;
+        }
+        $key = $entry['slot'] . '|' . $entry['base'];
+        if (isset($seen[$key])) {
+            continue;
+        }
+        $pool[] = $entry;
+        $seen[$key] = true;
+        $aCount++;
+    }
+    // 仍不足 8 件时，生成唯一名字补齐（避免重复）
+    $idx = 1;
+    while (count($pool) < 8) {
+        $needWeapon = $wCount < 3;
+        $slot = $needWeapon ? 'weapon' : (['head', 'body', 'legs', 'gloves', 'shoes'][$aCount] ?? 'body');
+        $base = level_equip_band_name(level_equip_band($lv)) . '·补' . $idx . '·' . $slot;
+        $key = $slot . '|' . $base;
+        if (!isset($seen[$key])) {
+            $pool[] = ['slot' => $slot, 'base' => $base, 'rate' => 0.05, 'q' => [40, 40, 15, 5, 0]];
+            $seen[$key] = true;
+            if (in_array($slot, ['weapon', 'offhand'], true)) {
+                $wCount++;
+            } else {
+                $aCount++;
+            }
+        }
+        $idx++;
+    }
+    return $pool;
+}
+
+// 审计函数：检查所有小怪的掉落实时池是否至少 8 件，返回报告
+function audit_monster_drops(): array
+{
+    $report = ['total' => 0, 'ok' => 0, 'bad' => []];
+    foreach (monsters() as $mid => $m) {
+        if (is_boss_mid($mid)) {
+            continue;
+        }
+        $dm = dragon_monster($mid);
+        if ($dm !== []) {
+            continue;
+        }
+        $pool = monster_drop_pool($mid);
+        $report['total']++;
+        if (count($pool) >= 8) {
+            $report['ok']++;
+        } else {
+            $report['bad'][] = $mid . ' (only ' . count($pool) . ')';
+        }
+    }
+    return $report;
+}
+
 function make_equip(int $uid, string $slot, string $base, int $q, int $itemLevel = 1, ?array $legend = null, string $offKind = ''): string
 {
     // 防御：非法部位一律不入库，避免产生"没有部位/名字不对/没有属性"的奇怪装备
@@ -5745,11 +5902,13 @@ function roll_drop_base(int $uid, string $mid, int $elite = 0): string
         }
         return $ch3;
     }
-    $t = monster_drops($mid);
-    if ($t === []) {
+    $pool = monster_drop_pool($mid);
+    if ($pool === []) {
         // 六圣柱小怪不掉套装，但召唤师照样能摸出契匣
         return roll_summoner_box($uid, $mid);
     }
+    // 从掉落实时池中随机挑一件（至少 8 种：3 武器 + 5 防具）
+    $t = $pool[array_rand($pool)];
     $mlv = monster_lv($mid);
     // 副本小怪：套件/装备基础掉率固定 1%，只吃寻宝与转生加成，不再随怪物等级暴涨
     $isDunMob = is_dungeon_mob($mid);

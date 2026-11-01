@@ -221,24 +221,8 @@ function arena_season_settle_week(string $zone): void
     if ($rec === $curKey) {
         return;
     }
-    // —— 赛季已推进：先按「上赛季最终名次」给真人补发一份周结算奖励 ——
+    // —— 赛季已推进：仅重排名次（名次奖励每日发、段位奖励每2周发，赛季本身不再重复发奖）——
     $rows = db()->query('SELECT * FROM arena_rank WHERE zone=' . db()->quote($zone) . ' AND season=' . db()->quote($cur) . ' AND is_dummy=0 ORDER BY rank ASC')->fetchAll();
-    foreach ($rows as $r) {
-        [$gold, $coin] = arena_rewards((int) $r['rank']);
-        $tier = arena_tier((int) $r['rank']);
-        [$bg, $bc] = arena_tier_bonus($tier[0]);
-        $gold += $bg;
-        $coin += $bc;
-        $att = [['t' => 'mat', 'id' => 'arena_coin', 'n' => $coin]];
-        if ($gold > 0) {
-            $att[] = ['t' => 'gold', 'n' => $gold];
-        }
-        if (function_exists('send_mail')) {
-            try {
-                send_mail((int) $r['uid'], '竞技场', 'arena', '竞技场赛季结算：上周' . $tier[1] . '段位·第' . $r['rank'] . '名', '新赛季开始，你的排名回到初始状态。上赛季第' . $r['rank'] . '名（' . $tier[1] . '段位）的结算奖励请查收。', $att);
-            } catch (Throwable $e) {}
-        }
-    }
     // —— 真人回初始位（1000 名起），假人按战力重排 1..N ——
     $rk = arena_start_rank();
     foreach ($rows as $r) {
@@ -948,34 +932,39 @@ function arena_fight(int $uid, int $foeRank): array
 
 function arena_rewards(int $rank): array
 {
-    // 返回[gold铜, arena_coin, 附魔石id=>n]
-    $pool = ['light', 'dark', 'fire', 'wind', 'ice', 'thunder'];
-    $stone = 'el_' . $pool[array_rand($pool)] . '_stone';
-    if ($rank === 1) {
-        return [100000, 200, [$stone => 10]];
+    // 名次奖励（每日05:00按名次发放）：[铜, 竞技场币]，不含属性石。
+    // 最高第1名 1金/200竞技场币，依次下降。
+    if ($rank <= 1) {
+        return [10000, 200];
     }
-    if ($rank === 2) {
-        return [50000, 150, [$stone => 5]];
+    if ($rank <= 2) {
+        return [8000, 180];
     }
-    if ($rank === 3) {
-        return [30000, 120, [$stone => 4]];
+    if ($rank <= 3) {
+        return [6000, 160];
     }
     if ($rank <= 10) {
-        return [20000, 100, [$stone => 3]];
+        return [4000, 120];
+    }
+    if ($rank <= 20) {
+        return [3000, 90];
     }
     if ($rank <= 50) {
-        return [10000, 60, [$stone => 2]];
+        return [2000, 60];
     }
     if ($rank <= 100) {
-        return [5000, 40, [$stone => 1]];
+        return [1000, 40];
     }
     if ($rank <= 300) {
-        return [3000, 25, []];
+        return [600, 25];
+    }
+    if ($rank <= 700) {
+        return [300, 15];
     }
     if ($rank <= 1000) {
-        return [1000, 10, []];
+        return [100, 8];
     }
-    return [500, 5, []];
+    return [50, 5];
 }
 
 // 天梯段位分档：名次上限 => [key, 中文, 代表色]（按名次从小到大）。
@@ -1005,16 +994,18 @@ function arena_tier(int $rank): array
     return ['iron', '黑铁', '#8a8a8a'];
 }
 
-// 段位保底奖励系数：越往上越丰厚（用于每日+赛季结算兜底，不让人越打越亏）
+// 段位奖励（每2周结算一次，邮件发放）：[金币(铜), 竞技场币]
+// 王者=40金，依次下降；不奖励属性石。
 function arena_tier_bonus(string $tierKey): array
 {
-    // [金币额外, 竞技场币额外]
+    // [金, 竞技场币]
     $map = [
-        'iron' => [0, 0], 'bronze' => [500, 3], 'silver' => [1500, 5],
-        'gold' => [3000, 8], 'platinum' => [6000, 12], 'diamond' => [12000, 20],
-        'master' => [20000, 30], 'king' => [40000, 50],
+        'iron' => [0, 0], 'bronze' => [1, 3], 'silver' => [2, 5],
+        'gold' => [5, 8], 'platinum' => [10, 12], 'diamond' => [15, 20],
+        'master' => [25, 30], 'king' => [40, 50],
     ];
-    return $map[$tierKey] ?? [0, 0];
+    [$g, $c] = $map[$tierKey] ?? [0, 0];
+    return [$g * 10000, $c];
 }
 
 // 每日05:00结算：按排名发邮件；每周一05:00重置赛季+发上周奖励
@@ -1044,21 +1035,68 @@ function arena_tick(): void
         $season = arena_season();
         $rows = db()->query('SELECT * FROM arena_rank WHERE zone=' . db()->quote($zone) . ' AND season=' . db()->quote($season) . ' AND is_dummy=0 ORDER BY rank ASC')->fetchAll();
         foreach ($rows as $r) {
-            [$gold, $coin, $stones] = arena_rewards((int) $r['rank']);
+            [$gold, $coin] = arena_rewards((int) $r['rank']);
             $tier = arena_tier((int) $r['rank']);
-            [$bg, $bc] = arena_tier_bonus($tier[0]);
-            $gold += $bg; $coin += $bc;
             $att = [['t' => 'mat', 'id' => 'arena_coin', 'n' => $coin]];
-            foreach ($stones as $sid => $n) {
-                $att[] = ['t' => 'mat', 'id' => $sid, 'n' => $n];
-            }
             if ($gold > 0) {
                 $att[] = ['t' => 'gold', 'n' => $gold];
             }
-            send_mail((int) $r['uid'], '竞技场', 'arena', '竞技场每日奖励：' . $tier[1] . '段位·第' . $r['rank'] . '名', '今日排名第' . $r['rank'] . '名（' . $tier[1] . '段位），奖励：' . fmt_money($gold) . '、竞技场币x' . $coin . '。请查收附件。', $att);
+            send_mail((int) $r['uid'], '竞技场', 'arena', '竞技场每日名次奖励：第' . $r['rank'] . '名', '今日排名第' . $r['rank'] . '名（' . $tier[1] . '段位），名次奖励：' . fmt_money($gold) . '、竞技场币x' . $coin . '。请查收附件。', $att);
         }
+        // 段位奖励每2周结算一次（邮件）
+        arena_tier_settle($zone);
         // 每周滚动已移到 arena_season_settle_week()：由 arena_ensure 在任意访问/结算时按赛季变化触发，
-        // 不再依赖「周一这一天的 tick 恰好跑到」。这里只保留每日结算。
+        // 不再依赖「周一这一天的 tick 恰好跑到」。这里只保留每日名次结算 + 双周段位结算。
+}
+
+// 段位奖励结算周期：以 05:00 为界的「天序号」每 14 天一个周期
+function arena_tier_period(): int
+{
+    return intdiv(arena_day_idx(), 14);
+}
+
+// 每 2 周给全体真人按当前段位发一次段位奖励（邮件）。首次运行只记基线，不追溯。
+function arena_tier_settle(string $zone): void
+{
+    $period = arena_tier_period();
+    $key = 'arena_tier_period_' . $zone;
+    try {
+        $rec = (int) (db()->query('SELECT num FROM sys_kv WHERE k=' . db()->quote($key))->fetchColumn() ?: 0);
+    } catch (Throwable $e) {
+        return;
+    }
+    if ($rec === 0) {
+        try { db()->prepare('INSERT OR REPLACE INTO sys_kv (k, num) VALUES (?, ?)')->execute([$key, $period]); } catch (Throwable $e) {}
+        return;
+    }
+    if ($rec >= $period) {
+        return;
+    }
+    $season = arena_season();
+    $rows = db()->query('SELECT * FROM arena_rank WHERE zone=' . db()->quote($zone) . ' AND season=' . db()->quote($season) . ' AND is_dummy=0 ORDER BY rank ASC')->fetchAll();
+    foreach ($rows as $r) {
+        $tier = arena_tier((int) $r['rank']);
+        [$bg, $bc] = arena_tier_bonus($tier[0]);
+        if ($bg <= 0 && $bc <= 0) {
+            continue;
+        }
+        $att = [];
+        if ($bc > 0) {
+            $att[] = ['t' => 'mat', 'id' => 'arena_coin', 'n' => $bc];
+        }
+        if ($bg > 0) {
+            $att[] = ['t' => 'gold', 'n' => $bg];
+        }
+        if ($att === []) {
+            continue;
+        }
+        if (function_exists('send_mail')) {
+            try {
+                send_mail((int) $r['uid'], '竞技场', 'arena', '竞技场段位奖励：' . $tier[1] . '段位', '你在竞技场的段位为【' . $tier[1] . '】（第' . $r['rank'] . '名），段位奖励：' . fmt_money($bg) . '、竞技场币x' . $bc . '。请查收附件。', $att);
+            } catch (Throwable $e) {}
+        }
+    }
+    try { db()->prepare('INSERT OR REPLACE INTO sys_kv (k, num) VALUES (?, ?)')->execute([$key, $period]); } catch (Throwable $e) {}
 }
 
 function arena_shop(): array

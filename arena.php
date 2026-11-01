@@ -37,8 +37,8 @@ if (in_array($a, ['rank', 'prize', 'def', 'shop', 'shopbuy'], true)) {
         exit;
     }
     if ($a === 'prize') {
-        echo '【奖 励】每日凌晨5点结算（邮件），每周一赛季重置（上周奖励再发一份）。<br>';
-        echo '—— 段位（按名次）——<br>';
+        echo '【奖 励】名次奖励每日凌晨5点结算（邮件）；段位奖励每2周结算一次（邮件）。<br>';
+        echo '—— 段位奖励（每2周，按当时名次段位）——<br>';
         $prevMax = 0;
         foreach (arena_tier_bounds() as $max => $tier) {
             [$bg, $bc] = arena_tier_bonus($tier[0]);
@@ -49,20 +49,16 @@ if (in_array($a, ['rank', 'prize', 'def', 'shop', 'shopbuy'], true)) {
             } else {
                 $range = '第' . ($prevMax + 1) . '~' . $max . '名';
             }
-            echo '<span style="color:' . $tier[2] . '">[' . $tier[1] . ']</span> ' . $range . '：段位保底(金' . $bg . '/币' . $bc . ')<br>';
+            echo '<span style="color:' . $tier[2] . '">[' . $tier[1] . ']</span> ' . $range . '：' . h(fmt_money($bg)) . '/竞技场币x' . $bc . '<br>';
             if ($max < PHP_INT_MAX) {
                 $prevMax = $max;
             }
         }
-        echo '—— 名次奖励档位 ——<br>';
+        echo '—— 名次奖励（每日，按名次）——<br>';
         foreach ([1, 2, 3, 10, 50, 100, 300, 1000, 999999] as $top) {
-            [$gold, $coinP, $stones] = arena_rewards($top);
+            [$gold, $coinP] = arena_rewards($top);
             $label = $top === 999999 ? '第1001名以后' : '第' . $top . '名档';
-            $txt = $label . '：' . h(fmt_money($gold)) . '/竞技场币' . $coinP;
-            foreach ($stones as $sid => $n) {
-                $txt .= '/' . h(mat_name($sid)) . 'x' . $n;
-            }
-            echo $txt . '<br>';
+            echo $label . '：' . h(fmt_money($gold)) . '/竞技场币x' . $coinP . '<br>';
         }
         echo '<a href="arena.php">返回</a>';
         nav_line();
@@ -102,7 +98,7 @@ if (in_array($a, ['rank', 'prize', 'def', 'shop', 'shopbuy'], true)) {
 }
 if (!$me) {
     echo '【竞 技 场】<br>';
-    echo '想证明自己吗？80级可进。异步PVP，自动战斗，赢了排名上升，输了下降。每日凌晨5点结算，每周一重置赛季。<br>';
+    echo '想证明自己吗？80级可进。异步PVP，自动战斗，赢了排名上升，输了下降。名次奖励每日5点结算，段位奖励每2周结算；每周一重置赛季。<br>';
     echo '今日免费挑战5次，额外10金/次，也可1魔钻买5次。<br>';
     echo '<a href="arena.php?a=join">进入竞技场</a><br>';
     echo '<a href="npc.php?who=arena_m">返回</a>';

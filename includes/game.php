@@ -559,15 +559,8 @@ function offline_tick(array &$u): void
             'atk' => $m['atk'], 'exp' => $m['exp'], 'gold' => $m['gold'],
             'log' => '', 'num' => $numOff, 'left' => $numOff, 'wexp' => 0, 'wgold' => 0, 'drops' => [], 'last' => $now,
         ];
-        $r = ['status' => 'fight', 'log' => '', 'flash' => ''];
-        for ($i = 0; $i < 300; $i++) {
-            $r = battle_round($u, $b, 'tick');
-            if ($r['status'] !== 'fight') {
-                break;
-            }
-        }
+        $r = idle_fight_once($u, $b, 300);
         if ($r['status'] === 'fight') {
-            unset($_SESSION['battle']);
             break;
         }
         if ($r['status'] === 'dead') {
@@ -2380,6 +2373,30 @@ function dummy_fmt(int $sec): string
     return $sec . '秒';
 }
 
+// 挂机单场战斗：把战斗种进 $_SESSION['battle']（否则 summon_save 是空操作，
+// 召唤师每场第 1 回合新召的兽当场就丢、怪物第一下全砸本体）；跑完 300/500 回合；
+// 胜利用回一口血（35% 最大生命），避免脆皮职业被跨场累计的溢出伤害慢慢耗死。
+// 返回 battle_round 的最终结果数组（status: fight/victory/dead）。
+function idle_fight_once(array &$u, array &$b, int $roundCap = 300): array
+{
+    $_SESSION['battle'] = $b;
+    $r = ['status' => 'fight', 'log' => '', 'flash' => ''];
+    for ($i = 0; $i < $roundCap; $i++) {
+        $r = battle_round($u, $b, 'tick');
+        if ($r['status'] !== 'fight') {
+            break;
+        }
+    }
+    unset($_SESSION['battle']);
+    if ($r['status'] === 'victory') {
+        // 挂机续航：胜利后回满血。挂机是无人值守铺量打怪，靠"每场回满"避免脆皮职业
+        // （尤其召唤师：本体血量全场最低、召唤兽血量又按本体算、且无自愈）被跨场累计
+        // 的溢出伤害慢慢耗死。仅影响陪练人偶/离线，不影响实时手动战斗。
+        $u['hp'] = max(1, (int) ($u['maxhp'] ?? 1));
+    }
+    return $r;
+}
+
 function dummy_tick(array &$u): void
 {
     $uid = (int) ($u['id'] ?? 0);
@@ -2437,15 +2454,8 @@ function dummy_tick(array &$u): void
             'log' => '陪练人偶带着你撞上了' . $numDummy . '只' . $m['name'] . '。',
             'num' => $numDummy, 'left' => $numDummy, 'wexp' => 0, 'wgold' => 0, 'drops' => [], 'last' => $now,
         ];
-        $r = ['status' => 'fight', 'log' => '', 'flash' => ''];
-        for ($i = 0; $i < 500; $i++) {
-            $r = battle_round($u, $b, 'tick');
-            if ($r['status'] !== 'fight') {
-                break;
-            }
-        }
+        $r = idle_fight_once($u, $b, 500);
         if ($r['status'] === 'fight') {
-            unset($_SESSION['battle']);
             break;
         }
         $done++;

@@ -194,6 +194,7 @@ function require_login(): array
     migrate_plain_legendaries((int) $u['id']);
     migrate_twohand_main((int) $u['id']);
     migrate_relic_weapon_jobs((int) $u['id']);
+    migrate_equip_req_and_names((int) $u['id']);
     return $u;
 }
 

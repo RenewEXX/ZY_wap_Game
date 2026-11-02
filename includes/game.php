@@ -3849,17 +3849,10 @@ function make_equip(int $uid, string $slot, string $base, int $q, int $itemLevel
     }
     $toGround = bag_full((int) $uid);
     $req = equip_reqs(max(1, $itemLevel), $q);
-    $isStr = in_array($slot, ['weapon', 'body', 'head', 'legs', 'gloves'], true);
     $reqLv = $req['lv'];
-    $reqStr = $isStr ? $req['str'] : 0;
-    $reqAgi = !$isStr ? $req['str'] : 0;
-    // 法系/召唤系主手（staff/relic）：法师/牧师/召唤师在加点里禁止加力量，这类武器
-    // 绝不能要求力量，否则连本职业都穿不上（只剩战士/猎手能硬凑力750，但又会被职业锁定拒绝）。
-    // 改为靠"仅法师/仅召唤师 + 等级"约束，不加属性门槛。
-    if ($slot === 'weapon' && in_array(weapon_sub((string) $base), ['staff', 'relic'], true)) {
-        $reqStr = 0;
-        $reqAgi = 0;
-    }
+    // 全局规则：装备只保留等级要求，去掉力量/坚毅等一切属性门槛（职业仍由部位/职业锁定约束）。
+    $reqStr = 0;
+    $reqAgi = 0;
     $primary = equip_primary($slot, $offKind, (string) $base);
     if ($slot === 'weapon' && in_array(weapon_sub((string) $base), ['staff', 'relic'], true)) {
         $primary = 'matk';
@@ -4086,6 +4079,20 @@ function migrate_relic_weapon_jobs(int $uid): void
     }
     mat_set($uid, 'caster_weapon_fixed', 1);
     _gear_uncache($uid);
+}
+
+// 一次性迁移：彻底去掉装备的力量/坚毅等属性门槛（只保留等级要求），
+// 并把早期带「召唤师·」廉价前缀的传说底改名成正式传说名。
+function migrate_equip_req_and_names(int $uid): void
+{
+    if ((int) (mats_of($uid)['equip_req_names_fixed'] ?? 0) > 0) {
+        return;
+    }
+    db()->prepare('UPDATE equips SET req_str=0, req_agi=0 WHERE uid=? AND (req_str<>0 OR req_agi<>0)')->execute([(int) $uid]);
+    db()->prepare("UPDATE equips SET name=REPLACE(name,'召唤师·深渊契匣','渊狱·噬魂契匣') WHERE uid=? AND name LIKE '%召唤师·深渊契匣%'")->execute([(int) $uid]);
+    db()->prepare("UPDATE equips SET name=REPLACE(name,'召唤师·深渊引魂灯','噬渊·引魂灯') WHERE uid=? AND name LIKE '%召唤师·深渊引魂灯%'")->execute([(int) $uid]);
+    mat_set((int) $uid, 'equip_req_names_fixed', 1);
+    _gear_uncache((int) $uid);
 }
 
 function monster_material(string $mid): array
@@ -11411,8 +11418,8 @@ function soulpact_kill_drop(int $uid, string $mid): string
         return '';
     }
     $pool = [
-        ['offhand', '召唤师·深渊契匣', '专用副手'],
-        ['weapon', '魂契·万鬼招魂幡'], ['weapon', '召唤师·深渊引魂灯'],
+        ['offhand', '渊狱·噬魂契匣', '专用副手'],
+        ['weapon', '魂契·万鬼招魂幡'], ['weapon', '噬渊·引魂灯'],
         ['head', '魂契·亡者契约冠'], ['necklace', '魂契·幽魂缚魂链'], ['ring', '魂契·献祭者骨戒'],
         ['', 'offhand', '幽冥·招魂匣'], ['', 'back', '深渊·万鬼披风'], ['', 'ring', '亡者·空洞之瞳'], ['', 'belt', '献祭·逆生带'], ['', 'shoes', '游魂·踏虚靴'], ['', 'body', '蚀月·裹尸衣'],
     ];

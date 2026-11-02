@@ -29,7 +29,7 @@ function summoner_offhands(): array
         '剧场·提线匣' => ['lv' => 600, 'summon' => 'abom', 'eff' => ['power' => 25], 'legend' => false, 'intro' => '开场召唤1只憎恶聚合体（死时爆炸，召唤兽伤害+25%）。'],
         '烬焰·契匣' => ['lv' => 635, 'summon' => 'abom', 'eff' => ['power' => 25], 'legend' => false, 'intro' => '开场召唤1只憎恶聚合体（死时爆炸，召唤兽伤害+25%）。'],
         // —— 毕业：传说基底（只出传说，带额外特殊效果）——
-        '召唤师·深渊契匣' => ['lv' => 700, 'summon' => 'abom', 'eff' => ['turns' => 2, 'power' => 30, 'hp' => 40, 'cap' => 1], 'legend' => true, 'intro' => '开场召唤1只憎恶聚合体；召唤上限+1；召唤兽生命+80%；召唤兽伤害+30%。'],
+        '渊狱·噬魂契匣' => ['lv' => 700, 'summon' => 'abom', 'eff' => ['turns' => 2, 'power' => 30, 'hp' => 40, 'cap' => 1], 'legend' => true, 'intro' => '开场召唤1只憎恶聚合体；召唤上限+1；召唤兽生命+80%；召唤兽伤害+30%。'],
         '幽冥·招魂匣' => ['lv' => 800, 'summon' => 'mare', 'eff' => ['turns' => 2, 'power' => 50, 'hp' => 80, 'guard' => 15], 'legend' => true, 'intro' => '开场召唤1只无面梦魇（最强）；召唤兽生命+120%；召唤兽伤害+50%；有召唤兽在场时你减伤+15%。'],
     ];
 }
@@ -155,7 +155,7 @@ function summoner_offhand_tiers(): array
         ['min' => 420, 'max' => 499, 'base' => '引魂匣', 'legend' => null],
         ['min' => 500, 'max' => 599, 'base' => '骨契匣', 'legend' => null],
         ['min' => 600, 'max' => 699, 'base' => '裹魂契匣', 'legend' => null],
-        ['min' => 700, 'max' => 799, 'base' => '烬焰·契匣', 'legend' => '召唤师·深渊契匣'],
+        ['min' => 700, 'max' => 799, 'base' => '烬焰·契匣', 'legend' => '渊狱·噬魂契匣'],
         ['min' => 800, 'max' => 999, 'base' => '剧场·提线匣', 'legend' => '幽冥·招魂匣'],
     ];
 }

@@ -39,11 +39,17 @@ ckc('噬魂→主词条召唤兽伤害', $main3==='summon_power', $main3);
 ckc('噬魂→传说词条lg_souleat', $leg3==='lg_souleat', $leg3);
 ckc('噬魂→传说词条有噬魂主题说明', str_contains(legend_relic_intro_by_key('lg_souleat'), '噬魂'), legend_relic_intro_by_key('lg_souleat'));
 
-// 3) 召唤师(力量0)能穿噬魂，战士穿不了
-$sum = ['id'=>$uid,'lv'=>700,'str'=>0,'agi'=>0,'job'=>'summoner'];
-ckc('召唤师可穿噬魂', equip_can_wear($sum, $w3)==='', equip_can_wear($sum, $w3));
-$war = ['id'=>$uid,'lv'=>700,'str'=>999,'agi'=>0,'job'=>'warrior'];
-ckc('战士不可穿噬魂', equip_can_wear($war, $w3)!=='', equip_can_wear($war, $w3));
+// 3) 召唤师专属契匣只看等级，无力量/坚毅要求
+make_equip($uid, 'offhand', '渊狱·噬魂契匣', 4, 725);
+$box = db()->query('SELECT * FROM equips WHERE uid=' . $uid . ' AND slot="offhand" ORDER BY id DESC LIMIT 1')->fetch();
+ckc('契匣→仅召唤师', equip_jobs_text($box)==='仅召唤师', equip_jobs_text($box));
+ckc('契匣→无属性要求', (int)$box['req_str']===0 && (int)$box['req_agi']===0, "str={$box['req_str']} agi={$box['req_agi']}");
+$sum = ['id'=>$uid,'lv'=>725,'str'=>0,'agi'=>0,'job'=>'summoner'];
+ckc('召唤师725级可穿契匣', equip_can_wear($sum,$box)==='', equip_can_wear($sum,$box));
+$war = ['id'=>$uid,'lv'=>999,'str'=>999,'agi'=>999,'job'=>'warrior'];
+ckc('战士不可穿契匣', equip_can_wear($war,$box)!=='', equip_can_wear($war,$box));
+ckc('正式契匣传说底名', summoner_is_box('渊狱·噬魂契匣'), 'not recognized');
+ckc('700级契匣掉落底名', summoner_offhand_for_lv(725,true)==='渊狱·噬魂契匣', (string)summoner_offhand_for_lv(725,true));
 
 // 清理
 db()->prepare('DELETE FROM equips WHERE uid=?')->execute([$uid]);

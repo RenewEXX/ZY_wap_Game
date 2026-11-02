@@ -7225,14 +7225,22 @@ function gain_exp(array &$u, int $exp): string
     if ($card > time()) {
         $exp = $exp * max(2, (int) ($mm['exp_card_mult'] ?? 2));
     }
-    // 觉级卡级：未1觉且未转生 → 硬卡299（三章内容怪≤120级，卡了不会锁图）。
-    // 注意：二觉不能硬卡599——五章及二觉试炼的怪最高到720级，卡599会把正常推图锁死。
-    // 二觉的599只是"开启门槛"（到599且五章通关后去找瓦尔顿），不是等级上限。
+    // 觉级卡级：未1觉卡299；1觉未2觉卡599；2觉/转生后到999。
+    // 不依赖 quest：否则可以在剧情没推到对应章节前，跑去高级图挂机刷过卡点。
     $cf = cflags((int) ($u['id'] ?? 0));
     $rbDone = !empty($cf['rb1_job']);
+    $rb2Done = !empty($cf['rb2_job']);
     $rsN = function_exists('rs_count') ? rs_count((int) $u['id']) : 0;
-    $cap = (!$rbDone && $rsN === 0) ? 299 : lv_cap();
-    $capNote = $cap === 299 ? '（299级瓶颈：1觉后继续累积，去找瓦尔顿）' : '（' . lv_cap() . '级已封顶：完成转生条件后可转生）';
+    if (!$rbDone && $rsN === 0) {
+        $cap = 299;
+        $capNote = '（299级瓶颈：1觉后继续累积，去找瓦尔顿）';
+    } elseif (!$rb2Done && $rsN === 0) {
+        $cap = 599;
+        $capNote = '（599级瓶颈：2觉后继续累积，去找瓦尔顿）';
+    } else {
+        $cap = lv_cap();
+        $capNote = '（' . lv_cap() . '级已封顶：完成转生条件后可转生）';
+    }
     // 已达上限：经验冻结，不再累积、不再升级
     if ((int) ($u['lv'] ?? 1) >= $cap) {
         $u['exp'] = 0;

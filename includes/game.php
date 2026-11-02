@@ -7225,26 +7225,25 @@ function gain_exp(array &$u, int $exp): string
     if ($card > time()) {
         $exp = $exp * max(2, (int) ($mm['exp_card_mult'] ?? 2));
     }
-    // 1觉卡级：三章通关（quest>=38）未1觉（rb1_job为空），299级经验冻结
+    // 1觉/转生卡级：未1觉（rb1_job为空）且未转生 → 硬卡299级。
+    // 不再依赖 quest>=38：否则玩家可以在剧情没推到三章通关前，跑去高级地图挂机刷到999。
     $rbDone = !empty(cflags((int) ($u['id'] ?? 0))['rb1_job']);
-    // 已转生者不受299级冻结约束（转生后可一路修到999）
-    $rsN0 = function_exists('rs_count') ? rs_count((int) $u['id']) : 0;
-    if ((int) ($u['quest'] ?? 0) >= 38 && !$rbDone && $rsN0 === 0 && (int) ($u['lv'] ?? 1) >= 299) {
-        return '经验+' . $exp . '（299级瓶颈：1觉后继续累积，去找瓦尔顿）';
+    $rsN = function_exists('rs_count') ? rs_count((int) $u['id']) : 0;
+    $cap = (!$rbDone && $rsN === 0) ? 299 : lv_cap();
+    $capNote = $cap === 299 ? '（299级瓶颈：1觉后继续累积，去找瓦尔顿）' : '（' . lv_cap() . '级已封顶：完成转生条件后可转生）';
+    // 已达上限：经验冻结，不再累积、不再升级
+    if ((int) ($u['lv'] ?? 1) >= $cap) {
+        $u['exp'] = 0;
+        return '经验+' . $exp . $capNote;
     }
     // 转生：经验获取+50%
-    $rsN = function_exists('rs_count') ? rs_count((int) $u['id']) : 0;
     if ($rsN > 0) {
         $exp = (int) ($exp * rs_exp_mult((int) $u['id']));
     }
     $u['exp'] = (int) $u['exp'] + $exp;
     $msg = '经验+' . $exp;
-    // 999级封顶：满级后必须转生
-    if ((int) $u['lv'] >= lv_cap()) {
-        $u['exp'] = 0;
-        return $msg . '（' . lv_cap() . '级已封顶：完成转生条件后可转生）';
-    }
-    while ((int) $u['exp'] >= exp_need((int) $u['lv'])) {
+    // 循环内也校验上限，杜绝一次性巨额经验从298一路冲过299直接到999
+    while ((int) $u['exp'] >= exp_need((int) $u['lv']) && (int) $u['lv'] < $cap) {
         $u['exp'] -= exp_need((int) $u['lv']);
         $u['lv'] = (int) $u['lv'] + 1;
         // 转生后每级成长翻倍
@@ -7295,6 +7294,10 @@ function gain_exp(array &$u, int $exp): string
             }
         }
         $msg .= '！升级至' . lv_text((int) $u['id'], (int) $u['lv']) . '，伤势尽复，' . $growth . '，得3属性点';
+    }
+    if ((int) $u['lv'] >= $cap) {
+        $u['exp'] = 0;
+        $msg .= $capNote;
     }
     sin_gain_array($u, 0);
     return $msg;

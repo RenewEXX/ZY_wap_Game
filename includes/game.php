@@ -2663,6 +2663,16 @@ function job_can_twohand(string $job): bool
 // 主手武器细分：按名判定种类，管职业限定+双持判定
 function weapon_sub(string $base): string
 {
+    // 传说 relic 武器：按其声明职业定类别，纠正「噬魂/极寒/尸潮/圣光」等被按名字误判成刀剑→战士/猎人。
+    if (function_exists('legend_relic_weapon_job')) {
+        $rj = legend_relic_weapon_job((string) $base);
+        if ($rj === 'summoner') {
+            return 'relic';
+        }
+        if ($rj === 'mage' || $rj === 'priest') {
+            return 'staff';
+        }
+    }
     foreach (['魂灯', '契杖', '骨杖', '魂契', '灵幡', '契匣', '深渊契匣'] as $k) {
         if (str_contains($base, $k)) {
             return 'relic';
@@ -3599,6 +3609,13 @@ function equip_job_list(array $e): array
         if (weapon_is_twohand($nm)) {
             $jobs = array_values(array_filter($jobs, fn($j) => job_can_twohand_weapon($j, $nm)));
         }
+        // 传说 relic 武器：职业由 relic 声明决定，精确锁定（避免战士/猎人错挂召唤/法师/牧师武器）
+        if (function_exists('legend_relic_weapon_job')) {
+            $rj = legend_relic_weapon_job($nm);
+            if ($rj !== '') {
+                $jobs = [$rj];
+            }
+        }
     } elseif ($slot === 'offhand') {
         if (str_contains($nm, '盾')) {
             $jobs = ['warrior', 'priest'];
@@ -3635,9 +3652,17 @@ function equip_can_wear(array $u, array $e): string
     $job = job_id_of($u);
     $slot = (string) ($e['slot'] ?? '');
     if ($slot === 'weapon') {
-        $sub = weapon_sub((string) ($e['name'] ?? ''));
-        if (!in_array($job, weapon_jobs($sub), true)) {
-            return '拿不动：' . (rebirth1_names()[$job] ?? job_of($u)['name']) . '用不了' . (['staff' => '法杖', 'axe' => '战斧', 'bow' => '弓弩', 'mace' => '战锤', 'shield' => '盾牌', 'blade' => '刀剑', 'relic' => '魂契器'][$sub] ?? '这种武器') . '。';
+        // 传说 relic 武器：职业锁定为 relic 声明的职业，精确校验
+        $rj = function_exists('legend_relic_weapon_job') ? legend_relic_weapon_job((string) ($e['name'] ?? '')) : '';
+        if ($rj !== '') {
+            if ($job !== $rj) {
+                return '拿不动：这是' . (['warrior' => '战士', 'mage' => '法师', 'hunter' => '猎手', 'priest' => '牧师', 'summoner' => '召唤师'][$rj] ?? $rj) . '专属传说武器。';
+            }
+        } else {
+            $sub = weapon_sub((string) ($e['name'] ?? ''));
+            if (!in_array($job, weapon_jobs($sub), true)) {
+                return '拿不动：' . (rebirth1_names()[$job] ?? job_of($u)['name']) . '用不了' . (['staff' => '法杖', 'axe' => '战斧', 'bow' => '弓弩', 'mace' => '战锤', 'shield' => '盾牌', 'blade' => '刀剑', 'relic' => '魂契器'][$sub] ?? '这种武器') . '。';
+            }
         }
     }
     if ($slot === 'offhand') {
@@ -3828,6 +3853,13 @@ function make_equip(int $uid, string $slot, string $base, int $q, int $itemLevel
     $reqLv = $req['lv'];
     $reqStr = $isStr ? $req['str'] : 0;
     $reqAgi = !$isStr ? $req['str'] : 0;
+    // 法系/召唤系主手（staff/relic）：法师/牧师/召唤师在加点里禁止加力量，这类武器
+    // 绝不能要求力量，否则连本职业都穿不上（只剩战士/猎手能硬凑力750，但又会被职业锁定拒绝）。
+    // 改为靠"仅法师/仅召唤师 + 等级"约束，不加属性门槛。
+    if ($slot === 'weapon' && in_array(weapon_sub((string) $base), ['staff', 'relic'], true)) {
+        $reqStr = 0;
+        $reqAgi = 0;
+    }
     $primary = equip_primary($slot, $offKind, (string) $base);
     if ($slot === 'weapon' && in_array(weapon_sub((string) $base), ['staff', 'relic'], true)) {
         $primary = 'matk';
@@ -4008,6 +4040,52 @@ function migrate_twohand_main(int $uid): void
         }
     }
     mat_set($uid, 'twohand_fixed', 1);
+}
+
+// 一次性迁移：修复法系/召唤系主手（staff/relic）两类历史 BUG：
+// 1) 被按名字误判成刀剑，主词条刷成物攻 → 重洗成 法攻(matk)/召唤兽伤害(summon_power)；
+// 2) 错误地要求力量，而法师/牧师/召唤师在加点里根本无法加力量 → 一律去掉 力量/坚毅 需求。
+function migrate_relic_weapon_jobs(int $uid): void
+{
+    if ((int) (mats_of($uid)['caster_weapon_fixed'] ?? 0) > 0) {
+        return;
+    }
+    $st = db()->prepare('SELECT id, name, quality, item_level, req_str, req_agi, affixes FROM equips WHERE uid=? AND slot="weapon"');
+    $st->execute([$uid]);
+    $rows = $st->fetchAll();
+    $updAff = db()->prepare('UPDATE equips SET affixes=? WHERE id=?');
+    $updReq = db()->prepare('UPDATE equips SET req_str=0, req_agi=0 WHERE id=?');
+    foreach ($rows as $r) {
+        $sub = weapon_sub((string) $r['name']);
+        if (!in_array($sub, ['staff', 'relic'], true)) {
+            continue;
+        }
+        // 去掉力量/坚毅门槛
+        if ((int) $r['req_str'] > 0 || (int) $r['req_agi'] > 0) {
+            $updReq->execute([(int) $r['id']]);
+        }
+        // 修主词条类型（老数据可能被刷成物攻）
+        $primary = $sub === 'relic' ? 'summon_power' : 'matk';
+        $affixes = json_decode((string) $r['affixes'], true);
+        if (!is_array($affixes)) {
+            continue;
+        }
+        $il = max(1, (int) $r['item_level']);
+        $q = (int) $r['quality'];
+        $changed = false;
+        foreach ($affixes as $i => $a) {
+            if (!empty($a['main']) && (string) ($a['id'] ?? '') !== $primary) {
+                $ro = affix_roll($primary, $q, $il);
+                $affixes[$i] = ['id' => $primary, 'tier' => $ro['tier'], 'v' => $ro['v'], 'main' => true];
+                $changed = true;
+            }
+        }
+        if ($changed) {
+            $updAff->execute([json_encode($affixes, JSON_UNESCAPED_UNICODE), (int) $r['id']]);
+        }
+    }
+    mat_set($uid, 'caster_weapon_fixed', 1);
+    _gear_uncache($uid);
 }
 
 function monster_material(string $mid): array

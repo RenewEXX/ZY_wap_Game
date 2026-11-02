@@ -105,7 +105,9 @@ function legend_relics(): array
         '骨爆' => ['slot' => 'head', 'lv' => 700, 'key' => 'lg_boneburst', 'job' => 'summoner', 'intro' => '召唤物伤害+20%，召唤物生命+20%。', 'eff' => ['summon_power' => 20, 'summon_hp' => 20]],
         '冥约' => ['slot' => 'necklace', 'lv' => 500, 'key' => 'lg_netherpact', 'job' => 'summoner', 'intro' => '召唤物生命+40%。', 'eff' => ['summon_hp' => 40]],
         // —— 痛苦盛宴（献祭/腐蚀）——
-        '噬魂' => ['slot' => 'weapon', 'lv' => 700, 'key' => 'lg_souleat', 'job' => 'summoner', 'intro' => '召唤物伤害+40%。', 'eff' => ['summon_power' => 40]],
+        '噬魂' => ['slot' => 'weapon', 'lv' => 700, 'key' => 'lg_souleat', 'job' => 'summoner',
+            'intro' => '【噬魂】每击杀一个敌人吞噬其灵魂，回复你10%最大生命；亡魂滋养仆从：召唤物伤害+25%、召唤物生命+25%。',
+            'eff' => ['summon_power' => 25, 'summon_hp' => 25, 'kill_heal' => 10]],
         '血宴' => ['slot' => 'ring', 'lv' => 600, 'key' => 'lg_bloodfeast', 'job' => 'summoner', 'intro' => '召唤物伤害+20%，吸血+3%。', 'eff' => ['summon_power' => 20, 'lifesteal' => 3]],
         '瘴疠' => ['slot' => 'body', 'lv' => 600, 'key' => 'lg_miasma', 'job' => 'summoner', 'intro' => '所有持续伤害(DOT)+25%。', 'eff' => ['dot' => 25]],
         '永夜' => ['slot' => 'belt', 'lv' => 700, 'key' => 'lg_endlessnight', 'job' => 'summoner', 'intro' => '召唤数量上限+1，召唤物伤害+15%。', 'eff' => ['summon_cap' => 1, 'summon_power' => 15]],
@@ -381,6 +383,33 @@ function legend_relic_eff_el(int $uid, string $el): float
 function legend_relic_by_name(string $name): ?array
 {
     return legend_relics()[equip_shortname($name)] ?? null;
+}
+
+// 传说 relic 武器的"应属职业"：用于纠正按名字判不出武器类型（如「噬魂」被当成刀剑→战士/猎人）的问题。
+// 返回 warrior/hunter/mage/priest/summoner 之一；非 relic 武器返回 ''。
+function legend_relic_weapon_job(string $name): string
+{
+    static $map = null;
+    if ($map === null) {
+        $map = [];
+        foreach (legend_relics() as $nm => $cfg) {
+            if (($cfg['slot'] ?? '') !== 'weapon') {
+                continue;
+            }
+            $job = (string) ($cfg['job'] ?? '');
+            if ($job !== '') {
+                $map[(string) $nm] = $job;
+            }
+        }
+        if (function_exists('hunter_arsenal_legendaries')) {
+            foreach (hunter_arsenal_legendaries() as $cfg) {
+                if (($cfg['slot'] ?? '') === 'weapon' && !empty($cfg['base']) && !empty($cfg['job'])) {
+                    $map[(string) $cfg['base']] = (string) $cfg['job'];
+                }
+            }
+        }
+    }
+    return $map[equip_shortname($name)] ?? '';
 }
 
 function legend_relic_intro_by_key(string $key): string

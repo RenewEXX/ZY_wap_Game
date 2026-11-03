@@ -5,13 +5,13 @@ declare(strict_types=1);
 
 function arena_season(): string
 {
-    // 以周一为赛季起点
-    $t = time();
-    $monday = strtotime('monday this week 05:00', $t);
-    if ($t < $monday) {
-        $monday = strtotime('monday last week 05:00', $t);
+    // 以自然月为赛季：每月 1 号 05:00 切换，和竞技场每日结算时刻一致。
+    $now = time();
+    $monthStart = strtotime(date('Y-m-01') . ' 05:00');
+    if ($now < $monthStart) {
+        return date('Y-m', strtotime('first day of last month', $monthStart));
     }
-    return date('Y-m-d', $monday);
+    return date('Y-m');
 }
 
 function arena_day(): string
@@ -44,7 +44,8 @@ function arena_bot_count(): int
 
 function arena_start_rank(): int
 {
-    return 1000;
+    // 机器人占据 1..1000，真人入场从 1001 起，避免真人与第1000名机器人重号。
+    return arena_bot_count() + 1;
 }
 
 // 竞技场假人名：模仿真实游戏排行榜里玩家的昵称习惯。
@@ -200,42 +201,97 @@ function arena_dummy_lv(int $rank): int
     return 50 + intdiv(2000 - $rank, 100);
 }
 
-// 每周滚动（不依赖周一当天是否有人访问）：用 sys_kv 记住本区已滚到哪个赛季（存 YYYYMMDD 整数），
-// 只要 arena_season() 变了，就在「之后第一次访问/结算」时滚一次：
-//   给上赛季真人补发一份排名结算奖励 → 真人回 100 名起步、假人按战力重排 1..200。
-// 首次运行（kv 为空）只记基线，不追溯老数据，避免突然群发邮件/大洗牌。
-function arena_season_settle_week(string $zone): void
+// 月末赛季奖励：[金(铜), 竞技场币]，按「上月最终名次」发放，比每日名次奖励更丰厚；王者档最大。
+function arena_season_reward(int $rank): array
+{
+    if ($rank <= 1)   { return [50000, 500]; } // 王者（第1名）：5金 / 500竞技场币
+    if ($rank <= 3)   { return [30000, 300]; }
+    if ($rank <= 10)  { return [20000, 200]; }
+    if ($rank <= 50)  { return [10000, 100]; }
+    if ($rank <= 100) { return [6000, 60]; }
+    if ($rank <= 300) { return [3000, 40]; }
+    if ($rank <= 700) { return [1500, 20]; }
+    if ($rank <= 1000){ return [800, 12]; }
+    return [300, 5];
+}
+
+// 按战力把本区全体（真人 + 机器人）重新排成连续的 1..N 名次：
+// 同分时真人(is_dummy=0)排在机器人前面（对玩家友好）。
+// 这样新赛季真人不是被一股脑塞到第1000名，而是强者靠前、弱者靠后，名次真实反映实力。
+function arena_rerank_by_power(string $zone, string $season): void
+{
+    $st = db()->prepare('SELECT rowid, is_dummy FROM arena_rank WHERE zone=? AND season=? ORDER BY power DESC, is_dummy ASC, rowid ASC');
+    $st->execute([$zone, $season]);
+    $rows = $st->fetchAll();
+    $upd = db()->prepare('UPDATE arena_rank SET rank=? WHERE rowid=?');
+    $rk = 1;
+    foreach ($rows as $r) {
+        $upd->execute([$rk, (int) $r['rowid']]);
+        $rk++;
+    }
+}
+
+// 月末赛季结算（不依赖每月 1 号当天是否有人访问）：用 sys_kv 记住本区已结算到哪个月，
+// 只要 arena_season() 变了，就在「之后第一次访问/结算」时结算一次：
+//   ① 给上个月末的真人按最终名次发「月末结算奖励」邮件（第1名=王者档），并告知新赛季已开启；
+//   ② 按战力把全体（真人+机器人）重新排序成 1..N 名次（不再「所有人降到第1000名」）。
+// 首次运行（kv 为空）或从旧「按周结算/存 Y-m-d」升级时只记基线，绝不群发邮件。
+function arena_season_settle(string $zone): void
 {
     $cur = arena_season();
-    $curKey = (int) str_replace('-', '', $cur);
+    $curKey = (int) str_replace('-', '', $cur); // "Y-m" => YYYYMM（6位）
     $key = 'arena_season_roll_' . $zone;
     try {
         $rec = (int) (db()->query('SELECT num FROM sys_kv WHERE k=' . db()->quote($key))->fetchColumn() ?: 0);
     } catch (Throwable $e) {
         return; // 还没有 sys_kv 表就跳过，等 tick 建好再来
     }
-    if ($rec === 0) {
+    $saveKey = function () use ($key, $curKey): void {
         try { db()->prepare('INSERT OR REPLACE INTO sys_kv (k, num) VALUES (?, ?)')->execute([$key, $curKey]); } catch (Throwable $e) {}
+    };
+    if ($rec === 0) { $saveKey(); return; }        // 首次运行：只记基线
+    if ($rec === $curKey) { return; }              // 本月已结算
+    if ($rec >= 10000000) {
+        // 旧「按周」格式(YYYYMMDD≈2千万)升级：旧逻辑已把真人一股脑压到第1000名。
+        // 这里做一次性按战力重排修复名次（不群发邮件，避免突然刷屏），然后记新基线。
+        arena_rerank_by_power($zone, $cur);
+        $saveKey();
         return;
     }
-    if ($rec === $curKey) {
-        return;
-    }
-    // —— 赛季已推进：仅重排名次（名次奖励每日发、段位奖励每2周发，赛季本身不再重复发奖）——
+
+    // —— 月度推进：先给上月末的真人按最终名次发结算奖励 ——
     $rows = db()->query('SELECT * FROM arena_rank WHERE zone=' . db()->quote($zone) . ' AND season=' . db()->quote($cur) . ' AND is_dummy=0 ORDER BY rank ASC')->fetchAll();
-    // —— 真人回初始位（1000 名起），假人按战力重排 1..N ——
-    $rk = arena_start_rank();
-    foreach ($rows as $r) {
-        db()->prepare('UPDATE arena_rank SET rank=? WHERE uid=? AND zone=? AND season=?')->execute([$rk, (int) $r['uid'], $zone, $cur]);
-        $rk++;
+    if (function_exists('send_mail')) {
+        foreach ($rows as $r) {
+            $rk = (int) $r['rank'];
+            [$gold, $coin] = arena_season_reward($rk);
+            $tier = arena_tier($rk);
+            $att = [];
+            if ($coin > 0) { $att[] = ['t' => 'mat', 'id' => 'arena_coin', 'n' => $coin]; }
+            if ($gold > 0) { $att[] = ['t' => 'gold', 'n' => $gold]; }
+            $title = $rk === 1 ? '【王者】上月竞技场第1名·月末结算' : ('上月竞技场结算：第' . $rk . '名');
+            $body = '上月竞技场最终名次：第' . $rk . '名（' . $tier[1] . '段位）。月末结算奖励：' . fmt_money($gold) . '、竞技场币x' . $coin . '。请查收附件。';
+            try {
+                send_mail((int) $r['uid'], '竞技场', 'arena', $title, $body, $att, $rk <= 3 ? 1 : 0);
+            } catch (Throwable $e) {}
+        }
     }
-    $dummies = db()->query('SELECT rowid FROM arena_rank WHERE zone=' . db()->quote($zone) . ' AND season=' . db()->quote($cur) . ' AND is_dummy=1 ORDER BY power DESC')->fetchAll();
-    $dr = 1;
-    foreach ($dummies as $d) {
-        db()->prepare('UPDATE arena_rank SET rank=? WHERE rowid=?')->execute([$dr, (int) $d['rowid']]);
-        $dr++;
+
+    // —— 全体（真人+机器人）按战力重排 1..N，强者靠前 ——
+    arena_rerank_by_power($zone, $cur);
+
+    // —— 给每个真人发一封「新赛季重置」提示，附上其按战力得到的新名次 ——
+    if (function_exists('send_mail')) {
+        $mine = db()->query('SELECT * FROM arena_rank WHERE zone=' . db()->quote($zone) . ' AND season=' . db()->quote($cur) . ' AND is_dummy=0 ORDER BY rank ASC')->fetchAll();
+        foreach ($mine as $r) {
+            $rk = (int) $r['rank'];
+            $tier = arena_tier($rk);
+            try {
+                send_mail((int) $r['uid'], '竞技场', 'arena', '竞技场新赛季已开启', '新的竞技场赛季（' . date('Y年n月') . '）开始了！名次已按当前战力重新排布，你现在的名次是第' . $rk . '名（' . $tier[1] . '段位）。现在就可以继续挑战冲榜。', []);
+            } catch (Throwable $e) {}
+        }
     }
-    try { db()->prepare('INSERT OR REPLACE INTO sys_kv (k, num) VALUES (?, ?)')->execute([$key, $curKey]); } catch (Throwable $e) {}
+    $saveKey();
 }
 
 function arena_ensure(string $zone): void
@@ -266,8 +322,8 @@ function arena_ensure(string $zone): void
         db()->prepare('UPDATE arena_rank SET season=? WHERE zone=? AND season<>?')->execute([$season, $zone, $season]);
     }
 
-    // 每周滚动兜底：跨赛季后第一次被访问就结算（发奖+重排名次），不依赖周一那次 tick。
-    arena_season_settle_week($zone);
+    // 每月赛季滚动兜底：跨月第一次被访问就发上月奖励+新赛季重排，不依赖月初那次 tick。
+    arena_season_settle($zone);
 
     $n = (int) db()->query('SELECT COUNT(*) FROM arena_rank WHERE zone=' . db()->quote($zone) . ' AND is_dummy=1 AND season=' . db()->quote($season))->fetchColumn();
     $botN = arena_bot_count();
@@ -1049,7 +1105,7 @@ function arena_tier_bonus(string $tierKey): array
     return [$g * 10000, $c];
 }
 
-// 每日05:00结算：按排名发邮件；每周一05:00重置赛季+发上周奖励
+// 每月1日05:00结算月末赛季；每日05:00结算名次奖励
 function arena_tick(): void
 {
     $now = time();
@@ -1086,8 +1142,8 @@ function arena_tick(): void
         }
         // 段位奖励每2周结算一次（邮件）
         arena_tier_settle($zone);
-        // 每周滚动已移到 arena_season_settle_week()：由 arena_ensure 在任意访问/结算时按赛季变化触发，
-        // 不再依赖「周一这一天的 tick 恰好跑到」。这里只保留每日名次结算 + 双周段位结算。
+        // 月末赛季结算已移到 arena_season_settle()：由 arena_ensure 在任意访问/结算时按月份变化触发，
+        // 不再依赖「每月1号这一天的 tick 恰好跑到」。这里只保留每日名次结算 + 双周段位结算。
 }
 
 // 段位奖励结算周期：以 05:00 为界的「天序号」每 14 天一个周期

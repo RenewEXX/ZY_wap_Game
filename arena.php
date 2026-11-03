@@ -99,7 +99,7 @@ if (in_array($a, ['rank', 'prize', 'def', 'shop', 'shopbuy'], true)) {
 }
 if (!$me) {
     echo '【竞 技 场】<br>';
-    echo '想证明自己吗？80级可进。异步PVP，自动战斗，赢了排名上升，输了下降。名次奖励每日5点结算，段位奖励每2周结算；每周一重置赛季。<br>';
+    echo '想证明自己吗？80级可进。异步PVP，自动战斗，赢了排名上升，输了下降。名次奖励每日5点结算，段位奖励每2周结算，赛季以自然月为周期、每月1号按战力重排并发放月末结算奖励。<br>';
     echo '今日免费挑战5次，额外10金/次，也可1魔钻买5次。<br>';
     echo '<a href="arena.php?a=join">进入竞技场</a><br>';
     echo '<a href="npc.php?who=arena_m">返回</a>';

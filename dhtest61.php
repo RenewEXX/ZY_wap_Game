@@ -70,7 +70,7 @@ db()->prepare('INSERT INTO arena_rank (uid,zone,rank,name,job,lv,power,is_dummy,
 $msg = arena_join($uid2);
 ck61('跨赛季老玩家 join 不崩且判为已在场', str_contains($msg, '已经'), $msg);
 
-// 7) 全新玩家 join 正常进入（初始 100+名）
+// 7) 全新玩家 join 正常进入（机器人占1..1000，真人从1001起）
 $uid3 = (int) user_create('tc61' . mt_rand(100000, 999999), 'x', 'warrior', $zone, true, 'tmp');
 $u3 = user_by_id($uid3); $u3['lv'] = 300; $u3['last_seen'] = time(); user_save($u3);
 $msg = arena_join($uid3);
@@ -78,29 +78,39 @@ $st = db()->prepare('SELECT COUNT(*) FROM arena_rank WHERE uid=? AND zone=? AND 
 $st->execute([$uid3, $zone, $season]);
 ck61('新玩家join成功入场', (int) $st->fetchColumn() === 1 && str_contains($msg, '欢迎'), $msg);
 
-// 8) 每周滚动兜底（不依赖周一）：kv 记录落后时，ensure 立刻结算——真人回100名起、假人重排1..200、kv推进当前赛季
+// 8) 月末赛季结算兜底（不依赖每月1号）：kv 落后时，ensure 立刻结算——真人按战力重排（不再全塞到第N名）、kv推进当前月。
 $kvKey = 'arena_season_roll_' . $zone;
-db()->prepare('INSERT OR REPLACE INTO sys_kv (k,num) VALUES (?,?)')->execute([$kvKey, 20000101]);
+db()->prepare('INSERT OR REPLACE INTO sys_kv (k,num) VALUES (?,?)')->execute([$kvKey, 202001]); // 旧月份(6位int)，触发结算
+$mailBefore = (int) db()->query('SELECT COUNT(*) FROM mails')->fetchColumn();
 arena_ensure($zone);
 $st = db()->prepare('SELECT rank FROM arena_rank WHERE zone=? AND season=? AND is_dummy=0 ORDER BY rank ASC');
 $st->execute([$zone, $season]);
 $realRanks = array_map('intval', array_column($st->fetchAll(), 'rank'));
-ck61('赛季滚动:真人数=3', count($realRanks) === 3, (string) count($realRanks));
-ck61('赛季滚动:真人从第1000名起连续', $realRanks === range(arena_start_rank(), arena_start_rank() + count($realRanks) - 1), implode(',', $realRanks));
+ck61('赛季结算:真人数=3', count($realRanks) === 3, (string) count($realRanks));
+// 真人名次互不相同（按战力排开），且不再是被一股脑塞到同一段名次
+ck61('赛季结算:三名真人名次互不相同', count(array_unique($realRanks)) === count($realRanks), implode(',', $realRanks));
+ck61('赛季结算:真人不再全部坠到起始名次', $realRanks !== range(arena_start_rank(), arena_start_rank() + count($realRanks) - 1), implode(',', $realRanks));
 $st = db()->prepare('SELECT num FROM sys_kv WHERE k=?');
 $st->execute([$kvKey]);
 $curKey = (int) str_replace('-', '', $season);
-ck61('赛季滚动:kv推进到当前赛季', (int) $st->fetchColumn() === $curKey, (string) $st->fetchColumn());
-$st = db()->prepare('SELECT rank FROM arena_rank WHERE zone=? AND season=? AND is_dummy=1 ORDER BY rank ASC');
+ck61('赛季结算:kv推进到当前月', (int) $st->fetchColumn() === $curKey, (string) $st->fetchColumn());
+// 全体（真人+机器人）名次连续 1..N 无空洞
+$st = db()->prepare('SELECT rank FROM arena_rank WHERE zone=? AND season=? ORDER BY rank ASC');
 $st->execute([$zone, $season]);
-$br = array_map('intval', array_column($st->fetchAll(), 'rank'));
-ck61('赛季滚动:假人仍1..1000连续', $br === range(1, arena_bot_count()));
-// 再调一次不应重复结算（kv 已是当前赛季，真人名次保持不变）
+$allR = array_map('intval', array_column($st->fetchAll(), 'rank'));
+ck61('赛季结算:榜单连续无空洞', $allR === range(1, count($allR)), 'n=' . count($allR));
+// 结算给真人发了月末结算奖励邮件
+$mailAfter = (int) db()->query('SELECT COUNT(*) FROM mails')->fetchColumn();
+ck61('赛季结算:发放了月末奖励邮件', $mailAfter > $mailBefore, "before=$mailBefore after=$mailAfter");
+// 再调一次不应重复结算（kv 已是当前月，真人名次保持不变）
+$mailsMid = (int) db()->query('SELECT COUNT(*) FROM mails')->fetchColumn();
 arena_ensure($zone);
 $st = db()->prepare('SELECT rank FROM arena_rank WHERE zone=? AND season=? AND is_dummy=0 ORDER BY rank ASC');
 $st->execute([$zone, $season]);
 $again = array_map('intval', array_column($st->fetchAll(), 'rank'));
 ck61('重复访问不重复结算', $again === $realRanks, implode(',', $again));
+$mailsMid2 = (int) db()->query('SELECT COUNT(*) FROM mails')->fetchColumn();
+ck61('重复访问不重复发邮件', $mailsMid2 === $mailsMid, "mid=$mailsMid mid2=$mailsMid2");
 
 cleanArena61($zone, [$uid, $uid2, $uid3]);
 echo "OK=$ok FAIL=$bad\n";

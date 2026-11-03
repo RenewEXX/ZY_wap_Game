@@ -5575,13 +5575,13 @@ function roll_summoner_box(int $uid, string $mid): string
         return '';
     }
     $m = 1 + $lv * 0.02 + min(200, gear_stats($uid)['magic_find']) / 100;
-    if (mt_rand() / mt_getrandmax() > 0.05 * $m) {
+    if (mt_rand() / mt_getrandmax() > 0.05 * $m && !legend_drop_force()) {
         return '';
     }
     $legend = summoner_offhand_for_lv($lv, true);
-    // 传说基底极稀有，且只有高等级区间才有
-    $legendRate = $lv >= 700 ? 0.02 : 0.004;
-    if ($legend !== null && mt_rand() / mt_getrandmax() < $legendRate) {
+    // 传说基底极稀有（约 0.01%*寻宝），不再 2% 天价
+    $legendRate = 0.0003;
+    if ($legend !== null && (mt_rand() / mt_getrandmax() < $legendRate || legend_drop_force())) {
         return make_equip($uid, 'offhand', $legend, 4, $lv);
     }
     $base = summoner_offhand_for_lv($lv);
@@ -5782,9 +5782,16 @@ function hunter_arsenal_legendary_for_lv(int $lv): array
     return $out;
 }
 
+// 测试专用：置 $GLOBALS['__force_legend_drop']=true 可让各 BOSS 传说池必定命中，
+// 用于在不做百万次抽样的情况下验证「该路径确实能产出传说」。游戏流程不会设置它。
+function legend_drop_force(): bool
+{
+    return !empty($GLOBALS['__force_legend_drop']);
+}
+
 // 猎人打怪掉本等级段的【传说弓 / 传说箭袋】（走 legend 引擎，穿上有 lg_* 特效）。
 // 沿用全游戏规则：传说只由 BOSS 产出（roll_drop 对非 BOSS 封顶史诗），所以这里只在 BOSS 轮判定。
-// 掉率 12%，吃寻宝/转生；独立于普通弓/箭袋掉落。
+// 掉率约0.006%，吃寻宝/转生；独立于普通弓/箭袋掉落。
 function roll_hunter_legendary_arsenal(int $uid, string $mid): string
 {
     if (job_id_of(user_by_id((int) $uid) ?? []) !== 'hunter') {
@@ -5801,12 +5808,12 @@ function roll_hunter_legendary_arsenal(int $uid, string $mid): string
     if ($cands === []) {
         return '';
     }
-    $baseRate = 0.12;
+    $baseRate = 0.0001; // 猎手弓/箭袋传说BOSS额外池约0.01%*寻宝
     $m = 1 + min(200, gear_stats($uid)['magic_find']) / 100;
     if (function_exists('rs_drop_mult')) {
         $m *= rs_drop_mult($uid);
     }
-    if (mt_rand() / mt_getrandmax() > $baseRate * $m) {
+    if (mt_rand() / mt_getrandmax() > $baseRate * $m && !legend_drop_force()) {
         return '';
     }
     $cfg = $cands[array_rand($cands)];
@@ -5839,12 +5846,12 @@ function roll_dot_legendary_gear(int $uid, string $mid): string
     if ($cands === []) {
         return '';
     }
-    $rate = 0.09;
+    $rate = 0.0001; // DOT 传说：BOSS 约 0.01%*寻宝
     $m = 1 + min(200, gear_stats($uid)['magic_find']) / 100;
     if (function_exists('rs_drop_mult')) {
         $m *= rs_drop_mult($uid);
     }
-    if (mt_rand() / mt_getrandmax() > $rate * $m) {
+    if (mt_rand() / mt_getrandmax() > $rate * $m && !legend_drop_force()) {
         return '';
     }
     $name = array_rand($cands);
@@ -5916,8 +5923,8 @@ function roll_region_boss_hunter_gear(int $uid, string $mid): string
     $lv = monster_lv($mid);
     $m = 1 + min(200, gear_stats($uid)['magic_find']) / 100;
     $r = mt_rand() / mt_getrandmax();
-    // 传说箭袋（q4，仅 BOSS，约 3%*寻宝）：统一为唯一的传说箭袋，带专属传说特效+故事
-    if ($r < 0.03 * $m) {
+    // 传说箭袋：概率与统一BOSS传说档同量级，仍保留专属池，但不再额外制造高频传说
+    if ($r < 0.0004 * $m || legend_drop_force()) {
         return make_equip($uid, 'offhand', '裂空猎魂箭袋', 4, $lv);
     }
     // 副本套装弓 / 套装箭袋（q3，约 22%*寻宝，各半）：弓=主手、箭袋=副手
@@ -6008,9 +6015,12 @@ function roll_drop_base(int $uid, string $mid, int $elite = 0): string
     // 转生：掉落率+20%
     if (function_exists('rs_drop_mult')) { $m *= rs_drop_mult($uid); }
     if (is_boss_mid($mid)) {
-        // BOSS：品质整体上移；传说掉率大幅压低，目标挂机 24H 出 1~2 件。
-        // 其余档位（史诗/稀有/优秀/普通）分布保持不变，仅传说档位缩小。
-        $leg = 0.0001 * $m;
+        // BOSS：品质整体上移；传说掉率按"固定低率"单独计算（只吃寻宝/转生），
+        // 不再随怪物等级的 $base 膨胀——否则野外高等级 BOSS 的传说率会从 0.01% 涨到 0.3%，
+        // 挂机一晚能出几十件。目标：24H AFK 约 1~2 件传说。
+        $leg = legend_drop_force() ? 5.0 : 0.0004;
+        $leg *= (1 + min(200, gear_stats($uid)['magic_find']) / 100);
+        if (function_exists('rs_drop_mult')) { $leg *= rs_drop_mult($uid); }
         $chances = [
             4 => $leg,
             3 => $leg + 0.008 * $m,
@@ -11354,7 +11364,7 @@ function gf_dot_set_drop(int $uid, string $mid): string
         return '';
     }
     $rate = ($mid === 'god_emperor') ? 30 : 6;
-    if (mt_rand(1, 100) > $rate) {
+    if (mt_rand(1, 1000) > (int) round($rate * 10)) {
         return '';
     }
     $u = user_by_id((int) $uid);
@@ -11409,8 +11419,9 @@ function soulpact_kill_drop(int $uid, string $mid): string
     if ($mid !== 'god_avatar' && $mid !== 'god_archon' && $mid !== 'gy_justice' && $mid !== 'yz_boss') {
         return '';
     }
-    $rate = ['yz_boss' => 15, 'god_avatar' => 8, 'god_archon' => 4, 'gy_justice' => 10][$mid];
-    if (mt_rand(1, 100) > $rate) {
+    // 魂契主题传说：BOSS 每次击杀独立 0.1%（1/1000）掉落，已纳入整体传奇稀有度
+    $rate = 1;
+    if (mt_rand(1, 1000) > $rate) {
         return '';
     }
     $u = user_by_id($uid);

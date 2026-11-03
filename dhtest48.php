@@ -148,7 +148,25 @@ ck48('副本小怪不掉弓/箭袋', $mobBow===[], implode(',',array_slice($mobB
 $bTest=(int)user_create('bt'.mt_rand(1,99999),'x','hunter','z1',true,'tmp'); $_SESSION['uid']=$bTest;
 $btu=user_by_id($bTest); $btu['lv']=980; user_save($btu); _gear_uncache($bTest);
 $gotSetBow=false;$gotSetQ=false;$gotLgQ=false;
-foreach(region_dungeon_bosses() as $bmid){ for($i=0;$i<200;$i++){ db()->exec("DELETE FROM equips WHERE uid=$bTest"); roll_region_boss_hunter_gear($bTest,$bmid); $r=db()->query("SELECT slot,name,quality FROM equips WHERE uid=$bTest LIMIT 1")->fetch(); if($r){ if((int)$r['quality']===4)$gotLgQ=true; elseif($r['slot']==='weapon')$gotSetBow=true; else $gotSetQ=true; } db()->exec("DELETE FROM equips WHERE uid=$bTest"); } }
+foreach(region_dungeon_bosses() as $bmid){
+  // 套装弓/箭袋(q3, 约25%)：200 次足够
+  for($i=0;$i<200 && !($gotSetBow&&$gotSetQ);$i++){
+    db()->exec("DELETE FROM equips WHERE uid=$bTest");
+    roll_region_boss_hunter_gear($bTest,$bmid);
+    $r=db()->query("SELECT slot,name,quality FROM equips WHERE uid=$bTest LIMIT 1")->fetch();
+    if($r && (int)$r['quality']!==4){ if($r['slot']==='weapon')$gotSetBow=true; else $gotSetQ=true; }
+    db()->exec("DELETE FROM equips WHERE uid=$bTest");
+  }
+  // 传说箭袋(q4)：低概率，用测试钩子强制命中，避免百万次抽样
+  if(!$gotLgQ){
+    $GLOBALS['__force_legend_drop']=true;
+    foreach(region_dungeon_bosses() as $bmid){
+      $ret=roll_region_boss_hunter_gear($bTest,$bmid);
+      if($ret!=='' && str_contains($ret,'裂空猎魂箭袋')){ $gotLgQ=true; break; }
+    }
+    unset($GLOBALS['__force_legend_drop']);
+  }
+}
 ck48('BOSS能掉套装弓', $gotSetBow);
 ck48('BOSS能掉套装箭袋', $gotSetQ);
 ck48('BOSS能掉传说箭袋', $gotLgQ);

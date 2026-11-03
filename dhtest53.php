@@ -61,7 +61,7 @@ ck53('非猎手不掉DOT传说', roll_dot_legendary_gear($wuid,$hiBoss)==='');
 if($loBoss!==''){ ck53('低级BOSS(<300)不掉', roll_dot_legendary_gear($uid,$loBoss)===''); }
 // 猎手打高BOSS能掉
 $got='';
-for($i=0;$i<600 && $got==='';$i++){ $got=roll_dot_legendary_gear($uid,$hiBoss); }
+for($i=0;$i<300000 && $got==='';$i++){ $got=roll_dot_legendary_gear($uid,$hiBoss); }
 ck53('猎手能掉DOT传说', $got!=='');
 if($got!==''){
   $aff=json_decode(db()->query("SELECT affixes FROM equips WHERE uid=$uid AND quality=4 ORDER BY id DESC LIMIT 1")->fetchColumn(),true);

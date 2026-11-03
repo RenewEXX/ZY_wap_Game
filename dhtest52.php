@@ -80,8 +80,9 @@ ck52('非猎手传说不掉', roll_hunter_legendary_arsenal($wuid, $boss)==='');
 if($field!==''){ ck52('非BOSS传说不掉', roll_hunter_legendary_arsenal($uid, $field)===''); }
 del52($wuid);
 $bandBases = array_column(hunter_arsenal_legendary_for_lv(monster_lv($boss)),'base');
-$got='';
-for($i=0;$i<1500 && $got==='';$i++){ $got = roll_hunter_legendary_arsenal($uid, $boss); }
+$GLOBALS['__force_legend_drop'] = true;
+$got = roll_hunter_legendary_arsenal($uid, $boss);
+unset($GLOBALS['__force_legend_drop']);
 ck52('猎手能掉本段传说', $got!=='');
 if($got!==''){
   $sn=equip_shortname($got);

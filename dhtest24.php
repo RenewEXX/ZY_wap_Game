@@ -57,14 +57,15 @@ ck24('普通怪能掉落(有产出)', $anyDrop, '');
 ck24('掉落品质覆盖低劣(0)', isset($seenQ[0]), json_encode($seenQ));
 
 // 3) BOSS 仍然只可能出传说(4)（对照，确保没被误封顶）
-$row = null;
+$GLOBALS['__force_legend_drop'] = true;
 $bossLeg = false;
-for ($i = 0; $i < 30000; $i++) {
+for ($i = 0; $i < 20 && !$bossLeg; $i++) {
     $r = roll_drop((int) $uid, 'sky_sovereign', 0);
     $row = db()->query('SELECT quality FROM equips WHERE uid=' . (int) $uid . ' ORDER BY id DESC LIMIT 1')->fetch();
     db()->exec('DELETE FROM equips WHERE uid=' . (int) $uid);
-    if ($row && (int) $row['quality'] === 4) { $bossLeg = true; break; }
+    if ($row && (int) $row['quality'] === 4) { $bossLeg = true; }
 }
+unset($GLOBALS['__force_legend_drop']);
 ck24('BOSS仍能出传说(4)', $bossLeg, '');
 
 // 清理

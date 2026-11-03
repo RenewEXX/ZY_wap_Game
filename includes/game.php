@@ -7807,6 +7807,7 @@ function battle_round(array &$u, array &$b, string $mode): array
     $isSkill = false;
     $skillName = '';
     $logHeal = '';
+    $selfAtkTag = ''; // 玩家本次普攻/技能的自身标签（召唤已满·普攻/献祭…），与伤害并列、不跟到召唤攻击那行
     $logNoMp = '';
     $profMsg = '';
     $skEl = '';
@@ -7834,17 +7835,17 @@ function battle_round(array &$u, array &$b, string $mode): array
                 // 召唤已满：普通暗影攻击，不再空耗蓝重复召唤，也不献祭生命（否则挂机每回合掉血暴毙）
                 if (count(summon_list()) >= summon_cap($u)) {
                     $pd = max(1, (int) (player_matk($u)) + 2 - (int) (monster_mdef($b) / 2));
-                    $logHeal .= '(召唤已满·普攻)';
+                    $selfAtkTag .= '(召唤已满·普攻)';
                 } elseif ((int) ($u['hp'] ?? 0) > (int) $u['maxhp'] * 0.3) {
                     // 召唤师平A：献祭5%生命换伤害（生命高于30%才献祭，避免挂机自杀）
                     $cost = max(1, (int) ($u['hp'] * 0.05));
                     $u['hp'] = max(1, (int) $u['hp'] - $cost);
                     $pd = max(1, (int) (player_matk($u) * 0.85) + 2 - (int) (monster_mdef($b) / 2));
-                    $logHeal .= '(献祭' . $cost . '血)';
+                    $selfAtkTag .= '(献祭' . $cost . '血)';
                 } else {
                     // 残血：改用不献祭的暗影普攻，优先保命
                     $pd = max(1, (int) (player_matk($u)) + 2 - (int) (monster_mdef($b) / 2));
-                    $logHeal .= '(残血·免献祭)';
+                    $selfAtkTag .= '(残血·免献祭)';
                 }
             }
             $skillName = job_of($u)['skill'];
@@ -8468,22 +8469,25 @@ function battle_round(array &$u, array &$b, string $mode): array
     }
     // 1觉·猎手标记：目标易伤10%（剩余轮数在受伤时结算）
     if ($pd > 0 && !empty($b['mark']) && ($b['hp'] ?? 1) > 0) { $pd = (int)($pd * 1.1); $b['hp'] = (int)$b['hp'] - (int)($pd * 0.1); $b['mark'] = (int)$b['mark'] - 1; $logHeal .= '(易伤)'; }
+    $gs = gear_stats((int) ($u['id'] ?? 0));
+    // 吸血/鲜血契约：玩家自身回血，标签要紧跟自己的伤害数字（$selfTag 插在“造成X点。”之后），
+    // 否则会被追加到整段末尾、再和怪物动作粘在一起，看起来像敌人的效果。
+    $selfTag = '';
+    if ($pd > 0 && $gs['lifesteal'] > 0) {
+        $hl = max(1, (int) ($pd * $gs['lifesteal'] / 100));
+        $u['hp'] = min((int) $u['maxhp'], (int) $u['hp'] + $hl);
+        $selfTag .= '(吸血+' . $hl . ')';
+    }
+    if ($pd > 0 && (cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '') === 'shadowbishop') {
+        $sh = max(1, (int) ($pd * 0.03));
+        $u['hp'] = min((int) $u['maxhp'], (int) $u['hp'] + $sh);
+        $selfTag .= '(鲜血契约+' . $sh . ')';
+    }
     $verb = $skillName === '拳击' ? '你挥出一拳，造成' : ($isSkill ? '你放出' . $skillName . '，造成' : '你劈出');
     if ($pd === 0) {
         $log = !empty($pDbf['stun']) ? '你被眩晕，出手被打断。' : ('你的攻击被' . $b['name'] . '闪避了。');
     } else {
-        $log = $verb . $pd . '点。' . $logHeal . $pDbfTag . $logNoMp . $profMsg . $tankMp;
-    }
-    $gs = gear_stats((int) ($u['id'] ?? 0));
-    if ($pd > 0 && $gs['lifesteal'] > 0) {
-        $hl = max(1, (int) ($pd * $gs['lifesteal'] / 100));
-        $u['hp'] = min((int) $u['maxhp'], (int) $u['hp'] + $hl);
-    if ($pd > 0 && (cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '') === 'shadowbishop') {
-        $sh = max(1, (int) ($pd * 0.03));
-        $u['hp'] = min((int) $u['maxhp'], (int) $u['hp'] + $sh);
-        $log .= '(鲜血契约+' . $sh . ')';
-    }
-        $log .= '(吸血+' . $hl . ')';
+        $log = $verb . $pd . '点' . $selfAtkTag . $selfTag . '。' . $logHeal . $pDbfTag . $logNoMp . $profMsg . $tankMp;
     }
     $petMsg = pet_attack($u, $b);
     if ($petMsg !== '') {
@@ -9082,6 +9086,11 @@ function battle_round(array &$u, array &$b, string $mode): array
         }
     }
     $alive = max(1, (int) ($b['left'] ?? 1));
+    // 我方这一回合的战报若没以句号/叹号收尾（比如末尾挂着“(吸血+66)”这类标签），
+    // 先补一个句号，避免和接下来的怪物动作粘成一句、看起来像是怪物的效果。
+    if ($log !== '' && !preg_match('/[。！]$/u', $log)) {
+        $log .= '。';
+    }
     $echoWeak = false;
     if (($b['id'] ?? '') === 'echo_rayne') {
         $b['echo_calls'] = (int) ($b['echo_calls'] ?? 0) + 1;

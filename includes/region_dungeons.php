@@ -294,6 +294,24 @@ function region_dungeon_specs(): array
     ];
 }
 
+// 副本怪/BOSS 元组第 5 项是内部英文标记（drift/lurk/hiero/lord…），不是给人看的名字。
+// 这里把它映射成可读的中文"招牌普攻"，未知标记一律回退到「攻击」，避免战斗日志里蹦出奇怪单词。
+function region_atk_name(string $key): string
+{
+    static $map = [
+        // 小怪
+        'drift' => '飘袭', 'gust' => '骤风袭', 'lurk' => '潜袭', 'coral' => '珊瑚刺',
+        'ember' => '余烬灼', 'guard' => '重锤横扫', 'creeper' => '藤缚', 'bloom' => '花噬',
+        'wraith' => '幽怨爪', 'reaper' => '镰斩', 'shard' => '星屑刺', 'flame' => '火舌',
+        'crawler' => '钳击', 'tide' => '潮涌', 'echo' => '时序回响', 'loop' => '逆时击',
+        'seraph' => '圣光斩',
+        // BOSS
+        'warden' => '罡风击', 'hiero' => '诵经噬魂', 'lord' => '王者横扫', 'mother' => '缠木绞',
+        'king' => '君临斩', 'master' => '凝时一击', 'god' => '摘神一击',
+    ];
+    return $map[$key] ?? '攻击';
+}
+
 // 由 spec 生成全部派生结构（记忆化）
 function region_dungeon_build(): array
 {
@@ -350,7 +368,7 @@ function region_dungeon_build(): array
             $lv[$mid] = $mlv;
             $el[$mid] = $mel;
             $drops[$mid] = region_dungeon_pick_drop($mid, $setLayout, false);
-            $skills[$mid] = ['atk' => $atkName, 'skills' => [['name' => $nm . '·扑击', 'rate' => 22, 'mult' => 1.5, 'el' => $mel]]];
+            $skills[$mid] = ['atk' => region_atk_name((string) $atkName), 'skills' => [['name' => $nm . '·扑击', 'rate' => 22, 'mult' => 1.5, 'el' => $mel]]];
         }
 
         // BOSS（比小怪更厚更疼：hp=lv*175*2.8、atk=lv*2.6*1.6，与 we2 BOSS 一致）
@@ -378,7 +396,8 @@ function region_dungeon_build(): array
             'set_piece' => ['slot' => $bossSetDrop['slot'], 'base' => $bossSetDrop['base'], 'class_weapons' => $bossSetDrop['class_weapons'] ?? null],
         ];
         $legendByMid[$bmid] = (string) $L['base'];
-        $skills[$bmid] = ['atk' => $batk, 'skills' => [
+        // BOSS 招牌普攻名走 token→中文映射，避免把内部英文标记（hiero/lord/god…）显示出来。
+        $skills[$bmid] = ['atk' => region_atk_name((string) $batk), 'skills' => [
             ['name' => $bnm . '·重压', 'rate' => 28, 'mult' => 2.5, 'el' => $bel],
             ['name' => $bnm . '·震击', 'rate' => 15, 'mult' => 1.8, 'dot' => [3, 3]],
             ['name' => $bnm . '·壁障', 'rate' => 12, 'mult' => 0.5, 'guard' => 3],

@@ -6572,6 +6572,32 @@ function summon_soulpact_trigger(array $u): string
     return summon_add('imp', $u);
 }
 
+// 召唤物伤害统一转为暗属性：吃角色的「元素伤害」(flat 元素伤害加成) + 武器暗附魔，
+// 再走怪物暗抗/克制与传说「暗伤%」(legend_relic_el_mult('dark'))。
+// 返回 [最终伤害, 属性后缀]（后缀用于战报标克制/被抵抗）。
+function summoner_dark_damage(int $uid, array $b, int $raw): array
+{
+    $raw = max(1, $raw);
+    $flat = 0;
+    $elMult = 1.0;
+    if ($uid > 0) {
+        $g = gear_stats($uid);
+        $flat += (int) round((float) ($g['element'] ?? 0));
+        $flat += enchant_el_dmg($uid, 'dark');
+        if (function_exists('legend_relic_el_mult')) {
+            $elMult = legend_relic_el_mult($uid, 'dark');
+        }
+    }
+    $raw += $flat;
+    $mid = (string) ($b['id'] ?? '');
+    $chart = element_chart('dark', monster_element($mid));
+    $mres = monster_resist($mid, 'dark');
+    $hit = (int) round($raw * $chart * (1 - $mres / 100) * $elMult);
+    $hit = max(1, $hit);
+    $suffix = $chart > 1 ? '（克制）' : ($chart < 1 ? '（被抵抗）' : '');
+    return [$hit, $suffix];
+}
+
 // 召唤兽行动：自动攻击（无回合上限，死亡才消失，死亡由 summon_absorb 结算）
 function summon_turn(array &$b): array
 {
@@ -6602,6 +6628,8 @@ function summon_turn(array &$b): array
                 $hit = (int) round($hit * 1.5);
             }
         }
+        // 召唤物伤害统一走暗属性：吃元素伤害加成 + 暗伤加成 + 怪物暗抗/克制
+        [$hit, $elSuffix] = summoner_dark_damage($uid, $b, $hit);
         $trueTag = '';
         if ($thorn !== null) {
             $pct = $isCrit ? 30 : 15; // 灵魂荆棘：15%，暴击翻倍30%
@@ -6610,7 +6638,7 @@ function summon_turn(array &$b): array
             $trueTag = '（灵魂撕裂真伤' . $td . '）';
         }
         $dmg += $hit;
-        $log .= $s['name'] . '扑上去，造成' . $hit . '点暗影伤害' . ($isCrit ? '（暴击）' : '') . $trueTag . '。';
+        $log .= $s['name'] . '扑上去，造成' . $hit . '点暗影伤害' . $elSuffix . ($isCrit ? '（暴击）' : '') . $trueTag . '。';
         if (isset($worn['slegend_mammoneye']) && mt_rand(1, 100) <= 5) {
             $b['stun'] = max((int) ($b['stun'] ?? 0), 2); // 玛门契约之眼：5%麻痹2回合
             $log .= '（玛门之眼·麻痹）';
@@ -6643,8 +6671,10 @@ function summon_absorb(int $md, array &$b): array
         }
         if (!empty($first['bomb'])) {
             $boom = max(1, (int) $first['atk']);
-            $b['hp'] = max(0, (int) ($b['hp'] ?? 0) - $boom);
-            $log .= '尸骸炸开，溅出' . $boom . '点暗影伤害。';
+            // 尸骸炸开同样是召唤物的暗属性伤害，吃元素/暗伤加成与怪物暗抗
+            [$boomHit, $boomTag] = summoner_dark_damage((int) $uid, $b, $boom);
+            $b['hp'] = max(0, (int) ($b['hp'] ?? 0) - $boomHit);
+            $log .= '尸骸炸开，溅出' . $boomHit . '点暗影伤害' . $boomTag . '。';
         }
         $list = array_slice($list, 1);
         $expl = summoner_legend_summon_death($b, $first, $uid);

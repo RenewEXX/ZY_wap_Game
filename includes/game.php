@@ -4164,15 +4164,15 @@ function skill_catalog(): array
         'w9' => ['name' => '血狱狂斩', 'job' => 'warrior', 'mp' => 45, 'kind' => 'sin', 'mult' => 3.6, 'el' => 'dark', 'rage' => 1, 't10' => '斩杀线40%', 'lv20' => '伤害+15%，斩杀线50%'],
         'm9' => ['name' => '魂蚀天雷', 'job' => 'mage', 'mp' => 50, 'kind' => 'sin', 'mult' => 4.2, 'el' => 'thunder', 't10' => '35%麻痹', 'lv20' => '伤害+15%，麻痹40%'],
         'h9' => ['name' => '弑神连珠', 'job' => 'hunter', 'mp' => 45, 'kind' => 'sin', 'mult' => 3.0, 'el' => 'dark', 'dot' => 'bleed', 't10' => '引爆目标身上全部DOT层数（每层转成一次额外伤害）', 'lv20' => '引爆伤害+50%'],        // 召唤师：召唤/腐蚀/献祭
-        's1' => ['name' => '深渊契约', 'job' => 'summoner', 'mp' => 10, 'kind' => 'summon', 'mult' => 1.2, 'el' => 'dark', 't10' => '召唤1只深渊小鬼', 'lv20' => '小鬼生命+15%'],
-        's2' => ['name' => '招魂引', 'job' => 'summoner', 'mp' => 18, 'kind' => 'summon', 'mult' => 1.4, 'el' => 'dark', 't10' => '召唤1只骸骨守卫（需熟练10级），血厚能扛', 'lv20' => '守卫生命+15%，伤害+15%'],
+        's1' => ['name' => '深渊契约', 'job' => 'summoner', 'mp' => 10, 'kind' => 'summon', 'mult' => 1.2, 'el' => 'dark', 't10' => '召唤1只深渊小鬼，登场即撕咬一口', 'lv20' => '小鬼生命+15%，撕咬更狠'],
+        's2' => ['name' => '招魂引', 'job' => 'summoner', 'mp' => 18, 'kind' => 'summon', 'mult' => 1.4, 'el' => 'dark', 't10' => '召唤1只骸骨守卫（需熟练10级），并撑起骨墙回血', 'lv20' => '守卫生命+15%，骨墙回血更多'],
         's3' => ['name' => '血肉筑城', 'job' => 'summoner', 'mp' => 22, 'kind' => 'summon', 'mult' => 1.8, 'el' => 'dark', 't10' => '献祭20%生命召唤憎恶聚合体（需熟练10级），死时爆炸', 'lv20' => '聚合体生命+15%，爆炸+30%'],
-        's4' => ['name' => '小鬼潮', 'job' => 'summoner', 'mp' => 30, 'kind' => 'summon', 'mult' => 1.5, 'el' => 'dark', 't10' => '召唤2只深渊小鬼', 'lv20' => '召唤3只，小鬼伤害+15%'],
+        's4' => ['name' => '小鬼潮', 'job' => 'summoner', 'mp' => 30, 'kind' => 'summon', 'mult' => 1.5, 'el' => 'dark', 't10' => '召唤2只深渊小鬼群攻', 'lv20' => '召唤3只，小鬼伤害+15%'],
         's5' => ['name' => '死灵之拥', 'job' => 'summoner', 'mp' => 40, 'kind' => 'summon', 'mult' => 2.2, 'el' => 'dark', 't10' => '召唤2只深渊恶鬼（2觉专属），死时爆炸', 'lv20' => '同时召唤多只，爆炸范围+50%'],
-        's6' => ['name' => '噬魂夜宴', 'job' => 'summoner', 'mp' => 48, 'kind' => 'summon', 'mult' => 2.6, 'el' => 'dark', 't10' => '献祭30%生命召唤无面梦魇（2觉专属），最强', 'lv20' => '梦魇生命+15%，伤害+25%'],
-        's7' => ['name' => '群魂爆裂', 'job' => 'summoner', 'mp' => 52, 'kind' => 'aoe', 'mult' => 2.6, 'el' => 'dark', 't10' => '引爆全部召唤兽，范围伤害', 'lv20' => '引爆伤害+40%'],
+        's6' => ['name' => '噬魂夜宴', 'job' => 'summoner', 'mp' => 48, 'kind' => 'summon', 'mult' => 2.6, 'el' => 'dark', 't10' => '献祭30%生命召唤无面梦魇（2觉专属），并令其腐蚀目标', 'lv20' => '梦魇生命+15%，腐蚀更猛'],
+        's7' => ['name' => '群魂爆裂', 'job' => 'summoner', 'mp' => 52, 'kind' => 'aoe', 'mult' => 2.6, 'el' => 'dark', 't10' => '引爆全部召唤兽造成高额AoE（每只×3.5攻击），再召1只恶鬼', 'lv20' => '爆炸×4.5，转命+40%'],
         's8' => ['name' => '永夜契约', 'job' => 'summoner', 'mp' => 52, 'kind' => 'summon', 'mult' => 2.8, 'el' => 'dark', 't10' => '召唤1只憎恶+1只恶鬼（需熟练10级）', 'lv20' => '再多1只恶鬼，伤害+25%'],
-        's9' => ['name' => '深渊主宰', 'job' => 'summoner', 'mp' => 45, 'kind' => 'sin', 'mult' => 3.4, 'el' => 'dark', 't10' => '献祭全部召唤兽，全部伤害转化生命', 'lv20' => '伤害+15%，转化率翻倍'],
+        's9' => ['name' => '深渊主宰', 'job' => 'summoner', 'mp' => 45, 'kind' => 'sin', 'mult' => 3.4, 'el' => 'dark', 't10' => '召无面梦魇+引爆旧召唤兽高额AoE，开启每3回合献祭', 'lv20' => '爆炸×6、梦魇生命+15%，周期献祭更狠'],
         'p9' => ['name' => '堕天圣裁', 'job' => 'priest', 'mp' => 50, 'kind' => 'sin', 'mult' => 3.0, 'heal' => 200, 'el' => 'dark', 't10' => '伤害转奶80%', 'lv20' => '治疗+20%，转奶100%'],
     ];
 }
@@ -6598,6 +6598,88 @@ function summoner_dark_damage(int $uid, array $b, int $raw): array
     return [$hit, $suffix];
 }
 
+// 溅射灌入队列并结算「攒满一条血震死一只」（只给经验金币，不掉落）。
+function summoner_splash_queue(array &$u, array &$b, int $add): void
+{
+    $b['splash'] = (int) (($b['splash'] ?? 0) + $add);
+    $maxhp = max(1, (int) ($b['maxhp'] ?? 1));
+    while ((int) ($b['left'] ?? 1) > 1 && (int) ($b['splash'] ?? 0) >= $maxhp) {
+        $b['splash'] = (int) $b['splash'] - $maxhp;
+        $b['left'] = (int) $b['left'] - 1;
+        $b['wexp'] = (int) ($b['wexp'] ?? 0) + exp_gain_for($u, (string) ($b['id'] ?? ''), (int) ($b['elite'] ?? 0));
+        $b['wgold'] = (int) ($b['wgold'] ?? 0) + monster_gold_reward((int) ($b['gold'] ?? 1), (int) ($u['id'] ?? 0));
+    }
+}
+
+// 召唤师·献祭爆炸：把当前全部召唤兽一次性引爆，对当前目标+AoE队列造成高额暗属性伤害。
+// 每只爆炸 = 该召唤兽攻击 × $mult（远高于它自己一次普攻，约 ×1），所以越攒越狠。
+// $convert>0 时按爆炸总伤转生命。引爆后召唤列表清空。
+function summoner_explode_all(array &$u, array &$b, int $uid, float $mult, float $convert = 0.0): array
+{
+    $list = summon_list();
+    if ($list === []) {
+        return [0, '', 0];
+    }
+    $total = 0;
+    foreach ($list as $s) {
+        $raw = max(1, (int) round((int) ($s['atk'] ?? 0) * $mult));
+        [$hit, ] = summoner_dark_damage($uid, $b, $raw);
+        $total += $hit;
+    }
+    $cnt = count($list);
+    summon_clear();
+    if ($total <= 0) {
+        return [0, '', 0];
+    }
+    $b['hp'] = max(0, (int) ($b['hp'] ?? 0) - $total);
+    summoner_splash_queue($u, $b, (int) round($total * 0.5));
+    $heal = $convert > 0 ? (int) round($total * $convert) : 0;
+    if ($heal > 0) {
+        $u['hp'] = min((int) $u['maxhp'], (int) ($u['hp'] ?? 0) + $heal);
+    }
+    $log = '（群魂爆裂·' . $cnt . '只献祭，AoE ' . $total . '点暗影伤害' . ($heal > 0 ? '·转命' . $heal : '') . '）';
+    return [$total, $log, $heal];
+}
+
+// 深渊主宰·周期献祭：每 3 回合自动献祭一只（血最少）召唤兽，造成 AoE 高额爆炸并回血。
+// 计数器存放在 $b['lord_period']，施放【深渊主宰】时置 3。
+function summoner_lord_periodic(array &$u, array &$b, int $uid): string
+{
+    $p = (int) ($b['lord_period'] ?? 0);
+    if ($p <= 0) {
+        return '';
+    }
+    $b['lord_period'] = $p - 1;
+    if ($b['lord_period'] > 0) {
+        return '';
+    }
+    $list = summon_list();
+    if ($list === []) {
+        $b['lord_period'] = 0;
+        return '';
+    }
+    // 挑血最少的一只献祭
+    $idx = 0;
+    $min = PHP_INT_MAX;
+    foreach ($list as $i => $s) {
+        if ((int) ($s['hp'] ?? 0) < $min) {
+            $min = (int) ($s['hp'] ?? 0);
+            $idx = $i;
+        }
+    }
+    $victim = $list[$idx];
+    array_splice($list, $idx, 1);
+    summon_save($list);
+    $raw = max(1, (int) round((int) ($victim['atk'] ?? 0) * 3.0));
+    [$hit, ] = summoner_dark_damage($uid, $b, $raw);
+    $b['hp'] = max(0, (int) ($b['hp'] ?? 0) - $hit);
+    summoner_splash_queue($u, $b, (int) round($hit * 0.5));
+    $heal = (int) round($hit * 0.3);
+    $u['hp'] = min((int) $u['maxhp'], (int) ($u['hp'] ?? 0) + $heal);
+    $b['lord_period'] = 3;
+    return '（深渊主宰·献祭' . ($victim['name'] ?? '召唤兽') . '，AoE ' . $hit . '点暗影伤害·回' . $heal . '）';
+}
+
 // 召唤兽行动：自动攻击（无回合上限，死亡才消失，死亡由 summon_absorb 结算）
 function summon_turn(array &$b): array
 {
@@ -8100,20 +8182,20 @@ function battle_round(array &$u, array &$b, string $mode): array
                         $u['hp'] = min((int) $u['maxhp'], (int) $u['hp'] + $leech);
                         $logHeal .= '(噬罪转奶' . $leech . ')';
                     } elseif ($sid === 's9') {
-                        // 召唤师·深渊主宰：法3.4暗，献祭全部召唤兽按存活数加伤，全部伤害转化生命
-                        $sacN = count(summon_list());
+                        // 召唤师·深渊主宰：一发高额暗伤 + 引爆全部旧召唤兽 AoE + 召无面梦魇 + 开启每3回合献祭
                         $pd = max(1, (int) ((player_matk($u) + random_int(4, 7)) * (float) $sk['mult'] * $sinPow) - (int) (monster_mdef($b) / 2));
-                        if ($sacN > 0) { $pd = (int) ($pd * (1 + $sacN * 0.2)); $logHeal .= '(献祭' . $sacN . '只)'; }
                         if ($sTier >= 10) { $pd = (int) ($pd * 1.3); }
                         if ($sLv >= 20) { $pd = (int) ($pd * 1.15); }
                         [$pd, $elTag] = apply_el_convert($u, $b, $pd, $skEl);
                         $logHeal .= $elTag;
                         $b['fullEl'] = 1;
-                        $leechS9 = $sLv >= 20 ? 1.0 : 0.5;
-                        $leech9 = (int) ($pd * $leechS9);
-                        $u['hp'] = min((int) $u['maxhp'], (int) ($u['hp'] ?? 0) + $leech9);
-                        $logHeal .= '(主宰转命' . $leech9 . ')';
-                        summon_clear();
+                        // 主宰降临：先引爆全部现有召唤兽（越攒越狠），再召一只无面梦魇作为新的主宰
+                        $exMult9 = $sTier >= 10 ? 6.0 : 5.0;
+                        [$exTot9, $exLog9, ] = summoner_explode_all($u, $b, (int) ($u['id'] ?? 0), $exMult9, 0.35);
+                        if ($exLog9 !== '') { $logHeal .= $exLog9; }
+                        $logHeal .= summon_add('mare', $u, $sLv >= 20 ? 1 : 0);
+                        $b['lord_period'] = 3;
+                        $logHeal .= '(主宰降临·每3回合献祭)';
                     }
                 }
             } elseif ($sk['kind'] === 'heal') {
@@ -8222,12 +8304,13 @@ function battle_round(array &$u, array &$b, string $mode): array
                     $b['splash'] = (int) (($b['splash'] ?? 0) + $pd * 0.5); // lv20：万箭齐发溅射翻倍
                     $logHeal .= '(箭雨漫溢)';
                 }
-                // 召唤师·群魂爆裂：引爆回血（爆炸伤害由 summon_bomb 另算）
+                // 召唤师·群魂爆裂：引爆现有召唤兽造成高额 AoE，再召一只恶鬼补阵
                 if ($sid === 's7') {
-                    $leechS7 = $sLv >= 20 ? 0.4 : 0.25;
-                    $hlS7 = (int) ($pd * $leechS7);
-                    $u['hp'] = min((int) $u['maxhp'], (int) ($u['hp'] ?? 0) + $hlS7);
-                    $logHeal .= '(群魂噬回+' . $hlS7 . ')';
+                    $exMult7 = $sTier >= 10 ? 4.5 : 3.5;
+                    $exConv7 = $sLv >= 20 ? 0.4 : 0.25;
+                    [$exTot7, $exLog7, ] = summoner_explode_all($u, $b, (int) ($u['id'] ?? 0), $exMult7, $exConv7);
+                    if ($exLog7 !== '') { $logHeal .= $exLog7; }
+                    $logHeal .= summon_add('wraith', $u, $sLv >= 20 ? 1 : 0);
                 }
                 // 召唤师·永夜契约：敌全体腐蚀2轮
                 if ($sid === 'p7') {
@@ -8427,9 +8510,19 @@ function battle_round(array &$u, array &$b, string $mode): array
         $blockMsg = '';
         if ($sid2 === 's1') {
             if ($sLv2 >= 20) { $logHeal .= summon_add('imp', $u, 1); } else { $logHeal .= summon_add('imp', $u, 0); }
+            // 额外效果：小鬼登场即撕咬一口
+            $sv = summon_list(); $atk1 = (int) (end($sv)['atk'] ?? 0);
+            if ($atk1 > 0) { [$eh1] = summoner_dark_damage((int) ($u['id'] ?? 0), $b, $atk1); $b['hp'] = max(0, (int) ($b['hp'] ?? 0) - $eh1); $logHeal .= '(小鬼撕咬' . $eh1 . ')'; }
         } elseif ($sid2 === 's2') {
             if ($sT2 < 10) { $blockMsg = '（招魂引需熟练10级才能引渡守卫）'; }
-            elseif ($sLv2 >= 20) { $logHeal .= summon_add('bone', $u, 1); } else { $logHeal .= summon_add('bone', $u, 0); }
+            else {
+                if ($sLv2 >= 20) { $logHeal .= summon_add('bone', $u, 1); } else { $logHeal .= summon_add('bone', $u, 0); }
+                // 额外效果：骸骨守卫撑起骨墙，为召唤师回血
+                $sv = summon_list(); $atk2 = (int) (end($sv)['atk'] ?? 0);
+                $gh2 = max(1, (int) round($atk2 * 0.5));
+                $u['hp'] = min((int) $u['maxhp'], (int) ($u['hp'] ?? 0) + $gh2);
+                $logHeal .= '(骨墙庇护·回' . $gh2 . ')';
+            }
         } elseif ($sid2 === 's3') {
             $cost3 = max(1, (int) floor((int) ($u['hp'] ?? 1) * 0.20));
             if ($sT2 < 10) { $blockMsg = '（血肉筑城需熟练10级）'; }
@@ -8478,6 +8571,11 @@ function battle_round(array &$u, array &$b, string $mode): array
             $b['hp'] = max(0, (int) $b['hp'] - $st2['dmg']);
             $logHeal .= $st2['log'];
         }
+    }
+    // 深渊主宰·周期献祭：每 3 回合自动献祭一只召唤兽，AoE 高额爆炸并回血
+    if (job_id_of($u) === 'summoner' && (int) ($b['lord_period'] ?? 0) > 0 && (int) ($b['hp'] ?? 0) > 0) {
+        $lpm = summoner_lord_periodic($u, $b, (int) ($u['id'] ?? 0));
+        if ($lpm !== '') { $logHeal .= $lpm; }
     }
     // 血契骨戒：你20%的行动触发献祭（吞噬最低血召唤物，回50%最大生命并重新召唤）
     if (job_id_of($u) === 'summoner') {

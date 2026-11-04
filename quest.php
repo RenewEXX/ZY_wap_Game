@@ -96,13 +96,13 @@ if ($q >= 16 && $q < 28) {
             $laterQuests[] = $id;
         }
     }
-} elseif ($q >= 62 && $q < 77) {
+} elseif ($q >= 62 && $q < 76) {
     foreach (array_keys($ch6) as $id) {
         if ($id > $q) {
             $laterQuests[] = $id;
         }
     }
-} elseif ($q >= 77) {
+} elseif ($q >= 76) {
     foreach (array_keys($ch7) as $id) {
         if ($id > $q) {
             $laterQuests[] = $id;
@@ -141,20 +141,18 @@ $descOf = function ($id) use ($newSteps, $ch1, $ch2, $ch3, $ch4, $ch5, $ch6, $ch
 if ($tab === 'doing') {
     if ($doingId === null && $q < 16) {
         echo '<span class="muted">第一章已通关，自由探索。听说罪字碑动了……</span>';
-    } elseif ($q >= 76) {
-        echo '<span class="muted">五章全通关！世界BOSS每天刷新，熔心/冰渊副本、神魂升级等你。</span>';
-    } elseif ($q >= 38 && $q < 50) {
-        echo '<span class="muted">三章全通关！农场、母巢、公会战、巅峰之战等你（影子伙伴：全属性+5%）。</span>';
     } else {
         $qs = quest_state($u);
         $dName = $q >= 16 ? (string) ($qs['name'] ?? '') : $nameOf($doingId ?? $q);
         $dDesc = $q >= 16 ? (string) ($qs['todo'] ?? '') : $descOf($doingId ?? $q);
         echo '<div class="warn">【' . h(($qs['step'] ?? '') . '·' . $dName) . '】<br>' . h($dDesc) . '</div>';
-        $prog = (($qs['ch'] ?? 0) === 2) ? quest_progress2_text((int) $u['id'], $qs) : (in_array(($qs['ch'] ?? 0), [3, 5, 6], true) ? quest_progress3_text((int) $u['id'], $qs) : quest_progress_text((int) $u['id'], $qs));
+        $prog = (($qs['ch'] ?? 0) === 2) ? quest_progress2_text((int) $u['id'], $qs) : (in_array(($qs['ch'] ?? 0), [3, 5, 6, 7, 8], true) ? quest_progress3_text((int) $u['id'], $qs) : quest_progress_text((int) $u['id'], $qs));
         if ($prog !== '') {
             echo h($prog) . '<br>';
         }
         echo '<br><a href="map.php?go=' . h($qs['loc']) . '">【立即前往·' . h($qs['locname']) . '】</a>';
+        // 觉醒流程：把 1觉/2觉 的每一步列出来（之前这里被"已通关"一句话盖掉了）
+        echo awaken_guide($u);
     }
 } elseif ($tab === 'activity') {
     echo '<b>活动任务（可与主线同时进行）</b><br>';

@@ -10944,6 +10944,9 @@ function quest_state(array $u): array
         return ['name' => '虚空守望', 'step' => '完成', 'todo' => '2觉完成！群攻在手，虚空裂隙/灰烬深渊/世界BOSS等你（700级开神界）', 'loc' => 'vx_gate', 'locname' => '虚空裂隙', 'id' => 99, 'ch' => 7, 'need' => []];
     }
     if ($q >= 38) {
+        if (!empty(cflags((int) $u['id'])['rb1_job'])) {
+            return ['name' => '凛冬冰原·序', 'step' => '序', 'todo' => '1觉完成！去王都城门找守夜人·北风，接下投名状开启第四章', 'loc' => 'capital_gate', 'locname' => '王都城门', 'id' => 46, 'ch' => 3, 'need' => []];
+        }
         // 三章通关但没299：自由探索；299了进1觉
         if ((int) ($u['lv'] ?? 1) >= 299) {
             return ['name' => '1觉·觉醒之路', 'step' => '序', 'todo' => '299级了！去王都中央大道找总会长瓦尔顿，开启1觉（不觉醒卡299级）', 'loc' => 'avenue', 'locname' => '中央大道', 'id' => 38, 'ch' => 3, 'need' => []];
@@ -11030,6 +11033,56 @@ function ch5_quests(): array
     ];
 }
 // 1觉·觉醒之路（quest 40~45）：四试炼+抉择，不杀怪，纯NPC交互
+// 觉醒流程引导（供 quest.php「进行中」展示）：把 1觉/2觉 每一步的完成情况列清楚，
+// 避免玩家只看到一句「已通关」而不知道该干嘛。
+function awaken_guide(array $u): string
+{
+    $q = (int) ($u['quest'] ?? 0);
+    $lv = (int) ($u['lv'] ?? 1);
+    $f = cflags((int) ($u['id'] ?? 0));
+    $isSum = job_id_of($u) === 'summoner';
+    $mk = fn(bool $ok): string => $ok ? '<span style="color:#6f6">✓</span>' : '<span class="muted">✗</span>';
+    $go = fn(string $loc, string $label): string => '<a href="map.php?go=' . h($loc) . '">' . h($label) . '</a>';
+
+    // 1觉：三章后 ~ 选路前
+    if ($q >= 38 && $q <= 49 && empty($f['rb1_job']) && (!empty($f['rb1_start']) || $q >= 40 || $lv >= 299)) {
+        $trials = [
+            ['rb1_war', '战士试炼', 'arena_gate', '王都竞技场·铁拳'],
+            ['rb1_mag', '法师试炼', 'library', '皇家图书馆·莫里亚蒂'],
+            ['rb1_hun', '猎手试炼', 'capital_gate', '王都城门·霍克'],
+            ['rb1_pri', '牧师试炼', 'cathedral', '光明大教堂·塞缪尔'],
+        ];
+        $done = 0;
+        $rows = $mk(!empty($f['rb1_start'])) . ' 找总会长·瓦尔顿开启1觉（' . $go('avenue', '中央大道') . '）<br>';
+        foreach ($trials as [$flag, $nm, $loc, $where]) {
+            $ok = !empty($f[$flag]);
+            if ($ok) { $done++; }
+            $rows .= $mk($ok) . ' ' . $nm . '（' . $go($loc, $where) . '）<br>';
+        }
+        $sumOk = !empty($f['rb1_sum']);
+        if ($isSum) {
+            $rows .= $mk($sumOk) . ' 深渊试炼（' . $go('slum', '贫民窟·深渊引渡人·帷幕') . '，献祭两成生命）<br>';
+        }
+        $total = $isSum ? 5 : 4;
+        $got = $done + ($isSum && $sumOk ? 1 : 0);
+        $html = '<div class="hr">1觉·觉醒之路（' . $got . '/' . $total . '）</div>' . $rows;
+        if ($done >= 4 && ($sumOk || !$isSum)) {
+            $html .= '<b>试炼全部完成！回' . $go('avenue', '中央大道') . '找瓦尔顿选路。</b>';
+        } elseif ($done >= 4 && $isSum && !$sumOk) {
+            $html .= '<b>四重试炼完成；召唤师还需去' . $go('slum', '贫民窟') . '找帷幕补做深渊试炼，再回瓦尔顿选路。</b>';
+        }
+        return $html;
+    }
+
+    // 2觉：599级后 ~ 选路前
+    if ($q >= 76 && $q <= 80 && empty($f['rb2_job']) && $lv >= 599) {
+        $rows = $mk(!empty($f['rb2_start'])) . ' 找总会长·瓦尔顿开启2觉（' . $go('avenue', '中央大道') . '）<br>';
+        $rows .= $mk($q >= 79) . ' 虚空试炼：' . $go('volcano_heart', '火山之心') . '，南炎守卫×40 + 击败遗迹守卫<br>';
+        return '<div class="hr">2觉·群攻之路</div>' . $rows;
+    }
+    return '';
+}
+
 function rebirth1_quests(): array
 {
     return [

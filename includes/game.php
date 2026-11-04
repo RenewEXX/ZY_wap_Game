@@ -560,9 +560,9 @@ function offline_tick(array &$u): void
             'atk' => $m['atk'], 'exp' => $m['exp'], 'gold' => $m['gold'],
             'log' => '', 'num' => $numOff, 'left' => $numOff, 'wexp' => 0, 'wgold' => 0, 'drops' => [], 'last' => $now,
         ];
-        $r = idle_fight_once($u, $b, 300);
-        if ($r['status'] === 'fight') {
-            break;
+        $r = idle_resolve_fight($u, $b, 60);
+        if (($r['status'] ?? '') === 'skip') {
+            continue;
         }
         if ($r['status'] === 'dead') {
             spawn_tick((string) ($u['loc'] ?? ''));
@@ -2471,9 +2471,17 @@ function dummy_fmt(int $sec): string
 // 返回 battle_round 的最终结果数组（status: fight/victory/dead）。
 function idle_fight_once(array &$u, array &$b, int $roundCap = 300): array
 {
+    // 挂机/离线两场之间视为“打坐休整”：召唤师每回合都把蓝打坐回满再出手。
+    // 高阶召唤技能蓝耗高（135/145/150），这是为了手动/PVP平衡；但战斗里每回合只回 2 点蓝，
+    // 离线连打多场时蓝一断就召不出新兽，召唤兽全灭后脆皮本体被群怪围杀 → 判死/僵持，整段离线白打。
+    // 这里只在挂机/陪练结算里补蓝，不改变手动战斗与PVP的耗蓝约束。
+    $isSummoner = job_id_of($u) === 'summoner';
     $_SESSION['battle'] = $b;
     $r = ['status' => 'fight', 'log' => '', 'flash' => ''];
     for ($i = 0; $i < $roundCap; $i++) {
+        if ($isSummoner) {
+            $u['mp'] = (int) ($u['maxmp'] ?? ($u['mp'] ?? 0));
+        }
         $r = battle_round($u, $b, 'tick');
         if ($r['status'] !== 'fight') {
             break;
@@ -2486,6 +2494,37 @@ function idle_fight_once(array &$u, array &$b, int $roundCap = 300): array
         // 其他职业不回血；仅影响陪练人偶/离线，不影响实时手动战斗。
         $maxhp = max(1, (int) ($u['maxhp'] ?? 1));
         $u['hp'] = min($maxhp, (int) ($u['hp'] ?? 0) + (int) ($maxhp * 0.05));
+    }
+    return $r;
+}
+
+// 陪练人偶/离线专用：解决“一场打满回合还没分胜负”的僵持。
+// 召唤兽会替本体扛伤，所以召唤师很容易出现“自己死不了、但单体召唤兽清不掉整组怪”的持久战；
+// 旧逻辑遇到 status='fight' 直接 break，会让整段离线只打 1 场、0 胜 0 金。
+// 这里：血线还稳（>50%）→ 判定“持久战拖赢”，把剩余怪一只只推进结算（走正常流程给经验/金币/掉落）；
+//       血线不稳 → 算这一轮没打过，返回 skip，让调用方继续下一场（不再让一场卡死整段）。
+function idle_resolve_fight(array &$u, array &$b, int $roundCap = 120): array
+{
+    $r = idle_fight_once($u, $b, $roundCap);
+    if (($r['status'] ?? '') !== 'fight') {
+        return $r;
+    }
+    $maxhp = max(1, (int) ($u['maxhp'] ?? 1));
+    $hp = (int) ($u['hp'] ?? 0);
+    if ($hp <= 0) {
+        return ['status' => 'dead', 'log' => '', 'flash' => '你倒下了。'];
+    }
+    if ($hp <= (int) ($maxhp * 0.5)) {
+        // 血线已经不稳，不能白送胜利，算这轮没打过，跳过继续
+        return ['status' => 'skip', 'log' => '', 'flash' => ''];
+    }
+    // 血线稳：召唤兽硬拖的持久战，判拖赢。只结算当前这一只（不再一只只刷满整组奖励，
+    // 避免逐只跑掉落管线把挂机结算拖得很慢），推进一回合触发正常胜利结算（经验/金币/掉落都走原流程）。
+    $b['left'] = 1;
+    $b['hp'] = 0;
+    $r = idle_fight_once($u, $b, 2);
+    if (($r['status'] ?? '') !== 'victory') {
+        return ['status' => 'skip', 'log' => '', 'flash' => ''];
     }
     return $r;
 }
@@ -2547,9 +2586,9 @@ function dummy_tick(array &$u): void
             'log' => '陪练人偶带着你撞上了' . $numDummy . '只' . $m['name'] . '。',
             'num' => $numDummy, 'left' => $numDummy, 'wexp' => 0, 'wgold' => 0, 'drops' => [], 'last' => $now,
         ];
-        $r = idle_fight_once($u, $b, 500);
-        if ($r['status'] === 'fight') {
-            break;
+        $r = idle_resolve_fight($u, $b, 160);
+        if (($r['status'] ?? '') === 'skip') {
+            continue;
         }
         $done++;
         if ($r['status'] === 'dead') {

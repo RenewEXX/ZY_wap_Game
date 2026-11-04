@@ -479,6 +479,8 @@ if ($who === 'rb_waldon' && $choice === 'start' && (int) $u['quest'] === 38 && (
     cflag_set((int) $u['id'], 'rb1_start', 1);
     flash_set('瓦尔顿：1觉·觉醒之路开启！去见四位导师，完成四重试炼再回来。');
     header('Location: npc.php?who=rb_waldon');
+    exit;
+}
 if ($who === 'rb_waldon' && $choice === 'start2' && (int) $u['quest'] === 76 && (int) ($u['lv'] ?? 1) >= 599) {
     $u['quest'] = 77;
     user_save($u);
@@ -510,6 +512,9 @@ if ($who === 'voidwalker' && $choice === 'open') {
         user_save($u);
         flash_set('虚空行者把你推进裂隙！45分钟倒计时开始！');
     }
+    header('Location: home.php');
+    exit;
+}
 if ($who === 'spider' && $choice === 'open2') {    $lv = (int) ($u['lv'] ?? 1);    if ($lv < 300 || $lv > 460) {        flash_set('阿蛛摇头：傀儡回廊只要300到460级的冒险者，你现在' . $lv . '级。');    } elseif (empty(mats_of((int) $u['id'])['pz_ticket'])) {        flash_set('阿蛛：进回廊要【傀儡回廊入场券】×1（杀牵线者 0.5% 掉）。');    } else {        add_mat((int) $u['id'], 'pz_ticket', -1);        mat_set((int) $u['id'], 'pz_stage', 1);        mat_set((int) $u['id'], 'pz_enter', time());        $u['loc'] = 'pz_gate';        user_save($u);        flash_set('阿蛛剪断你影子上的丝，送你进傀儡回廊！45分钟倒计时开始！');    }    header('Location: home.php');    exit;}if ($who === 'qingya' && $choice === 'open') {    $lv = (int) ($u['lv'] ?? 1);    if ($lv < 500 || $lv > 620) {        flash_set('青芽摇头：雾森祭坛只要500到620级的冒险者，你现在' . $lv . '级。');    } elseif (empty(mats_of((int) $u['id'])['sen_ticket'])) {        flash_set('青芽：进祭坛要【雾森祭坛入场券】×1（杀雾隐猎场的雾眼先知 0.5% 掉）。');    } else {        add_mat((int) $u['id'], 'sen_ticket', -1);        mat_set((int) $u['id'], 'sen_stage', 1);        mat_set((int) $u['id'], 'sen_enter', time());        $u['loc'] = 'sen_gate';        user_save($u);        flash_set('青芽吹了声口哨，雾让开一条路：雾森祭坛，45分钟！');    }    header('Location: home.php');    exit;}if ($who === 'northwind' && $choice === 'start' && in_array((int) $u['quest'], [38, 46], true)) {
     $u['quest'] = 50;
     user_save($u);
@@ -616,12 +621,8 @@ if ($who === 'oldash' && $choice === 'open2') {
     header('Location: home.php');
     exit;
 }
-    header('Location: home.php');
-    exit;
-}
-}
 // 1觉四试炼：铁拳承伤/莫里亚蒂答题/霍克追鹿/塞缪尔舍药
-if ($who === 'rb_veil' && $choice === 'try' && in_array((int) $u['quest'], [40, 41], true)) {
+if ($who === 'rb_veil' && $choice === 'try' && in_array((int) $u['quest'], [40, 41, 45], true)) {
     $f = cflags((int) $u['id']);
     if (!empty($f['rb1_sum'])) { flash_set('帷幕：契约已经签了，别再割自己了。'); }
     else {
@@ -859,15 +860,24 @@ if ($who === 'waldon' && (int) $u['quest'] === 28) {
 }
 if ($who === 'rb_waldon' && (int) $u['quest'] === 38 && (int) ($u['lv'] ?? 1) >= 299) {
     echo '<a href="npc.php?who=rb_waldon&choice=start">聆听四条路，开启1觉·觉醒之路</a><br>';
+}
 if ($who === 'rb_waldon' && (int) $u['quest'] === 76 && (int) ($u['lv'] ?? 1) >= 599) {
     echo '<a href="npc.php?who=rb_waldon&choice=start2">聆听八条路，开启2觉·群攻之路</a><br>';
 }
+if ($who === 'rb_waldon' && in_array((int) $u['quest'], [40, 41], true)) {
+    echo '四重试炼（战/法/猎/牧）：竞技场找铁拳、图书馆找莫里亚蒂、城门/郊野找霍克、大教堂找塞缪尔。<br>';
+    if (job_id_of($u) === 'summoner' && empty(cflags((int) $u['id'])['rb1_sum'])) {
+        echo '召唤师还要做深渊试炼：去贫民窟找<a href="npc.php?who=rb_veil">深渊引渡人·帷幕</a>献祭两成生命。<br>';
+    }
 }
 if ($who === 'rb_waldon' && (int) $u['quest'] === 45) {
     $rf = cflags((int) $u['id']);
     if (!empty($rf['rb1_war']) && !empty($rf['rb1_mag']) && !empty($rf['rb1_hun']) && !empty($rf['rb1_pri']) && empty($rf['rb1_job'])) {
         foreach (rebirth1_names() as $jid => $jname) {
             echo '<a href="npc.php?who=rb_waldon&choice=' . $jid . '">选择【' . h($jname) . '】：' . h(rebirth1_passive_desc($jid)) . '</a><br>';
+        }
+        if (job_id_of($u) === 'summoner' && empty($rf['rb1_sum'])) {
+            echo '（召唤师：还需先去<a href="npc.php?who=rb_veil">深渊引渡人·帷幕</a>完成深渊试炼，才能选召唤师之路。）<br>';
         }
     }
 }
@@ -882,9 +892,9 @@ if ($who === 'rb_waldon' && (int) $u['quest'] === 80 && !empty(cflags((int) $u['
 }
 if ($who === 'voidwalker') {
     echo '<a href="npc.php?who=voidwalker&choice=open">进虚空裂隙（600级+，消耗【虚空裂隙入场券】×1，45分钟）</a><br>';
+}
 if ($who === 'rockwarden') {
     echo '<a href="npc.php?who=rockwarden&choice=open">开启副本【岩狱·泰坦】（700~900级，消耗【岩狱副本入场券】×1，45分钟，掉土龙蛋+岩狱套）</a><br>';
-}
 }
 if ($who === 'northwind' && in_array((int) $u['quest'], [38, 46], true)) {
     echo '<a href="npc.php?who=northwind&choice=start">接下投名状，开启第四章·凛冬冰原</a><br>';
@@ -941,7 +951,7 @@ if ($who === 'rb_hawk' && in_array((int) $u['quest'], [40, 41], true) && empty(c
     echo '<a href="npc.php?who=rb_hawk&choice=grass">走草丛（稳，5分钟）</a><br>';
     echo '<a href="npc.php?who=rb_hawk&choice=back">回去找霍克交差</a><br>';
 }
-if ($who === 'rb_veil' && in_array((int) $u['quest'], [40, 41], true)) {
+if ($who === 'rb_veil' && in_array((int) $u['quest'], [40, 41, 45], true)) {
     if (!empty(cflags((int) $u['id'])['rb1_sum'])) {
         echo '<span class="muted">契约已签。</span><br>';
     } else {

@@ -25,16 +25,12 @@ function mailCnt66(int $uid, string $title): int
     return (int) $st->fetchColumn();
 }
 
-// ============ 1觉：全部5职业各选一次（summoner需额外rb1_sum） ============
+// ============ 1觉：各职业只做本职业试炼，并觉醒为本职业路线 ============
 $jobs1 = ['warrior' => 'w3', 'mage' => 'm3', 'hunter' => 'h3', 'priest' => 'p3', 'summoner' => 's3'];
+$ownFlag1 = ['warrior' => 'rb1_war', 'mage' => 'rb1_mag', 'hunter' => 'rb1_hun', 'priest' => 'rb1_pri', 'summoner' => 'rb1_sum'];
 foreach ($jobs1 as $job => $sk) {
     $uid = mk66($job);
-    foreach (['rb1_war', 'rb1_mag', 'rb1_hun', 'rb1_pri'] as $k) {
-        cflag_set($uid, $k, 1);
-    }
-    if ($job === 'summoner') {
-        cflag_set($uid, 'rb1_sum', 1);
-    }
+    cflag_set($uid, $ownFlag1[$job], 1); // 只做本职业试炼
     $u = user_by_id($uid);
     $u['quest'] = 45; $u['gold'] = 0; user_save($u);
     $r = rb1_choose_job($uid, $job);
@@ -48,29 +44,45 @@ foreach ($jobs1 as $job => $sk) {
     rm66($uid);
 }
 
-// ============ 1觉：特殊拦截 ============
-// 召唤师选召唤师，但没做 rb1_sum → 被拦
-$uid = mk66('summoner');
-foreach (['rb1_war', 'rb1_mag', 'rb1_hun', 'rb1_pri'] as $k) { cflag_set($uid, $k, 1); }
+// ============ 1觉：不跨职业 ============
+// 法师只做本职业试炼即可（不需要战/猎/牧）
+$uid = mk66('mage');
+cflag_set($uid, 'rb1_mag', 1);
 $u = user_by_id($uid); $u['quest'] = 45; user_save($u);
-$r = rb1_choose_job($uid, 'summoner');
-ck66('召唤师缺rb1_sum被拦', str_contains($r, '试炼还没完') && empty(cflags($uid)['rb1_job']), $r);
+$r = rb1_choose_job($uid, 'mage');
+ck66('法师只做本职业试炼即可', str_contains($r, '1觉完成'), $r);
 rm66($uid);
 
-// 试炼没做完 → 任何职业都被拦
-$uid = mk66('mage');
+// 召唤师不填 rb1_war/mag/hun/pri 也能觉醒（只需 rb1_sum）
+$uid = mk66('summoner');
+cflag_set($uid, 'rb1_sum', 1);
+$u = user_by_id($uid); $u['quest'] = 45; user_save($u);
+$r = rb1_choose_job($uid, 'summoner');
+ck66('召唤师只需深渊试炼即可', str_contains($r, '1觉完成'), $r);
+rm66($uid);
+
+// 缺本职业试炼 → 被拦
+$uid = mk66('summoner');
+$u = user_by_id($uid); $u['quest'] = 45; user_save($u);
+$r = rb1_choose_job($uid, 'summoner');
+ck66('召唤师缺深渊试炼被拦', str_contains($r, '还没完成') && empty(cflags($uid)['rb1_job']), $r);
+rm66($uid);
+
+// 试图觉醒别的职业 → 被拦
+$uid = mk66('warrior');
 cflag_set($uid, 'rb1_war', 1);
-$u = user_by_id($uid); $u['quest'] = 45; $u['gold'] = 0; user_save($u);
+cflag_set($uid, 'rb1_mag', 1);
+$u = user_by_id($uid); $u['quest'] = 45; user_save($u);
 $r = rb1_choose_job($uid, 'mage');
-ck66('试炼不全被拦', str_contains($r, '试炼还没完') && empty(cflags($uid)['rb1_job']), $r);
+ck66('跨职业觉醒被拦', str_contains($r, '别走岔了') && empty(cflags($uid)['rb1_job']), $r);
 rm66($uid);
 
 // 重复选择 → 被拦
 $uid = mk66('priest');
-foreach (['rb1_war', 'rb1_mag', 'rb1_hun', 'rb1_pri'] as $k) { cflag_set($uid, $k, 1); }
+cflag_set($uid, 'rb1_pri', 1);
 $u = user_by_id($uid); $u['quest'] = 45; user_save($u);
 rb1_choose_job($uid, 'priest');
-$r = rb1_choose_job($uid, 'mage');
+$r = rb1_choose_job($uid, 'priest');
 ck66('1觉重复选择被拦', str_contains($r, '路已经选了'), $r);
 rm66($uid);
 

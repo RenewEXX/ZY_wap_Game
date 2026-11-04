@@ -9238,9 +9238,10 @@ function battle_round(array &$u, array &$b, string $mode): array
         }
         if ($cur >= 40 && $cur <= 41) {
             $rrf = cflags((int) $u['id']);
-            if ($cur === 40 && !empty($rrf['rb1_start'])) { $u['quest'] = 41; user_save($u); $txt .= '。瓦尔顿为你打开四重试炼，去见四位导师！'; }
-            elseif ($cur === 41 && !empty($rrf['rb1_war']) && !empty($rrf['rb1_mag']) && !empty($rrf['rb1_hun']) && !empty($rrf['rb1_pri'])) { $u['quest'] = 45; user_save($u); $txt .= '。四重试炼完成！回中央大道找瓦尔顿抉择！'; }
-            else { $txt .= '。【' . rebirth1_quests()[$cur]['name'] . '】试炼进度（战法猎牧）：' . (empty($rrf['rb1_war']) ? 0 : 1) . (empty($rrf['rb1_mag']) ? 0 : 1) . (empty($rrf['rb1_hun']) ? 0 : 1) . (empty($rrf['rb1_pri']) ? 0 : 1); }
+            $ti = rb1_trial_info(job_id_of($u));
+            if ($cur === 40 && !empty($rrf['rb1_start'])) { $u['quest'] = 41; user_save($u); $txt .= '。瓦尔顿为你打开本职业试炼，去' . $ti[3] . '！'; }
+            elseif ($cur === 41 && rb1_own_trial_done($u)) { $u['quest'] = 45; user_save($u); $txt .= '。本职业试炼完成！回中央大道找瓦尔顿觉醒！'; }
+            else { $txt .= '。【' . rebirth1_quests()[$cur]['name'] . '】' . $ti[1] . '：' . $ti[3] . (empty($rrf[$ti[0]]) ? '（未完成）' : '（已完成）'); }
         }
         if ($bid === 'ogre' && (int) ($u['quest'] ?? 0) === 3) {
             $u['quest'] = 10;
@@ -11032,7 +11033,42 @@ function ch5_quests(): array
         75 => ['name' => '南炎柱', 'todo' => '火山之心：南炎守卫×60、击败遗迹守卫，见熔火守望者（别惊动巨龙）', 'loc' => 'volcano_heart', 'locname' => '火山之心', 'need' => ['south_flame_guard' => 60, 'ancient_ruin_golem' => 1], 'flag' => 'doyle_met'],
     ];
 }
-// 1觉·觉醒之路（quest 40~45）：四试炼+抉择，不杀怪，纯NPC交互
+// 1觉·觉醒之路（quest 40~45）：各职业只做本职业试炼，然后觉醒本职业路线，不杀怪，纯NPC交互
+// ===== 1觉：每个职业只做本职业试炼，且只能觉醒为本职业路线 =====
+function rb1_own_trial_flag(string $job): string
+{
+    return ['warrior' => 'rb1_war', 'mage' => 'rb1_mag', 'hunter' => 'rb1_hun', 'priest' => 'rb1_pri', 'summoner' => 'rb1_sum'][$job] ?? 'rb1_war';
+}
+
+// 本职业试炼信息：[旗标, 试炼名, 所在地 loc, 导师/地点文案]
+function rb1_trial_info(string $job): array
+{
+    return [
+        'warrior' => ['rb1_war', '战士试炼', 'arena_gate', '王都竞技场·铁拳'],
+        'mage' => ['rb1_mag', '法师试炼', 'library', '皇家图书馆·莫里亚蒂'],
+        'hunter' => ['rb1_hun', '猎手试炼', 'capital_gate', '王都城门·霍克'],
+        'priest' => ['rb1_pri', '牧师试炼', 'cathedral', '光明大教堂·塞缪尔'],
+        'summoner' => ['rb1_sum', '深渊试炼', 'slum', '贫民窟·深渊引渡人·帷幕'],
+    ][$job] ?? ['rb1_war', '战士试炼', 'arena_gate', '王都竞技场·铁拳'];
+}
+
+function rb1_own_trial_done(array $u): bool
+{
+    $flag = rb1_own_trial_flag(job_id_of($u));
+    return !empty(cflags((int) ($u['id'] ?? 0))[$flag]);
+}
+
+// 完成本职业试炼后，把 quest 41 立即推进到 45，免得玩家还要再打一架才触发。
+function rb1_trial_cleared(int $uid): void
+{
+    $u = user_by_id($uid);
+    $cq = (int) ($u['quest'] ?? 0);
+    if ($u && ($cq === 40 || $cq === 41) && rb1_own_trial_done($u)) {
+        $u['quest'] = 45;
+        user_save($u);
+    }
+}
+
 // 觉醒流程引导（供 quest.php「进行中」展示）：把 1觉/2觉 每一步的完成情况列清楚，
 // 避免玩家只看到一句「已通关」而不知道该干嘛。
 function awaken_guide(array $u): string
@@ -11040,36 +11076,19 @@ function awaken_guide(array $u): string
     $q = (int) ($u['quest'] ?? 0);
     $lv = (int) ($u['lv'] ?? 1);
     $f = cflags((int) ($u['id'] ?? 0));
-    $isSum = job_id_of($u) === 'summoner';
     $mk = fn(bool $ok): string => $ok ? '<span style="color:#6f6">✓</span>' : '<span class="muted">✗</span>';
     $go = fn(string $loc, string $label): string => '<a href="map.php?go=' . h($loc) . '">' . h($label) . '</a>';
 
-    // 1觉：三章后 ~ 选路前
+    // 1觉：三章后 ~ 选路前（只做本职业试炼）
     if ($q >= 38 && $q <= 49 && empty($f['rb1_job']) && (!empty($f['rb1_start']) || $q >= 40 || $lv >= 299)) {
-        $trials = [
-            ['rb1_war', '战士试炼', 'arena_gate', '王都竞技场·铁拳'],
-            ['rb1_mag', '法师试炼', 'library', '皇家图书馆·莫里亚蒂'],
-            ['rb1_hun', '猎手试炼', 'capital_gate', '王都城门·霍克'],
-            ['rb1_pri', '牧师试炼', 'cathedral', '光明大教堂·塞缪尔'],
-        ];
-        $done = 0;
+        $base = job_id_of($u);
+        [$flag, $nm, $loc, $where] = rb1_trial_info($base);
+        $ok = !empty($f[$flag]);
         $rows = $mk(!empty($f['rb1_start'])) . ' 找总会长·瓦尔顿开启1觉（' . $go('avenue', '中央大道') . '）<br>';
-        foreach ($trials as [$flag, $nm, $loc, $where]) {
-            $ok = !empty($f[$flag]);
-            if ($ok) { $done++; }
-            $rows .= $mk($ok) . ' ' . $nm . '（' . $go($loc, $where) . '）<br>';
-        }
-        $sumOk = !empty($f['rb1_sum']);
-        if ($isSum) {
-            $rows .= $mk($sumOk) . ' 深渊试炼（' . $go('slum', '贫民窟·深渊引渡人·帷幕') . '，献祭两成生命）<br>';
-        }
-        $total = $isSum ? 5 : 4;
-        $got = $done + ($isSum && $sumOk ? 1 : 0);
-        $html = '<div class="hr">1觉·觉醒之路（' . $got . '/' . $total . '）</div>' . $rows;
-        if ($done >= 4 && ($sumOk || !$isSum)) {
-            $html .= '<b>试炼全部完成！回' . $go('avenue', '中央大道') . '找瓦尔顿选路。</b>';
-        } elseif ($done >= 4 && $isSum && !$sumOk) {
-            $html .= '<b>四重试炼完成；召唤师还需去' . $go('slum', '贫民窟') . '找帷幕补做深渊试炼，再回瓦尔顿选路。</b>';
+        $rows .= $mk($ok) . ' ' . $nm . '（' . $go($loc, $where) . '）<br>';
+        $html = '<div class="hr">1觉·觉醒之路（' . ($ok ? '1/1' : '0/1') . '）</div>' . $rows;
+        if ($ok) {
+            $html .= '<b>本职业试炼完成！回' . $go('avenue', '中央大道') . '找瓦尔顿觉醒。</b>';
         }
         return $html;
     }
@@ -11086,12 +11105,12 @@ function awaken_guide(array $u): string
 function rebirth1_quests(): array
 {
     return [
-        40 => ['name' => '1觉·抉择之始', 'todo' => '去王都中央大道找总会长瓦尔顿，听他讲四条路', 'loc' => 'avenue', 'locname' => '中央大道', 'need' => [], 'flag' => 'rb1_start'],
-        41 => ['name' => '1觉·四重试炼', 'todo' => '完成四重试炼：竞技场铁拳（承伤）/图书馆莫里亚蒂（答题）/郊野霍克（追鹿）/大教堂塞缪尔（舍药），顺序不限', 'loc' => 'avenue', 'locname' => '中央大道', 'need' => [], 'flag' => null],
-        42 => ['name' => '1觉·战士试炼', 'todo' => '（已并入四重试炼）', 'loc' => 'arena', 'locname' => '王都竞技场', 'need' => [], 'flag' => 'rb1_war'],
-        43 => ['name' => '1觉·法师试炼', 'todo' => '（已并入四重试炼）', 'loc' => 'library', 'locname' => '皇家图书馆', 'need' => [], 'flag' => 'rb1_mag'],
-        44 => ['name' => '1觉·猎手试炼', 'todo' => '（已并入四重试炼）', 'loc' => 'suburb', 'locname' => '外城郊野', 'need' => [], 'flag' => 'rb1_hun'],
-        45 => ['name' => '1觉·抉择', 'todo' => '四试炼完成，回中央大道找瓦尔顿选择你的路（牧师试炼在大教堂找塞缪尔）', 'loc' => 'avenue', 'locname' => '中央大道', 'need' => [], 'flag' => null],
+        40 => ['name' => '1觉·抉择之始', 'todo' => '去王都中央大道找总会长瓦尔顿，开启本职业1觉', 'loc' => 'avenue', 'locname' => '中央大道', 'need' => [], 'flag' => 'rb1_start'],
+        41 => ['name' => '1觉·本职业试炼', 'todo' => '完成本职业试炼：战士→竞技场铁拳 / 法师→图书馆莫里亚蒂 / 猎手→城门霍克 / 牧师→大教堂塞缪尔 / 召唤师→贫民窟帷幕（顺序无需跨职业）', 'loc' => 'avenue', 'locname' => '中央大道', 'need' => [], 'flag' => null],
+        42 => ['name' => '1觉·战士试炼', 'todo' => '（战士专属）去王都竞技场找铁拳完成试炼', 'loc' => 'arena', 'locname' => '王都竞技场', 'need' => [], 'flag' => 'rb1_war'],
+        43 => ['name' => '1觉·法师试炼', 'todo' => '（法师专属）去皇家图书馆找莫里亚蒂完成试炼', 'loc' => 'library', 'locname' => '皇家图书馆', 'need' => [], 'flag' => 'rb1_mag'],
+        44 => ['name' => '1觉·猎手试炼', 'todo' => '（猎手专属）去王都城门找霍克完成试炼', 'loc' => 'suburb', 'locname' => '外城郊野', 'need' => [], 'flag' => 'rb1_hun'],
+        45 => ['name' => '1觉·觉醒', 'todo' => '本职业试炼完成，回中央大道找瓦尔顿觉醒', 'loc' => 'avenue', 'locname' => '中央大道', 'need' => [], 'flag' => null],
     ];
 }
 
@@ -11292,11 +11311,15 @@ function rb1_choose_job(int $uid, string $choice): string
         return '角色不存在。';
     }
     $f = cflags($uid);
-    if (empty($f['rb1_war']) || empty($f['rb1_mag']) || empty($f['rb1_hun']) || empty($f['rb1_pri']) || (job_id_of($u) === 'summoner' && $choice === 'summoner' && empty($f['rb1_sum']))) {
-        return '瓦尔顿：四重试炼还没完，别急。';
-    }
+    $base = job_id_of($u);
     if (!empty($f['rb1_job'])) {
         return '路已经选了，走下去吧。';
+    }
+    if ($choice !== $base) {
+        return '瓦尔顿：1觉只能觉醒你自己的路，别走岔了。';
+    }
+    if (empty($f[rb1_own_trial_flag($base)])) {
+        return '瓦尔顿：你的本职业试炼还没完成，别急。';
     }
     cflag_set($uid, 'rb1_job', $choice);
     $u['quest'] = 46;

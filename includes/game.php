@@ -6463,9 +6463,11 @@ function summon_units(): array
 
 function summon_cap(array $u): int
 {
-    $rb2 = cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '';
-    // 死灵之拥：可同时召唤多只
-    $cap = $rb2 === 'necro' ? 4 : 2;
+    $flags = cflags((int) ($u['id'] ?? 0));
+    $rb1 = $flags['rb1_job'] ?? '';
+    $rb2 = $flags['rb2_job'] ?? '';
+    // 1觉·魂契：召唤物上限+1（2→3）；2觉·亡者军团最终上限为4
+    $cap = $rb2 === 'necro' ? 4 : ($rb1 === 'summoner' ? 3 : 2);
     // 魂契2件：召唤上限+1
     if (equip_set_owned_count((int) ($u['id'] ?? 0), 'soulpact') >= 2) {
         $cap++;
@@ -11223,7 +11225,7 @@ function rebirth1_passive_desc(string $job): string
         'mage' => '元素亲和：元素伤害+12%',
         'hunter' => '鹰眼：暴击+8%，命中+8%，15%概率标记使目标易伤10%持续2轮',
         'priest' => '圣光庇护：每回合3%最大生命，受伤5%概率减伤40%',
-        'summoner' => '魂契：每当你或你的宠物受到伤害，10%概率召唤一只深渊小鬼助战。小鬼自动攻击敌人造成30%攻击力的暗影伤害，并替你承伤（不占回合，只有被打死才会消失）。',
+        'summoner' => '魂契：每当你或你的宠物受到伤害，10%概率召唤一只深渊小鬼助战（30%攻击力暗影伤害、替你承伤）；召唤物上限+1。',
     ][$job] ?? '';
 }
 

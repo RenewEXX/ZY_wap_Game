@@ -122,6 +122,18 @@ foreach ($builds as $bj) {
 }
 ck28('多build×多技能满遗物无异常', $allOk, $err2);
 
+// ============ 7) 1觉·魂契：召唤物上限 2→3（2觉 necro 最终 4） ============
+$uidCap = (int) user_create('cap87' . mt_rand(1000, 9999), 'x', 'summoner', 'z1', true, 'tmp');
+$uc = user_by_id($uidCap);
+ck28('未1觉召唤上限=2', summon_cap($uc) === 2, (string) summon_cap($uc));
+cflag_set($uidCap, 'rb1_job', 'summoner');
+$uc = user_by_id($uidCap);
+ck28('1觉召唤上限=3', summon_cap($uc) === 3, (string) summon_cap($uc));
+cflag_set($uidCap, 'rb2_job', 'necro');
+$uc = user_by_id($uidCap);
+ck28('1觉后2觉necro上限=4', summon_cap($uc) === 4, (string) summon_cap($uc));
+db()->prepare('DELETE FROM users WHERE id=?')->execute([$uidCap]);
+
 // 清理
 db()->exec('DELETE FROM equips WHERE uid=' . (int)$uid);
 db()->exec('DELETE FROM mats WHERE uid=' . (int)$uid);

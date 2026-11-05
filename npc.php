@@ -698,7 +698,7 @@ if ($who === 'rb_samuel' && $choice === 'give' && job_id_of($u) === 'priest' && 
     }
     header('Location: npc.php?who=rb_samuel'); exit;
 }
-if ($who === 'rb_waldon' && in_array($choice, ['warrior','mage','hunter','priest','summoner'], true) && (int) $u['quest'] === 45) {
+if ($who === 'rb_waldon' && in_array($choice, ['warrior','mage','hunter','priest','summoner'], true) && in_array((int) $u['quest'], [40, 41, 45], true)) {
     flash_set(rb1_choose_job((int) $u['id'], $choice));
     header('Location: npc.php?who=rb_waldon'); exit;
 }
@@ -866,16 +866,18 @@ if ($who === 'rb_waldon' && (int) $u['quest'] === 38 && (int) ($u['lv'] ?? 1) >=
 if ($who === 'rb_waldon' && (int) $u['quest'] === 76 && (int) ($u['lv'] ?? 1) >= 599) {
     echo '<a href="npc.php?who=rb_waldon&choice=start2">聆听八条路，开启2觉·群攻之路</a><br>';
 }
-if ($who === 'rb_waldon' && in_array((int) $u['quest'], [40, 41], true)) {
+if ($who === 'rb_waldon' && in_array((int) $u['quest'], [40, 41, 45], true)) {
     $ti = rb1_trial_info(job_id_of($u));
-    echo '你的本职业试炼：<b>' . h($ti[1]) . '</b>——去' . h($ti[3]) . '。<br>';
-}
-if ($who === 'rb_waldon' && (int) $u['quest'] === 45) {
-    $rf = cflags((int) $u['id']);
-    $base = job_id_of($u);
-    if (!empty($rf[rb1_own_trial_flag($base)]) && empty($rf['rb1_job'])) {
-        $jname = rebirth1_names()[$base] ?? $base;
-        echo '<a href="npc.php?who=rb_waldon&choice=' . h($base) . '">觉醒为【' . h($jname) . '】：' . h(rebirth1_passive_desc($base)) . '</a><br>';
+    $trialDone = rb1_own_trial_done($u);
+    if (!$trialDone) {
+        echo '你的本职业试炼：<b>' . h($ti[1]) . '</b>——去' . h($ti[3]) . '。<br>';
+    } else {
+        echo '<b>本职业试炼已完成！</b> 回中央大道找瓦尔顿觉醒。<br>';
+        $base = job_id_of($u);
+        if (empty(cflags((int) $u['id'])['rb1_job'])) {
+            $jname = rebirth1_names()[$base] ?? $base;
+            echo '<a href="npc.php?who=rb_waldon&choice=' . h($base) . '">觉醒为【' . h($jname) . '】：' . h(rebirth1_passive_desc($base)) . '</a><br>';
+        }
     }
 }
 if ($who === 'rb_waldon' && (int) $u['quest'] === 79 && empty(cflags((int) $u['id'])['rb2_job'])) {

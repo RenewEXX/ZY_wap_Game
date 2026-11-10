@@ -150,10 +150,10 @@ function loc(string $id): array
     return $all[$id] ?? $all['gate'];
 }
 
-function monsters(): array
+function monsters_base(): array
 {
     return [
-        'goblin' => ['name' => '哥布林哨兵x2', 'hp' => 30, 'atk' => 6, 'exp' => 20, 'gold' => 8],
+        'goblin' => ['name' => '哥布林哨兵', 'hp' => 30, 'atk' => 6, 'exp' => 20, 'gold' => 8],
         'banshee' => ['name' => '雾中女妖', 'hp' => 36, 'atk' => 8, 'exp' => 26, 'gold' => 12],
         'ogre' => ['name' => '食人魔咕噜', 'hp' => 50, 'atk' => 10, 'exp' => 34, 'gold' => 20],
         // ---- 第一章·白石镇 ----
@@ -191,9 +191,9 @@ function monsters(): array
         'apostle' => ['name' => '深渊使徒', 'hp' => 2500, 'atk' => 110, 'exp' => 3000, 'gold' => 1500],
         'guardian' => ['name' => '巨型傀儡·守护者', 'hp' => 4000, 'atk' => 140, 'exp' => 5000, 'gold' => 2500],
         // ---- 70~100级·影蚀荒原 ----
-        'waste_stalker' => ['name' => '荒原影行者', 'hp' => 1600, 'atk' => 100, 'exp' => 2800, 'gold' => 1100],
-        'waste_hound' => ['name' => '蚀影荒犬', 'hp' => 1900, 'atk' => 108, 'exp' => 3400, 'gold' => 1300],
-        'waste_colossus' => ['name' => '荒原蚀像', 'hp' => 2600, 'atk' => 125, 'exp' => 4600, 'gold' => 1800],
+        'waste_stalker' => ['name' => '荒原影行者', 'hp' => 8000, 'atk' => 260, 'exp' => 12000, 'gold' => 5000],
+        'waste_hound' => ['name' => '蚀影荒犬', 'hp' => 9500, 'atk' => 290, 'exp' => 14000, 'gold' => 6000],
+        'waste_colossus' => ['name' => '荒原蚀像', 'hp' => 11000, 'atk' => 310, 'exp' => 16000, 'gold' => 7000],
         'valentin' => ['name' => '城主瓦伦丁', 'hp' => 5500, 'atk' => 170, 'exp' => 7000, 'gold' => 4000],
         'dark_lily' => ['name' => '暗影莉莉', 'hp' => 7000, 'atk' => 200, 'exp' => 10000, 'gold' => 6000],
         'abyss_eye' => ['name' => '深渊之眼', 'hp' => 10000, 'atk' => 240, 'exp' => 12000, 'gold' => 10000],
@@ -306,12 +306,6 @@ function monsters(): array
         'em_magma' => ['name' => '熔核行者', 'hp' => 1040000, 'atk' => 6800, 'exp' => 5239000, 'gold' => 2501200],
         'em_ashlord' => ['name' => '灰烬领主侍从', 'hp' => 1170000, 'atk' => 7120, 'exp' => 5915000, 'gold' => 2839200],
         'em_heart' => ['name' => '熔心化身', 'hp' => 2560000, 'atk' => 8100, 'exp' => 13520000, 'gold' => 6422000],
-        // 岩狱深渊副本（700~900级）
-        'tt_rock' => ['name' => '岩狱岩奴', 'hp' => 4200000, 'atk' => 12000, 'exp' => 22000000, 'gold' => 10500000],
-        'tt_crag' => ['name' => '岩狱峭兽', 'hp' => 4800000, 'atk' => 13200, 'exp' => 25000000, 'gold' => 12000000],
-        'tt_magma' => ['name' => '岩狱熔裔', 'hp' => 5500000, 'atk' => 14500, 'exp' => 29000000, 'gold' => 13800000],
-        'tt_warden' => ['name' => '岩狱狱守', 'hp' => 6400000, 'atk' => 15800, 'exp' => 34000000, 'gold' => 16200000],
-        'tt_titan' => ['name' => '岩狱泰坦·土龙岳柱', 'hp' => 15000000, 'atk' => 20000, 'exp' => 90000000, 'gold' => 42000000],
         // 傀儡回廊副本（380~460级）
         'pz_puller' => ['name' => '回廊牵线者', 'hp' => 800000, 'atk' => 3000, 'exp' => 1820000, 'gold' => 858000],
         'pz_dancer' => ['name' => '回廊舞者', 'hp' => 880000, 'atk' => 3150, 'exp' => 2015000, 'gold' => 949000],
@@ -1360,13 +1354,42 @@ function chat_fetch(string $channel, int $target, int $lastId, string $zone = 'z
 {
     // 世界频道按大区分隔，公会/队伍频道按成员归属（建会建队时已锁区）
     if ($channel === 'world') {
-        $st = db()->prepare('SELECT id, username, text, created_at FROM chat_msgs WHERE channel=? AND target=? AND zone=? AND id>? ORDER BY id ASC LIMIT 30');
+        $st = db()->prepare('SELECT id, uid, username, text, created_at FROM chat_msgs WHERE channel=? AND target=? AND zone=? AND id>? ORDER BY id ASC LIMIT 30');
         $st->execute([$channel, $target, $zone, $lastId]);
         return $st->fetchAll();
     }
-    $st = db()->prepare('SELECT id, username, text, created_at FROM chat_msgs WHERE channel=? AND target=? AND id>? ORDER BY id ASC LIMIT 30');
+    $st = db()->prepare('SELECT id, uid, username, text, created_at FROM chat_msgs WHERE channel=? AND target=? AND id>? ORDER BY id ASC LIMIT 30');
     $st->execute([$channel, $target, $lastId]);
     return $st->fetchAll();
+}
+
+// 某频道消息总数（分页用；世界按大区分隔）
+function chat_count(string $channel, int $target, string $zone = 'z1'): int
+{
+    if ($channel === 'world') {
+        $st = db()->prepare('SELECT COUNT(*) FROM chat_msgs WHERE channel=? AND target=? AND zone=?');
+        $st->execute([$channel, $target, $zone]);
+        return (int) $st->fetchColumn();
+    }
+    $st = db()->prepare('SELECT COUNT(*) FROM chat_msgs WHERE channel=? AND target=?');
+    $st->execute([$channel, $target]);
+    return (int) $st->fetchColumn();
+}
+
+// 取某页消息（1=最新页；页内最新在前，越往下越旧）
+function chat_page(string $channel, int $target, string $zone, int $page, int $per = 10): array
+{
+    $per = max(1, min(50, $per));
+    $page = max(1, $page);
+    $off = ($page - 1) * $per;
+    if ($channel === 'world') {
+        $st = db()->prepare('SELECT id, uid, username, text, created_at FROM chat_msgs WHERE channel=? AND target=? AND zone=? ORDER BY id DESC LIMIT ? OFFSET ?');
+        $st->execute([$channel, $target, $zone, $per, $off]);
+    } else {
+        $st = db()->prepare('SELECT id, uid, username, text, created_at FROM chat_msgs WHERE channel=? AND target=? ORDER BY id DESC LIMIT ? OFFSET ?');
+        $st->execute([$channel, $target, $per, $off]);
+    }
+    return $st->fetchAll(); // DESC：最新在前
 }
 
 function war_window_open(): bool
@@ -1485,7 +1508,7 @@ function war_enemies(int $uid): array
 
 function boss_of_map(string $loc): string
 {
-    static $m = ['boss' => 'knight', 'echo_room' => 'echo_rayne', 'rift' => 'abyss_eye', 'baltar' => 'dark_lily', 'dsw_throne' => 'swamp_king', 'abx_throne' => 'abaddon', 'theater' => 'string_puller', 'mx_heart' => 'silk_mother', 'frost_throne' => 'winter_king', 'fr_core' => 'fr_leviathan', 'volcano_heart' => 'ancient_ruin_golem', 'em_core' => 'em_heart', 'pz_core' => 'pz_master', 'sen_core' => 'sen_avatar', 'shadow_den' => 'shadow_claw', 'brass_chapel' => 'brass_bishop', 'wanderer_camp' => 'tundra_wanderer', 'ice_fall' => 'avalanche_titan', 'obsidian_field' => 'obsidian_colossus', 'as_core' => 'ash_titan', 'vx_core' => 'vx_tyrant', 'ry_core' => 'ry_titan', 'god_throne' => 'god_avatar', 'gf_core' => 'god_emperor', 'yz_core' => 'yz_boss'];
+    static $m = ['boss' => 'knight', 'mine3' => 'knight', 'echo_room' => 'echo_rayne', 'rift' => 'abyss_eye', 'baltar' => 'dark_lily', 'dsw_throne' => 'swamp_king', 'abx_throne' => 'abaddon', 'theater' => 'string_puller', 'mx_heart' => 'silk_mother', 'frost_throne' => 'winter_king', 'fr_core' => 'fr_leviathan', 'volcano_heart' => 'ancient_ruin_golem', 'em_core' => 'em_heart', 'pz_core' => 'pz_master', 'sen_core' => 'sen_avatar', 'shadow_den' => 'shadow_claw', 'brass_chapel' => 'brass_bishop', 'wanderer_camp' => 'tundra_wanderer', 'ice_fall' => 'avalanche_titan', 'obsidian_field' => 'obsidian_colossus', 'as_core' => 'ash_titan', 'vx_core' => 'vx_tyrant', 'ry_core' => 'ry_titan', 'god_throne' => 'god_avatar', 'gf_core' => 'god_emperor', 'yz_core' => 'yz_boss'];
     static $wnMerged = false;
     if (!$wnMerged) {
         foreach (world_expansion_boss_map() as $__wk => $__wv) {
@@ -1811,20 +1834,80 @@ function pet_species(): array
         'ember_pup' => ['name' => '火绒犬', 'quality' => 'good', 'growth' => 1.1, 'atk' => 8, 'def' => 6, 'hp' => 70, 'spd' => 12, 'crit' => 4, 'cd' => 155, 'active' => '火绒扑咬', 'mult' => 1.3, 'passive' => '暖绒：主人火抗+5%', 'source' => '商城砸蛋'],
         'mist_fox' => ['name' => '雾狐', 'quality' => 'rare', 'growth' => 1.35, 'atk' => 11, 'def' => 5, 'hp' => 60, 'spd' => 22, 'crit' => 7, 'cd' => 160, 'active' => '雾隐突袭', 'mult' => 1.5, 'passive' => '雾隐：闪避+3%', 'source' => '商城砸蛋'],
         'thunder_bird' => ['name' => '雷鸟', 'quality' => 'rare', 'growth' => 1.35, 'atk' => 12, 'def' => 4, 'hp' => 55, 'spd' => 24, 'crit' => 8, 'cd' => 165, 'active' => '落雷', 'mult' => 1.6, 'passive' => '雷速：出手更快', 'source' => '商城砸蛋'],
-        'abyss_witch' => ['name' => '魔女阿比希尔', 'quality' => 'legend', 'growth' => 2.4, 'atk' => 38, 'def' => 12, 'hp' => 120, 'spd' => 20, 'crit' => 12, 'cd' => 175, 'active' => '魔女低语', 'mult' => 1.7, 'passive' => '月之庇佑：低语偷取敌人5%生命', 'source' => '限时活动掉落'],
+        'abyss_witch' => ['name' => '魔女阿比希尔', 'quality' => 'legend', 'growth' => 2.4, 'atk' => 38, 'def' => 12, 'hp' => 120, 'spd' => 20, 'crit' => 12, 'cd' => 175, 'active' => '魔女低语', 'mult' => 1.7, 'passive' => '月之庇佑：低语偷取敌人5%生命', 'source' => '限定抽取'],
         'pumpkin_jack' => ['name' => '南瓜灯魔·杰克', 'quality' => 'legend', 'growth' => 2.4, 'atk' => 37, 'def' => 13, 'hp' => 128, 'spd' => 19, 'crit' => 12, 'cd' => 178, 'active' => '南瓜爆裂', 'mult' => 1.72, 'passive' => '惊魂夜：爆裂释放南瓜瘴气，中毒持续灼烧', 'source' => '万圣节限时抽取'],
-        'golden_dragon' => ['name' => '金龙献瑞·炎龙', 'quality' => 'legend', 'growth' => 2.5, 'atk' => 40, 'def' => 14, 'hp' => 135, 'spd' => 18, 'crit' => 13, 'cd' => 180, 'active' => '金龙献瑞', 'mult' => 1.75, 'passive' => '金龙追击：对残血目标额外爆发', 'source' => '国庆节限时抽取'],
+        'golden_dragon' => ['name' => '幻龙·瑞瑞', 'quality' => 'legend', 'growth' => 2.5, 'atk' => 40, 'def' => 14, 'hp' => 135, 'spd' => 18, 'crit' => 13, 'cd' => 180, 'active' => '金龙献瑞', 'mult' => 1.75, 'passive' => '金龙追击：对残血目标额外爆发', 'source' => '国庆节限时抽取'],
         'firework_sprite' => ['name' => '烟花精灵·星', 'quality' => 'legend', 'growth' => 2.3, 'atk' => 34, 'def' => 11, 'hp' => 115, 'spd' => 22, 'crit' => 14, 'cd' => 170, 'active' => '烟花绽放', 'mult' => 1.68, 'passive' => '新年祝福：技能命中恢复自身生命', 'source' => '元旦限时抽取'],
         'nian_beast' => ['name' => '年兽·驱邪', 'quality' => 'legend', 'growth' => 2.6, 'atk' => 42, 'def' => 16, 'hp' => 150, 'spd' => 16, 'crit' => 11, 'cd' => 185, 'active' => '年兽咆哮', 'mult' => 1.8, 'passive' => '驱邪：对高血目标造成额外伤害', 'source' => '春节限时抽取'],
         'xmas_sprite' => ['name' => '圣夜精灵·雪', 'quality' => 'legend', 'growth' => 2.35, 'atk' => 35, 'def' => 12, 'hp' => 125, 'spd' => 21, 'crit' => 13, 'cd' => 172, 'active' => '圣夜祝福', 'mult' => 1.7, 'passive' => '礼物雨：技能附带生命汲取', 'source' => '圣诞节限时抽取'],
         'labor_ant' => ['name' => '勤劳之魂·蚁', 'quality' => 'legend', 'growth' => 2.2, 'atk' => 30, 'def' => 18, 'hp' => 140, 'spd' => 17, 'crit' => 10, 'cd' => 165, 'active' => '勤劳之魂', 'mult' => 1.6, 'passive' => '双倍打击：技能连击两次', 'source' => '劳动节限时抽取'],
-        'earth_dragon' => ['name' => '土龙岳柱幼体', 'quality' => 'legend', 'growth' => 2.1, 'atk' => 16, 'def' => 24, 'hp' => 380, 'spd' => 10, 'crit' => 5, 'cd' => 190, 'active' => '岳柱镇压', 'mult' => 1.2, 'passive' => '磐岩：承伤-25%', 'source' => '岩狱泰坦掉落'],
+        'earth_dragon' => ['name' => '土龙岳柱幼体', 'quality' => 'legend', 'growth' => 2.1, 'atk' => 16, 'def' => 24, 'hp' => 380, 'spd' => 10, 'crit' => 5, 'cd' => 190, 'active' => '岳柱镇压', 'mult' => 1.2, 'passive' => '磐岩：承伤-30%，受击反震50%伤害给敌人', 'source' => '岩狱泰坦掉落'],
     ] + dragon_pets();
 }
 
 function pet_quality_name(string $q): string
 {
     return ['common' => '普通', 'good' => '优秀', 'rare' => '稀有', 'epic' => '史诗', 'legend' => '传说'][$q] ?? $q;
+}
+
+// 宠物立绘：把图片放到 img/pets/ 即可在【宠物详情】显示（仅该画面使用）。
+//   命名优先 <species>.<ext>，再按中文名。<ext> 支持 png/jpg/jpeg/webp/gif。有图返回相对 URL，无图返回空串。
+function pet_image_url(string $species, string $name = ''): string
+{
+    static $cache = [];
+    $ck = $species . '|' . $name;
+    if (array_key_exists($ck, $cache)) {
+        return $cache[$ck];
+    }
+    $cands = [];
+    $key = preg_replace('/[^A-Za-z0-9_]/', '_', $species);
+    if ($key !== '') {
+        $cands[] = $key;
+    }
+    $nm = trim($name);
+    if ($nm !== '') {
+        $nm = preg_replace('/[\/\\\\:*?"<>|\x00-\x1F]/u', '', $nm);
+        if ($nm !== '') {
+            $cands[] = $nm;
+        }
+    }
+    $dir = __DIR__ . '/../img/pets/';
+    $found = '';
+    foreach ($cands as $cand) {
+        foreach (['png', 'jpg', 'jpeg', 'webp', 'gif'] as $ext) {
+            if (is_file($dir . $cand . '.' . $ext)) {
+                $found = 'img/pets/' . rawurlencode($cand) . '.' . $ext;
+                break 2;
+            }
+        }
+    }
+    return $cache[$ck] = $found;
+}
+
+// 宠物立绘头像（大小参考人物头像 avatar_html）：有图用图，无图用品质色首字徽章兜底。
+function pet_portrait_html(string $species, int $size = 64): string
+{
+    $sp = pet_species()[$species] ?? null;
+    $name = (string) ($sp['name'] ?? $species);
+    $r = $size >= 32 ? 10 : 8;
+    $img = pet_image_url($species, $name);
+    if ($img !== '') {
+        return '<span title="' . h($name) . '" style="display:inline-block;vertical-align:middle;line-height:0">'
+            . '<img src="' . h($img) . '" alt="' . h($name) . '" style="width:' . $size . 'px;height:' . $size . 'px;object-fit:cover;border-radius:' . $r . 'px;border:1px solid #7a7f8a">'
+            . '</span>';
+    }
+    $q = (string) ($sp['quality'] ?? 'common');
+    $colors = [
+        'common' => ['#20242b', '#aeb6c2'],
+        'good' => ['#1f3a24', '#bfffcf'],
+        'rare' => ['#1d344d', '#cfe8ff'],
+        'epic' => ['#35224a', '#e6c9ff'],
+        'legend' => ['#493b1d', '#ffe6a0'],
+    ];
+    [$bg, $fg] = $colors[$q] ?? $colors['common'];
+    $ch = mb_substr($name, 0, 1);
+    $fs = (int) round($size * 0.5);
+    return '<span title="' . h($name) . '" style="display:inline-flex;align-items:center;justify-content:center;width:' . $size . 'px;height:' . $size . 'px;border-radius:' . $r . 'px;background:' . $bg . ';color:' . $fg . ';border:1px solid #555;font-size:' . $fs . 'px;line-height:1;vertical-align:middle;font-weight:bold">' . h($ch) . '</span>';
 }
 
 function pet_eggs(): array
@@ -2057,6 +2140,13 @@ function pet_attack(array &$u, array &$b): string
     $dmg = $stats['atk'] + random_int(0, 3);
     $useSkill = mt_rand(1, 100) <= 30;
     $tag = '';
+    // 命中前的敌方状态快照（用于各龙王的阈值判定）
+    $preHp = (int) ($b['hp'] ?? 0);
+    $preMax = max(1, (int) ($b['maxhp'] ?? ($b['hp'] ?? 1)));
+    $preStun = (int) ($b['stun'] ?? 0);
+    // 风迹·来去无痕：风龙遁走后蓄势，下一击必暴并增伤
+    $windMark = $p['species'] === 'sky_serpent'
+        && (int) (mats_of((int) ($u['id'] ?? 0))['pet_wind_mark'] ?? 0) > 0;
     if ($useSkill) {
         if ($p['species'] === 'stone') {
             $heal = (int) ((int) $u['maxhp'] * 0.15);
@@ -2113,24 +2203,80 @@ function pet_attack(array &$u, array &$b): string
             $tag = '（' . $sp['active'] . '）';
         }
     }
-    if (mt_rand(1, 100) <= $stats['crit']) {
+    if ($windMark) {
+        // 风迹未散：这一击必暴，且额外增伤
+        $dmg = (int) ($dmg * $stats['cd'] / 100 * 1.25);
+        $tag .= '（风迹·来去无痕）';
+        mat_set((int) ($u['id'] ?? 0), 'pet_wind_mark', 0);
+    } elseif (mt_rand(1, 100) <= $stats['crit']) {
         $dmg = (int) ($dmg * $stats['cd'] / 100);
         $tag .= '（暴击）';
     }
+    // —— 各龙王被动：条件增伤（互不重复）——
+    if ($p['species'] === 'void_dragon' && $preHp < $preMax * 0.30) {
+        $dmg = (int) ($dmg * 1.5);
+        $tag .= '（噬界·吞噬残渣）';
+    }
+    if ($p['species'] === 'seraph_dragon' && $preHp > $preMax * 0.60) {
+        $dmg = (int) ($dmg * 1.45);
+        $tag .= '（圣裁·审判强者）';
+    }
+    if ($p['species'] === 'storm_tyrant' && $preStun > 0) {
+        $dmg = (int) ($dmg * 1.45);
+        $tag .= '（天谴·雷罚）';
+    }
     $dmg = max(1, $dmg);
     $b['hp'] = (int) $b['hp'] - $dmg;
+    // 风之残响：疾风穿透之后再补一击
+    if ($p['species'] === 'sky_serpent' && (int) ($b['hp'] ?? 0) > 0 && mt_rand(1, 100) <= 40) {
+        $echo = max(1, (int) ($dmg * 0.55));
+        $b['hp'] = (int) $b['hp'] - $echo;
+        $tag .= '（风之残响，追加' . $echo . '点）';
+    }
+    // —— 各龙王被动：命中附加效果（互不重复）——
+    if ($p['species'] === 'fire_drake' && (int) ($b['hp'] ?? 0) > 0 && mt_rand(1, 100) <= 40) {
+        $b['poison'] = max(3, (int) ($b['poison'] ?? 0));
+        $b['poison_pct'] = max(4.0, (float) ($b['poison_pct'] ?? 0));
+        $tag .= '（烬火点燃，持续灼烧）';
+    }
+    if ($p['species'] === 'frost_maiden' && (int) ($b['hp'] ?? 0) > 0 && mt_rand(1, 100) <= 30) {
+        $b['fear'] = max(3, (int) ($b['fear'] ?? 0));
+        $tag .= '（永冻哀歌，敌人哀恸）';
+    }
+    if ($p['species'] === 'storm_tyrant' && (int) ($b['hp'] ?? 0) > 0 && mt_rand(1, 100) <= 30) {
+        $b['stun'] = max(1, (int) ($b['stun'] ?? 0));
+        $tag .= '（天谴麻痹）';
+    }
+    if ($p['species'] === 'void_dragon') {
+        $steal = max(1, (int) ($dmg * 0.25));
+        $u['hp'] = min((int) $u['maxhp'], (int) $u['hp'] + $steal);
+        $tag .= '（噬界吸血' . $steal . '点）';
+    }
+    if ($p['species'] === 'seraph_dragon') {
+        $mend = max(1, (int) ($dmg * 0.12));
+        $u['hp'] = min((int) $u['maxhp'], (int) $u['hp'] + $mend);
+        $tag .= '（圣辉回复' . $mend . '点）';
+    }
     return $autoMsg . $sp['name'] . '扑向' . $b['name'] . '，造成' . $dmg . '点伤害。' . $tag;
 }
 
-function pet_hurt(int $uid, int $md): string
+function pet_hurt(int $uid, int $md, ?array &$b = null): string
 {
     $p = active_pet($uid);
     if (!$p) {
         return '';
     }
+    // 风龙艾瑟琳幼体·无羁苍岚：30% 化作一缕苍岚遁走，并为下一击积蓄「风迹」
+    if ($p['species'] === 'sky_serpent' && mt_rand(1, 100) <= 30) {
+        mat_set($uid, 'pet_wind_mark', 1);
+        return pet_species()[$p['species']]['name'] . '化作一缕苍岚，悄然遁走！（风迹蓄势）';
+    }
     $take = max(1, (int) ($md / 2));
     if ($p['species'] === 'earth_dragon') {
-        $take = max(1, (int) ($take * 0.75));
+        $take = max(1, (int) ($take * 0.70)); // 磐岩：承伤-30%
+    }
+    if ($p['species'] === 'frost_maiden') {
+        $take = max(1, (int) ($take * 0.80)); // 永冻哀歌：冰棺护体，承伤-20%
     }
     if ($p['species'] === 'fire_drake') {
         $take = max(1, (int) ($take * 0.9)); // 龙威：承伤-10%
@@ -2140,6 +2286,13 @@ function pet_hurt(int $uid, int $md): string
     }
     $stats = pet_stats($p);
     $take = max(0, $take - (int) ($stats['def'] / 2));
+    // 土龙·磐岩：受击反震，将一部分伤害震回给攻击者
+    $reflectMsg = '';
+    if ($p['species'] === 'earth_dragon' && $b !== null && $take > 0 && (int) ($b['hp'] ?? 0) > 0) {
+        $reflect = max(1, (int) ($take * 0.5));
+        $b['hp'] = (int) $b['hp'] - $reflect;
+        $reflectMsg = '（磐岩反震' . $reflect . '点）';
+    }
     $hp = (int) $p['hp'] - $take;
     if ($hp <= 0) {
         $puid = (int) ($p['uid'] ?? 0);
@@ -2149,13 +2302,13 @@ function pet_hurt(int $uid, int $md): string
             user_save($pu);
             $st = pet_stats($p);
             db()->prepare('UPDATE pets SET hp=?, status="normal" WHERE id=?')->execute([$st['maxhp'], (int) $p['id']]);
-            return pet_species()[$p['species']]['name'] . '被击倒了，自动复活（-1银）满血归来！';
+            return pet_species()[$p['species']]['name'] . '被击倒了，自动复活（-1银）满血归来！' . $reflectMsg;
         }
         db()->prepare('UPDATE pets SET hp=0, status="weak", active=0 WHERE id=?')->execute([(int) $p['id']]);
-        return pet_species()[$p['species']]['name'] . '被击倒了，进入虚弱状态！[治疗宠物]';
+        return pet_species()[$p['species']]['name'] . '被击倒了，进入虚弱状态！[治疗宠物]' . $reflectMsg;
     }
     db()->prepare('UPDATE pets SET hp=? WHERE id=?')->execute([$hp, (int) $p['id']]);
-    return '';
+    return $reflectMsg;
 }
 
 function roll_pet_egg(int $uid, string $mid): string
@@ -2963,7 +3116,7 @@ function enhance_tag_html(int $lv): string
     return '+' . $lv;
 }
 
-function legend_lore(string $shortName): string
+function legend_lore_base(string $shortName): string
 {
     $lore = [
         '食人魔战裙' => '咕噜死前还在笑。它说这条战裙是它从一百个输家身上剥下来的。<br>穿上它的人，听见的笑声比敌人多。',
@@ -3336,7 +3489,7 @@ function equip_set_bonus_text(string $set, int $owned): string
 }
 
 // 怪物专属掉落：小怪掉率低且多为低劣
-function monster_drops(string $mid): array
+function monster_drops_base(string $mid): array
 {
     // 六圣柱小怪：不掉龙王套装（套装只由斩龙排行产出），只走 monster_material 掉龙魂/龙王精华
     $dm = dragon_monster($mid);
@@ -3473,17 +3626,6 @@ function monster_drops(string $mid): array
         'south_flame_guard' => ['slot' => 'body', 'base' => '烬焰·守卫铠'],
         'ancient_ruin_golem' => ['slot' => 'offhand', 'off' => 'shield', 'base' => '遗迹壁垒', 'rate' => 0.3, 'q' => [0, 0, 20, 50, 30], 'legendary' => ['base' => '遗迹壁垒·不陨', 'extra' => ['k' => 'damage_reduction', 'v' => 4.0]]],
         'em_slag' => ['slot' => 'legs', 'base' => '烬焰·熔渣腿'],
-        'tt_rock' => ['slot' => 'body', 'base' => '岩狱·岩铠', 'rate' => 0.12, 'q' => [0, 20, 50, 30, 0]],
-        'tt_crag' => ['slot' => 'weapon', 'base' => '岩狱·峭刃', 'rate' => 0.12, 'q' => [0, 20, 50, 30, 0]],
-        'tt_magma' => ['slot' => 'head', 'base' => '岩狱·熔盔', 'rate' => 0.12, 'q' => [0, 20, 50, 30, 0]],
-        'tt_warden' => ['slot' => 'offhand', 'base' => '岩狱·狱盾', 'rate' => 0.12, 'q' => [0, 20, 50, 30, 0]],
-        'tt_rock2' => ['slot' => 'legs', 'base' => '岩狱·岩裙', 'rate' => 0.1, 'q' => [0, 20, 50, 30, 0]],
-        'tt_crag2' => ['slot' => 'gloves', 'base' => '岩狱·峭手', 'rate' => 0.1, 'q' => [0, 20, 50, 30, 0]],
-        'tt_magma2' => ['slot' => 'shoes', 'base' => '岩狱·熔靴', 'rate' => 0.1, 'q' => [0, 20, 50, 30, 0]],
-        'tt_warden2' => ['slot' => 'belt', 'base' => '岩狱·狱带', 'rate' => 0.1, 'q' => [0, 20, 50, 30, 0]],
-        'tt_rock3' => ['slot' => 'ring', 'base' => '岩狱·岩戒', 'rate' => 0.08, 'q' => [0, 20, 50, 30, 0]],
-        'tt_crag3' => ['slot' => 'necklace', 'base' => '岩狱·峭链', 'rate' => 0.08, 'q' => [0, 20, 50, 30, 0]],
-        'tt_titan' => ['slot' => 'body', 'base' => '岩狱·泰坦岩铠', 'rate' => 0.3, 'q' => [0, 0, 20, 50, 30], 'legendary' => ['base' => '岩狱泰坦·岳柱', 'extra' => ['k' => 'damage_reduction', 'v' => 8.0]]],
         'em_fiend' => ['slot' => 'weapon', 'base' => '烬焰·焚心弓'],
         'em_magma' => ['slot' => 'weapon', 'base' => '烬焰·熔核锤'],
         'em_ashlord' => ['slot' => 'ring', 'base' => '烬焰·灰烬戒'],
@@ -4134,7 +4276,7 @@ function migrate_equip_req_and_names(int $uid): void
     _gear_uncache((int) $uid);
 }
 
-function monster_material(string $mid): array
+function monster_material_base(string $mid): array
 {
     // 只有副本信物怪掉材料，其他怪一律不掉（卖钱+装备就够了）
     // 矿工铭牌已绝版且无任何用途，停止掉落（历史存量在背包中系统隐藏）。
@@ -4152,6 +4294,35 @@ function monster_material(string $mid): array
         return ['dragon_core', '龙王精华'];
     }
     return [(string) $d['soul'], '龙魂·' . element_name((string) $d['el'])];
+}
+
+// 怪物立绘：把图片放到 img/monsters/ 即可在战斗/列表/世界BOSS等界面显示。
+//   命名优先级：先找 <怪物id>.<ext>，找不到再找 <中文名>.<ext>（如 goblin.png 或 哥布林哨兵.png）。
+//   支持 jpg/jpeg/png/webp/gif；有图返回相对 URL，没图返回空串（照常显示文字，不会出现破图）。
+function monster_image_url(?string $mid, string $name = ''): string
+{
+    $cands = [];
+    $id = preg_replace('/[^A-Za-z0-9_]/', '', (string) $mid);
+    if ($id !== '') {
+        $cands[] = $id;
+    }
+    $nm = trim((string) $name);
+    if ($nm !== '') {
+        // 去掉文件名非法字符（保留中文），避免出现路径穿越/非法文件名
+        $nm = preg_replace('/[\/\\\\:*?"<>|\x00-\x1F]/u', '', $nm);
+        $nm = trim($nm);
+        if ($nm !== '') {
+            $cands[] = $nm;
+        }
+    }
+    foreach ($cands as $cand) {
+        foreach (['jpg', 'jpeg', 'png', 'webp', 'gif'] as $ext) {
+            if (is_file(__DIR__ . '/../img/monsters/' . $cand . '.' . $ext)) {
+                return 'img/monsters/' . rawurlencode($cand) . '.' . $ext;
+            }
+        }
+    }
+    return '';
 }
 
 function quest_mats(): array
@@ -4326,7 +4497,8 @@ function skill_books(): array
 
 function tier_prof_need(int $tier): int
 {
-    return [1 => 0, 2 => 100, 3 => 250, 4 => 500, 5 => 900, 6 => 1400, 7 => 2000, 8 => 2700, 9 => 3500, 10 => 4500][$tier] ?? 999999;
+    // 前中期平滑（2~4阶几乎不变），7阶起急剧变陡，冲10阶需要成倍的熟练度（10阶累计 14000，约为旧值的 3.1 倍）。
+    return [1 => 0, 2 => 120, 3 => 320, 4 => 650, 5 => 1150, 6 => 1900, 7 => 3000, 8 => 4800, 9 => 8000, 10 => 14000][$tier] ?? 999999;
 }
 
 // 各阶技能的最低角色等级：与对应技能书掉落的地图等级对齐（五个职业同阶同门槛）
@@ -4439,6 +4611,34 @@ function set_active_skill(int $uid, string $sid): string
 function skill_power(array $s): float
 {
     return 1 + max(0, (int) ($s['tier'] ?? 1) - 1) * 0.05 + max(0, (int) ($s['level'] ?? 1) - 1) * 0.04;
+}
+
+// 技能等级（1~20级）线性进度：1级=0，20级=1。
+// 原来的「20级才触发的额外效果」统一改成 该效果 × 本比例，实现逐级提升。
+function skill_lv_ratio(int $level): float
+{
+    $l = max(1, min(20, $level));
+    return ($l - 1) / 19.0;
+}
+
+// 技能画面用：把 lv20 文本里的「+X%」按当前等级比例缩小，显示本级别真实生效的额外效果。
+// 例：s3 的 20级「聚合体生命+15%，爆炸+30%」→ 2级显示「聚合体生命+1%，爆炸+2%」。
+function skill_lv_bonus_text(string $sid, int $level): string
+{
+    $cat = skill_catalog()[$sid] ?? null;
+    if (!$cat) {
+        return '';
+    }
+    $text = (string) ($cat['lv20'] ?? '');
+    if ($text === '') {
+        return '';
+    }
+    $ratio = skill_lv_ratio($level);
+    $out = preg_replace_callback('/([+\-])(\d+(?:\.\d+)?)%/u', function ($m) use ($ratio) {
+        $v = (int) round((float) $m[2] * $ratio);
+        return $m[1] . $v . '%';
+    }, $text);
+    return (string) $out;
 }
 
 function add_skill_prof(int $uid, string $sid): string
@@ -4900,7 +5100,7 @@ function element_chart(string $atk, string $def): float
     return 1.0;
 }
 
-function monster_element(string $mid): string
+function monster_element_base(string $mid): string
 {
     if (function_exists('ticket_hunt_element') && isset(ticket_hunt_element()[$mid])) {
         return ticket_hunt_element()[$mid];
@@ -4930,6 +5130,7 @@ function monster_element(string $mid): string
         'pz_puller' => 'dark', 'pz_dancer' => 'dark', 'pz_mask' => 'dark', 'pz_golem' => 'thunder', 'pz_master' => 'dark',
         'sen_priest' => 'wind', 'sen_thorn' => 'wind', 'sen_serpent' => 'dark', 'sen_guard' => 'wind', 'sen_avatar' => 'wind',
         'shadow_claw' => 'dark', 'brass_bishop' => 'light', 'tundra_wanderer' => 'ice', 'lucky_goblin' => 'wind', 'golden_slime' => 'light', 'mimic_chest' => 'dark',
+        'knight' => 'dark', 'waste_stalker' => 'dark', 'waste_hound' => 'dark', 'waste_colossus' => 'dark',
         'frostborn_hunter' => 'ice',
         'vx_spawn' => 'dark', 'vx_stalker' => 'dark', 'vx_mage' => 'dark', 'vx_knight' => 'dark', 'vx_herald' => 'dark', 'vx_tyrant' => 'dark', 'avalanche_titan' => 'ice', 'sulfur_sprite' => 'fire', 'obsidian_colossus' => 'fire',
         'cinder_crawler' => 'fire', 'cinder_stalker' => 'dark', 'cinder_warden' => 'fire', 'cinder_horror' => 'dark', 'ash_titan' => 'fire',
@@ -6558,6 +6759,7 @@ function summon_spawn(string $kind, int $patk, int $php, array $u, float $bonusH
 {
     $cfg = summon_units()[$kind] ?? summon_units()['imp'];
     $sp = 1 + summon_power_bonus($u) / 100;
+    $skillRatio = (float) ($u['_skill_lv_ratio'] ?? 0);
     $hpPct = 0;
     // 魂契5件：召唤兽生命+40%
     if (equip_set_owned_count((int) ($u['id'] ?? 0), 'soulpact') >= 5) {
@@ -6566,6 +6768,8 @@ function summon_spawn(string $kind, int $patk, int $php, array $u, float $bonusH
     // 契匣：原"存活+轮数"折成生命（每轮=+20%）
     $hpPct += summoner_offhand_eff((int) ($u['id'] ?? 0))['turns'] * 20;
     $hpPct += $bonusHpPct;
+    // 技能等级效果：召唤技能的生命加成在 1~20 级之间逐级生效。
+    $hpPct += (float) ($u['_skill_summon_hp_pct'] ?? 0);
     // 召唤兽生命：基础生命 × 召唤兽生命%(装备 summon_hp + 契匣 hp + 折算)
     $shp = $php * $cfg['hp_mult'] * (1 + (summon_hp_bonus($u) + $hpPct) / 100);
     return [
@@ -6575,6 +6779,7 @@ function summon_spawn(string $kind, int $patk, int $php, array $u, float $bonusH
         'maxhp' => max(1, (int) $shp),
         'atk' => max(1, (int) ($patk * $cfg['atk_mult'] * $sp)),
         'bomb' => $cfg['bomb'] || equip_set_owned_count((int) ($u['id'] ?? 0), 'soulpact') >= 5,
+        'bomb_mult' => 1.5 * (1 + (float) ($u['_skill_bomb_pct'] ?? 0) / 100),
     ];
 }
 
@@ -6825,7 +7030,7 @@ function summon_bomb(array &$b): string
     $log = '';
     foreach ($list as $s) {
         if (!empty($s['bomb'])) {
-            $d = max(1, (int) ($s['atk'] * 1.5));
+            $d = max(1, (int) ($s['atk'] * (float) ($s['bomb_mult'] ?? 1.5)));
             $b['hp'] = max(0, (int) $b['hp'] - $d);
             $log .= $s['name'] . '死亡爆炸，造成' . $d . '点范围伤害！';
         }
@@ -7352,7 +7557,7 @@ function exp_need(int $lv): int
     return max(20, (int) (20 * pow(max(1, $lv), 1.65)));
 }
 
-function monster_lv(string $mid): int
+function monster_lv_base(string $mid): int
 {
     if (function_exists('ticket_hunt_lv') && isset(ticket_hunt_lv()[$mid])) {
         return ticket_hunt_lv()[$mid];
@@ -7385,7 +7590,7 @@ function monster_lv(string $mid): int
         'mist_apeman' => 560, 'rot_sage' => 575, 'ember_imp' => 590, 'lava_hound' => 605,
         'ash_cultist' => 620, 'magma_golem' => 635, 'flame_djinn' => 650, 'cinder_dragonspawn' => 665,
         'volcano_priest' => 680, 'ash_wyrm' => 695, 'south_flame_guard' => 710, 'ancient_ruin_golem' => 720,
-        'em_slag' => 640, 'em_fiend' => 660, 'em_magma' => 680, 'em_ashlord' => 700, 'em_heart' => 720, 'tt_rock' => 720, 'tt_crag' => 760, 'tt_magma' => 800, 'tt_warden' => 850, 'tt_titan' => 900,
+        'em_slag' => 640, 'em_fiend' => 660, 'em_magma' => 680, 'em_ashlord' => 700, 'em_heart' => 720, 'waste_stalker' => 82, 'waste_hound' => 90, 'waste_colossus' => 92,
         'pz_puller' => 380, 'pz_dancer' => 400, 'pz_mask' => 420, 'pz_golem' => 440, 'pz_master' => 460,
         'sen_priest' => 520, 'sen_thorn' => 540, 'sen_serpent' => 560, 'sen_guard' => 580, 'sen_avatar' => 600,
         'shadow_claw' => 320, 'brass_bishop' => 480, 'tundra_wanderer' => 450, 'lucky_goblin' => 5, 'golden_slime' => 100, 'mimic_chest' => 200,
@@ -8016,6 +8221,7 @@ function battle_round(array &$u, array &$b, string $mode): array
             $pow = skill_power($sk);
             $sTier = (int) $sk['tier'];
             $sLv = (int) $sk['level'];
+            $lvR = skill_lv_ratio($sLv);
             if ($sk['kind'] === 'phys') {
                 // 物理技：物攻×倍率后过怪物业防；带元素 rider 的再加一段法伤（过半法防）
                 $pd = max(1, (int) ((player_patk($u) + random_int(0, 3)) * (float) $sk['mult'] * $pow) - monster_pdef($b));
@@ -8049,11 +8255,11 @@ function battle_round(array &$u, array &$b, string $mode): array
                 if ($sid === 'w1' && $sTier >= 10) {
                     $pd = (int) ($pd * 1.25);
                 }
-                if ($sid === 'w1' && $sLv >= 20) {
-                    $pd = (int) ($pd * 1.15);
+                if ($sid === 'w1') {
+                    $pd = (int) ($pd * (1 + 0.15 * $lvR));
                 }
-                if ($sid === 'w2' && $sLv >= 20) {
-                    $pd = (int) ($pd * 1.15);
+                if ($sid === 'w2') {
+                    $pd = (int) ($pd * (1 + 0.15 * $lvR));
                 }
                 if ($sid === 'w2' && $sTier >= 10 && mt_rand(1, 100) <= 20) {
                     $pd = (int) ($pd * 1.5);
@@ -8074,8 +8280,8 @@ function battle_round(array &$u, array &$b, string $mode): array
                 if ($sTier >= 10) {
                     $pd = (int) ($pd * 1.3);
                 }
-                if ($sLv >= 20) {
-                    $pd = (int) ($pd * 1.15);
+                if ($sLv >= 1) {
+                    $pd = (int) ($pd * (1 + 0.15 * $lvR));
                 }
                 if ($sid === 'm2' && $sTier >= 10 && mt_rand(1, 100) <= 12) {
                     $b['stun'] = 1;
@@ -8102,8 +8308,8 @@ function battle_round(array &$u, array &$b, string $mode): array
                 if ($sTier >= 10) {
                     $pd = (int) ($pd * 1.5);
                 }
-                if ($sLv >= 20) {
-                    $pd = (int) ($pd * 1.15);
+                if ($sLv >= 1) {
+                    $pd = (int) ($pd * (1 + 0.15 * $lvR));
                 }
                 if ($sid === 'h4' && in_array(($b['id'] ?? ''), ['cinder_dragonspawn', 'ash_wyrm', 'south_flame_guard', 'doyle', 'dragon'], true)) {
                     $pd = (int) ($pd * 1.5);
@@ -8114,8 +8320,8 @@ function battle_round(array &$u, array &$b, string $mode): array
                 if ($dotKey !== '') {
                     $add = $sTier >= 10 ? 2 : 1;
                     if ($sid === 'h3' && $sTier >= 10) { $add = 2; }
-                    hunter_dot_bind_lv20($b, $sLv >= 20);
-                    $logHeal .= hunter_dot_add($b, $dotKey, $add, $pd, $sLv >= 20, $sTier);
+                    hunter_dot_bind_lv20($b, $lvR);
+                    $logHeal .= hunter_dot_add($b, $dotKey, $add, $pd, $lvR, $sTier);
                 }
             } elseif ($sk['kind'] === 'step') {
                 // 刺客单体爆发：极高倍率打单一目标，不溅射。2觉·影刺客再叠60%。
@@ -8136,11 +8342,12 @@ function battle_round(array &$u, array &$b, string $mode): array
                     $logHeal .= '(必暴)';
                     $forceCrit = true;
                 }
-                if ($sLv >= 20) {
-                    $pd = (int) ($pd * 1.15);
+                if ($sLv >= 1) {
+                    $pd = (int) ($pd * (1 + 0.15 * $lvR));
                 }
                 // 斩杀：残血目标额外加成
-                $cutLine = $sLv >= 20 ? 0.6 : ($sTier >= 10 ? 0.4 : 0.3);
+                $cutBase = $sTier >= 10 ? 0.4 : 0.3;
+                $cutLine = $cutBase + (0.6 - $cutBase) * $lvR;
                 if ($sTier >= 10 && (int) $b['hp'] <= (int) ((int) $b['maxhp'] * $cutLine)) {
                     $pd = (int) ($pd * 1.5);
                     $logHeal .= '(影杀斩杀)';
@@ -8162,26 +8369,28 @@ function battle_round(array &$u, array &$b, string $mode): array
                         if ($rt9 !== '') {
                             $logHeal .= $rt9;
                         }
-                        $cutLine = $sLv >= 20 ? 0.5 : ($sTier >= 10 ? 0.4 : 0.3);
+                        $cutBase = $sTier >= 10 ? 0.4 : 0.3;
+                        $cutLine = $cutBase + (0.5 - $cutBase) * $lvR;
                         if ((int) $b['hp'] <= (int) ((int) $b['maxhp'] * $cutLine)) {
                             $pd = (int) ($pd * 1.5);
                             $logHeal .= '(血狱斩杀)';
                         }
                         if ($sTier >= 10) { $pd = (int) ($pd * 1.3); }
-                        if ($sLv >= 20) { $pd = (int) ($pd * 1.15); }
+                        $pd = (int) ($pd * (1 + 0.15 * $lvR));
                         [$pd, $elTag] = apply_el_convert($u, $b, $pd, $skEl);
                         $logHeal .= $elTag;
                         $b['fullEl'] = 1;
                     } elseif ($sid === 'm9') {
                         // 法师·魂蚀天雷：法4.2雷，35%麻痹（t10）/40%（lv20）
                         $pd = max(1, (int) ((player_matk($u) + random_int(4, 7)) * (float) $sk['mult'] * $sinPow) - (int) (monster_mdef($b) / 2));
-                        $stunRate = $sLv >= 20 ? 40 : ($sTier >= 10 ? 35 : 20);
+                        $stunBase = $sTier >= 10 ? 35 : 20;
+                        $stunRate = $stunBase + (40 - $stunBase) * $lvR;
                         if (mt_rand(1, 100) <= $stunRate) {
                             $b['stun'] = 1;
                             $logHeal .= '(魂蚀麻痹)';
                         }
                         if ($sTier >= 10) { $pd = (int) ($pd * 1.3); }
-                        if ($sLv >= 20) { $pd = (int) ($pd * 1.15); }
+                        $pd = (int) ($pd * (1 + 0.15 * $lvR));
                         [$pd, $elTag] = apply_el_convert($u, $b, $pd, $skEl);
                         $logHeal .= $elTag;
                         $b['fullEl'] = 1;
@@ -8191,14 +8400,14 @@ function battle_round(array &$u, array &$b, string $mode): array
                         $pd = (int) ($pd * 0.7) + (int) ($pd * 0.7);
                         $pd += max(0, (int) (player_matk($u) * 0.5) - (int) (monster_mdef($b) / 2));
                         if ($sTier >= 10) { $pd = (int) ($pd * 1.3); }
-                        if ($sLv >= 20) { $pd = (int) ($pd * 1.15); }
+                        if ($sLv >= 1) { $pd = (int) ($pd * (1 + 0.15 * $lvR)); }
                         [$pd, $elTag] = apply_el_convert($u, $b, $pd, $skEl);
                         $logHeal .= $elTag;
                         $b['fullEl'] = 1;
                         // 引爆：每层DOT转成额外伤害（lv20 再+50%）
                         $detMult = $sTier >= 10 ? 1.0 : 0.5;
-                        if ($sLv >= 20) { $detMult *= 1.5; }
-                        $det = hunter_dot_detonate($b, (int) $detMult, $sLv >= 20);
+                        $detMult *= (1 + 0.5 * $lvR);
+                        $det = hunter_dot_detonate($b, (int) $detMult, $lvR);
                         if ($det['dmg'] > 0) {
                             $pd += $det['dmg'];
                             $logHeal .= '(' . $det['log'] . ')';
@@ -8209,16 +8418,17 @@ function battle_round(array &$u, array &$b, string $mode): array
                         // 牧师·堕天圣裁：法3.0暗+奶200（转奶80%，lv20转100%）
                         $healSin = (int) ((int) $sk['heal'] * $pow) + (int) (player_matk($u) * 0.3);
                         if ($sTier >= 10) { $healSin += 30; }
-                        if ($sLv >= 20) { $healSin = (int) ($healSin * 1.2); }
+                        if ($sLv >= 1) { $healSin = (int) ($healSin * (1 + 0.20 * $lvR)); }
                         $u['hp'] = min((int) $u['maxhp'], (int) $u['hp'] + $healSin);
                         $logHeal .= '(堕天回' . $healSin . ')';
                         $pd = max(1, (int) ((player_matk($u) + random_int(4, 7)) * (float) $sk['mult'] * $sinPow) - (int) (monster_mdef($b) / 2));
                         if ($sTier >= 10) { $pd = (int) ($pd * 1.3); }
-                        if ($sLv >= 20) { $pd = (int) ($pd * 1.15); }
+                        if ($sLv >= 1) { $pd = (int) ($pd * (1 + 0.15 * $lvR)); }
                         [$pd, $elTag] = apply_el_convert($u, $b, $pd, $skEl);
                         $logHeal .= $elTag;
                         $b['fullEl'] = 1;
-                        $leechRate = $sLv >= 20 ? 1.0 : ($sTier >= 10 ? 0.8 : 0.5);
+                        $leechBase = $sTier >= 10 ? 0.8 : 0.5;
+                        $leechRate = $leechBase + (1.0 - $leechBase) * $lvR;
                         $leech = (int) ($pd * $leechRate);
                         $u['hp'] = min((int) $u['maxhp'], (int) $u['hp'] + $leech);
                         $logHeal .= '(噬罪转奶' . $leech . ')';
@@ -8226,7 +8436,7 @@ function battle_round(array &$u, array &$b, string $mode): array
                         // 召唤师·深渊主宰：一发高额暗伤 + 引爆全部旧召唤兽 AoE + 召无面梦魇 + 开启每3回合献祭
                         $pd = max(1, (int) ((player_matk($u) + random_int(4, 7)) * (float) $sk['mult'] * $sinPow) - (int) (monster_mdef($b) / 2));
                         if ($sTier >= 10) { $pd = (int) ($pd * 1.3); }
-                        if ($sLv >= 20) { $pd = (int) ($pd * 1.15); }
+                        if ($sLv >= 1) { $pd = (int) ($pd * (1 + 0.15 * $lvR)); }
                         [$pd, $elTag] = apply_el_convert($u, $b, $pd, $skEl);
                         $logHeal .= $elTag;
                         $b['fullEl'] = 1;
@@ -8234,7 +8444,9 @@ function battle_round(array &$u, array &$b, string $mode): array
                         $exMult9 = $sTier >= 10 ? 6.0 : 5.0;
                         [$exTot9, $exLog9, ] = summoner_explode_all($u, $b, (int) ($u['id'] ?? 0), $exMult9, 0.35);
                         if ($exLog9 !== '') { $logHeal .= $exLog9; }
-                        $logHeal .= summon_add('mare', $u, $sLv >= 20 ? 1 : 0);
+                        $u['_skill_summon_hp_pct'] = 15 * $lvR;
+                        $logHeal .= summon_add('mare', $u, 0);
+                        unset($u['_skill_summon_hp_pct'], $u['_skill_bomb_pct']);
                         $b['lord_period'] = 3;
                         $logHeal .= '(主宰降临·每3回合献祭)';
                     }
@@ -8245,7 +8457,7 @@ function battle_round(array &$u, array &$b, string $mode): array
                 if ($sTier >= 10) {
                     $heal += in_array($sid, ['p2', 'p3'], true) ? 25 : 15;
                 }
-                if ($sLv >= 20) {
+                if ($sLv >= 1) {
                     $heal = (int) ($heal * 1.2);
                 }
                 if ((cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '') === 'holybishop') { $heal = (int) ($heal * 1.15); $logHeal .= '(圣光灌注)'; }
@@ -8261,8 +8473,8 @@ function battle_round(array &$u, array &$b, string $mode): array
                     $logHeal .= $elTag;
                     $b['fullEl'] = 1;
                 }
-                if ($sLv >= 20) {
-                    $pd = (int) ($pd * 1.15);
+                if ($sLv >= 1) {
+                    $pd = (int) ($pd * (1 + 0.15 * $lvR));
                 }
             } elseif ($sk['kind'] === 'aoe') {
                 // 群攻：打当前+溅射队列（余波震死的只给经验金币，不掉落）
@@ -8293,8 +8505,8 @@ function battle_round(array &$u, array &$b, string $mode): array
                 if ($sTier >= 10) {
                     $pd = (int) ($pd * 1.3);
                 }
-                if ($sLv >= 20) {
-                    $pd = (int) ($pd * 1.15);
+                if ($sLv >= 1) {
+                    $pd = (int) ($pd * (1 + 0.15 * $lvR));
                 }
                 if ($sid === 'w6' && $sTier >= 10 && mt_rand(1, 100) <= 10) {
                     $b['stun'] = 1;
@@ -8310,12 +8522,12 @@ function battle_round(array &$u, array &$b, string $mode): array
                         $add = hunter_ranger_stacks($sid, $sTier, $sLv >= 20);
                     }
                     if ($dotKey !== '') {
-                        hunter_dot_bind_lv20($b, $sLv >= 20);
-                        $logHeal .= hunter_dot_add($b, $dotKey, $add, $pd, $sLv >= 20);
+                        hunter_dot_bind_lv20($b, $lvR);
+                        $logHeal .= hunter_dot_add($b, $dotKey, $add, $pd, $lvR);
                     }
                 }
                 if ($sid === 'h5' && $sTier >= 10 && mt_rand(1, 100) <= 25) {
-                    $pd = (int) ($pd * ($sLv >= 20 ? 1.8 : 1.6));
+                    $pd = (int) ($pd * (1.6 + 0.2 * $lvR));
                     $logHeal .= '(箭雨暴击)';
                 }
                 if ($sid === 'm5' && $sTier >= 10 && mt_rand(1, 100) <= 10) {
@@ -8330,32 +8542,34 @@ function battle_round(array &$u, array &$b, string $mode): array
                 }
                 if ($sid === 'w8' && $sTier >= 10) {
                     $b['breach'] = 3;
-                    $b['breachdmg'] = $sLv >= 20 ? 75 : 80;
+                    $b['breachdmg'] = 80 - 5 * $lvR;
                     $logHeal .= '(壁垒破甲)';
                 }
-                if ($sid === 'm7' && $sTier >= 10 && mt_rand(1, 100) <= ($sLv >= 20 ? 30 : 25)) {
+                if ($sid === 'm7' && $sTier >= 10 && mt_rand(1, 100) <= (25 + 5 * $lvR)) {
                     $b['stun'] = 1;
                     $logHeal .= '(雷暴麻痹)';
                 }
                 if ($sid === 'h7' && $sTier >= 10 && mt_rand(1, 100) <= 30) {
-                    $pd = (int) ($pd * ($sLv >= 20 ? 1.8 : 1.6));
+                    $pd = (int) ($pd * (1.6 + 0.2 * $lvR));
                     $logHeal .= '(穿云暴击)';
                 }
-                if ($sid === 'h5' && $sLv >= 20) {
-                    $b['splash'] = (int) (($b['splash'] ?? 0) + $pd * 0.5); // lv20：万箭齐发溅射翻倍
+                if ($sid === 'h5' && $lvR > 0) {
+                    $b['splash'] = (int) (($b['splash'] ?? 0) + $pd * 0.5 * $lvR); // 万箭齐发溅射随等级逐级翻倍
                     $logHeal .= '(箭雨漫溢)';
                 }
                 // 召唤师·群魂爆裂：引爆现有召唤兽造成高额 AoE，再召一只恶鬼补阵
                 if ($sid === 's7') {
                     $exMult7 = $sTier >= 10 ? 4.5 : 3.5;
-                    $exConv7 = $sLv >= 20 ? 0.4 : 0.25;
+                    $exConv7 = 0.25 + 0.15 * $lvR;
                     [$exTot7, $exLog7, ] = summoner_explode_all($u, $b, (int) ($u['id'] ?? 0), $exMult7, $exConv7);
                     if ($exLog7 !== '') { $logHeal .= $exLog7; }
-                    $logHeal .= summon_add('wraith', $u, $sLv >= 20 ? 1 : 0);
+                    $u['_skill_summon_hp_pct'] = 15 * $lvR;
+                    $logHeal .= summon_add('wraith', $u, 0);
+                    unset($u['_skill_summon_hp_pct'], $u['_skill_bomb_pct']);
                 }
                 // 召唤师·永夜契约：敌全体腐蚀2轮
                 if ($sid === 'p7') {
-                    $leechRate7 = $sLv >= 20 ? 0.6 : 0.5;
+                    $leechRate7 = 0.5 + 0.1 * $lvR;
                     $leech7b = (int) ($pd * $leechRate7);
                     $u['hp'] = min((int) $u['maxhp'], (int) $u['hp'] + $leech7b);
                     $logHeal .= '(噬魂汲取+' . $leech7b . ')';
@@ -8363,11 +8577,11 @@ function battle_round(array &$u, array &$b, string $mode): array
                 if ($sid === 'p8') {
                     $heal8 = (int) ($sk['heal'] * $pow) + (int) (player_matk($u) * 0.2);
                     if ($sTier >= 10) { $heal8 += 50; }
-                    if ($sLv >= 20) { $heal8 = (int) ($heal8 * 1.2); }
+                    if ($sLv >= 1) { $heal8 = (int) ($heal8 * (1 + 0.20 * $lvR)); }
                     if ((cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '') === 'holybishop') { $heal8 = (int) ($heal8 * 1.15); $logHeal .= '(圣光灌注)'; }
                     $u['hp'] = min((int) $u['maxhp'], (int) $u['hp'] + $heal8);
                     $logHeal .= '(审判回血+' . $heal8 . ')';
-                    $mateRate8 = $sLv >= 20 ? 0.8 : 0.6;
+                    $mateRate8 = 0.6 + 0.2 * $lvR;
                     $mparty8 = my_party((int) ($u['id'] ?? 0));
                     if ($mparty8) {
                         foreach (party_mates((int) $mparty8['id'], (int) $u['id']) as $mate) {
@@ -8383,7 +8597,7 @@ function battle_round(array &$u, array &$b, string $mode): array
                 }
                 // 暗影主教：伤害转奶
                 if ($sid === 'p5') {
-                    $leechRate = $sLv >= 20 ? 0.4 : 0.3;
+                    $leechRate = 0.3 + 0.1 * $lvR;
                     $leech = (int) ($pd * $leechRate);
                     $u['hp'] = min((int) $u['maxhp'], (int) $u['hp'] + $leech);
                     $logHeal .= '(暗影汲取+' . $leech . ')';
@@ -8392,11 +8606,11 @@ function battle_round(array &$u, array &$b, string $mode): array
                 if ($sid === 'p6') {
                     $heal6 = (int) ($sk['heal'] * $pow) + (int) (player_matk($u) * 0.2);
                     if ($sTier >= 10) { $heal6 += 40; }
-                    if ($sLv >= 20) { $heal6 = (int) ($heal6 * 1.2); }
+                    if ($sLv >= 1) { $heal6 = (int) ($heal6 * (1 + 0.20 * $lvR)); }
                     if ((cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '') === 'holybishop') { $heal6 = (int) ($heal6 * 1.15); $logHeal .= '(圣光灌注)'; }
                     $u['hp'] = min((int) $u['maxhp'], (int) $u['hp'] + $heal6);
                     $logHeal .= '(回' . $heal6 . ')';
-                    $mateRate = $sLv >= 20 ? 0.7 : 0.5;
+                    $mateRate = 0.5 + 0.2 * $lvR;
                     $mparty = my_party((int) ($u['id'] ?? 0));
                     if ($mparty) {
                         foreach (party_mates((int) $mparty['id'], (int) $u['id']) as $mate) {
@@ -8412,7 +8626,7 @@ function battle_round(array &$u, array &$b, string $mode): array
                 }
                 // 溅射：50%伤害灌进队列，攒满一条血震死一只（只给经验金币）
                 $splashRate = $sTier >= 10 ? 0.6 : 0.5;
-                if ($sid === 'm8' && $sLv >= 20) { $b['splash'] = (int) (($b['splash'] ?? 0) + $pd * 0.1); $logHeal .= '(风火蔓延)'; }
+                if ($sid === 'm8' && $lvR > 0) { $b['splash'] = (int) (($b['splash'] ?? 0) + $pd * 0.1 * $lvR); $logHeal .= '(风火蔓延)'; }
                 $b['splash'] = (int) (($b['splash'] ?? 0) + $pd * $splashRate);
                 while ((int) ($b['left'] ?? 1) > 1 && (int) ($b['splash'] ?? 0) >= (int) ($b['maxhp'] ?? 1)) {
                     $b['splash'] = (int) $b['splash'] - (int) $b['maxhp'];
@@ -8446,7 +8660,7 @@ function battle_round(array &$u, array &$b, string $mode): array
         $pd = 0;
     }
     $rb2 = cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '';
-    if ($rb2 === 'berserker' && (int) $u['hp'] < (int) $u['maxhp'] / 2 && $pd > 0) { $pd = (int) ($pd * 1.15); $logHeal .= '(狂怒)'; }
+    if ($rb2 === 'berserker' && (int) $u['hp'] < (int) $u['maxhp'] / 2 && $pd > 0) { $pd = (int) ($pd * (1 + 0.15 * $lvR)); $logHeal .= '(狂怒)'; }
     // 源罪技能树·攻击侧：神之罪主(按罪值加全伤) + 之怒(残血<30%物攻翻倍)
     if ($pd > 0 && function_exists('src_sin_effects')) {
         $seAtk = src_sin_effects((int) ($u['id'] ?? 0));
@@ -8547,17 +8761,23 @@ function battle_round(array &$u, array &$b, string $mode): array
         $sid2 = (string) ($sid ?? '');
         $sLv2 = (int) ($sLv ?? 0);
         $sT2 = (int) ($sTier ?? 0);
+        $sRatio = skill_lv_ratio($sLv2);
         $rb2j = cflags((int) ($u['id'] ?? 0))['rb2_job'] ?? '';
         $blockMsg = '';
+        // 技能等级逐级加成：默认清零，由各召唤技能按需设置（生命+15%、爆炸+30% 等 × 等级比例）
+        $u['_skill_summon_hp_pct'] = 0.0;
+        $u['_skill_bomb_pct'] = 0.0;
         if ($sid2 === 's1') {
-            if ($sLv2 >= 20) { $logHeal .= summon_add('imp', $u, 1); } else { $logHeal .= summon_add('imp', $u, 0); }
+            $u['_skill_summon_hp_pct'] = 15 * $sRatio;
+            $logHeal .= summon_add('imp', $u, 0);
             // 额外效果：小鬼登场即撕咬一口
             $sv = summon_list(); $atk1 = (int) (end($sv)['atk'] ?? 0);
             if ($atk1 > 0) { [$eh1] = summoner_dark_damage((int) ($u['id'] ?? 0), $b, $atk1); $b['hp'] = max(0, (int) ($b['hp'] ?? 0) - $eh1); $logHeal .= '(小鬼撕咬' . $eh1 . ')'; }
         } elseif ($sid2 === 's2') {
             if ($sT2 < 10) { $blockMsg = '（招魂引需熟练10级才能引渡守卫）'; }
             else {
-                if ($sLv2 >= 20) { $logHeal .= summon_add('bone', $u, 1); } else { $logHeal .= summon_add('bone', $u, 0); }
+                $u['_skill_summon_hp_pct'] = 15 * $sRatio;
+                $logHeal .= summon_add('bone', $u, 0);
                 // 额外效果：骸骨守卫撑起骨墙，为召唤师回血
                 $sv = summon_list(); $atk2 = (int) (end($sv)['atk'] ?? 0);
                 $gh2 = max(1, (int) round($atk2 * 0.5));
@@ -8568,34 +8788,36 @@ function battle_round(array &$u, array &$b, string $mode): array
             $cost3 = max(1, (int) floor((int) ($u['hp'] ?? 1) * 0.20));
             if ($sT2 < 10) { $blockMsg = '（血肉筑城需熟练10级）'; }
             elseif ((int) ($u['hp'] ?? 1) - $cost3 < 1) { $blockMsg = '（血不够筑城，回满再来）'; }
-            else { $u['hp'] = (int) ($u['hp'] ?? 1) - $cost3; $logHeal .= '(血祭' . $cost3 . '血)'; if ($sLv2 >= 20) { $logHeal .= summon_add('abom', $u, 1); } else { $logHeal .= summon_add('abom', $u, 0); } }
+            else { $u['hp'] = (int) ($u['hp'] ?? 1) - $cost3; $logHeal .= '(血祭' . $cost3 . '血)'; $u['_skill_summon_hp_pct'] = 15 * $sRatio; $u['_skill_bomb_pct'] = 30 * $sRatio; $logHeal .= summon_add('abom', $u, 0); }
         } elseif ($sid2 === 's4') {
-            $nImp = $sLv2 >= 20 ? 3 : 2;
-            for ($ii = 0; $ii < $nImp; $ii++) { $logHeal .= summon_add('imp', $u, $ii === 0 && $sLv2 >= 20 ? 1 : 0); }
+            $nImp = 2 + ($sRatio >= 0.5 ? 1 : 0);
+            $u['_skill_summon_hp_pct'] = 15 * $sRatio;
+            for ($ii = 0; $ii < $nImp; $ii++) { $logHeal .= summon_add('imp', $u, 0); }
         } elseif ($sid2 === 's5') {
             if ($rb2j !== 'necro') { $blockMsg = '（死灵之拥需2觉·死灵之拥）'; }
-            else { $logHeal .= summon_add('wraith', $u, 0); $logHeal .= summon_add('wraith', $u, $sLv2 >= 20 ? 1 : 0); }
+            else { $u['_skill_summon_hp_pct'] = 15 * $sRatio; $u['_skill_bomb_pct'] = 50 * $sRatio; $logHeal .= summon_add('wraith', $u, 0); $logHeal .= summon_add('wraith', $u, 0); }
         } elseif ($sid2 === 's6') {
             $cost6 = max(1, (int) floor((int) ($u['hp'] ?? 1) * 0.30));
             if ($rb2j !== 'plague') { $blockMsg = '（噬魂夜宴需2觉·痛苦盛宴）'; }
             elseif ($sT2 < 10) { $blockMsg = '（夜宴需熟练10级）'; }
             elseif ((int) ($u['hp'] ?? 1) - $cost6 < 1) { $blockMsg = '（血不够开宴，回满再来）'; }
-            else { $u['hp'] = (int) ($u['hp'] ?? 1) - $cost6; $logHeal .= '(血祭' . $cost6 . '血)'; if ($sLv2 >= 20) { $logHeal .= summon_add('mare', $u, 1); } else { $logHeal .= summon_add('mare', $u, 0); } }
+            else { $u['hp'] = (int) ($u['hp'] ?? 1) - $cost6; $logHeal .= '(血祭' . $cost6 . '血)'; $u['_skill_summon_hp_pct'] = 15 * $sRatio; $logHeal .= summon_add('mare', $u, 0); }
         } elseif ($sid2 === 's8') {
             if ($sT2 < 10) { $blockMsg = '（永夜契约需熟练10级）'; }
-            else { $logHeal .= summon_add('abom', $u, $sLv2 >= 20 ? 1 : 0); $logHeal .= summon_add('wraith', $u, 0); if ($sLv2 >= 20) { $logHeal .= summon_add('wraith', $u, 0); } }
+            else { $u['_skill_summon_hp_pct'] = 15 * $sRatio; $logHeal .= summon_add('abom', $u, 0); $logHeal .= summon_add('wraith', $u, 0); if ($sRatio >= 0.5) { $logHeal .= summon_add('wraith', $u, 0); } }
         } elseif ($sid2 === 's9') {
             $logHeal .= '（主宰降临）';
         } else {
             $logHeal .= summon_add('imp', $u, 0);
         }
-                // 噬魂夜宴：梦魇登场附带灵魂腐蚀
+                // 噬魂夜宴：梦魇登场附带灵魂腐蚀（层数与强度随技能等级逐级提升）
                 if ($sid2 === 's6' && $blockMsg === '') {
-                    $b['poison'] = ($sLv2 >= 20 ? 3 : 2);
-                    $b['poison_pct'] = $sLv2 >= 20 ? 2 : 1.5;
+                    $b['poison'] = 2 + (int) round($sRatio);
+                    $b['poison_pct'] = 1.5 + 0.5 * $sRatio;
                     $logHeal .= '(夜宴腐蚀)';
                 }
         if ($blockMsg !== '') { $logHeal .= $blockMsg; }
+        unset($u['_skill_summon_hp_pct'], $u['_skill_bomb_pct']);
     }
     // 契匣开场召唤：戴着专属副手的召唤师，每场战斗白嫖一只（不耗蓝不占回合）
     if ($mode !== 'hit' && empty($b['opened']) && job_id_of($u) === 'summoner') {
@@ -9458,7 +9680,7 @@ function battle_round(array &$u, array &$b, string $mode): array
     $log .= $tankHp;
     // 怪物随机打其一：有宠时50%宠全吃（人不掉血），50%人全吃（宠无伤）
     if (active_pet((int) ($u['id'] ?? 0)) && mt_rand(1, 100) <= 50) {
-        $petHurt = pet_hurt((int) ($u['id'] ?? 0), $md * 2);
+        $petHurt = pet_hurt((int) ($u['id'] ?? 0), $md * 2, $b);
         if ($petHurt !== '') { $log .= $petHurt; }
         $u['hp'] = (int) $u['hp'] + $md;
         $log .= '(怪物转头打了宠物)';
@@ -10065,7 +10287,7 @@ function ch2_locations(): array
     $m['bmine2'] = ['name' => '矿道二层', 'desc' => '黑袍使徒在这里等你。你的影子比来时长了三寸。', 'exits' => ['bmine1' => '白银矿道一层', 'sforest' => '影蚀森林'], 'monsters' => ['corrupt_guard', 'apostle']];
     $m['sforest'] = ['name' => '影蚀森林', 'desc' => '树是黑的，叶是灰的，落下来像纸片。林心有尊三倍大的傀儡。', 'exits' => ['bmine2' => '矿道二层', 'manor' => '废弃庄园'], 'monsters' => ['shadow_hound', 'corrupt_treant', 'gargoyle', 'guardian']];
     $m['manor'] = ['name' => '废弃庄园', 'desc' => '门开着，安静得不正常。大厅主位上，城主瓦伦丁端着红酒等你。', 'exits' => ['sforest' => '影蚀森林', 'baltar' => '深渊祭坛'], 'monsters' => ['puppet', 'valentin']];
-    $m['rift_road'] = ['name' => '裂隙长路', 'desc' => '从深渊祭坛往裂隙口的长路，70~100级练级地（猎犬88/织影者97）。', 'exits' => ['baltar' => '深渊祭坛', 'rift' => '深渊裂隙口'], 'monsters' => ['rift_hound', 'rift_weaver', 'colossus']];
+    $m['rift_road'] = ['name' => '裂隙长路', 'desc' => '从深渊祭坛往裂隙口的长路，70~100级练级地（猎犬88/织影者97）。', 'exits' => ['baltar' => '深渊祭坛', 'rift' => '深渊裂隙口'], 'monsters' => ['rift_hound', 'rift_weaver', 'colossus', 'waste_colossus']];
     $m['baltar'] = ['name' => '深渊祭坛', 'desc' => '很大，很黑。核心处站着眼睛发黑、影子如翅的暗影莉莉。', 'exits' => ['manor' => '废弃庄园', 'rift_road' => '裂隙长路'], 'monsters' => ['dark_lily']];
     $m['rift'] = ['name' => '裂隙深处', 'desc' => '没有底。你走在黑水上。深渊之眼睁着，瞳孔里是你的影子。', 'exits' => ['rift_road' => '裂隙长路'], 'monsters' => ['abyss_eye']];
     return $m;
@@ -10256,8 +10478,8 @@ function ice_locations(): array
     $m = [];
     $m['buf12a'] = ['name' => '银道荒径·前', 'desc' => '白石镇到白银城的老路，野狼和强人在此拦路。走过去，才是白银城门。', 'exits' => ['gate' => '白石镇道口', 'buf12b' => '银道荒径·后'], 'monsters' => ['road_wolf']];
     $m['buf12b'] = ['name' => '银道荒径·后', 'desc' => '离城门只剩一步，强人比狼更凶。', 'exits' => ['buf12a' => '银道荒径·前', 'silver_gate' => '白银城门'], 'monsters' => ['road_bandit']];
-    $m['buf23a'] = ['name' => '尘埃长路·前', 'desc' => '白银城到王都的尘埃路，劫掠者在风里等活物。', 'exits' => ['silver_sq' => '白银广场', 'buf23b' => '尘埃长路·后'], 'monsters' => ['dust_raider']];
-    $m['buf23b'] = ['name' => '尘埃长路·后', 'desc' => '王都城墙已经看得见，但掠夺者不会让你白走。', 'exits' => ['buf23a' => '尘埃长路·前', 'capital_gate' => '王都城门'], 'monsters' => ['dust_marauder']];
+    $m['buf23a'] = ['name' => '尘埃长路·前', 'desc' => '白银城到王都的尘埃路，劫掠者在风里等活物。', 'exits' => ['silver_sq' => '白银广场', 'buf23b' => '尘埃长路·后'], 'monsters' => ['dust_raider', 'waste_stalker']];
+    $m['buf23b'] = ['name' => '尘埃长路·后', 'desc' => '王都城墙已经看得见，但掠夺者不会让你白走。', 'exits' => ['buf23a' => '尘埃长路·前', 'capital_gate' => '王都城门'], 'monsters' => ['dust_marauder', 'waste_hound']];
     $m['buf34a'] = ['name' => '风雪关道·前', 'desc' => '王都北门外的风雪关道，流浪者在雪里刨食，也刨人。', 'exits' => ['capital_gate' => '王都城门', 'buf34b' => '风雪关道·后'], 'monsters' => ['snow_drifter']];
     $m['buf34b'] = ['name' => '风雪关道·后', 'desc' => '再往前就是冰原渡口，雪更大，人更凶。', 'exits' => ['buf34a' => '风雪关道·前', 'ice_gate' => '冰原渡口'], 'monsters' => ['snow_reaver']];
     $m['buf35a'] = ['name' => '灰雾关道·前', 'desc' => '王都南门外的灰雾关道，雾里有人影晃，不是人。', 'exits' => ['capital_gate' => '王都城门', 'buf35b' => '灰雾关道·后'], 'monsters' => ['ash_drifter']];
@@ -10330,7 +10552,7 @@ function em_locations(): array
 {
     $m = [];
     $m['em_gate'] = ['name' => '熔心入口', 'desc' => '火山麓裂开的口子。探火人·老灰：45分钟，绳子是石棉的，人不是。', 'exits' => ['em_flow' => '熔流道'], 'monsters' => ['em_slag']];
-    $m['em_vein'] = ['name' => '熔脉', 'desc' => '岩浆像血一样在岩管里走。熔核行者顺着脉走，找heart的位置。', 'exits' => ['em_chamber' => '焚心室', 'em_core' => '熔核之心'], 'monsters' => ['em_magma', 'em_ashlord']];
+    $m['em_vein'] = ['name' => '熔脉', 'desc' => '岩浆像血一样在岩管里走。熔核行者顺着脉走，找heart的位置。', 'exits' => ['em_chamber' => '焚心室', 'em_core' => '熔核之心'], 'monsters' => ['em_magma', 'em_ashlord', 'em_fiend']];
     $m['em_core'] = ['name' => '熔核之心', 'desc' => '熔心化身悬在岩浆海上。它每跳一下，你的心就跟着跳一下。', 'exits' => ['em_vein' => '熔脉'], 'monsters' => ['em_heart']];
     return $m;
 }
@@ -10338,21 +10560,6 @@ function em_locations(): array
 function em_maps(): array
 {
     return ['em_gate', 'em_flow', 'em_chamber', 'em_vein', 'em_core'];
-}
-
-function tt_locations(): array
-{
-    $m = [];
-    $m['tt_gate'] = ['name' => '岩狱入口', 'desc' => '黑曜石原裂开的竖井。镇狱人·岩婆：700~900级，45分钟，绳子是精钢的。', 'exits' => ['tt_trail' => '岩狱小径'], 'monsters' => ['tt_rock']];
-    $m['tt_trail'] = ['name' => '岩狱小径', 'desc' => '峭兽在岩壁上爬，掉下来的碎石比拳头大。', 'exits' => ['tt_gate' => '岩狱入口', 'tt_vein' => '岩狱岩脉'], 'monsters' => ['tt_rock', 'tt_crag']];
-    $m['tt_vein'] = ['name' => '岩狱岩脉', 'desc' => '熔裔顺着岩浆管走，狱守 lans着?守着脉口。', 'exits' => ['tt_trail' => '岩狱小径', 'tt_core' => '泰坦之座'], 'monsters' => ['tt_magma', 'tt_warden']];
-    $m['tt_core'] = ['name' => '泰坦之座', 'desc' => '岩狱泰坦·土龙岳柱盘踞于此。它打个盹，整座山都跟着晃。', 'exits' => ['tt_vein' => '岩狱岩脉'], 'monsters' => ['tt_titan']];
-    return $m;
-}
-
-function tt_maps(): array
-{
-    return ['tt_gate', 'tt_trail', 'tt_vein', 'tt_core'];
 }
 
 function pz_locations(): array
@@ -10805,7 +11012,7 @@ function ch1_locations(): array
     $m['mine_gate'] = ['name' => '白石矿坑·封锁门', 'desc' => '三年前被封死的矿坑。门上钉着王国调查队的旧封条。', 'exits' => ['town_sq' => '白石镇广场', 'mine1' => '矿坑第一层'], 'monsters' => []];
     $m['mine1'] = ['name' => '矿坑第一层·白纹矿脉', 'desc' => '矿车自己在动。空气里飘着腐化孢子的甜味。', 'exits' => ['mine_gate' => '封锁门', 'mine2' => '矿坑第二层'], 'monsters' => ['runaway_miner', 'corrupt_rat', 'deep_bat']];
     $m['mine2'] = ['name' => '矿坑第二层·失落营地', 'desc' => '调查队的营火还在燃。墙上写着：不要回答。', 'exits' => ['mine1' => '第一层', 'mine3' => '矿坑第三层'], 'monsters' => ['runaway_miner', 'deep_bat']];
-    $m['mine3'] = ['name' => '矿坑第三层·裂隙前', 'desc' => '凿穿的墙后没有岩石。十二具人形轮廓嵌在黑色流动空间里。', 'exits' => ['mine2' => '第二层', 'echo_room' => '回响厅'], 'monsters' => ['abyss_spore']];
+    $m['mine3'] = ['name' => '矿坑第三层·裂隙前', 'desc' => '凿穿的墙后没有岩石。十二具人形轮廓嵌在黑色流动空间里。', 'exits' => ['mine2' => '第二层', 'echo_room' => '回响厅'], 'monsters' => ['abyss_spore', 'knight']];
     $m['echo_room'] = ['name' => '回响厅', 'desc' => '雷恩的声音从四面传来：“你也要进来吗？里面很温暖。”不要回答。', 'exits' => ['mine3' => '第三层'], 'monsters' => ['echo_rayne']];
     return $m;
 }

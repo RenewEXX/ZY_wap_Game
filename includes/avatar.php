@@ -11,7 +11,7 @@ declare(strict_types=1);
 //   - 每个职业(5) 有 1 个初始头像；
 //   - 每个一觉(1转，5 个) 有 1 个专属头像；
 //   - 每个转职分支(2觉，10 个) 各有 1 个专属头像；
-//   - 五大职业的"二次元头像"在商城付费解锁（跨职业可用）；
+//   - 五大职业的"泳装头像"在商城付费解锁（跨职业可用）；
 //   - 玩家默认头像 = 当前 2觉 > 1觉 > 职业 的头像；
 //   - 玩家可手动挑选任何"已解锁"的头像（本职业 + 已转职分支 + 已购二次元），存 users.avatar。
 //
@@ -61,11 +61,11 @@ function avatar_catalog(): array
         'rb2:plague' => ['name' => '痛苦盛宴·腐宴', 'glyph' => '❖', 'bg' => 'linear-gradient(135deg,#2a0f1a,#7a2a4a)', 'fg' => '#f0c0d8', 'ring' => '#d24a7a', 'job' => 'summoner'],
 
         // —— 二次元头像（商城付费解锁，跨职业也能用）——
-        'anime:warrior'  => ['name' => '二次元·战士', 'glyph' => '★', 'bg' => 'linear-gradient(135deg,#ff9ec4,#ff5e7e,#7a2bd0)', 'fg' => '#ffffff', 'ring' => '#ff9ec4', 'job' => 'warrior', 'shop' => true],
-        'anime:mage'     => ['name' => '二次元·法师', 'glyph' => '☆', 'bg' => 'linear-gradient(135deg,#a0f6ff,#5fd0ff,#6a6aff)', 'fg' => '#ffffff', 'ring' => '#a0f6ff', 'job' => 'mage', 'shop' => true],
-        'anime:hunter'   => ['name' => '二次元·猎手', 'glyph' => '✿', 'bg' => 'linear-gradient(135deg,#d6ffb0,#7ee06a,#22b06a)', 'fg' => '#ffffff', 'ring' => '#b6ff7a', 'job' => 'hunter', 'shop' => true],
-        'anime:priest'   => ['name' => '二次元·牧师', 'glyph' => '♥', 'bg' => 'linear-gradient(135deg,#ffe6a0,#ffd05f,#ff7ab0)', 'fg' => '#ffffff', 'ring' => '#ffe0a0', 'job' => 'priest', 'shop' => true],
-        'anime:summoner' => ['name' => '二次元·召唤', 'glyph' => '✧', 'bg' => 'linear-gradient(135deg,#e0c0ff,#b07aff,#6a3aff)', 'fg' => '#ffffff', 'ring' => '#d0a0ff', 'job' => 'summoner', 'shop' => true],
+        'anime:warrior'  => ['name' => '泳装·战士', 'glyph' => '★', 'bg' => 'linear-gradient(135deg,#ff9ec4,#ff5e7e,#7a2bd0)', 'fg' => '#ffffff', 'ring' => '#ff9ec4', 'job' => 'warrior', 'shop' => true],
+        'anime:mage'     => ['name' => '泳装·法师', 'glyph' => '☆', 'bg' => 'linear-gradient(135deg,#a0f6ff,#5fd0ff,#6a6aff)', 'fg' => '#ffffff', 'ring' => '#a0f6ff', 'job' => 'mage', 'shop' => true],
+        'anime:hunter'   => ['name' => '泳装·猎手', 'glyph' => '✿', 'bg' => 'linear-gradient(135deg,#d6ffb0,#7ee06a,#22b06a)', 'fg' => '#ffffff', 'ring' => '#b6ff7a', 'job' => 'hunter', 'shop' => true],
+        'anime:priest'   => ['name' => '泳装·牧师', 'glyph' => '♥', 'bg' => 'linear-gradient(135deg,#ffe6a0,#ffd05f,#ff7ab0)', 'fg' => '#ffffff', 'ring' => '#ffe0a0', 'job' => 'priest', 'shop' => true],
+        'anime:summoner' => ['name' => '泳装·召唤', 'glyph' => '✧', 'bg' => 'linear-gradient(135deg,#e0c0ff,#b07aff,#6a3aff)', 'fg' => '#ffffff', 'ring' => '#d0a0ff', 'job' => 'summoner', 'shop' => true],
     ];
 }
 
@@ -88,7 +88,7 @@ function avatar_anime_goods(): array
     $out = [];
     foreach (avatar_classes() as $j) {
         $out['avatar_anime_' . $j] = [
-            'name' => '二次元头像·' . ($names[$j] ?? $j),
+            'name' => '泳装头像·' . ($names[$j] ?? $j),
             'job' => $j,
             'price' => 200,
         ];
@@ -241,11 +241,58 @@ function avatar_chibi_svg(string $job, int $size = 40): string
     return $s;
 }
 
+// 头像/角色立绘：把图片放到 img/avatars/ 即可替换默认徽章（与 img/monsters/ 的怪物立绘分开放）。
+//   命名：<头像id 里的 ':' 换成 '_'>.<ext>，例如 job:warrior → job_warrior.jpg、rb2:aegis → rb2_aegis.jpg。
+//   兜底：找不到再按头像中文名找（如 战士·守夜.jpg）。有图返回相对 URL，没图返回空串（照常显示徽章）。
+function avatar_image_url(string $id): string
+{
+    static $cache = [];
+    if (array_key_exists($id, $cache)) {
+        return $cache[$id];
+    }
+    $cands = [];
+    $key = preg_replace('/[^A-Za-z0-9_]/', '_', (string) $id); // ':' 等一律换成 '_'
+    if ($key !== '') {
+        $cands[] = $key;
+    }
+    $cat = avatar_catalog();
+    $name = trim((string) ($cat[$id]['name'] ?? ''));
+    if ($name !== '') {
+        $nm = preg_replace('/[\/\\\\:*?"<>|\x00-\x1F]/u', '', $name);
+        $nm = trim($nm);
+        if ($nm !== '') {
+            $cands[] = $nm;
+        }
+    }
+    $found = '';
+    foreach ($cands as $cand) {
+        if (is_file(__DIR__ . '/../img/avatars/' . $cand . '.jpg') || is_file(__DIR__ . '/../img/avatars/' . $cand . '.jpeg')
+            || is_file(__DIR__ . '/../img/avatars/' . $cand . '.png') || is_file(__DIR__ . '/../img/avatars/' . $cand . '.webp')
+            || is_file(__DIR__ . '/../img/avatars/' . $cand . '.gif')) {
+            foreach (['jpg', 'jpeg', 'png', 'webp', 'gif'] as $ext) {
+                if (is_file(__DIR__ . '/../img/avatars/' . $cand . '.' . $ext)) {
+                    $found = 'img/avatars/' . rawurlencode($cand) . '.' . $ext;
+                    break 2;
+                }
+            }
+        }
+    }
+    return $cache[$id] = $found;
+}
+
 // 直接按头像 id 渲染徽章（不校验解锁，供选择页展示用）
 function avatar_render(string $id, int $size = 40): string
 {
     $cat = avatar_catalog();
     $a = $cat[$id] ?? $cat['job:warrior'];
+    // 若提供了角色立绘图片，则优先用图片（覆盖徽章/二次元 SVG）
+    $img = avatar_image_url($id);
+    if ($img !== '') {
+        $r = $size >= 32 ? 10 : 8;
+        return '<span title="' . h((string) $a['name']) . '" style="display:inline-block;vertical-align:middle;line-height:0">'
+            . '<img src="' . h($img) . '" alt="' . h((string) $a['name']) . '" style="width:' . $size . 'px;height:' . $size . 'px;object-fit:cover;border-radius:' . $r . 'px;border:1px solid ' . $a['ring'] . '">'
+            . '</span>';
+    }
     // 二次元头像：渲染 Q 版动漫少女
     if (!empty($a['shop'])) {
         return '<span title="' . h((string) $a['name']) . '" style="display:inline-block;vertical-align:middle;line-height:0">'
@@ -267,13 +314,13 @@ function avatar_html(array $u, int $size = 40): string
 }
 
 // 头像 + 名字（聊天/榜单/查看他人等紧凑场景用）
-function avatar_name_html(array $u, int $size = 22): string
+function avatar_name_html(array $u, int $size = 28): string
 {
     return avatar_html($u, $size) . ' ' . sin_name_html((string) ($u['username'] ?? ''), sin_of((int) ($u['id'] ?? 0)));
 }
 
 // 按 uid 取头像徽章（带内存缓存，聊天/榜单批量渲染用，避免逐条查库）
-function avatar_by_uid_html(int $uid, int $size = 22): string
+function avatar_by_uid_html(int $uid, int $size = 28): string
 {
     static $cache = [];
     if (!array_key_exists($uid, $cache)) {
@@ -288,7 +335,7 @@ function avatar_by_uid_html(int $uid, int $size = 22): string
 }
 
 // 按 uid 渲染"头像+名字"（带缓存）
-function avatar_name_by_uid_html(int $uid, string $name, int $size = 22): string
+function avatar_name_by_uid_html(int $uid, string $name, int $size = 28): string
 {
     return avatar_by_uid_html($uid, $size) . ' ' . sin_name_html($name, sin_of($uid));
 }

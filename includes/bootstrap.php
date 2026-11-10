@@ -32,6 +32,7 @@ require_once __DIR__ . '/summoner_legend.php';
 require_once __DIR__ . '/hunter_dot.php';
 require_once __DIR__ . '/warrior_hunter.php';
 require_once __DIR__ . '/monster_skills.php';
+require_once __DIR__ . '/dev_overrides.php';
 require_once __DIR__ . '/arena.php';
 require_once __DIR__ . '/rebirth.php';
 require_once __DIR__ . '/avatar.php';

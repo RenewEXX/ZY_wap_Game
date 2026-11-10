@@ -192,6 +192,7 @@ if ($a === 'view') {
     $sp = pet_species()[$p['species']];
     $stats = pet_stats($p);
     echo '【宠物详情】<br>';
+    echo '<div style="margin:3px 0">' . pet_portrait_html($p['species'], 64) . '</div>';
     echo '<b>' . h($sp['name']) . '</b> ' . (int) $p['level'] . '级<br>';
     echo '品质：' . h(pet_quality_name($sp['quality'])) . '　状态：' . ($p['status'] === 'weak' ? '<span style="color:#f00">虚弱</span>' : '正常') . ((int) $p['active'] === 1 ? '·出战中' : '') . '<br>';
     echo '疲劳：' . (int) ($p['fatigue'] ?? 0) . '/100' . ((int) ($p['fatigue'] ?? 0) >= 100 ? '<span style="color:#f00">（累趴了，喂粮食）</span>' : '') . '<br>';
@@ -242,7 +243,7 @@ foreach (pet_eggs() as $eid => $e) {
         continue;
     }
     $hasEgg = true;
-    echo '·' . h($e['name']) . 'x' . $mats[$eid] . ' <a href="pet.php?a=hatch&egg=' . h($eid) . '">孵化(10分钟)</a> <a href="bag.php?a=drop&id=' . h($eid) . '&tab=other">扔掉</a><br>';
+    echo '·' . h($e['name']) . 'x' . $mats[$eid] . ' <a href="pet.php?a=hatch&egg=' . h($eid) . '">孵化(10分钟)</a> <a href="bag.php?a=drop&id=' . h($eid) . '&tab=mat&back=pet">扔掉</a><br>';
 }
 foreach ($mats as $mid => $num) {
     if (!str_starts_with($mid, 'hatch_')) {

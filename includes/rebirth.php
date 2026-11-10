@@ -112,6 +112,18 @@ function rs_soul_next(int $uid): int
     return rs_soul_cost(rs_count($uid) + 1);
 }
 
+// 龙王精华：来自六圣柱区域首领掉落（此前是没人用的死材料），纳入转生消耗，让龙族区三档产出各司其职
+// 龙魂(小怪) + 龙王精华(区域首领) + 龙玉(斩龙) = 转生三件套
+function rs_core_cost(int $turn): int
+{
+    return max(0, $turn);
+}
+
+function rs_core_next(int $uid): int
+{
+    return rs_core_cost(rs_count($uid) + 1);
+}
+
 // 转生资格：999级 + 已斩龙（当前周期）+ 神魂满级 + 足额龙玉与龙魂
 function rs_requirements(int $uid): array
 {
@@ -129,6 +141,8 @@ function rs_requirements(int $uid): array
     }
     $jadeNeed = rs_jade_cost($rsN + 1);
     $soulNeed = rs_soul_cost($rsN + 1);
+    $coreNeed = rs_core_cost($rsN + 1);
+    $coreHave = (int) (mats_of($uid)['dragon_core'] ?? 0);
     return [
         'lv' => $lvOk,
         'wb' => $wbKill,
@@ -139,6 +153,9 @@ function rs_requirements(int $uid): array
         'dsoul' => $atMax ? true : rs_mat_total($uid, 'soul_') >= $soulNeed,
         'soul_need' => $soulNeed,
         'soul_have' => rs_mat_total($uid, 'soul_'),
+        'core' => $atMax ? true : $coreHave >= $coreNeed,
+        'core_need' => $coreNeed,
+        'core_have' => $coreHave,
         'max' => $atMax,
     ];
 }
@@ -181,13 +198,16 @@ function rs_require_text(int $uid): string
     if (!$r['dsoul']) {
         $t[] = '龙魂×' . $r['soul_need'] . '（任意属性，当前' . $r['soul_have'] . '个）';
     }
+    if (!$r['core']) {
+        $t[] = '龙王精华×' . $r['core_need'] . '（当前' . $r['core_have'] . '个）';
+    }
     return $t === [] ? '条件齐备，随时可以转生。' : '还差：' . implode('、', $t);
 }
 
 function rs_can_rebirth(int $uid): bool
 {
     $r = rs_requirements($uid);
-    return $r['lv'] && $r['wb'] && $r['soul'] && $r['jade'] && $r['dsoul'] && !$r['max'];
+    return $r['lv'] && $r['wb'] && $r['soul'] && $r['jade'] && $r['dsoul'] && $r['core'] && !$r['max'];
 }
 
 // 执行转生
@@ -210,6 +230,14 @@ function rs_perform(int $uid): string
     if (($err = rs_mat_pay($uid, 'soul_', $soulCost)) !== '') {
         return '源罪未满：' . $err;
     }
+    $coreCost = rs_core_cost($n);
+    if ($coreCost > 0) {
+        $coreHave = (int) (mats_of($uid)['dragon_core'] ?? 0);
+        if ($coreHave < $coreCost) {
+            return '源罪未满：龙王精华不足（还差' . ($coreCost - $coreHave) . '个）';
+        }
+        add_mat($uid, 'dragon_core', -$coreCost);
+    }
     $job = job_id_of($u);
     $base = jobs()[$job] ?? jobs()['warrior'];
     // 等级清零、属性与属性点回初始值
@@ -223,7 +251,7 @@ function rs_perform(int $uid): string
     user_save($u);
     db()->prepare('INSERT INTO chat_msgs (uid, username, channel, target, text, created_at) VALUES (0, ?, "world", 0, ?, ?)')
         ->execute(['转生', '【转生】' . $u['username'] . ' 的神魂已觉醒，化为' . $n . '转！', time()]);
-    return '【转生】你的神魂已觉醒。' . $n . '转 —— 等级归零，一切基础属性+' . ($n * 10) . '%，每级成长翻倍，经验+50%、掉落+20%、金币+30%，源罪点数+1，消耗龙玉×' . $jadeCost . '、龙魂×' . $soulCost . '。';
+    return '【转生】你的神魂已觉醒。' . $n . '转 —— 等级归零，一切基础属性+' . ($n * 10) . '%，每级成长翻倍，经验+50%、掉落+20%、金币+30%，源罪点数+1，消耗龙玉×' . $jadeCost . '、龙魂×' . $soulCost . '、龙王精华×' . $coreCost . '。';
 }
 
 // ============ 源罪技能树（消耗源罪点数）============

@@ -82,7 +82,7 @@ $gf = 0.8 + $sp['growth'] * 0.4;
 $rawAtk = (int) (($sp['atk'] * 0.4 + ($lv - 1) * $sp['atk'] * 0.06) * $gf * 1.5);
 $st = pet_stats(['species' => 'fire_drake', 'level' => $lv]);
 ckP('火龙攻击含龙威+20%', $st['atk'], (int) round($rawAtk * 1.2));
-ckP('火龙龙威被动文案', $sp['passive'], '龙威：攻击+20%，承伤-10%');
+ckP('火龙龙威被动文案', $sp['passive'], '烬焰龙威：攻击+20%、承伤-10%；命中40%点燃烬火（持续灼烧）');
 
 // —— 8. 迁移：遗留 fire_dragon 宠物被改成 fire_drake ——
 $uid = user_create('tpetfix', 'x', 'warrior', 'z1', true, 'tmp');

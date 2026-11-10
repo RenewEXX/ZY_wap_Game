@@ -1,0 +1,30 @@
+角色/职业头像立绘命名对照——把图片命名为 <文件名>.jpg 放进本文件夹，即可替换对应头像（聊天/榜单/竞技场/状态页等所有出现头像处）。
+规则：头像id 里的 ':' 换成 '_' 即为文件名；也支持直接按中文名命名。支持 jpg/jpeg/png/webp/gif。
+怪物立绘是另一个目录：img/monsters/。
+----------------------------------------
+【文件名】	【头像id】	【名称】
+job_warrior.jpg	job:warrior	战士·守夜
+job_mage.jpg	job:mage	法师·抄书
+job_hunter.jpg	job:hunter	猎手·追风
+job_priest.jpg	job:priest	牧师·圣恩
+job_summoner.jpg	job:summoner	召唤·深渊
+rb1_warrior.jpg	rb1:warrior	一觉·狂战士
+rb1_mage.jpg	rb1:mage	一觉·元素使
+rb1_hunter.jpg	rb1:hunter	一觉·追猎者
+rb1_priest.jpg	rb1:priest	一觉·圣光牧师
+rb1_summoner.jpg	rb1:summoner	一觉·缚魂使
+rb2_berserker.jpg	rb2:berserker	狂战士·血怒
+rb2_aegis.jpg	rb2:aegis	铁卫·磐壁
+rb2_wintermage.jpg	rb2:wintermage	凛冬法师·冰雷
+rb2_wildfire.jpg	rb2:wildfire	燎原使者·烈焰
+rb2_ranger.jpg	rb2:ranger	游侠·毒雨
+rb2_assassin.jpg	rb2:assassin	影刺客·潜行
+rb2_shadowbishop.jpg	rb2:shadowbishop	暗影主教·血契
+rb2_holybishop.jpg	rb2:holybishop	神圣主教·圣光
+rb2_necro.jpg	rb2:necro	死灵之拥·亡军
+rb2_plague.jpg	rb2:plague	痛苦盛宴·腐宴
+anime_warrior.jpg	anime:warrior	二次元·战士
+anime_mage.jpg	anime:mage	二次元·法师
+anime_hunter.jpg	anime:hunter	二次元·猎手
+anime_priest.jpg	anime:priest	二次元·牧师
+anime_summoner.jpg	anime:summoner	二次元·召唤

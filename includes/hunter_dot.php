@@ -22,7 +22,7 @@ function hunter_dot_cap(string $key, int $tier): int
 
 // 挂 DOT 层。$srcDmg 是本次技能打出的伤害，作为固定值 DOT 的基准。
 // $tier 传技能熟练档位，决定层数上限（10档上限+2）；不传则按基础上限。
-function hunter_dot_add(array &$b, string $key, int $add, int $srcDmg, bool $lv20 = false, int $tier = 0): string
+function hunter_dot_add(array &$b, string $key, int $add, int $srcDmg, float $lvRatio = 0.0, int $tier = 0): string
 {
     if ($key === '' || $add <= 0) {
         return '';
@@ -36,7 +36,7 @@ function hunter_dot_add(array &$b, string $key, int $add, int $srcDmg, bool $lv2
     $b['dot_' . $key] = $newStacks;
     $b['dot_' . $key . '_turns'] = hunter_dot_turns($key);
     // 固定值 DOT 用最强的那次伤害做基准，层数越高单层越疼
-    $per = hunter_dot_per_stack($key, $srcDmg, $lv20);
+    $per = hunter_dot_per_stack($key, $srcDmg, $lvRatio);
     $prev = (int) ($b['dot_' . $key . '_per'] ?? 0);
     $b['dot_' . $key . '_per'] = max($prev, $per);
     $tag = hunter_dot_names()[$key] ?? 'DOT';
@@ -45,7 +45,7 @@ function hunter_dot_add(array &$b, string $key, int $add, int $srcDmg, bool $lv2
 }
 
 // 每层每轮伤害
-function hunter_dot_per_stack(string $key, int $srcDmg, bool $lv20 = false): int
+function hunter_dot_per_stack(string $key, int $srcDmg, float $lvRatio = 0.0): int
 {
     $base = match ($key) {
         'bleed' => max(2, (int) ($srcDmg * 0.18)),
@@ -53,8 +53,9 @@ function hunter_dot_per_stack(string $key, int $srcDmg, bool $lv20 = false): int
         'burn' => max(2, (int) ($srcDmg * 0.12)),
         default => 0,
     };
-    if ($lv20) {
-        $base = (int) ($base * 1.4);
+    // 每层DOT伤害随技能等级逐级提升：20级×1.4，中间等级线性过渡
+    if ($lvRatio > 0) {
+        $base = (int) ($base * (1 + 0.4 * min(1.0, $lvRatio)));
     }
     return max(0, $base);
 }
@@ -66,10 +67,10 @@ function hunter_dot_turns(string $key): int
 }
 
 // 剧毒按目标最大生命百分比算，lv20 每层多 2%
-function hunter_dot_poison_pct(int $bMaxhp, int $stacks, bool $lv20): int
+function hunter_dot_poison_pct(int $bMaxhp, int $stacks, float $lvRatio = 0.0): int
 {
-    // 剧毒：按目标最大生命百分比，但已由 3%/层(20级5%) 平衡下调为 1%/层(20级2%)，避免对高血BOSS过强
-    $per = 1 + ($lv20 ? 1 : 0);
+    // 剧毒：按目标最大生命百分比，1%/层，20级时逐级提升到 2%/层，避免对高血BOSS过强
+    $per = 1 + 1.0 * min(1.0, max(0.0, $lvRatio));
     return max(1, (int) ($bMaxhp * $per * $stacks / 100));
 }
 
@@ -90,7 +91,7 @@ function hunter_dot_tick(array &$b, float $mult = 1.0, int $hardCap = 0): array
     if ((int) ($b['hp'] ?? 0) <= 0) {
         return ['dmg' => 0, 'log' => ''];
     }
-    $lv20 = !empty($b['dot_lv20']);
+    $lvRatio = (float) ($b['dot_lv_ratio'] ?? (!empty($b['dot_lv20']) ? 1.0 : 0.0));
     $meld = monster_element((string) ($b['id'] ?? ''));
     foreach (['bleed', 'burn', 'poison'] as $key) {
         $stacks = (int) ($b['dot_' . $key] ?? 0);
@@ -99,7 +100,7 @@ function hunter_dot_tick(array &$b, float $mult = 1.0, int $hardCap = 0): array
         }
         $name = (string) ($b['name'] ?? '敌人');
         if ($key === 'poison') {
-            $hit = hunter_dot_poison_pct((int) ($b['maxhp'] ?? 1), $stacks, $lv20);
+            $hit = hunter_dot_poison_pct((int) ($b['maxhp'] ?? 1), $stacks, $lvRatio);
             $hit = (int) ($hit * (1 - monster_resist((string) ($b['id'] ?? ''), 'dark') / 100));
             $tag = '剧毒';
         } else {
@@ -134,7 +135,7 @@ function hunter_dot_tick(array &$b, float $mult = 1.0, int $hardCap = 0): array
 }
 
 // 弑神连珠：引爆目标身上所有 DOT 层数，每层转成一次额外伤害
-function hunter_dot_detonate(array &$b, int $mult, bool $lv20): array
+function hunter_dot_detonate(array &$b, int $mult, float $lvRatio = 0.0): array
 {
     $bonus = 0;
     $log = '';
@@ -144,7 +145,7 @@ function hunter_dot_detonate(array &$b, int $mult, bool $lv20): array
             continue;
         }
         $per = $key === 'poison'
-            ? hunter_dot_poison_pct((int) ($b['maxhp'] ?? 1), 1, $lv20)
+            ? hunter_dot_poison_pct((int) ($b['maxhp'] ?? 1), 1, $lvRatio)
             : max(1, (int) ($b['dot_' . $key . '_per'] ?? 0));
         $bonus += $per * $stacks;
         $log .= (hunter_dot_names()[$key] ?? '') . '×' . $stacks . '引爆，';
@@ -158,9 +159,10 @@ function hunter_dot_detonate(array &$b, int $mult, bool $lv20): array
 }
 
 // 战斗对象初始化时带上 lv20 标记（每场战斗从施法者技能等级写入）
-function hunter_dot_bind_lv20(array &$b, bool $lv20): void
+function hunter_dot_bind_lv20(array &$b, float $lvRatio): void
 {
-    $b['dot_lv20'] = $lv20;
+    $lvRatio = max(0.0, min(1.0, $lvRatio));
+    $b['dot_lv_ratio'] = $lvRatio;
 }
 
 // 清空（战斗结束/换怪时调用）
@@ -169,7 +171,7 @@ function hunter_dot_clear(array &$b): void
     foreach (['bleed', 'burn', 'poison'] as $key) {
         unset($b['dot_' . $key], $b['dot_' . $key . '_turns'], $b['dot_' . $key . '_per']);
     }
-    unset($b['dot_lv20']);
+    unset($b['dot_lv20'], $b['dot_lv_ratio']);
 }
 
 // 目标身上当前 DOT 总层数（UI/日志用）

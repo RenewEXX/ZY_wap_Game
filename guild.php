@@ -457,7 +457,7 @@ if ($g) {
         echo '<div class="hr">--------</div>【公会仓库】' . guild_warehouse_count((int) $g['id']) . '/' . guild_warehouse_cap((int) $g['level']) . '格（成员可存可交易物，副会长以上可取）<br>';
         echo '仓库金：' . fmt_money((int) ($g['gold'] ?? 0)) . '<br>';
         echo '<form method="post" action="guild.php?a=wdepgold">';
-        echo '存金<input name="gold" size="8" value="10000"><input type="submit" value="存入（满1金+1贡献）">';
+        echo '存金<input name="gold" size="8" value="1"><input type="submit" value="存入（满1金+1贡献）">';
         echo '</form>';
         if (guild_can_take_warehouse($g)) {
             echo '<form method="post" action="guild.php?a=wwithgold">';

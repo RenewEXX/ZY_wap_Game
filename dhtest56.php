@@ -51,10 +51,18 @@ ck56('战士不能用法师二次元头像', avatar_of($u)!=='anime:mage', avata
 
 // 二次元头像渲染为 Q版 SVG 少女；职业/转职头像仍是徽章字形
 $animeHtml = avatar_render('anime:warrior', 40);
-ck56('二次元渲染为SVG', str_contains($animeHtml,'<svg') && str_contains($animeHtml,'linearGradient'));
-ck56('SVG含大眼高光', str_contains($animeHtml,'#ffffff'));
+if (avatar_image_url('anime:warrior') !== '') {
+    ck56('二次元头像(已装图片)用img', str_contains($animeHtml,'<img') && !str_contains($animeHtml,'linearGradient'));
+} else {
+    ck56('二次元渲染为SVG', str_contains($animeHtml,'<svg') && str_contains($animeHtml,'linearGradient'));
+    ck56('SVG含大眼高光', str_contains($animeHtml,'#ffffff'));
+}
 $badgeHtml = avatar_render('job:warrior', 40);
-ck56('职业头像仍为徽章(非SVG)', !str_contains($badgeHtml,'<svg') && str_contains($badgeHtml,'display:inline-flex'));
+if (avatar_image_url('job:warrior') !== '') {
+    ck56('职业头像(已装图片)用img', str_contains($badgeHtml,'<img'));
+} else {
+    ck56('职业头像仍为徽章(非SVG)', !str_contains($badgeHtml,'<svg') && str_contains($badgeHtml,'display:inline-flex'));
+}
 
 // 恢复默认 → 回到当前二觉
 avatar_set($uid,''); $u=user_by_id($uid);

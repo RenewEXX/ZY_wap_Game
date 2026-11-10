@@ -49,7 +49,7 @@ if ($tab === 'power') {
     usort($rows, fn($a, $b) => $b['v'] <=> $a['v']);
     $rows = array_slice($rows, 0, 20);
     foreach ($rows as $i => $r) {
-        $av = isset($byName[$r['name']]) ? avatar_html($byName[$r['name']], 22) : '';
+        $av = isset($byName[$r['name']]) ? '<span class="avatar-zoom">' . avatar_html($byName[$r['name']], 32) . '</span>' : '';
         echo ($i + 1) . '. ' . $av . ' ' . h($r['name']) . '【' . h($r['job']) . '】Lv' . $r['lv'] . ' 战力' . $r['v'] . '<br>';
     }
 } elseif ($tab === 'active') {

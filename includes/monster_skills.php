@@ -21,7 +21,7 @@ declare(strict_types=1);
 //   pslow   可选：[轮数, 降低出手伤害%]，减速玩家（吃减速抗性）
 //   weak    可选：N 轮，怪自曝破绽（自身出手伤害-10%，如万眼开阖后致盲）
 
-function monster_skills(): array
+function monster_skills_base(): array
 {
     return [
         // —— 第一章 ——

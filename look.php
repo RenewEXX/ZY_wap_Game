@@ -9,7 +9,9 @@ if (!$t) {
     header('Location: home.php');
     exit;
 }
-if ((string) $t['loc'] !== (string) $u['loc']) {
+$from = (string) ($_GET['from'] ?? '');
+// 从聊天点进来可跨地点查看同大区玩家，其余入口仍要求同地点（“附近”）
+if ($from !== 'chat' && (string) $t['loc'] !== (string) $u['loc']) {
     flash_set('他不在附近了。');
     header('Location: home.php');
     exit;
@@ -25,7 +27,7 @@ if ((int) $t['id'] === (int) $u['id']) {
 }
 
 wap_start('查看玩家');
-echo avatar_html($t, 44) . '<br>';
+echo avatar_html($t, 56) . '<br>';
 echo '【' . sin_name_html((string) $t['username'], sin_of((int) $t['id'])) . '】<br>';
 echo '等级：' . (int) $t['lv'] . '<br>';
 echo '职业：' . h(job_of($t)['name']) . '（' . h(job_of($t)['skill']) . '）';

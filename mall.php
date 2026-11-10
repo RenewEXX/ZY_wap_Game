@@ -20,14 +20,14 @@ if ($a === 'buy') {
         header('Location: mall.php' . ($m !== '' ? '?m=' . urlencode($m) : ''));
         exit;
     }
-    // 二次元头像：一次性永久解锁（数量恒为1，本职业专属）
+    // 泳装头像：一次性永久解锁（数量恒为1，本职业专属）
     if (function_exists('avatar_anime_goods') && isset(avatar_anime_goods()[$m])) {
         $ag = avatar_anime_goods()[$m];
         $aj = (string) $ag['job'];
         if ($aj !== job_id_of($u)) {
-            flash_set('二次元头像是本职业专属，这个【' . $ag['name'] . '】不是你的职业，买不了也用不了。');
+            flash_set('泳装头像是本职业专属，这个【' . $ag['name'] . '】不是你的职业，买不了也用不了。');
         } elseif (avatar_anime_owned((int) $u['id'], $aj)) {
-            flash_set('你已经有这个二次元头像了，去头像页切换即可。');
+            flash_set('你已经有这个泳装头像了，去头像页切换即可。');
         } elseif ((int) ($u['diamonds'] ?? 0) < (int) $ag['price']) {
             flash_set('魔钻不够，这个头像要' . fmt_diamond((int) $ag['price']) . '。');
         } else {
@@ -37,7 +37,7 @@ if ($a === 'buy') {
             avatar_anime_grant((int) $u['id'], $aj);
             flash_set('已解锁【' . $ag['name'] . '】，去头像页切换！');
         }
-        header('Location: mall.php?tab=func');
+        header('Location: mall.php?tab=avatar');
         exit;
     }
     if (!isset($goods[$m])) {
@@ -134,7 +134,7 @@ if ($m !== '' && isset($goods[$m])) {
         } else {
             echo '<a href="mall.php?a=buy&m=' . h($m) . '">购买解锁</a><br>';
         }
-        echo '<a href="mall.php?tab=func">回商城</a>';
+        echo '<a href="mall.php?tab=avatar">回商城</a>';
         nav_line();
         wap_end(false);
         exit;
@@ -163,10 +163,10 @@ if ($m !== '' && isset($goods[$m])) {
     echo '<a href="mall.php">回商城</a>';
 } else {
     $tab = (string) ($_GET['tab'] ?? 'hot');
-    if (!in_array($tab, ['hot', 'stone', 'tank', 'dummy', 'pet', 'func'], true)) {
+    if (!in_array($tab, ['hot', 'stone', 'tank', 'dummy', 'pet', 'func', 'avatar'], true)) {
         $tab = 'hot';
     }
-    echo '<a href="mall.php?tab=hot">热卖</a> <a href="mall.php?tab=stone">强化附魔</a> <a href="mall.php?tab=tank">药罐</a> <a href="mall.php?tab=dummy">人偶</a> <a href="mall.php?tab=pet">宠物</a> <a href="mall.php?tab=func">功能</a><br>';
+    echo '<a href="mall.php?tab=hot">热卖</a> <a href="mall.php?tab=stone">强化附魔</a> <a href="mall.php?tab=tank">药罐</a> <a href="mall.php?tab=dummy">人偶</a> <a href="mall.php?tab=pet">宠物</a> <a href="mall.php?tab=avatar">头像</a> <a href="mall.php?tab=func">功能</a><br>';
     echo '<div class="hr">--------</div>';
     if ($tab === 'hot') {
         echo '【热卖推荐】<br>';
@@ -264,7 +264,9 @@ if ($m !== '' && isset($goods[$m])) {
         echo '·<b><span style="color:#c6f">【属性洗点药】</span></b> ';
         echo '<b>' . h(fmt_diamond(300)) . '</b>/瓶(重新分配属性点，第三章结局也送) ';
         echo '<a href="mall.php?a=buy&m=reset_potion&n=1">买1</a><br>'; echo '·<a href="mall.php?m=rename_card"><b><span style="color:#6cf">【改名卡】</span></b></a> <b>' . h(fmt_diamond(100)) . '</b>/张（本大区唯一，去状态页改名） <a href="mall.php?a=buy&m=rename_card&n=1">买1</a><br>';
-        echo '二次元头像（各' . h(fmt_diamond(200)) . '，Q版动漫少女 · 永久解锁 · <b>本职业专属</b>）：<br>';
+    }
+    if ($tab === 'avatar') {
+        echo '泳装头像（永久解锁 · 切换于头像页 · <b>本职业专属</b>）：<br>';
         if (function_exists('avatar_anime_goods')) {
             $myJob = job_id_of($u);
             foreach (avatar_anime_goods() as $gk => $gv) {

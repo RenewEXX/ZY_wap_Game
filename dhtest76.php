@@ -15,13 +15,15 @@ drg_kv_set('wb_done_doyle', 1);
 db()->prepare('INSERT INTO equips (uid, slot, name, quality, affixes, pos, req_lv, expires_at) VALUES (?, "soul", ?, 4, "[]", "", 1, 0)')->execute([$uid, '测试神魂']);
 $soulEid = (int)db()->lastInsertId();
 mat_set($uid, 'soul_lv_' . $soulEid, 10);
-// jade + soul mats (first rebirth: 2 jade, 3 soul)
+// jade + soul + core mats (first rebirth: 2 jade, 3 soul, 1 core)
 add_mat($uid, 'jade_fire', 2);
 add_mat($uid, 'soul_fire', 3);
+add_mat($uid, 'dragon_core', 1);
 // rs_can_rebirth should be true
 ck('转生条件满足', rs_can_rebirth($uid), rs_require_text($uid));
 $beforeJade = (int)(mats_of($uid)['jade_fire'] ?? 0);
 $beforeSoul = (int)(mats_of($uid)['soul_fire'] ?? 0);
+$beforeCore = (int)(mats_of($uid)['dragon_core'] ?? 0);
 $beforeRs = rs_count($uid);
 $beforePoint = (int)(mats_of($uid)['rs_point'] ?? 0);
 // perform
@@ -34,12 +36,14 @@ ck('经验清零', (int)$u2['exp'] === 0);
 ck('源罪点数+1', (int)(mats_of($uid)['rs_point'] ?? 0) === $beforePoint + 1);
 ck('龙玉扣除2', (int)(mats_of($uid)['jade_fire'] ?? 0) === $beforeJade - 2, 'have=' . (int)(mats_of($uid)['jade_fire'] ?? 0));
 ck('龙魂扣除3', (int)(mats_of($uid)['soul_fire'] ?? 0) === $beforeSoul - 3, 'have=' . (int)(mats_of($uid)['soul_fire'] ?? 0));
+ck('龙王精华扣除1', (int)(mats_of($uid)['dragon_core'] ?? 0) === $beforeCore - 1, 'have=' . (int)(mats_of($uid)['dragon_core'] ?? 0));
 ck('属性重置atk', (int)$u2['atk'] === (int)(jobs()['warrior']['atk'] ?? 0), 'atk=' . (int)$u2['atk']);
 ck('转生加成倍率 1.1', abs(rs_stat_mult($uid) - 1.1) < 0.001);
 // 第二转：再满足条件
 $u2['lv']=999; user_save($u2);
 add_mat($uid, 'jade_fire', 4);
 add_mat($uid, 'soul_fire', 6);
+add_mat($uid, 'dragon_core', 2);
 ck('第二转条件满足', rs_can_rebirth($uid), rs_require_text($uid));
 $out2 = rs_perform($uid);
 ck('第二转成功', str_contains($out2, '2转'), $out2);
@@ -49,6 +53,7 @@ ck('源罪点数=2', (int)(mats_of($uid)['rs_point'] ?? 0) === 2);
 $u3 = user_by_id($uid); $u3['lv']=999; user_save($u3);
 add_mat($uid, 'jade_fire', 6);
 add_mat($uid, 'soul_fire', 9);
+add_mat($uid, 'dragon_core', 3);
 ck('第三转条件满足', rs_can_rebirth($uid));
 $out3 = rs_perform($uid);
 ck('第三转成功', str_contains($out3, '3转'), $out3);

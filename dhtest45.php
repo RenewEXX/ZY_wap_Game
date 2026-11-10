@@ -48,8 +48,12 @@ ck45('清空恢复默认(跟随转职)', avatar_of(user_by_id($uid))==='rb2:aegi
 
 // 6) 渲染 html 非空且含 glyph
 $html = avatar_html(user_by_id($uid),44);
-ck45('头像HTML非空', $html!=='' && str_contains($html,'display:inline-flex'));
-ck45('头像HTML含字形', str_contains($html, avatar_catalog()['rb2:aegis']['glyph']));
+if (avatar_image_url('rb2:aegis') !== '') {
+    ck45('头像HTML非空(已装图片)', $html!=='' && str_contains($html,'<img'));
+} else {
+    ck45('头像HTML非空', $html!=='' && str_contains($html,'display:inline-flex'));
+    ck45('头像HTML含字形', str_contains($html, avatar_catalog()['rb2:aegis']['glyph']));
+}
 
 // 7) 跨职业不能选
 $uid2=(int)user_create('av2'.mt_rand(1,999999),'x','mage','z1',true,'tmp');

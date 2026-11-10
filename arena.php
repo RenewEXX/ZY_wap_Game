@@ -100,7 +100,7 @@ if (in_array($a, ['rank', 'prize', 'def', 'shop', 'shopbuy'], true)) {
 if (!$me) {
     echo '【竞 技 场】<br>';
     echo '想证明自己吗？80级可进。异步PVP，自动战斗，赢了排名上升，输了下降。名次奖励每日5点结算，段位奖励每2周结算，赛季以自然月为周期、每月1号按战力重排并发放月末结算奖励。<br>';
-    echo '今日免费挑战5次，额外10金/次，也可1魔钻买5次。<br>';
+    echo '今日免费挑战5次，额外10金/次，也可2魔钻买1次。<br>';
     echo '<a href="arena.php?a=join">进入竞技场</a><br>';
     echo '<a href="npc.php?who=arena_m">返回</a>';
     nav_line();
@@ -172,9 +172,9 @@ if ($a === 'targets') {
     echo '本大区真人玩家：' . $realCnt . ' 人（含你）' . ($realCnt <= 1 ? '，<span class="muted">暂无其他真人对手</span>' : '') . '<br>';
     foreach (arena_targets($me) as $t) {
         $tag = ((int) ($t['is_dummy'] ?? 0) === 0) ? '【真人】' : '';
-        echo '第' . (int) $t['rank'] . '名：' . $tag . h($t['name']) . ' Lv' . (int) $t['lv'] . ' 战力' . (int) $t['power'] . ' <a href="arena.php?a=fight&rank=' . (int) $t['rank'] . '">挑战</a><br>';
+        echo '第' . (int) $t['rank'] . '名：' . arena_opp_avatar_html($t) . ' ' . $tag . h($t['name']) . ' Lv' . (int) $t['lv'] . ' 战力' . (int) $t['power'] . ' <a href="arena.php?a=fight&rank=' . (int) $t['rank'] . '">挑战</a><br>';
     }
-    echo '额外：<a href="arena.php?a=buy_gold">10金买1次</a> <a href="arena.php?a=buy_diamond">1魔钻买5次</a><br>';
+    echo '额外：<a href="arena.php?a=buy_gold">10金买1次</a> <a href="arena.php?a=buy_diamond">2魔钻买1次</a><br>';
 }
 nav_line();
 wap_end(false);

@@ -72,9 +72,11 @@ if ($a === 'drop') {
     if (!in_array($dtab, ['mat', 'book', 'func', 'potion', 'quest'], true)) {
         $dtab = 'mat';
     }
+    // back=pet：从宠物画面点「扔掉」后留在宠物画面并提示，不跳去背包。
+    $dropRedirect = ((string) ($_GET['back'] ?? '')) === 'pet' ? 'pet.php' : ('bag.php?tab=' . $dtab);
     if (mat_hidden($did)) {
         flash_set('这是系统记录，不能扔。');
-        header('Location: bag.php?tab=' . $dtab);
+        header('Location: ' . $dropRedirect);
         exit;
     }
     $st = db()->prepare('SELECT num FROM mats WHERE uid=? AND mat=?');
@@ -91,7 +93,7 @@ if ($a === 'drop') {
     } else {
         flash_set('没有这个东西。');
     }
-    header('Location: bag.php?tab=' . $dtab);
+    header('Location: ' . $dropRedirect);
     exit;
 }
 if ($a === 'dropequip') {

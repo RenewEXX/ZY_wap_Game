@@ -34,13 +34,20 @@ foreach ($set as $sid) {
     $active = active_skill((int) $u['id'], $job);
     $isActive = $active && $active['skill'] === $sid;
     echo ($isActive ? '◀默认 ' : '<a href="skills.php?a=set&id=' . h($sid) . '">设为默认</a> ');
-    echo $s['level'] . '级·' . $s['tier'] . '阶·熟练' . $s['prof'] . '/' . tier_prof_need(min(10, (int) $s['tier'] + 1)) . '<br>';
+    $tierNow = (int) $s['tier'];
+    $tierLine = $s['level'] . '级·' . $tierNow . '阶·熟练' . $s['prof'];
+    $tierLine .= $tierNow >= 10 ? '（已满阶）' : ('/' . tier_prof_need($tierNow + 1));
+    echo $tierLine . '<br>';
     echo '<span style="color:#cfc">技能效果：' . h(skill_effect_desc($c)) . '</span><br>';
     $pw = skill_power($s);
     $pw1 = 1 + max(0, (int) ($s['tier'] ?? 1) - 1) * 0.05 + max(0, (int) ($s['level'] ?? 1)) * 0.04;
     $pwt = 1 + max(0, min(10, (int) ($s['tier'] ?? 1))) * 0.05 + max(0, (int) ($s['level'] ?? 1) - 1) * 0.04;
     echo '<span class="muted">现威力×' . number_format($pw, 2) . '（升1级+' . number_format($pw1 - $pw, 2) . '，升1阶+' . number_format($pwt - $pw, 2) . '，每级+4%每阶+5%）</span><br>';
     echo '<span class="muted">10阶：' . h($c['t10']) . '　20级：' . h($c['lv20']) . '</span><br>';
+    $lvNowTxt = skill_lv_bonus_text($sid, (int) $s['level']);
+    if ($lvNowTxt !== '') {
+        echo '<span style="color:#ffd27f">当前' . (int) $s['level'] . '级效果：' . h($lvNowTxt) . '</span><br>';
+    }
 }
 echo '<div class="hr">--------</div>';
 $rb2j = (string) (cflags((int) $u['id'])['rb2_job'] ?? '');

@@ -371,6 +371,18 @@ if ($here['monsters'] !== []) {
     foreach (map_spawns($cur) as $s) {
         $spawns[$s['mid'] . '|' . $s['elite']] = (int) $s['num'];
     }
+    // 统一渲染：普通怪与精英怪共用同一套「flex 行 + 固定 26px 立绘槽」，保证立绘纵向对齐。
+    $monRow = function (string $mid, string $inner): string {
+        $m = monsters()[$mid] ?? null;
+        $url = ($m && function_exists('monster_image_url')) ? monster_image_url($mid, (string) ($m['name'] ?? '')) : '';
+        $thumb = $url !== ''
+            ? '<img src="' . h($url) . '" alt="" style="flex:0 0 26px;width:26px;height:26px;object-fit:cover;border-radius:4px;border:1px solid #333;display:block">'
+            : '<span style="flex:0 0 26px;width:26px;height:26px"></span>';
+        return '<div style="display:flex;align-items:center;gap:6px;margin:1px 0">'
+            . '<span style="flex:0 0 auto;color:#696">·</span>'
+            . $thumb
+            . '<span style="flex:1 1 auto;min-width:0">' . $inner . '</span></div>';
+    };
     foreach ($here['monsters'] as $mid) {
         $m = monsters()[$mid];
         $shownLv = monster_shown_lv($mid, $u);
@@ -379,18 +391,19 @@ if ($here['monsters'] !== []) {
         $isBoss = ($mid === boss_of_map($cur));
         $left = $spawns[$mid . '|0'] ?? 0;
         if ($left <= 0) {
-            echo '· ' . h($m['name']) . '[Lv' . $shownLv . ']' . ($isBoss ? '（BOSS剩' . gmdate('i:s', spawn_respawn_in($cur, $mid)) . '刷新）' : '（这种杀光了，剩' . gmdate('i:s', spawn_respawn_in($cur, $mid)) . '刷新，可打别的怪）') . '<br>';
+            $sub = $isBoss ? '（BOSS剩' . gmdate('i:s', spawn_respawn_in($cur, $mid)) . '刷新）' : '（这种杀光了，剩' . gmdate('i:s', spawn_respawn_in($cur, $mid)) . '刷新，可打别的怪）';
+            echo $monRow($mid, h($m['name']) . '[Lv' . $shownLv . ']' . $sub);
             continue;
         }
         $gang = (!$isBoss && $left >= 6) ? ' / <a href="fight.php?a=start&m=' . h($mid) . '&n=6">群殴6只</a>' : '';
-        echo '· ' . h($m['name']) . '[Lv' . $shownLv . ($tag !== '' ? '·' . $tag : '') . ']剩' . $left . '只 <a href="fight.php?a=start&m=' . h($mid) . '">打1只</a>' . $gang . '<br>';
+        echo $monRow($mid, h($m['name']) . '[Lv' . $shownLv . ($tag !== '' ? '·' . $tag : '') . ']剩' . $left . '只 <a href="fight.php?a=start&m=' . h($mid) . '">打1只</a>' . $gang);
     }
     foreach ($spawns as $key => $num) {
         [$emid, $eel] = explode('|', $key);
         if ((int) $eel !== 1 || !isset(monsters()[$emid])) {
             continue;
         }
-        echo '·<b>' . h(monsters()[$emid]['name']) . '（精英）</b>[Lv' . monster_shown_lv($emid, $u) . ']剩' . $num . '只（经验×3，掉率更高） <a href="fight.php?a=start&m=' . h($emid) . '&elite=1">挑战</a><br>';
+        echo $monRow($emid, '<b>' . h(monsters()[$emid]['name']) . '（精英）</b>[Lv' . monster_shown_lv($emid, $u) . ']剩' . $num . '只（经验×3，掉率更高） <a href="fight.php?a=start&m=' . h($emid) . '&elite=1">挑战</a>');
     }
     echo '<div class="hr">--------</div>';
 }

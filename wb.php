@@ -182,6 +182,10 @@ wap_start('龙王殿');
 if ($d !== []) {
     $st = drg_status($mid);
     $myDmg = drg_my_dmg($uid, $mid, $day);
+    $dimg = function_exists('monster_image_url') ? monster_image_url($mid, (string) ($d['name'] ?? '')) : '';
+    if ($dimg !== '') {
+        echo '<div style="text-align:center;margin:2px 0 6px"><img src="' . h($dimg) . '" alt="' . h((string) $d['name']) . '" style="max-width:190px;max-height:220px;border:1px solid #444;border-radius:8px;background:#000"></div>';
+    }
     echo '<div class="t">' . h((string) $d['name']) . '（' . h((string) $d['pillar']) . '·' . (int) $d['lv'] . '级）</div>';
     echo '<div class="muted">' . h((string) $d['epithet']) . '｜' . h(element_name((string) $d['el'])) . '属性</div><br>';
     echo h((string) $d['intro']) . '<br>';
@@ -230,7 +234,9 @@ foreach ($order as $dmId) {
     $myDmgAll += $mine;
     $el = element_name((string) $dd['el']);
     echo '<div class="hr">--------</div>';
-    echo '<div class="t">' . h((string) $dd['name']) . '（' . (int) $dd['lv'] . '）</div>';
+    $dtmb = function_exists('monster_image_url') ? monster_image_url($dmId, (string) ($dd['name'] ?? '')) : '';
+    $dtmbHtml = $dtmb !== '' ? '<img src="' . h($dtmb) . '" alt="" style="height:44px;width:44px;object-fit:cover;vertical-align:middle;border-radius:6px;border:1px solid #333;margin-right:6px">' : '';
+    echo '<div class="t">' . $dtmbHtml . h((string) $dd['name']) . '（' . (int) $dd['lv'] . '）</div>';
     echo $el . '属性 · ' . h((string) $dd['pillar']) . ' · ' . h((string) $dd['epithet']) . '<br>';
     echo '<span class="muted">' . h((string) $dd['intro']) . '</span><br>';
     if ($ds['done'] === 1) {

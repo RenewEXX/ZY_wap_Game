@@ -32,7 +32,21 @@ if ($stAct === 'renamedo' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 $here = loc((string) $u['loc']);
 
 wap_start('状态');
-echo avatar_html($u, 48) . '<br>';
+$avId = function_exists('avatar_of') ? avatar_of($u) : '';
+$avSmall = function_exists('avatar_image_url') ? avatar_image_url((string) $avId) : '';
+$avHd = '';
+if ($avSmall !== '' && preg_match('/\.png$/i', $avSmall)) {
+    foreach (['.hd.png', '.big.png'] as $suf) {
+        $cand = preg_replace('/\.png$/i', $suf, $avSmall);
+        if (is_file(__DIR__ . '/' . $cand)) { $avHd = $cand; break; }
+    }
+}
+if ($avHd !== '') {
+    $avBox = 'min(168px,56vw)';
+    echo '<div><img src="' . h($avHd) . '" alt="' . h((string) ($u['username'] ?? '')) . '" style="max-width:' . $avBox . ';max-height:' . $avBox . ';width:auto;height:auto;object-fit:contain;border-radius:12px;border:1px solid #444;background:#000;display:block;margin:4px 0"></div><br>';
+} else {
+    echo '<span class="avatar-zoom">' . avatar_html($u, 96) . '</span><br>';
+}
 echo sin_name_html((string) $u['username'], sin_of((int) $u['id'])) . '　' . h(lv_text((int) $u['id'], (int) $u['lv']));
 echo '　' . h(job_of($u)['name']) . '(' . h(job_of($u)['skill']) . ')';
 $rb2cur = (string) (cflags((int) $u['id'])['rb2_job'] ?? '');

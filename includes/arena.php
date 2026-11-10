@@ -902,16 +902,42 @@ function arena_buy_chances(int $uid, string $kind): string
         return '花10金买下1次挑战。';
     }
     if ($kind === 'diamond') {
-        if ((int) ($u['diamonds'] ?? 0) < 10) {
-            return '魔钻不够，一魔钻换5次。';
+        // 2魔钻买1次（魔钻以 0.1 为单位存储，故扣 20）
+        if ((int) ($u['diamonds'] ?? 0) < 20) {
+            return '魔钻不够，2魔钻换1次。';
         }
-        $u['diamonds'] = (int) $u['diamonds'] - 10;
+        $u['diamonds'] = (int) $u['diamonds'] - 20;
         user_save($u);
-        spend_diamonds((int) $uid, 10);
-        add_mat((int) $uid, 'arena_bought', 5);
-        return '花1魔钻买下5次挑战。';
+        spend_diamonds((int) $uid, 20);
+        add_mat((int) $uid, 'arena_bought', 1);
+        return '花2魔钻买下1次挑战。';
     }
     return '没这种买法。';
+}
+
+// 竞技场对手立绘：真人对战用其头像，机器人用职业默认头像；没有则返回空串。
+function arena_opp_avatar_html(array $t): string
+{
+    if (!function_exists('avatar_html')) {
+        return '';
+    }
+    if ((int) ($t['is_dummy'] ?? 0) === 0) {
+        $tu = user_by_id((int) ($t['uid'] ?? 0));
+        if ($tu) {
+            return avatar_html($tu, 40);
+        }
+    }
+    $jobCn = (string) ($t['job'] ?? '');
+    $jid = 'warrior';
+    if (function_exists('jobs')) {
+        foreach (jobs() as $id => $j) {
+            if ((string) ($j['name'] ?? '') === $jobCn) {
+                $jid = (string) $id;
+                break;
+            }
+        }
+    }
+    return function_exists('avatar_render') ? avatar_render('job:' . $jid, 40) : '';
 }
 
 function arena_targets(array $my): array
@@ -989,7 +1015,7 @@ function arena_fight(int $uid, int $foeRank): array
     $used = (int) ($mats['arena_used'] ?? 0);
     $bought = (int) ($mats['arena_bought'] ?? 0);
     if ($used >= 5 + $bought) {
-        return [false, ['今日挑战次数用完了（免费5次+购买' . $bought . '次）。花10金买1次，或1魔钻买5次。'], 0, $myRank, $myRank];
+        return [false, ['今日挑战次数用完了（免费5次+购买' . $bought . '次）。花10金买1次，或2魔钻买1次。'], 0, $myRank, $myRank];
     }
     $st = db()->prepare('SELECT * FROM arena_rank WHERE zone=? AND season=? AND rank=?');
     $st->execute([$zone, $season, $foeRank]);

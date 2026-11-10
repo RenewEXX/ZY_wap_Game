@@ -671,6 +671,26 @@ wap_start('交手');
 $history = $b['history'] ?? [$log];
 $num = (int) ($b['num'] ?? 1);
 $left = (int) ($b['left'] ?? 1);
+$bid = (string) ($b['id'] ?? '');
+$bname = (string) ($b['name'] ?? '');
+$bSpeciesName = (string) (monsters()[$bid]['name'] ?? $bname);
+$mimg = function_exists('monster_image_url') ? monster_image_url($bid, $bSpeciesName) : '';
+// 实时战斗优先用怪物高清立绘（.hd.<ext>），没有则回退普通图
+if ($mimg !== '' && preg_match('/\.(png|jpe?g|webp|gif)$/i', $mimg, $mExt)) {
+    $mHd = preg_replace('/\.(png|jpe?g|webp|gif)$/i', '.hd.' . $mExt[1], $mimg);
+    if ($mHd !== $mimg && is_file(__DIR__ . '/' . $mHd)) {
+        $mimg = $mHd;
+    }
+}
+if ($mimg !== '') {
+    echo '<style>@keyframes mshake{0%{transform:translateX(0)}20%{transform:translateX(-6px) rotate(-2deg)}40%{transform:translateX(6px) rotate(2deg)}60%{transform:translateX(-4px) rotate(-1deg)}80%{transform:translateX(3px)}100%{transform:translateX(0)}}.mshake{animation:mshake .2s ease}</style>';
+    echo '<div style="position:relative;width:max-content;margin:2px auto 6px">';
+    echo '<img id="mimg" src="' . h($mimg) . '" alt="' . h($bname) . '" style="display:block;max-width:160px;max-height:160px;width:auto;height:auto;border:1px solid #444;border-radius:8px;background:#000">';
+    if ($num > 1) {
+        echo '<span style="position:absolute;top:-8px;right:-8px;background:#c0392b;color:#fff;font-size:13px;line-height:1;padding:3px 7px;border-radius:12px;border:1px solid #fff3;font-weight:bold">×' . $num . '</span>';
+    }
+    echo '</div>';
+}
 echo '<div>敌人：' . h((string) $b['name']) . ($num > 1 ? '（共' . $num . '只，剩' . $left . '）' : '') . '</div>';
 echo '<div class="hp" id="bhp">敌生命 ' . (int) $b['hp'] . '/' . (int) $b['maxhp'] . '</div>';
 if ($num > 1) {
@@ -791,6 +811,7 @@ setInterval(async ()=>{
     if(d.ump!==undefined){ const me=document.getElementById("ump"); if(me) me.innerText="魔力 "+d.ump+"/"+d.umaxmp; }
     if(d.pet!==undefined){ const pe=document.getElementById("ppet"); if(pe) pe.innerText=d.pet; }
     if(d.summons!==undefined){ const se=document.getElementById("psum"); if(se) se.innerHTML=d.summons.map(function(s){return s.name+" "+s.hp+"/"+s.max;}).join("<br>"); }
+    if(d.bhp!==undefined){ const mi=document.getElementById("mimg"); if(mi){ if(window.__lastBhp!==undefined && d.bhp<window.__lastBhp){ mi.classList.remove("mshake"); void mi.offsetWidth; mi.classList.add("mshake"); } window.__lastBhp=d.bhp; } }
     document.getElementById("bhp").innerText="敌生命"+d.bhp+"/"+d.bmax;
     if(d.num>1){ const bl=document.getElementById("bleft"); if(bl) bl.innerText="剩余 "+d.left+"/"+d.num+"只，存活怪每回合一起打你！"; }
     const box=document.getElementById("blog");

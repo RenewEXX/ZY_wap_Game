@@ -68,6 +68,11 @@ a{color:#8cf;text-decoration:none}
 .nav a:active{background:#1c2b1c}
 .nav a.on{background:#1c2b1c;border-color:#6a6;color:#cfc}
 input{background:#111;color:#cfc;border:1px solid #363;padding:4px;font:13px monospace}
+.avatar-zoom{cursor:zoom-in;display:inline-block;vertical-align:middle;line-height:0}
+#avz{position:fixed;left:0;top:0;right:0;bottom:0;z-index:9999;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.88)}
+#avz.on{display:flex}
+#avz img{max-width:min(640px,96vw);max-height:90vh;width:auto;height:auto;border-radius:10px;border:1px solid #3a5;background:#000}
+#avz .cap{position:absolute;left:0;right:0;bottom:14px;text-align:center;color:#9c9;font-size:12px}
 </style></head><body>';
     echo '<div class="t">【' . h($title) . '】</div>';
     if (function_exists('war_banner') && !empty($_SESSION['uid'])) {
@@ -96,6 +101,20 @@ function wap_end(bool $home = true): void
     if ($home) {
         echo '<a href="home.php">返回营地</a>';
     }
+    echo '<div id="avz"><img alt=""><div class="cap">点任意处关闭</div></div>';
+    echo '<script>(function(){var box=document.getElementById("avz");if(!box)return;var bi=box.querySelector("img");'
+        . 'var hoverOK=window.matchMedia&&window.matchMedia("(hover:hover) and (pointer:fine)").matches;'
+        . 'if(hoverOK){box.style.pointerEvents="none";}'
+        . 'function srcOf(el){var i=el.querySelector("img");return i?i.getAttribute("src"):"";}'
+        . 'function bigOf(s){return /\\.png(\\?.*)?$/i.test(s)?s.replace(/\\.png(\\?.*)?$/i,function(m,q){return ".big.png"+(q||"");}):s;}'
+        . 'function show(s){if(!s)return;var b=bigOf(s);if(b===s){bi.src=s;box.classList.add("on");return;}'
+        . 'var p=new Image();p.onload=function(){bi.src=b;box.classList.add("on");};p.onerror=function(){bi.src=s;box.classList.add("on");};p.src=b;}'
+        . 'function hide(){box.classList.remove("on");}'
+        . 'document.addEventListener("click",function(e){var z=e.target&&e.target.closest?e.target.closest(".avatar-zoom"):null;'
+        . 'if(z){e.preventDefault();show(srcOf(z));return;}if(box.classList.contains("on"))hide();});'
+        . 'if(hoverOK){document.addEventListener("mouseover",function(e){var z=e.target&&e.target.closest?e.target.closest(".avatar-zoom"):null;if(z)show(srcOf(z));});'
+        . 'document.addEventListener("mouseout",function(e){var z=e.target&&e.target.closest?e.target.closest(".avatar-zoom"):null;if(z&&!z.contains(e.relatedTarget))hide();});}'
+        . '})();</script>';
     echo '</body></html>';
 }
 
